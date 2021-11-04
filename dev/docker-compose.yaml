@@ -8,6 +8,10 @@ services:
       - ./dev.env
     depends_on:
       - arya-db
+    volumes:
+      - ../:/arya-core
+    stdin_open: true
+    tty: true
   arya-db:
     image: postgres:latest
     ports:
