@@ -97,7 +97,3 @@ func newDBCommand(migrations *migrate.Migrations) *cli.Command {
 		},
 	}
 }
-
-func isServerClosed(err error) bool {
-	return err.Error() == "http: Server closed"
-}
