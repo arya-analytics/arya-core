@@ -1,1 +1,0 @@
-package arya_core
