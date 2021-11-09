@@ -5,9 +5,9 @@ import "time"
 const MaxConnAge = 1000 * time.Second
 const MaxConnCount = 5
 
-type Config map[string] ConnParams
+type Configs map[string]Config
 
-type ConnParams struct {
+type Config struct {
 	Engine   string
 	Host     string
 	Name     string

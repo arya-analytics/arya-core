@@ -5,7 +5,7 @@ import (
 	"os"
 )
 
-var DS = ds.Config{
+var DS = ds.Configs{
 	"default": {
 		Engine:   "github.com/uptrace/bun/driver/pgdriver",
 		Name:     os.Getenv("ARYA_DB_NAME"),

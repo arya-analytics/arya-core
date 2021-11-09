@@ -7,17 +7,17 @@ import (
 )
 
 type Config struct {
-	ds ds.Config
+	ds ds.Configs
 }
 
 type Core struct {
 	cfg         *Config
-	ConnManager *ds.ConnManager
+	ConnManager *ds.ConnPooler
 	router      *gin.Engine
 }
 
 func NewCore(ctx context.Context, cfg *Config) (*Core, context.Context) {
-	cm := ds.NewConnManager(cfg.ds)
+	cm := ds.NewConnPooler(cfg.ds)
 	router := gin.Default()
 	core := &Core{
 		ConnManager: cm,

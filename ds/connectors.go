@@ -8,7 +8,7 @@ import (
 	"github.com/uptrace/bun/driver/pgdriver"
 )
 
-type Connector func(params ConnParams) (conn Conn, getStatus GetStatus, close Close)
+type Connector func(params Config) (conn Conn)
 
 func getConnector(engine string) Connector {
 	connectors := map[string]Connector{
@@ -19,21 +19,12 @@ func getConnector(engine string) Connector {
 }
 
 // || POSTGRES ||
-
-func pgGetStatus(conn Conn) ConnStatus {
-	return Active
-}
-
-func pgClose(conn Conn) {
-	fmt.Println("Conn Closed")
-}
-
-func pgConnector(params ConnParams) (conn Conn, getStatus GetStatus, close Close) {
+func pgConnector(params Config) (conn Conn) {
 	dsn := "postgres://" + params.User + ":" + params.Password + "@" + params.Host +
 		"/" + params.Name
 	if !params.Secure {
 		dsn += "?sslmode=disable"
 	}
 	baseDB := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(dsn)))
-	return bun.NewDB(baseDB, pgdialect.New()), pgGetStatus, pgClose
+	return bun.NewDB(baseDB, pgdialect.New())
 }
