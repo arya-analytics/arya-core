@@ -24,6 +24,8 @@ type RangeReplicaToNode struct {
 type ChannelConfig struct {
 	ID int32 `bun:",pk"`
 	Name string
+	NodeId uuid.UUID
+	Node *cluster.Node `bun:"rel:belongs-to,join:node_id=id"`
 }
 
 type ChannelChunk struct {

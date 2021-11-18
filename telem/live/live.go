@@ -1,7 +1,10 @@
 package live
 
-import "time"
+import (
+	"time"
+)
 
 const (
-	receiverUpdateRate time.Duration = 100 * time.Millisecond
+	rate = 100 * time.Millisecond
 )
+

@@ -2,17 +2,47 @@ package ds
 
 import "time"
 
+// || CONSTANTS ||
+
 const MaxConnAge = 1000 * time.Second
 const MaxConnCount = 5
 
-type Configs map[string]Config
+// || CONFIG ||
+
+type Configs map[string] Config
 
 type Config struct {
-	Engine   string
+	Engine   Engine
 	Host     string
 	Name     string
 	Port     string
-	User     string
-	Password string
+	Auth AuthConfig
 	Secure bool
 }
+
+// || AUTHENTICATION ||
+
+type AuthMethod int
+
+const (
+	TLS AuthMethod = iota
+	Credentials
+	Token
+	None
+)
+
+type AuthConfig struct {
+	Mode     AuthMethod
+	User     string
+	Password string
+	Token    string
+}
+
+// || ENGINE ||
+
+type Engine string
+
+const (
+	Postgres Engine = "github.com/uptrace/bun/driver/pgdriver"
+	GorillaWS Engine = "github.com/gorilla/websocket"
+)

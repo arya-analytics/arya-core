@@ -5,25 +5,14 @@ import (
 	"time"
 )
 
-type ConnStatus int
-
-const (
-	Active ConnStatus = iota
-	Inactive
-)
-
 type Conn interface{}
-type GetStatus func(conn Conn) ConnStatus
-type Close func(conn Conn)
 
 type ConnAdapter struct {
 	Id        uuid.UUID
 	created   time.Time
-	engine    string
+	engine    Engine
 	key       string
 	conn      Conn
-	getStatus GetStatus
-	close     Close
 }
 
 func NewConnAdapter(key string, params Config, connector Connector) ConnAdapter {

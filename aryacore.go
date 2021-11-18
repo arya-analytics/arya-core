@@ -1,28 +1,24 @@
 package aryacore
 
 import (
-	"context"
 	"github.com/arya-analytics/aryacore/ds"
-	"github.com/gin-gonic/gin"
+	"github.com/arya-analytics/aryacore/server"
+	"github.com/arya-analytics/aryacore/telem/live"
 )
 
 type Config struct {
-	ds ds.Configs
+	DS ds.Configs
 }
 
-type Core struct {
-	cfg         *Config
-	ConnManager *ds.ConnPooler
-	router      *gin.Engine
-}
-
-func NewCore(ctx context.Context, cfg *Config) (*Core, context.Context) {
-	cm := ds.NewConnPooler(cfg.ds)
-	router := gin.Default()
-	core := &Core{
-		ConnManager: cm,
-		cfg:         cfg,
-		router:      router,
+func StartServer() {
+	cfg := GetConfig()
+	pooler := ds.NewConnPooler(cfg.DS)
+	eb := server.NewEndpointBuilder("api")
+	ctx := server.Context{
+		Pooler: pooler,
+		EndpointBuilder: eb,
 	}
-	return core, ctx
+	sv := server.New(&ctx)
+	sv.BindSlice(live.API)
+	sv.Start()
 }

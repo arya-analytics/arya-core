@@ -8,7 +8,7 @@ func NewConnPooler(configs Configs) *ConnPooler {
 }
 
 type ConnPooler struct {
-	configs  Configs
+	configs  map[string] Config
 	Adapters map[*ConnAdapter] bool
 }
 
@@ -20,7 +20,7 @@ func (cp *ConnPooler) SetConfig(key string, config Config) {
 	cp.configs[key] = config
 }
 
-func (cp *ConnPooler) DelConfig(key string, config Config) {
+func (cp *ConnPooler) DelConfig(key string) {
 	delete(cp.configs, key)
 }
 

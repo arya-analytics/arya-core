@@ -6,7 +6,6 @@ import (
 	"time"
 )
 
-type SenderConfig struct{}
 
 // Relay manages the interactions between a set of telemetry 'senders' and 'receivers.'
 type Relay struct {
@@ -50,34 +49,34 @@ func NewRelay(locator Locator) *Relay {
 
 // Start starts the Relay and begins listening to requests and sending responses to
 // senders and receivers
-func (h *Relay) Start() {
+func (r *Relay) Start() {
 	ticker := time.NewTicker(rate)
 	defer func() {
 		ticker.Stop()
 	}()
 	for {
 		select {
-		case cfg := <-h.updateSenderConfig:
-			h.handleConfigUpdate(cfg)
-		case sender := <-h.addSender:
-			h.senders[sender] = true
-		case sender := <-h.removeSender:
-			delete(h.senders, sender)
-		case receiver := <-h.addReceiver:
-			h.receivers[receiver] = true
-		case receiver := <-h.removeReceiver:
-			delete(h.receivers, receiver)
+		case cfg := <-r.updateSenderConfig:
+			r.handleConfigUpdate(cfg)
+		case sender := <-r.addSender:
+			r.senders[sender] = true
+		case sender := <-r.removeSender:
+			delete(r.senders, sender)
+		case receiver := <-r.addReceiver:
+			r.receivers[receiver] = true
+		case receiver := <-r.removeReceiver:
+			delete(r.receivers, receiver)
 		case <-ticker.C:
-			tlm := h.readFromReceivers()
-			h.forwardToSenders(tlm)
+			tlm := r.readFromReceivers()
+			r.forwardToSenders(tlm)
 		}
 	}
 }
 
 // readFromReceivers reads, aggregates, and returns telemetry from receivers
-func (h *Relay) readFromReceivers() (slc telem.Slice) {
+func (r *Relay) readFromReceivers() (slc telem.Slice) {
 	slc = telem.Slice{}
-	for rc := range h.receivers {
+	for rc := range r.receivers {
 		for key, val := range rc.receive() {
 			slc[key] = val
 		}
@@ -86,12 +85,12 @@ func (h *Relay) readFromReceivers() (slc telem.Slice) {
 }
 
 /// forwardToSenders forwards telemetry (p) to senders
-func (h *Relay) forwardToSenders(slc telem.Slice) {
-	for sr := range h.senders {
+func (r *Relay) forwardToSenders(slc telem.Slice) {
+	for sr := range r.senders {
 		sr.send(slc)
 	}
 }
 
-func (h *Relay) handleConfigUpdate(cfg SenderConfig) {
+func (r *Relay) handleConfigUpdate(cfg SenderConfig) {
 
 }
