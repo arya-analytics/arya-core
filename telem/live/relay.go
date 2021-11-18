@@ -6,11 +6,10 @@ import (
 	"time"
 )
 
-
 // Relay manages the interactions between a set of telemetry 'senders' and 'receivers.'
 type Relay struct {
 	// Config
-	chanConfigs map[int][]uuid.UUID
+	chanConfigs map[int32]map[uuid.UUID]bool
 	// Sender Management
 	addSender          chan Sender
 	removeSender       chan Sender
@@ -26,7 +25,7 @@ type Relay struct {
 
 // NewRelay creates a new Relay. Returns a pointer to the created Relay.
 func NewRelay(locator Locator) *Relay {
-	chanConfigs := map[int][]uuid.UUID{}
+	chanConfigs := map[int32]map[uuid.UUID]bool{}
 	addSender := make(chan Sender)
 	removeSender := make(chan Sender)
 	updateSenderConfig := make(chan SenderConfig)
@@ -92,5 +91,20 @@ func (r *Relay) forwardToSenders(slc telem.Slice) {
 }
 
 func (r *Relay) handleConfigUpdate(cfg SenderConfig) {
+	for _, senderIds := range r.chanConfigs {
+		delete(senderIds, cfg.ID)
 
+	}
+	for _, chanCfg := range cfg.ChanCfgs {
+		_, found := r.chanConfigs[chanCfg]
+		if !found {
+			r.chanConfigs[chanCfg] = map[uuid.UUID]bool{}
+		}
+		r.chanConfigs[chanCfg][cfg.ID] = true
+	}
+	for chanCfg, senderIds := range r.chanConfigs {
+		if len(senderIds) == 0 {
+			delete(r.chanConfigs, chanCfg)
+		}
+	}
 }

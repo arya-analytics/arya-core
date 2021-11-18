@@ -1,7 +1,6 @@
 package live
 
 import (
-	"fmt"
 	"github.com/arya-analytics/aryacore/telem"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
@@ -62,7 +61,6 @@ func (s WSSender) listen() {
 			panic(err)
 		}
 		cfg := s.decode(msg)
-		fmt.Println(cfg)
 		s.rel.updateSenderConfig <- cfg
 	}
 }
