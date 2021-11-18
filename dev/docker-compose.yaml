@@ -3,7 +3,7 @@ services:
   arya-core:
     build: ../
     ports:
-      - 8080
+      - 8080:8080
     env_file:
       - ./dev.env
     depends_on:
