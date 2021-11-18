@@ -1,6 +1,7 @@
 package server
 
 import (
+	"github.com/arya-analytics/aryacore/config"
 	"github.com/arya-analytics/aryacore/ds"
 	"github.com/gin-gonic/gin"
 )
@@ -30,14 +31,23 @@ type APIHandler struct {
 type APISliceFactory func(c *Context) APISlice
 
 type Server struct {
-	ctx    *Context
-	router *gin.Engine
-	slices []APISlice
+	Context *Context
+	config  *config.Config
+	router  *gin.Engine
+	slices  []APISlice
 }
 
-func New(c *Context) *Server {
-	r := gin.Default()
-	return &Server{c, r, []APISlice{}}
+func New(cfg *config.Config) *Server {
+	rtr := gin.Default()
+	pooler := ds.NewConnPooler(cfg.DS)
+	eb := NewEndpointBuilder(cfg.BaseEndpoint...)
+	ctx := &Context{
+		pooler,
+		eb,
+	}
+	var slices []APISlice
+	server := Server{ctx, cfg, rtr, slices}
+	return &server
 }
 
 func (sv *Server) Start() {
@@ -54,7 +64,7 @@ func (sv *Server) Start() {
 }
 
 func (sv *Server) BindSlice(slcFac APISliceFactory) {
-	slc := slcFac(sv.ctx)
+	slc := slcFac(sv.Context)
 	for _, h := range slc.Handlers {
 		for _, m := range h.ReqMethods {
 			sv.router.Handle(m, h.Endpoint, h.HandlerFunc)

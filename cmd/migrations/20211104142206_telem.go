@@ -11,7 +11,9 @@ func init() {
 	Migrations.MustRegister(func(ctx context.Context, db *bun.DB) error {
 		if _, err := db.NewCreateTable().
 			Model((*telem.ChannelConfig)(nil)).
+			ForeignKey(`("node_id") REFERENCES "nodes" ("id") ON DELETE CASCADE`).
 			Exec(ctx); err != nil {
+
 			panic(err)
 		}
 		if _, err := db.NewCreateTable().

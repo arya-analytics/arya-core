@@ -9,7 +9,7 @@ const MaxConnCount = 5
 
 // || CONFIG ||
 
-type Configs map[string] Config
+type ConfigChain map[string] Config
 
 type Config struct {
 	Engine   Engine

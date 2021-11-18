@@ -24,7 +24,7 @@ type RangeReplicaToNode struct {
 type ChannelConfig struct {
 	ID int32 `bun:",pk"`
 	Name string
-	NodeId uuid.UUID
+	NodeId uuid.UUID `bun:"type:uuid"`
 	Node *cluster.Node `bun:"rel:belongs-to,join:node_id=id"`
 }
 

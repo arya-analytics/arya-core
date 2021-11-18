@@ -1,6 +1,6 @@
 package ds
 
-func NewConnPooler(configs Configs) *ConnPooler {
+func NewConnPooler(configs ConfigChain) *ConnPooler {
 	return &ConnPooler{
 		configs:  configs,
 		Adapters: map[*ConnAdapter]bool{},
