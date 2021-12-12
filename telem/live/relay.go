@@ -107,4 +107,12 @@ func (r *Relay) handleConfigUpdate(cfg SenderConfig) {
 			delete(r.chanConfigs, chanCfg)
 		}
 	}
+	var chanCfgChain []int32
+	for chanCfg := range r.chanConfigs {
+		chanCfgChain = append(chanCfgChain, chanCfg)
+	}
+	receivers := r.locator.Locate(chanCfgChain)
+	for _, r := range receivers {
+		go r.Start(chanCfgChain)
+	}
 }

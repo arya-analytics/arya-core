@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: &name {{ .Release.Name }}-{{ .Values.resourcePrefix }}-{{ .Values.conf.name }}
+data:
+  *name: |
+           port {{ .Values.port }}
+           masteruser {{ .Values.auth.username }}
+           masterauth {{ .Values.auth.password }}

@@ -16,7 +16,7 @@ import (
 
 func main() {
 	app := &cli.App{
-		Name: "aryacore",
+		Name: "arya",
 		Commands: []*cli.Command{
 			newDBCommand(migrations.Migrations),
 			serverCommand,

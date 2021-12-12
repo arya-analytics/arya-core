@@ -29,10 +29,3 @@ func appendSlash (e string) (formattedE string) {
 	}
 	return e
 }
-
-func prependSlash (e string) (formattedE string) {
-	if e[0] != '/' {
-		return "/" + e
-	}
-	return e
-}

@@ -1,16 +1,27 @@
-package aryacore
+package main
 
 import (
-	"context"
-	"github.com/arya-analytics/aryacore/config"
-	"github.com/arya-analytics/aryacore/server"
-	"github.com/arya-analytics/aryacore/telem/live"
+	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 )
 
+func main() {
+	fmt.Println("Starting Dummy Arya Core")
+	t := time.NewTicker(5*time.Second)
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+	done := true
+	for done {
+		select {
+				case <-t.C:
+					fmt.Println("Ticker")
+				case <-sigs:
+					fmt.Println("Terminating")
+					done = false
+		}
 
-
-func StartServer() {
-	sv := server.New(config.GetConfig(), context.Background())
-	sv.BindSlice(live.API)
-	sv.Start()
+	}
 }

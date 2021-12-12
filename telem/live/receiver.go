@@ -7,10 +7,12 @@ import (
 	"time"
 )
 
+type ReceiverConfig []int32
+
 type Receiver interface {
 	send(sect telem.Slice)
 	receive() (sect telem.Slice)
-	Start() ()
+	Start(cfg ReceiverConfig) ()
 }
 
 type WSReceiver struct {
@@ -40,7 +42,7 @@ func (rcv WSReceiver) decode(b []byte) (slc telem.Slice) {
 	return slc
 }
 
-func (rcv WSReceiver) Start() () {
+func (rcv WSReceiver) Start(cfg ReceiverConfig) () {
 	rcv.rel.addReceiver <- rcv
 	defer func() {
 		rcv.rel.removeReceiver <- rcv
@@ -56,7 +58,7 @@ func (rcv WSReceiver) Start() () {
 
 type DummyReceiver struct {
 	rel *Relay
-	p chan telem.Slice
+	p   chan telem.Slice
 }
 
 func (rcv DummyReceiver) send(slc telem.Slice) {
@@ -73,7 +75,7 @@ func (rcv DummyReceiver) receive() (slc telem.Slice) {
 	}
 }
 
-func (rcv DummyReceiver) Start() () {
+func (rcv DummyReceiver) Start(cfg ReceiverConfig) () {
 	rcv.rel.addReceiver <- rcv
 	defer func() {
 		rcv.rel.removeReceiver <- rcv

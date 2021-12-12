@@ -1,0 +1,7 @@
+auth:
+  username: &username arya-master
+  password: &password arya-dummy-pass
+redistimeseries:
+  auth:
+    username: *username
+    password: *password

@@ -1,0 +1,11 @@
+replicaCount: 1
+resourcePrefix: redistimeseries
+image: redislabs/redistimeseries
+port: 6379
+conf:
+  dir: /etc/redis/
+  path: redis.conf
+  name: config
+auth:
+  username: arya-master
+  password: arya-dummy-pass

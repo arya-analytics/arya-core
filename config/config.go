@@ -9,9 +9,13 @@ type Config struct {
 	BaseEndpoint []string
 }
 
+const (
+	AryaDB = "aryadb"
+)
+
 func GetConfig() *Config {
 	DS := map[string]ds.Config{
-		"aryadb": {
+		AryaDB: {
 			Engine: ds.Postgres,
 			Name:   "arya-db",
 			Host:   "arya-db",

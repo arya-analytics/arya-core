@@ -46,8 +46,7 @@ func New(cfg *config.Config) *Server {
 		eb,
 	}
 	var slices []APISlice
-	server := Server{ctx, cfg, rtr, slices}
-	return &server
+	return &Server{ctx, cfg, rtr, slices}
 }
 
 func (sv *Server) Start() {

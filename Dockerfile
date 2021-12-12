@@ -4,6 +4,4 @@ WORKDIR /arya-core
 
 ADD . /arya-core
 
-#RUN go build -o main .
-
-CMD ["/bin/bash"]
+RUN go build -o main .

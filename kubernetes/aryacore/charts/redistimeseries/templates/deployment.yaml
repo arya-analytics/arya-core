@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: &name {{ .Release.Name }}-{{ .Values.resourcePrefix }}-deployment
+  labels:
+    app: *name
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: *name
+  template:
+    metadata:
+      labels:
+        app: *name
+    spec:
+      containers:
+        - name: *name
+          image: {{ .Values.image }}
+          command:
+            - redis-server
+            - {{ .Values.conf.dir }}{{ .Values.conf.path }}
+          ports:
+            - containerPort: {{ .Values.port }}
+              name: {{ .Release.Name }}
+          volumeMounts:
+            - name: &confname {{ .Release.Name }}-{{ .Values.resourcePrefix }}-{{.Values.conf.name }}
+              mountPath: {{ .Values.conf.dir }}
+      volumes:
+        - name: *confname
+          configMap:
+            name: *confname
+            items:
+            - key: *confname
+              path: {{ .Values.conf.path }}
+        - name: secret
+          secret:
