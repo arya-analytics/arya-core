@@ -1,0 +1,21 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: &name {{ .Release.Name }}-{{.Values.resourcePrefix}}-cluster-init
+  labels:
+    app: {{.Release.Name}}-{{.Values.resourcePrefix}}
+spec:
+  template:
+    spec:
+      nodeSelector:
+        aryaRole: orchestrator
+      restartPolicy: OnFailure
+      containers:
+        - name: *name
+          image: {{.Values.image}}
+          imagePullPolicy: IfNotPresent
+          command:
+            - "/cockroach/cockroach"
+            - "init"
+            - "--insecure"
+            - "--host={{.Values.nodeIP }}"

@@ -68,18 +68,17 @@ do
 
   if [ "$node_id" -eq 1 ]
   then
-    echo "Installing Submariner CLI on node $NODE_NAME"
-    multipass exec "$NODE_NAME" -- bash -c "
-      curl -Ls https://get.submariner.io | bash
-      export PATH=\$PATH:~/.local/bin
-      echo export PATH=\$PATH:~/.local/bin >> ~/.profile
-      subctl deploy-broker --kubeconfig $KUBECONFIG_NAME"
-
+#    echo "Installing Submariner CLI on node $NODE_NAME"
+#    multipass exec "$NODE_NAME" -- bash -c "
+#      curl -Ls https://get.submariner.io | bash
+#      export PATH=\$PATH:~/.local/bin
+#      echo export PATH=\$PATH:~/.local/bin >> ~/.profile
+#      subctl deploy-broker --kubeconfig $KUBECONFIG_NAME"
+    multipass transfer "$NODE_NAME":/home/ubuntu/"$KUBECONFIG_NAME" "$HOME"/.kube/"$KUBECONFIG_NAME"
   else
     echo "Transferring $KUBECONFIG_NAME to $NODE_1_NAME"
-    multipass transfer "$NODE_NAME":/home/ubuntu/"$KUBECONFIG_NAME" ~/"$KUBECONFIG_NAME"
-    multipass transfer ~/"$KUBECONFIG_NAME" $NODE_1_NAME:/home/ubuntu/"$KUBECONFIG_NAME"
-    rm ~/kubeconfig."$NODE_NAME"
+    multipass transfer "$NODE_NAME":/home/ubuntu/"$KUBECONFIG_NAME" "$HOME"/.kube/"$KUBECONFIG_NAME"
+    multipass transfer "$HOME"/.kube/"$KUBECONFIG_NAME" $NODE_1_NAME:/home/ubuntu/"$KUBECONFIG_NAME"
   fi
 
   echo "All done setting up cluster $NODE_NAME"
@@ -100,14 +99,72 @@ multipass exec $NODE_1_NAME -- bash -c "
   sudo bash -c \"echo KUBECONFIG=$KUBECONFIGS >> /etc/environment\"
 "
 
-for node_idx in $NODE_RANGE
+#for node_idx in $NODE_RANGE
+#do
+#  node_name="$NODE_NAME_PREFIX$node_idx"
+#  kubeconfig_name="\$HOME/kubeconfig.$node_name"
+#  echo "Joining cluster $node_name to the submariner broker on $NODE_1_NAME"
+#  multipass exec $NODE_1_NAME -- bash -c "
+#  export PATH=\$PATH:~/.local/bin
+#  echo export PATH=\$PATH:~/.local/bin >> ~/.profile
+#  subctl join --kubeconfig $kubeconfig_name broker-info.subm --clusterid \
+#  $node_name --natt=false"
+#done
+
+# Installing krew on local machine
+(
+  set -x; cd "$(mktemp -d)" &&
+  OS="$(uname | tr '[:upper:]' '[:lower:]')" &&
+  ARCH="$(uname -m | sed -e 's/x86_64/amd64/' -e 's/\(arm\)\(64\)\?.*/\1\2/' -e 's/aarch64$/arm64/')" &&
+  KREW="krew-${OS}_${ARCH}" &&
+  curl -fsSLO "https://github.com/kubernetes-sigs/krew/releases/latest/download/${KREW}.tar.gz" &&
+  tar zxvf "${KREW}.tar.gz" &&
+  ./"${KREW}" install krew
+)
+export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"
+echo export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH" >> ~/.zshrc
+echo $PATH
+
+# Installing konfig for kubectl config management
+kubectl krew install konfig
+
+
+for kf in $NODE_RANGE
 do
-  node_name="$NODE_NAME_PREFIX$node_idx"
-  kubeconfig_name="\$HOME/kubeconfig.$node_name"
-  echo "Joining cluster $node_name to the submariner broker on $NODE_1_NAME"
-  multipass exec $NODE_1_NAME -- bash -c "
-  export PATH=\$PATH:~/.local/bin
-  echo export PATH=\$PATH:~/.local/bin >> ~/.profile
-  subctl join --kubeconfig $kubeconfig_name broker-info.subm --clusterid \
-  $node_name --natt=false"
+  node_name="$NODE_NAME_PREFIX$kf"
+  kf_name=$HOME/.kube/kubeconfig.$node_name
+  echo "Merging konfig $kf_name"
+  kubectl config delete-cluster "$node_name"
+  kubectl config delete-context "$node_name"
+  kubectl config delete-user "$node_name"
+  kubectl konfig import -s "$kf_name"
+done
+
+# Deploying our helm chart
+for n in $NODE_RANGE
+do
+  node_name="$NODE_NAME_PREFIX$n"
+  kubectl config use-context $node_name
+  if [ $n -eq 1 ]
+  then
+    kubectl label nodes $node_name aryaRole="orchestrator"
+  fi
+  join_addrs=""
+
+  node_ip=$(multipass info $node_name | grep IPv4 | awk '{print $2}')
+  for nx in $NODE_RANGE
+  do
+    if [ $nx -ne $n ]
+    then
+      nx_name="$NODE_NAME_PREFIX$nx"
+      join_addr=$(multipass info $nx_name | grep IPv4 | awk '{print $2}')
+      join_addrs+="$join_addr\,"
+    fi
+  done
+  join_addrs=${join_addrs%?}
+  echo $join_addrs
+  echo $node_ip
+  helm uninstall aryacore
+  helm install --set cockroachdb.clusterInitHost=ad1,cockroachdb.nodeIP=$node_ip,cockroachdb.join=$join_addrs\
+  aryacore ./aryacore
 done

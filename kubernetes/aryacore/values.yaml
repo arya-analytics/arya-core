@@ -5,3 +5,5 @@ redistimeseries:
   auth:
     username: *username
     password: *password
+cockroachdb:
+  join: 192.168.64.12,192.168.64.13

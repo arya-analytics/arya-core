@@ -1,21 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: &name {{ .Release.Name }}-{{ .Values.resourcePrefix }}-deployment
+  name: {{ .Release.Name }}-{{ .Values.resourcePrefix }}-deployment
   labels:
-    app: *name
+    app: &app {{.Values.resourcePrefix}}-{{.Release.Name}}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app: *name
+      app: *app
   template:
     metadata:
       labels:
-        app: *name
+        app: *app
     spec:
       containers:
-        - name: *name
+        - name: *app
           image: {{ .Values.image }}
           command:
             - redis-server
@@ -33,5 +33,3 @@ spec:
             items:
             - key: *confname
               path: {{ .Values.conf.path }}
-        - name: secret
-          secret:

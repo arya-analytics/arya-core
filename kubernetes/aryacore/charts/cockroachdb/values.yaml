@@ -1,0 +1,17 @@
+resourcePrefix: cockroachdb
+image: cockroachdb/cockroach:v21.2.2
+hostNetwork: true
+ports:
+  grpc: 26257
+  http: 8081
+resources:
+  cpu: "0"
+  memory: "0Gi"
+terminationGracePeriodSeconds: 60
+hostPath: /cockroach/cockroach-data
+cmd:
+  cache: 25%
+  maxSQLMemory: 25%
+join: 192.168.64.12,192.168.64.13
+nodeIP: 192.168.64.12
+clusterInitHost: ad1

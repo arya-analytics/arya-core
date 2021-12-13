@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ .Release.Name }}-{{.Values.resourcePrefix}}-daemonset
+  labels:
+    app: &app {{ .Release.Name }}-{{.Values.resourcePrefix}}
+spec:
+  selector:
+    matchLabels:
+      app: *app
+  template:
+    metadata:
+      labels:
+        app: *app
+    spec:
+      tolerations:
+        - key: node-role.kubernetes.io/master
+          operator: Exists
+          effect: NoSchedule
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
+      hostNetwork: {{.Values.hostNetwork}}
+      containers:
+        - name: *app
+          image: {{.Values.image}}
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: {{.Values.resources.cpu}}
+              memory: {{.Values.resources.memory}}
+          ports:
+            - containerPort: {{.Values.ports.grpc}}
+              name: grpc
+            - containerPort: {{.Values.ports.http}}
+              name: http
+          volumeMounts:
+            - name: &volume datadir
+              mountPath: /cockroach/cockroach-data
+          env:
+            - name: COCKROACH_CHANNEL
+              value: kubernetes-insecure
+          command:
+            - "/bin/bash"
+            - "-ecx"
+            - "exec /cockroach/cockroach start
+            --logtostderr
+            --insecure
+            --http-addr 0.0.0.0:{{.Values.ports.http}}
+            --listen-addr=0.0.0.0:{{.Values.ports.grpc}}
+            --cache {{.Values.cmd.cache }}
+            --max-sql-memory {{.Values.cmd.maxSQLMemory }}
+            --join={{.Values.join }}
+            --advertise-host={{.Values.nodeIP}}"
+      volumes:
+        - name: *volume
+          hostPath:
+            path: {{.Values.hostPath}}
+
+
+
+
