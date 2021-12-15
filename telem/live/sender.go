@@ -65,7 +65,7 @@ func (s WSSender) listen() {
 	}
 }
 
-func (s WSSender) start() () {
+func (s WSSender) start() {
 	go s.listen()
 	s.rel.addSender <- s
 	defer func() {

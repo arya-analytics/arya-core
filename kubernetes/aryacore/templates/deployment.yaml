@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-{{.Values.resourcePrefix }}-deployment
+  labels:
+    app: &app {{.Release.Name}}--{{.Values.resourcePrefix}}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: *app
+  template:
+    metadata:
+      labels:
+        app: *app
+    spec:
+      containers:
+        - name: *app
+          image: {{.Values.image.repository}}:{{.Values.image.tag}}
+          imagePullPolicy: {{.Values.image.pullPolicy}}
+          command: [ "/bin/bash", "-c", "--" ]
+          args: [ "./main" ]
+      imagePullSecrets:
+        - name: {{.Values.imagePullSecrets.name }}

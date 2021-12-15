@@ -12,7 +12,7 @@ type ReceiverConfig []int32
 type Receiver interface {
 	send(sect telem.Slice)
 	receive() (sect telem.Slice)
-	Start(cfg ReceiverConfig) ()
+	Start(cfg ReceiverConfig)
 }
 
 type WSReceiver struct {
@@ -42,7 +42,7 @@ func (rcv WSReceiver) decode(b []byte) (slc telem.Slice) {
 	return slc
 }
 
-func (rcv WSReceiver) Start(cfg ReceiverConfig) () {
+func (rcv WSReceiver) Start(cfg ReceiverConfig) {
 	rcv.rel.addReceiver <- rcv
 	defer func() {
 		rcv.rel.removeReceiver <- rcv
@@ -75,7 +75,7 @@ func (rcv DummyReceiver) receive() (slc telem.Slice) {
 	}
 }
 
-func (rcv DummyReceiver) Start(cfg ReceiverConfig) () {
+func (rcv DummyReceiver) Start(cfg ReceiverConfig) {
 	rcv.rel.addReceiver <- rcv
 	defer func() {
 		rcv.rel.removeReceiver <- rcv

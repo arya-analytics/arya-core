@@ -1,0 +1,14 @@
+apiVersion: skaffold/v2beta26
+kind: Config
+build:
+  artifacts:
+    - image: ghcr.io/arya-analytics/arya-core
+  local: {}
+deploy:
+  helm:
+    releases:
+    - name: aryacore
+      artifactOverrides:
+        image: ghcr.io/arya-analytics/arya-core
+      imageStrategy:
+        helm: {}

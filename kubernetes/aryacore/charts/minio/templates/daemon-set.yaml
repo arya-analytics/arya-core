@@ -1,0 +1,42 @@
+{{- $appName := print .Release.Name "-" .Values.resourcePrefix -}}
+{{- $volumeName := print $appName "-" .Values.volumes.name -}}
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{$appName}}-daemon-set
+  labels:
+    app: {{$appName}}
+spec:
+  selector:
+    matchLabels:
+      app: {{$appName}}
+  template:
+    metadata:
+      labels:
+        app: {{$appName}}
+    spec:
+      hostNetwork: {{.Values.hostNetwork}}
+      containers:
+        - name: {{$appName}}
+          image: {{.Values.image.repository}}:{{.Values.image.tag}}
+          imagePullPolicy: {{.Values.image.pullPolicy}}
+          command:
+            - "/bin/sh"
+            - "-ce"
+            - "/usr/bin/docker-entrypoint.sh minio server
+              --address \":{{.Values.ports.http}}\"
+              --console-address \":{{.Values.ports.console}}\"
+              {{ .Values.volumes.containerPath }}
+              "
+          volumeMounts:
+            - name: {{$volumeName}}
+              mountPath: {{.Values.volumes.containerPath}}
+          ports:
+            - containerPort: {{.Values.ports.http }}
+              name: http
+            - containerPort: {{.Values.ports.console}}
+              name: console
+      volumes:
+        - name: {{$volumeName}}
+          hostPath:
+            path: {{.Values.volumes.hostPath}}

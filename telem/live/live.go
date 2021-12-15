@@ -7,4 +7,3 @@ import (
 const (
 	rate = 100 * time.Millisecond
 )
-

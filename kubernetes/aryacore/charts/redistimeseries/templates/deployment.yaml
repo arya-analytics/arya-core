@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: *app
-          image: {{ .Values.image }}
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
           command:
             - redis-server
             - {{ .Values.conf.dir }}{{ .Values.conf.path }}

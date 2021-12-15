@@ -8,8 +8,8 @@ func NewConnPooler(configs ConfigChain) *ConnPooler {
 }
 
 type ConnPooler struct {
-	configs  map[string] Config
-	Adapters map[*ConnAdapter] bool
+	configs  map[string]Config
+	Adapters map[*ConnAdapter]bool
 }
 
 func (cp *ConnPooler) GetConfig(key string) Config {

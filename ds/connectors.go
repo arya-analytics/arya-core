@@ -13,7 +13,7 @@ type Connector func(params Config) (conn Conn)
 
 func getConnector(engine Engine) Connector {
 	connectors := map[Engine]Connector{
-		Postgres: pgConnector,
+		Postgres:  pgConnector,
 		GorillaWS: gorillaWSConnector,
 	}
 	fmt.Println(engine)
@@ -34,7 +34,7 @@ func pgConnector(cfg Config) (conn Conn) {
 
 // || WEBSOCKET ||
 func gorillaWSConnector(cfg Config) (conn Conn) {
-	dsn := "ws://"	+ cfg.Host + ":" + cfg.Port + cfg.Name
+	dsn := "ws://" + cfg.Host + ":" + cfg.Port + cfg.Name
 	conn, _, err := websocket.DefaultDialer.Dial(dsn, nil)
 	if err != nil {
 		panic(err)

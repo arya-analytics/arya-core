@@ -1,3 +1,8 @@
+resourcePrefix: aryacore
+image:
+  repository: ghcr.io/arya-analytics/arya-core
+  tag: bcc0b66-dirty
+  pullPolicy: IfNotPresent
 auth:
   username: &username arya-master
   password: &password arya-dummy-pass
@@ -7,3 +12,5 @@ redistimeseries:
     password: *password
 cockroachdb:
   join: 192.168.64.12,192.168.64.13
+imagePullSecrets:
+  name: regcred

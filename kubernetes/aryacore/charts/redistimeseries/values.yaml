@@ -1,6 +1,9 @@
 replicaCount: 1
 resourcePrefix: redistimeseries
-image: redislabs/redistimeseries
+image:
+  repository: redislabs/redistimeseries
+  tag: 1.4.13
+  pullPolicy: IfNotPresent
 port: 6379
 conf:
   dir: /etc/redis/

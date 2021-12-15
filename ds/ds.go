@@ -9,14 +9,14 @@ const MaxConnCount = 5
 
 // || CONFIG ||
 
-type ConfigChain map[string] Config
+type ConfigChain map[string]Config
 
 type Config struct {
-	Engine   Engine
-	Host     string
-	Name     string
-	Port     string
-	Auth AuthConfig
+	Engine Engine
+	Host   string
+	Name   string
+	Port   string
+	Auth   AuthConfig
 	Secure bool
 }
 
@@ -43,6 +43,6 @@ type AuthConfig struct {
 type Engine string
 
 const (
-	Postgres Engine = "github.com/uptrace/bun/driver/pgdriver"
+	Postgres  Engine = "github.com/uptrace/bun/driver/pgdriver"
 	GorillaWS Engine = "github.com/gorilla/websocket"
 )
