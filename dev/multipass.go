@@ -14,7 +14,7 @@ type VM interface {
 	Delete() error
 	Info() (VMInfo, error)
 	Exec(cmdString string) ([]byte, error)
-	Transfer(direction TranferDirection, srcPath string, destPath string) error
+	Transfer(direction TransferDirection, srcPath string, destPath string) error
 }
 
 type VMInfo struct {
@@ -83,18 +83,22 @@ func (vm MultipassVM) Info() (VMInfo, error) {
 			vm.cfg.Name)
 	}
 	infoStrings := strings.Split(string(o[:]), "\n")
-	for i, v := range infoStrings[:len(infoStrings)-1] {
-		infoStrings[i] = strings.Trim(strings.Split(v, ":")[1], " ")
+	var parsedInfo = []string{}
+	for _, v := range infoStrings[:len(infoStrings)-1] {
+		splitV := strings.Split(v, ":")
+		if len(splitV) == 2 {
+			parsedInfo = append(parsedInfo, strings.Trim(splitV[1], " "))
+		}
 	}
 	i := VMInfo{
-		Name:      infoStrings[0],
-		State:     infoStrings[1],
-		IPv4:      infoStrings[2],
-		Release:   infoStrings[3],
-		ImageHash: infoStrings[4],
-		Load:      infoStrings[5],
-		Disk:      infoStrings[6],
-		Memory:    infoStrings[7],
+		Name:      parsedInfo[0],
+		State:     parsedInfo[1],
+		IPv4:      parsedInfo[2],
+		Release:   parsedInfo[3],
+		ImageHash: parsedInfo[4],
+		Load:      parsedInfo[5],
+		Disk:      parsedInfo[6],
+		Memory:    parsedInfo[7],
 	}
 	return i, nil
 }
@@ -133,14 +137,14 @@ func (vm MultipassVM) Exec(cmdString string) ([]byte, error) {
 	return outb.Bytes(), nil
 }
 
-type TranferDirection int
+type TransferDirection int
 
 const (
-	TransferTo TranferDirection = iota
+	TransferTo TransferDirection = iota
 	TransferFrom
 )
 
-func (vm MultipassVM) Transfer(transfer TranferDirection, srcPath, destPath string) error {
+func (vm MultipassVM) Transfer(transfer TransferDirection, srcPath, destPath string) error {
 	if transfer == TransferTo {
 		destPath = fmt.Sprintf("%s:%s", vm.cfg.Name, destPath)
 	} else {

@@ -137,24 +137,25 @@ var devCommand = &cli.Command{
 		Action: func(c *cli.Context) error {
 			log.Println("Binding new Vm")
 			vm := dev.NewVM(dev.VMConfig{Name: "ad1"})
+			fmt.Println(vm.Info())
 			//err := vm.Launch()
 			//if err != nil {
 			//	panic(err)
 			//}
-			//log.Println("Building command")
-			//
+			log.Println("Building command")
+
 			//clusterCfg := dev.ClusterConfig{
-			//	PodCidr:     "10.45.0.0/16",
+			//	PodCidr:     "10.47.0.0/16",
 			//	ServiceCidr: "10.46.0.0/16",
 			//}
 			//p := dev.NewK3sCluster(vm, clusterCfg)
 			//p.Provision()
-			err := vm.Transfer(dev.TransferFrom, "/etc/rancher/k3s/k3s.yaml",
-				os.ExpandEnv("$HOME/.kube/myrandomconfig.yaml"))
-			if err != nil {
-				fmt.Println(err)
-				panic(err)
-			}
+			//err := vm.Transfer(dev.TransferFrom, "/etc/rancher/k3s/k3s.yaml",
+			//	os.ExpandEnv("$HOME/.kube/myrandomconfig.yaml"))
+			//if err != nil {
+			//	fmt.Println(err)
+			//	panic(err)
+			//}
 			return nil
 		},
 	},
