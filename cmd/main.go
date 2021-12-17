@@ -18,7 +18,7 @@ func main() {
 		Name: "aryacore",
 		Usage: "Hello",
 		Commands: []*cli.Command{
-			devCommand,
+			dev.Cmd,
 			//newDBCommand(migrations.Migrations),
 			//serverCommand,
 		},
@@ -117,47 +117,3 @@ func newDBCommand(migrations *migrate.Migrations) *cli.Command {
 //	},
 //	},
 //}
-
-var devCommand = &cli.Command{
-	Name: "dev",
-	Usage: "manage development stuff",
-	Subcommands: []*cli.Command{{
-		Name: "install",
-		Action: func(c *cli.Context) error {
-			i := dev.NewInstaller()
-			err := i.Install()
-			if err != nil {
-				return err
-			}
-			return nil
-		},
-	},
-	{
-		Name: "init",
-		Action: func(c *cli.Context) error {
-			log.Println("Binding new Vm")
-			vm := dev.NewVM(dev.VMConfig{Name: "ad1"})
-			fmt.Println(vm.Info())
-			//err := vm.Launch()
-			//if err != nil {
-			//	panic(err)
-			//}
-			log.Println("Building command")
-
-			//clusterCfg := dev.ClusterConfig{
-			//	PodCidr:     "10.47.0.0/16",
-			//	ServiceCidr: "10.46.0.0/16",
-			//}
-			//p := dev.NewK3sCluster(vm, clusterCfg)
-			//p.Provision()
-			//err := vm.Transfer(dev.TransferFrom, "/etc/rancher/k3s/k3s.yaml",
-			//	os.ExpandEnv("$HOME/.kube/myrandomconfig.yaml"))
-			//if err != nil {
-			//	fmt.Println(err)
-			//	panic(err)
-			//}
-			return nil
-		},
-	},
-	},
-}
