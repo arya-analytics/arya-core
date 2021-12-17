@@ -1,7 +1,6 @@
 package dev
 
 import (
-	"fmt"
 	"github.com/urfave/cli/v2"
 	"strconv"
 	"strings"
@@ -38,51 +37,14 @@ var toolingCmd = &cli.Command{
 			Name:  "install",
 			Usage: "Install development tools.",
 			Action: func(c *cli.Context) error {
-				fmt.Printf("%s Sit back and relax while we install the required"+
-					" development tools \n", emoji("\\U0001F6E0"))
-				t := NewTooling()
-				for _, k := range RequiredTools {
-					installed := t.CheckInstalled(k)
-					if installed {
-						fmt.Printf("%s %s is already installed. "+
-							"Skipping re-install. \n", emoji("\\U0001F438"), k)
-					} else {
-						fmt.Printf("%s Installing %s. \n", emoji("\\U0001f525"), k)
-						if err := t.Install(k); err != nil {
-							return err
-						}
-						fmt.Printf("%s  Successfully installed %s. \n",
-							emoji("\\U0002705"), k)
-					}
-				}
-				fmt.Printf("%s  All Done! \n", emoji("\\U0002705"))
-				return nil
+				return InstallRequired()
 			},
 		},
 		{
 			Name:  "uninstall",
-			Usage: "uninstall development tools.",
+			Usage: "Uninstall development tools.",
 			Action: func(c *cli.Context) error {
-				fmt.Printf("Uninstalling development tools. \n")
-				t := NewTooling()
-				for i := range RequiredTools {
-					k := RequiredTools[len(RequiredTools) - 1 - i]
-					installed := t.CheckInstalled(k)
-					if installed {
-						fmt.Printf("%s Uninstalling %s. \n", emoji("\\U0001f525"), k)
-						if err := t.Uninstall(k); err != nil {
-							return err
-						}
-						fmt.Printf("%s  Successfully uninstalled %s. \n",
-							emoji("\\U0002705"), k)
-
-					} else {
-						fmt.Printf("%s %s is not installed. Skipping uninstall. \n",
-							emoji("\\U0001F438"), k)
-					}
-				}
-				fmt.Printf("%s  All Done! \n", emoji("\\U0002705"))
-				return nil
+				return UninstallRequired()
 			},
 		},
 	},
