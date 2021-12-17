@@ -2,10 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/arya-analytics/aryacore/cmd/migrations"
 	"github.com/arya-analytics/aryacore/config"
+	"github.com/arya-analytics/aryacore/dev"
 	"github.com/arya-analytics/aryacore/server"
-	"github.com/arya-analytics/aryacore/telem/live"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/migrate"
 	"github.com/urfave/cli/v2"
@@ -16,10 +15,12 @@ import (
 
 func main() {
 	app := &cli.App{
-		Name: "arya",
+		Name: "aryacore",
+		Usage: "Hello",
 		Commands: []*cli.Command{
-			newDBCommand(migrations.Migrations),
-			serverCommand,
+			devCommand,
+			//newDBCommand(migrations.Migrations),
+			//serverCommand,
 		},
 	}
 	if err := app.Run(os.Args); err != nil {
@@ -101,16 +102,59 @@ func newDBCommand(migrations *migrate.Migrations) *cli.Command {
 	}
 }
 
-var serverCommand = &cli.Command{
-	Name:  "server",
-	Usage: "control server",
+//var serverCommand = &cli.command{
+//	Name:  "server",
+//	Usage: "control server",
+//	Subcommands: []*cli.command{{
+//		Name:  "start",
+//		Usage: "start server",
+//		Action: func(c *cli.Context) error {
+//			sv := server.New(config.GetConfig())
+//			sv.BindSlice(live.API)
+//			sv.Start()
+//			return nil
+//		},
+//	},
+//	},
+//}
+
+var devCommand = &cli.Command{
+	Name: "dev",
+	Usage: "manage development stuff",
 	Subcommands: []*cli.Command{{
-		Name:  "start",
-		Usage: "start server",
+		Name: "install",
 		Action: func(c *cli.Context) error {
-			sv := server.New(config.GetConfig())
-			sv.BindSlice(live.API)
-			sv.Start()
+			i := dev.NewInstaller()
+			err := i.Install()
+			if err != nil {
+				return err
+			}
+			return nil
+		},
+	},
+	{
+		Name: "init",
+		Action: func(c *cli.Context) error {
+			log.Println("Binding new Vm")
+			vm := dev.NewVM(dev.VMConfig{Name: "ad1"})
+			//err := vm.Launch()
+			//if err != nil {
+			//	panic(err)
+			//}
+			//log.Println("Building command")
+			//
+			//clusterCfg := dev.ClusterConfig{
+			//	PodCidr:     "10.45.0.0/16",
+			//	ServiceCidr: "10.46.0.0/16",
+			//}
+			//p := dev.NewK3sCluster(vm, clusterCfg)
+			//p.Provision()
+			err := vm.Transfer(dev.TransferFrom, "/etc/rancher/k3s/k3s.yaml",
+				os.ExpandEnv("$HOME/.kube/myrandomconfig.yaml"))
+			if err != nil {
+				fmt.Println(err)
+				panic(err)
+			}
 			return nil
 		},
 	},
