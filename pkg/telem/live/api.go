@@ -3,9 +3,9 @@ package live
 import (
 	"context"
 	"fmt"
-	"github.com/arya-analytics/aryacore/ds"
-	"github.com/arya-analytics/aryacore/server"
-	"github.com/arya-analytics/aryacore/telem"
+	"github.com/arya-analytics/aryacore/pkg/ds"
+	"github.com/arya-analytics/aryacore/pkg/server"
+	"github.com/arya-analytics/aryacore/pkg/telem"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"github.com/uptrace/bun"
@@ -20,7 +20,7 @@ func API(sc *server.Context) server.APISlice {
 	loc := NewLocator(sc.Pooler)
 	rel := NewRelay(loc)
 	rcv := NewReceiver(rel)
-	go rcv.Start()
+	go rcv.Start(ReceiverConfig{})
 	return server.APISlice{
 		OnStart: func() func() {
 			go rel.Start()

@@ -1,7 +1,7 @@
 package config
 
 import (
-	"github.com/arya-analytics/aryacore/ds"
+	"github.com/arya-analytics/aryacore/pkg/ds"
 )
 
 type Config struct {

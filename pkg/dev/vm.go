@@ -5,8 +5,11 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 )
+
+// || GENERAL VM ||
 
 type VM interface {
 	Launch() error
@@ -35,6 +38,8 @@ type VMConfig struct {
 	Storage int
 }
 
+// || MULTIPASS VM ||
+
 const multipassBaseCmd string = "multipass"
 
 type MultipassVM struct {
@@ -48,22 +53,20 @@ func NewVM(cfg VMConfig) VM {
 func (vm MultipassVM) command(args ...string) *exec.Cmd {
 	c := exec.Command(multipassBaseCmd, args...)
 	c.Stderr = os.Stderr
+	c.Stdout = os.Stdout
 	return c
 }
 
 func (vm MultipassVM) Launch() error {
-	if vm.Exists() {
-		return fmt.Errorf("multipass VM with name %s already exists", vm.cfg.Name)
-	}
 	args := []string{"launch", "--name", vm.cfg.Name}
 	if vm.cfg.Memory != 0 {
-		args = append(args, "--mem", string(rune(vm.cfg.Memory))+"g")
+		args = append(args, "--mem", strconv.Itoa(vm.cfg.Memory)+"g")
 	}
 	if vm.cfg.Cores != 0 {
-		args = append(args, "--cpus", string(rune(vm.cfg.Cores)))
+		args = append(args, "--cpus", strconv.Itoa(vm.cfg.Cores))
 	}
 	if vm.cfg.Storage != 0 {
-		args = append(args, "--disk", string(rune(vm.cfg.Storage))+"g")
+		args = append(args, "--disk", strconv.Itoa(vm.cfg.Storage)+"g")
 	}
 	return vm.command(args...).Run()
 }
@@ -117,7 +120,6 @@ func (vm MultipassVM) Exec(cmdString string) ([]byte, error) {
 	var outb, errb bytes.Buffer
 	cmd := vm.command("exec", vm.cfg.Name, "--", "bash")
 	cmdWriter, _ := cmd.StdinPipe()
-	cmd.Stdout, cmd.Stderr = &outb, &errb
 	err := cmd.Start()
 	if err != nil {
 		return outb.Bytes(), err

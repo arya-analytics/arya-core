@@ -9,18 +9,7 @@ import (
 	"strings"
 )
 
-
-type  ToolingConfig []string
-
 // || REQUIRED TOOL INSTALLS ||
-
-var RequiredTools = ToolingConfig{
-	"multipass",
-	"kubernetes-cli",
-	"krew",
-	"yq",
-	"helm",
-}
 
 // InstallRequired installs all mandatory dev tools necessary for developing aryacore.
 func InstallRequired() error {
@@ -87,7 +76,7 @@ type BrewTooling struct {
 }
 
 // Install installs a dev tool based on its name.
-func (t BrewTooling) Install (tool string) error {
+func (t BrewTooling) Install(tool string) error {
 	_, err := t.command("install " + tool)
 	if err != nil {
 		log.Fatalf("%s", err)
@@ -96,13 +85,13 @@ func (t BrewTooling) Install (tool string) error {
 }
 
 // Uninstall uninstalls a dev tool based on its name.
-func (t BrewTooling) Uninstall (tool string) error {
+func (t BrewTooling) Uninstall(tool string) error {
 	_, err := t.command("uninstall " + tool)
 	return err
 }
 
 // CheckInstalled checks if a package has already been installed.
-func (t BrewTooling) CheckInstalled (tool string) bool {
+func (t BrewTooling) CheckInstalled(tool string) bool {
 	out, err := t.command("list")
 	if err != nil {
 		panic(err)
@@ -112,8 +101,8 @@ func (t BrewTooling) CheckInstalled (tool string) bool {
 }
 
 /// command wraps exec.command to add brew specific functionality.
-func (t BrewTooling) command (cmdString string) ([]byte, error) {
-	cmd := exec.Command("bash", "-c", "brew " + cmdString)
+func (t BrewTooling) command(cmdString string) ([]byte, error) {
+	cmd := exec.Command("bash", "-c", "brew "+cmdString)
 	cmd.Stderr = os.Stderr
 	return cmd.Output()
 }

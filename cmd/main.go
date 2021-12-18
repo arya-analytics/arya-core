@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/arya-analytics/aryacore/config"
-	"github.com/arya-analytics/aryacore/dev"
-	"github.com/arya-analytics/aryacore/server"
+	"github.com/arya-analytics/aryacore/pkg/config"
+	"github.com/arya-analytics/aryacore/pkg/dev"
+	"github.com/arya-analytics/aryacore/pkg/server"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/migrate"
 	"github.com/urfave/cli/v2"

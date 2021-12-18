@@ -1,7 +1,7 @@
 package telem
 
 import (
-	"github.com/arya-analytics/aryacore/cluster"
+	"github.com/arya-analytics/aryacore/pkg/cluster"
 	"github.com/google/uuid"
 )
 
