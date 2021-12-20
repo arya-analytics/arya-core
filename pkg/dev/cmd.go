@@ -30,7 +30,7 @@ var clusterCmd = &cli.Command{
 			Usage: "Initialize an Arya development cluster.",
 			Flags: []cli.Flag{
 				&cli.IntFlag{
-					Name:    "vms",
+					Name:    "nodes",
 					Aliases: []string{"n"},
 					Value:   3,
 					Usage:   "Number of vms in cluster",
@@ -78,7 +78,7 @@ var clusterCmd = &cli.Command{
 				if err := InstallRequired(); err != nil {
 					return err
 				}
-				numNodes := c.Int("vms")
+				numNodes := c.Int("nodes")
 				clusterName := c.String("clusterName")
 				fmt.Printf("%s Initializing an Arya Cluster named %s with %v nodes \n",
 					emoji("\\U0001F4AB"),clusterName, numNodes)
@@ -91,16 +91,17 @@ var clusterCmd = &cli.Command{
 					CidrOffset: c.Int("cidrOffset"),
 				}
 				aryaCluster := NewAryaCluster(aryaCfg)
-				if err := aryaCluster.Provision(); err != nil {
+				k3sClusters, err := aryaCluster.Provision();
+				if err != nil {
 					return err
 				}
 				aryaConfig := NewAryaConfig()
 				fmt.Println("Merging kubeconfig")
-				fmt.Println(aryaCluster.nodes)
-				for _, c := range aryaCluster.nodes {
+				for _, c := range k3sClusters {
 					if err := aryaConfig.MergeRemoteKubeConfig(*c); err != nil {
 						return err
 					}
+					aryaConfig.CreateAuthSecret(*c)
 				}
 				fmt.Printf("Successfully initialized Arya Cluster %s", clusterName)
 				return nil
@@ -155,8 +156,16 @@ var toolingCmd = &cli.Command{
 var reloaderCmd = &cli.Command{
 	Name:  "reloader",
 	Usage: "Operate the development hot-reloader.",
-	Action: func(c *cli.Context) error {
-		return nil
+	Subcommands: []*cli.Command{
+		{
+			Name: "start",
+			Usage: "Start the hot-reloader",
+			Action: func (c *cli.Context) error {
+				WatchAndReload()
+				return nil
+
+			},
+		},
 	},
 }
 
@@ -169,4 +178,9 @@ var configCmd = &cli.Command{
 var loginCmd = &cli.Command{
 	Name:  "login",
 	Usage: "Login to Github and register credentials in config",
+	Action: func(c *cli.Context) error {
+		//ConstructConfig()
+		Login(c.Args().Get(0))
+		return nil
+	},
 }

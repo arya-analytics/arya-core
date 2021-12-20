@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 )
 
 type AryaConfig struct {
@@ -18,6 +19,42 @@ var hostKubeCfgPathBase = os.ExpandEnv("$HOME") + "/.kube/"
 
 func NewAryaConfig() *AryaConfig {
 	return &AryaConfig{}
+}
+
+func (a AryaConfig) CreateAuthSecret(c K3sCluster) error {
+	info, err := c.vm.Info()
+	if err != nil {
+		panic(err)
+	}
+	cmdOneString := fmt.Sprintf("kubectl config use-context %s", info.Name)
+	cmdOne := exec.Command("bash", "-c", cmdOneString)
+	cmdOne.Stderr = os.Stderr
+	cmdOne.Stdout = os.Stdout
+	if err := cmdOne.Run(); err != nil {
+		panic(err)
+	}
+
+
+	cmdTwoString := "kubectl delete secret regcred"
+	cmdTwo := exec.Command("bash", "-c", cmdTwoString)
+	cmdTwo.Stderr = os.Stderr
+	cmdTwo.Stdout = os.Stdout
+	if err := cmdTwo.Run(); err != nil {
+		fmt.Println(err)
+	}
+
+	configPath := filepath.Join(os.ExpandEnv("$HOME"), ".arya", "config.json")
+	cmdThreeString := fmt.Sprintf("kubectl create secret generic regcred --from-file" +
+		"=.dockerconfigjson=%s" +
+		" --type=%s",configPath, "kubernetes.io/dockerconfigjson")
+
+	cmdThree := exec.Command("bash", "-c", cmdThreeString)
+	cmdThree.Stderr = os.Stderr
+	cmdThree.Stdout = os.Stdout
+	if err := cmdThree.Run(); err != nil {
+		panic(err)
+	}
+	return nil
 }
 
 func (a AryaConfig) MergeRemoteKubeConfig(c K3sCluster) error {
@@ -69,11 +106,12 @@ func (a AryaConfig) MergeRemoteKubeConfig(c K3sCluster) error {
 	}
 	if err := exec.Command("bash", "-c",
 		fmt.Sprintf("kubectl konfig import -s %s", hostPath)).Run(
+
 	); err != nil {
 		log.Fatal(err)
 	}
-
-
 	a.kubeConfigs = append(a.kubeConfigs, name)
+
 	return nil
 }
+

@@ -12,7 +12,7 @@ import (
 // || GENERAL VM ||
 
 type VM interface {
-	Launch() error
+	Provision() error
 	Exists() bool
 	Delete() error
 	Info() (VMInfo, error)
@@ -57,7 +57,7 @@ func (vm MultipassVM) command(args ...string) *exec.Cmd {
 	return c
 }
 
-func (vm MultipassVM) Launch() error {
+func (vm MultipassVM) Provision() error {
 	args := []string{"launch", "--name", vm.cfg.Name}
 	if vm.cfg.Memory != 0 {
 		args = append(args, "--mem", strconv.Itoa(vm.cfg.Memory)+"g")

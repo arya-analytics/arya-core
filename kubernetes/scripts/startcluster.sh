@@ -29,7 +29,7 @@ do
   NODE_NAME+=$node_id
 
   # Starting multipass VM
-  multipass launch --name "$NODE_NAME" --cpus $NODE_CPUS --mem $NODE_MEM --disk $NODE_DISK
+  multipass Provision --name "$NODE_NAME" --cpus $NODE_CPUS --mem $NODE_MEM --disk $NODE_DISK
 
   # shellcheck disable=SC2086
   NODE_IP=$(multipass info $NODE_NAME | grep IPv4 | awk '{print $2}')

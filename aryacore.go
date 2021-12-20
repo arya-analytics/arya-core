@@ -22,6 +22,5 @@ func main() {
 			fmt.Println("Terminating")
 			done = false
 		}
-
 	}
 }

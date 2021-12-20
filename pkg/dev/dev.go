@@ -10,4 +10,5 @@ var RequiredTools = ToolingConfig{
 	"krew",
 	"yq",
 	"helm",
+	"gh",
 }
