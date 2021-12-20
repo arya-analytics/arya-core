@@ -74,7 +74,8 @@ func WatchAndReload() {
 					log.Printf("Modified file %s \n", event.Name)
 					BuildDockerImage(bc, nameTag)
 					PushDockerImage(bc, nameTag)
-					DeployHelmChart(nameTag)
+					RestartDeployment()
+					//DeployHelmChart(nameTag)
 				}
 			case err, ok := <-watcher.Errors:
 				if !ok {
@@ -177,5 +178,15 @@ func DeployHelmChart(imageNameTag string) {
 	}
 
 	fmt.Println(results)
+}
 
+func RestartDeployment() {
+	fmt.Println("Restarting deployment")
+	cmd := exec.Command("bash", "-c",
+		"kubectl rollout restart deployment arya-core-aryacore" +
+		"-deployment")
+	err := cmd.Run()
+	if err != nil {
+		panic(err)
+	}
 }

@@ -2,7 +2,7 @@ resourcePrefix: aryacore
 image:
   repository: ghcr.io/arya-analytics/arya-core
   tag: bcc0b66-dirty
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
 auth:
   username: &username arya-master
   password: &password arya-dummy-pass

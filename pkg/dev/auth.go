@@ -39,7 +39,6 @@ func ConstructConfig() {
 
 func Login(ghToken string) {
 	auth := AuthConfig{"ghcr.io": {"auth": ghToken}}
-
 	cfg := Config{
 		StackOrchestrator: "swarm",
 		Auths: auth,
@@ -56,4 +55,6 @@ func Login(ghToken string) {
 		"config.json",
 	)
 	err = ioutil.WriteFile(path, dat, 0777)
+	fmt.Println("Hello")
+
 }

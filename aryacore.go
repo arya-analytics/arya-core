@@ -17,7 +17,7 @@ func main() {
 	for done {
 		select {
 		case <-t.C:
-			fmt.Println("Ticker")
+			fmt.Println("Ticker X")
 		case <-sigs:
 			fmt.Println("Terminating")
 			done = false
