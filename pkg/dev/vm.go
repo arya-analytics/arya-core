@@ -79,7 +79,11 @@ func (vm MultipassVM) Provision() error {
 	if vm.cfg.Storage != 0 {
 		args = append(args, "--disk", strconv.Itoa(vm.cfg.Storage)+"g")
 	}
-	return vm.command(args...).Run()
+	if err := vm.command(args...).Run(); err != nil {
+		log.WithFields(vm.logFields(true)).Error("Failed to provision new VM")
+		return err
+	}
+	return nil
 }
 
 func (vm MultipassVM) Exists() bool {

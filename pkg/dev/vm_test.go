@@ -43,32 +43,41 @@ var _ = AfterSuite(func() {
 	}
 })
 
-var _ = Describe("Vm", func() {
-	Context("Multipass VM", func() {
+var _ = Describe("VM", func() {
+	Describe("Multipass VM", func() {
 		Describe("Provisioning new VM", func() {
-			It("Should assign the correct name ", func() {
-				Expect(vmInfo.Name).To(Equal(vmCfg.Name))
+			Context("When the VM doesn't exist", func() {
+				It("Should assign the correct name ", func() {
+					Expect(vmInfo.Name).To(Equal(vmCfg.Name))
+				})
+				It("`Should be in a running state", func() {
+					Expect(vmInfo.State).To(Equal("Running"))
+				})
 			})
-			It("Should be in a running state", func() {
-				Expect(vmInfo.State).To(Equal("Running"))
+			Context("When the VM already exists", func() {
+				It("Should throw an error", func() {
+					existingVm := dev.NewVM(dev.VMConfig{Name: vmCfg.Name})
+					err := existingVm.Provision()
+					Expect(err).ToNot(BeNil())
+				})
 			})
 		})
-		//Describe("Deleting VM", func() {
-		//	It("Should delete and purge a vm", func() {
-		//		tempVM := dev.NewVM(dev.VMConfig{Name: "testtempvm1"})
-		//		if err := tempVM.Provision(); err != nil {
-		//			Fail("Failed to provision VM")
-		//		}
-		//		if !vm.Exists() {
-		//			Fail("Failed to provision VM")
-		//		}
-		//		if err := tempVM.Delete(); err != nil {
-		//			Fail("Failed to delete Vm")
-		//		}
-		//		Expect(tempVM.Exists()).To(BeFalse())
-		//	})
-		//
-		//})
+		Describe("Deleting VM", func() {
+			It("(SLOW) Should delete and purge a vm", func() {
+				tempVM := dev.NewVM(dev.VMConfig{Name: "testtempvm1"})
+				if err := tempVM.Provision(); err != nil {
+					Fail("Failed to provision VM")
+				}
+				if !vm.Exists() {
+					Fail("Failed to provision VM")
+				}
+				if err := tempVM.Delete(); err != nil {
+					Fail("Failed to delete Vm")
+				}
+				Expect(tempVM.Exists()).To(BeFalse())
+			})
+
+		})
 		Describe("Checking if a VM exists", func() {
 			It("Should return false when the VM doesnt exists", func() {
 				nonExistentVm := dev.NewVM(dev.VMConfig{Name: "definitelydoesnotexist"})
@@ -79,25 +88,29 @@ var _ = Describe("Vm", func() {
 			})
 		})
 		Describe("Getting VM info", func() {
-			It("Should return an IPV4 address", func() {
-				Expect(vmInfo.IPv4).To(MatchRegexp("^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$"))
+			Context("When a VM exists", func() {
+				It("Should return an IPV4 address", func() {
+					Expect(vmInfo.IPv4).To(MatchRegexp("^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$"))
+				})
+				It("Should return a valid release", func() {
+					Expect(vmInfo.Release).To(ContainSubstring("Ubuntu"))
+				})
+				It("Should return a correctly formatted storage usage", func() {
+					Expect(vmInfo.Storage).To(ContainSubstring("out of"))
+				})
+				It("Should return a correctly formatted memory usage", func() {
+					Expect(vmInfo.Memory).To(ContainSubstring("out of"))
+				})
+				It("Should return a valid image hash", func() {
+					Expect(vmInfo.ImageHash).To(ContainSubstring("(Ubuntu"))
+				})
 			})
-			It("Should return a valid release", func() {
-				Expect(vmInfo.Release).To(ContainSubstring("Ubuntu"))
-			})
-			It("Should return a correctly formatted storage usage", func() {
-				Expect(vmInfo.Storage).To(ContainSubstring("out of"))
-			})
-			It("Should return a correctly formatted memory usage", func() {
-				Expect(vmInfo.Memory).To(ContainSubstring("out of"))
-			})
-			It("Should return a valid image hash", func() {
-				Expect(vmInfo.ImageHash).To(ContainSubstring("(Ubuntu"))
-			})
-			It("Should return an error when the VM can't be found", func() {
-				nonExistentVm := dev.NewVM(dev.VMConfig{Name: "definitelydoesnotexist"})
-				_, err := nonExistentVm.Info()
-				Expect(err).ToNot(BeNil())
+			Context("When a VM doesn't exist", func() {
+				It("Should return an error", func() {
+					nonExistentVm := dev.NewVM(dev.VMConfig{Name: "definitelydoesnotexist"})
+					_, err := nonExistentVm.Info()
+					Expect(err).ToNot(BeNil())
+				})
 			})
 		})
 		Describe("Executing commands", func() {
