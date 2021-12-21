@@ -3,7 +3,7 @@ package dev
 import (
 	"bytes"
 	"fmt"
-	"os"
+	log "github.com/sirupsen/logrus"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -16,7 +16,7 @@ type VM interface {
 	Exists() bool
 	Delete() error
 	Info() (VMInfo, error)
-	Exec(cmdString string) ([]byte, error)
+	Exec(cmdStr string) ([]byte, error)
 	Transfer(direction TransferDirection, srcPath string, destPath string) error
 }
 
@@ -27,7 +27,7 @@ type VMInfo struct {
 	Release   string
 	ImageHash string
 	Load      string
-	Disk      string
+	Storage   string
 	Memory    string
 }
 
@@ -40,7 +40,8 @@ type VMConfig struct {
 
 // || MULTIPASS VM ||
 
-const multipassBaseCmd string = "multipass"
+// Command to access multipass executable
+const multipassExec = "multipass"
 
 type MultipassVM struct {
 	cfg VMConfig
@@ -51,13 +52,23 @@ func NewVM(cfg VMConfig) VM {
 }
 
 func (vm MultipassVM) command(args ...string) *exec.Cmd {
-	c := exec.Command(multipassBaseCmd, args...)
-	c.Stderr = os.Stderr
-	c.Stdout = os.Stdout
-	return c
+	return exec.Command(multipassExec, args...)
+}
+
+func (vm MultipassVM) logFields(vb bool) log.Fields {
+	f := log.Fields{
+		"name": vm.cfg.Name,
+	}
+	if vb {
+		f["memory"] = vm.cfg.Memory
+		f["cores"] = vm.cfg.Cores
+		f["storage"] = vm.cfg.Storage
+	}
+	return f
 }
 
 func (vm MultipassVM) Provision() error {
+	log.WithFields(vm.logFields(true)).Trace("Provisioning a new multipass VM")
 	args := []string{"launch", "--name", vm.cfg.Name}
 	if vm.cfg.Memory != 0 {
 		args = append(args, "--mem", strconv.Itoa(vm.cfg.Memory)+"g")
@@ -80,55 +91,65 @@ func (vm MultipassVM) Exists() bool {
 }
 
 func (vm MultipassVM) Info() (VMInfo, error) {
-	o, err := exec.Command("multipass", "info", vm.cfg.Name).Output()
+	var info VMInfo
+	o, err := vm.command("info", vm.cfg.Name).Output()
 	if err != nil {
-		return VMInfo{}, fmt.Errorf("could not find vm with name %s",
-			vm.cfg.Name)
+		log.WithFields(vm.logFields(false)).Warn("Couldn't find VM")
+		return info, fmt.Errorf("couldn't find VM named %s", vm.cfg.Name)
 	}
-	infoStrings := strings.Split(string(o[:]), "\n")
-	var parsedInfo = []string{}
-	for _, v := range infoStrings[:len(infoStrings)-1] {
-		splitV := strings.Split(v, ":")
-		if len(splitV) == 2 {
-			parsedInfo = append(parsedInfo, strings.Trim(splitV[1], " "))
+	rawInfoChain := strings.Split(string(o[:]), "\n")
+	var parsedInfo [12]string
+
+	// Using a manually defined i to ensure values are placed at correct index
+	i := 0
+	for _, ri := range rawInfoChain[:len(rawInfoChain)-1] {
+		kv := strings.Split(ri, ":")
+		if len(kv) == 2 {
+			parsedInfo[i] = strings.Trim(kv[1], " ")
+			i += 1
+		} else {
+			log.WithFields(vm.logFields(false)).Warn("Encountered unknown VM info")
 		}
 	}
-	i := VMInfo{
-		Name:      parsedInfo[0],
-		State:     parsedInfo[1],
-		IPv4:      parsedInfo[2],
-		Release:   parsedInfo[3],
-		ImageHash: parsedInfo[4],
-		Load:      parsedInfo[5],
-		Disk:      parsedInfo[6],
-		Memory:    parsedInfo[7],
-	}
-	return i, nil
+	info.Name = parsedInfo[0]
+	info.State = parsedInfo[1]
+	info.IPv4 = parsedInfo[2]
+	info.Release = parsedInfo[3]
+	info.ImageHash = parsedInfo[4]
+	info.Load = parsedInfo[5]
+	info.Storage = parsedInfo[6]
+	info.Memory = parsedInfo[7]
+	return info, nil
 }
 
 func (vm MultipassVM) Delete() error {
+	f := vm.logFields(false)
 	if err := vm.command("delete", vm.cfg.Name).Run(); err != nil {
+		log.WithFields(f).Error("Failed to delete VM")
 		return err
 	}
 	if err := vm.command("purge").Run(); err != nil {
+		log.WithFields(f).Error("Failed to purge deleted VM")
 		return err
 	}
+	log.WithFields(f).Trace("Successfully deleted VM")
 	return nil
 }
 
-func (vm MultipassVM) Exec(cmdString string) ([]byte, error) {
+func (vm MultipassVM) Exec(cmdStr string) ([]byte, error) {
 	var outb, errb bytes.Buffer
 	cmd := vm.command("exec", vm.cfg.Name, "--", "bash")
-	cmdWriter, _ := cmd.StdinPipe()
+	w, _ := cmd.StdinPipe()
 	err := cmd.Start()
-	if err != nil {
-		return outb.Bytes(), err
-	}
-	_, err = cmdWriter.Write([]byte(cmdString + "\n"))
+	cmd.Stdout, cmd.Stderr = &outb, &errb
 	if err != nil {
 		return errb.Bytes(), err
 	}
-	_, err = cmdWriter.Write([]byte("exit" + "\n"))
+	_, err = w.Write([]byte(cmdStr + "\n"))
+	if err != nil {
+		return errb.Bytes(), err
+	}
+	_, err = w.Write([]byte("exit" + "\n"))
 	if err != nil {
 		return errb.Bytes(), err
 	}
@@ -152,7 +173,12 @@ func (vm MultipassVM) Transfer(transfer TransferDirection, srcPath, destPath str
 	} else {
 		srcPath = fmt.Sprintf("%s:%s", vm.cfg.Name, srcPath)
 	}
-	fmt.Println(srcPath, destPath)
+	var errb bytes.Buffer
 	cmd := vm.command("transfer", srcPath, destPath)
-	return cmd.Run()
+	cmd.Stderr = &errb
+	if err := cmd.Run(); err != nil {
+		log.WithFields(vm.logFields(false)).Error(errb.String())
+		return err
+	}
+	return nil
 }

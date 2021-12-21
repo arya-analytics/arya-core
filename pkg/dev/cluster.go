@@ -100,7 +100,7 @@ func (a *AryaCluster) ProvisionVM(nodeName string) (VM, error) {
 	return vm, nil
 }
 
-// || K3S ClUSTER ||
+// || K3S CLUSTER ||
 
 const (
 	k3sAddr             = "https://get.k3s.io"

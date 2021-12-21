@@ -58,7 +58,7 @@ var clusterCmd = &cli.Command{
 					Aliases: []string{"co"},
 					Value: BaseAryaClusterCfg.CidrOffset,
 					Usage: "Value to offset cluster node cidrs by (ex. " +
-						"an offset of 10 would make the first nodes cidr 10.11.0.0/16",
+						"an offset of 10 would make the first nodes cidr 10.11.0.0/16)",
 				},
 				&cli.BoolFlag{
 					Name:    "reInit",
@@ -127,10 +127,9 @@ var clusterCmd = &cli.Command{
 
 func emoji(s string) string {
 	r, _ := strconv.ParseInt(strings.TrimPrefix(s, "\\U"), 16, 32)
-	return string(r)
+	return strconv.FormatInt(r, 10)
 }
 
-// toolingCmd dispatches cli actions to the correct tooling function.
 var toolingCmd = &cli.Command{
 	Name:  "tooling",
 	Usage: "Install and manage development tools.",
@@ -152,7 +151,6 @@ var toolingCmd = &cli.Command{
 	},
 }
 
-// reloaderCmd dispatches cli actions to the correct tooling function.
 var reloaderCmd = &cli.Command{
 	Name:  "reloader",
 	Usage: "Operate the development hot-reloader.",
@@ -169,7 +167,6 @@ var reloaderCmd = &cli.Command{
 	},
 }
 
-// configCmd dispatches cli actions to the correct tooling function
 var configCmd = &cli.Command{
 	Name:  "config",
 	Usage: "Manage development configurations.",
