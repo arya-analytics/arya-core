@@ -11,15 +11,33 @@ import (
 
 // || GENERAL VM ||
 
+// VM provides a generic interface for working with a development virtual machine.
 type VM interface {
+	// Provision launched and configures the VM.
 	Provision() error
+	// Exists checks if the VM exists.
 	Exists() bool
+	// Delete removes the VM and purges all of its data.
 	Delete() error
+	// Info returns information about the VM.
 	Info() (VMInfo, error)
+	// Exec takes a command string and executes it in the VM.
 	Exec(cmdStr string) ([]byte, error)
+	// Transfer copies a file from the source path to the destination path.
+	// If the transfer direction is set to TransferTo, destPath represents the path on
+	// the virtual machine. If the transfer direction is set ot TransferFrom,
+	// destPath represents the path on the local machine.
 	Transfer(direction TransferDirection, srcPath string, destPath string) error
 }
 
+type TransferDirection int
+
+const (
+	TransferTo TransferDirection = iota
+	TransferFrom
+)
+
+// VMInfo stores information describing a virtual machine
 type VMInfo struct {
 	Name      string
 	State     string
@@ -31,11 +49,17 @@ type VMInfo struct {
 	Memory    string
 }
 
+// VMConfig stores information for configuring a new virtual machine
 type VMConfig struct {
 	Name    string
 	Memory  int
 	Cores   int
 	Storage int
+}
+
+// NewVM returns a type implementing the VM interface
+func NewVM(cfg VMConfig) VM {
+	return &MultipassVM{cfg}
 }
 
 // || MULTIPASS VM ||
@@ -45,10 +69,6 @@ const multipassExec = "multipass"
 
 type MultipassVM struct {
 	cfg VMConfig
-}
-
-func NewVM(cfg VMConfig) VM {
-	return &MultipassVM{cfg}
 }
 
 func (vm MultipassVM) command(args ...string) *exec.Cmd {
@@ -67,6 +87,7 @@ func (vm MultipassVM) logFields(vb bool) log.Fields {
 	return f
 }
 
+// Provision provisions the virtual machine based on its config.
 func (vm MultipassVM) Provision() error {
 	log.WithFields(vm.logFields(true)).Trace("Provisioning a new multipass VM")
 	args := []string{"launch", "--name", vm.cfg.Name}
@@ -86,6 +107,7 @@ func (vm MultipassVM) Provision() error {
 	return nil
 }
 
+// Exists checks if the virtual machine exists.
 func (vm MultipassVM) Exists() bool {
 	_, err := vm.Info()
 	if err != nil {
@@ -94,6 +116,7 @@ func (vm MultipassVM) Exists() bool {
 	return true
 }
 
+// Info retrieves info describing the VM.
 func (vm MultipassVM) Info() (VMInfo, error) {
 	var info VMInfo
 	o, err := vm.command("info", vm.cfg.Name).Output()
@@ -126,6 +149,7 @@ func (vm MultipassVM) Info() (VMInfo, error) {
 	return info, nil
 }
 
+// Delete deletes the VM and purges all of its data.
 func (vm MultipassVM) Delete() error {
 	f := vm.logFields(false)
 	if err := vm.command("delete", vm.cfg.Name).Run(); err != nil {
@@ -140,6 +164,7 @@ func (vm MultipassVM) Delete() error {
 	return nil
 }
 
+// Exec executes a command on the VM.
 func (vm MultipassVM) Exec(cmdStr string) ([]byte, error) {
 	var outb, errb bytes.Buffer
 	cmd := vm.command("exec", vm.cfg.Name, "--", "bash")
@@ -164,13 +189,8 @@ func (vm MultipassVM) Exec(cmdStr string) ([]byte, error) {
 	return outb.Bytes(), nil
 }
 
-type TransferDirection int
 
-const (
-	TransferTo TransferDirection = iota
-	TransferFrom
-)
-
+// Transfer copies a file to or from the VM.
 func (vm MultipassVM) Transfer(transfer TransferDirection, srcPath, destPath string) error {
 	if transfer == TransferTo {
 		destPath = fmt.Sprintf("%s:%s", vm.cfg.Name, destPath)

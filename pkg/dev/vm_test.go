@@ -129,7 +129,6 @@ var _ = Describe("VM", func() {
 				Expect(string(o[:])).To(Equal(
 					"bash: line 1: lsawdaw: command not found\n"))
 			})
-
 		})
 	})
 })
