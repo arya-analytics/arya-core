@@ -107,7 +107,7 @@ var _ = Describe("VM", func() {
 			})
 			Context("When a VM doesn't exist", func() {
 				It("Should return an error", func() {
-					nonExistentVm := dev.NewVM(dev.VMConfig{Name: "definitelydoesnotexist"})
+					nonExistentVm := dev.NewVM(dev.VMConfig{Name: "doesnotexist"})
 					_, err := nonExistentVm.Info()
 					Expect(err).ToNot(BeNil())
 				})
@@ -126,8 +126,7 @@ var _ = Describe("VM", func() {
 				cmdString := "lsawdaw"
 				o, err := vm.Exec(cmdString)
 				Expect(err).ToNot(BeNil())
-				Expect(string(o[:])).To(Equal(
-					"bash: line 1: lsawdaw: command not found\n"))
+				Expect(string(o[:])).To(Equal("bash: line 1: lsawdaw: command not found\n"))
 			})
 		})
 	})

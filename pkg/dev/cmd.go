@@ -3,9 +3,8 @@ package dev
 import "C"
 import (
 	"fmt"
+	"github.com/arya-analytics/aryacore/pkg/util/emoji"
 	"github.com/urfave/cli/v2"
-	"strconv"
-	"strings"
 )
 
 var Cmd = &cli.Command{
@@ -81,7 +80,7 @@ var clusterCmd = &cli.Command{
 				numNodes := c.Int("nodes")
 				clusterName := c.String("clusterName")
 				fmt.Printf("%s Initializing an Arya Cluster named %s with %v nodes \n",
-					emoji("\\U0001F4AB"),clusterName, numNodes)
+					emoji.Bolt,clusterName, numNodes)
 				aryaCfg := AryaClusterConfig{
 					NumNodes: numNodes,
 					Cores:    c.Int("cores"),
@@ -125,10 +124,6 @@ var clusterCmd = &cli.Command{
 	},
 }
 
-func emoji(s string) string {
-	r, _ := strconv.ParseInt(strings.TrimPrefix(s, "\\U"), 16, 32)
-	return strconv.FormatInt(r, 10)
-}
 
 var toolingCmd = &cli.Command{
 	Name:  "tooling",
@@ -146,6 +141,14 @@ var toolingCmd = &cli.Command{
 			Usage: "Uninstall development tools.",
 			Action: func(c *cli.Context) error {
 				return UninstallRequired()
+			},
+		},
+		{
+			Name: "check",
+			Usage: "Check if required development tools are installed",
+			Action: func(c *cli.Context) error {
+				RequiredInstalled()
+				return nil
 			},
 		},
 	},

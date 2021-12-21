@@ -2,9 +2,9 @@ package dev
 
 import (
 	"fmt"
+	"github.com/arya-analytics/aryacore/pkg/util/emoji"
 	"github.com/hashicorp/go-version"
 	"log"
-	"os"
 	"os/exec"
 	"strings"
 )
@@ -12,56 +12,59 @@ import (
 // || REQUIRED TOOL INSTALLS ||
 
 // InstallRequired installs all mandatory dev tools necessary for developing aryacore.
+// Takes a verbosity flag
 func InstallRequired() error {
-	fmt.Printf("%s Installing dev tools \n", emoji("\\U0001F6E0"))
+	fmt.Printf("%s Installing dev tools \n", emoji.Tools)
 	t := NewTooling()
 	for _, k := range RequiredTools {
 		if t.Installed(k) {
-			fmt.Printf("%s %s already installed \n", emoji("\\U0001F438"), k)
+			fmt.Printf("%s %s already installed \n", emoji.Frog, k)
 		} else {
-			fmt.Printf("%s Installing %s \n", emoji("\\U0001f525"), k)
+			fmt.Printf("%s Installing %s \n", emoji.Flame, k)
 			if err := t.Install(k); err != nil {
 				return err
 			}
-			fmt.Printf("%s  Installed %s \n", emoji("\\U0002705"), k)
+			fmt.Printf("%s  Installed %s \n", emoji.Check, k)
 		}
 	}
-	fmt.Printf("%s  All Done! \n", emoji("\\U0002705"))
+	fmt.Printf("%s  All Done! \n", emoji.Check)
 	return nil
 }
 
 // UninstallRequired uninstalls all mandatory dev tools necessary for developing
-//aryacore.
+//aryacore. Takes a verbosity flag.
 func UninstallRequired() error {
-	fmt.Printf("%s Uninstalling dev tools \n", emoji("\\U0001F6E0"))
+	fmt.Printf("%s Uninstalling dev tools \n", emoji.Tools)
 	t := NewTooling()
 	for i := range RequiredTools {
 		k := RequiredTools[len(RequiredTools)-1-i]
 		if t.Installed(k) {
-			fmt.Printf("%s Uninstalling %s \n", emoji("\\U0001f525"), k)
+			fmt.Printf("%s Uninstalling %s \n", emoji.Flame, k)
 			if err := t.Uninstall(k); err != nil {
 				return err
 			}
-			fmt.Printf("%s  Uninstalled %s \n", emoji("\\U0002705"), k)
+			fmt.Printf("%s  Uninstalled %s \n", emoji.Check, k)
 
 		} else {
-			fmt.Printf("%s %s is not installed. \n", emoji("\\U0001F438"), k)
+			fmt.Printf("%s %s is not installed. \n", emoji.Check, k)
 		}
 	}
-	fmt.Printf("%s  All Done! \n", emoji("\\U0002705"))
+	fmt.Printf("%s  All Done! \n", emoji.Check)
 	return nil
 }
 
 // RequiredInstalled checks to see if all mandatory dev tools are installed.
 func RequiredInstalled() bool {
-	allInstalled := true
+	fmt.Printf("%s Checking if required dev tools are installed\n", emoji.Tools)
 	t := NewTooling()
 	for _, v := range RequiredTools {
 		if !t.Installed(v) {
-			allInstalled = false
+			fmt.Printf("%s Missing required dev tools\n", emoji.Frog)
+			return false
 		}
 	}
-	return allInstalled
+	fmt.Printf("%s  All required dev tools installed\n", emoji.Check)
+	return true
 }
 
 // || GENERAL TOOLING ||
@@ -82,6 +85,7 @@ func NewTooling() Tooling {
 // || BREW TOOLING ||
 
 const brewCommand = "brew"
+
 var requiredBrewVersion, _ = version.NewVersion("3.3.8")
 
 type BrewTooling struct {
@@ -116,7 +120,6 @@ func (t BrewTooling) Installed(tool string) bool {
 /// command wraps exec.command to add brew specific functionality.
 func (t BrewTooling) command(args ...string) ([]byte, error) {
 	cmd := exec.Command(brewCommand, args...)
-	cmd.Stderr = os.Stderr
 	return cmd.Output()
 }
 
