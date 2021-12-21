@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"os"
 	"os/signal"
 	"syscall"
@@ -9,6 +10,10 @@ import (
 )
 
 func main() {
+	log.WithFields(log.Fields{
+		"animal": "walrus",
+		"size": 10,
+	}).Error("info")
 	fmt.Println("Starting Dummy Arya Core")
 	t := time.NewTicker(5 * time.Second)
 	sigs := make(chan os.Signal, 1)
