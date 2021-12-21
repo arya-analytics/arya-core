@@ -94,7 +94,7 @@ func (vm MultipassVM) Info() (VMInfo, error) {
 	var info VMInfo
 	o, err := vm.command("info", vm.cfg.Name).Output()
 	if err != nil {
-		log.WithFields(vm.logFields(false)).Warn("Couldn't find VM")
+		log.WithFields(vm.logFields(false)).Trace("Couldn't find VM")
 		return info, fmt.Errorf("couldn't find VM named %s", vm.cfg.Name)
 	}
 	rawInfoChain := strings.Split(string(o[:]), "\n")
@@ -140,8 +140,8 @@ func (vm MultipassVM) Exec(cmdStr string) ([]byte, error) {
 	var outb, errb bytes.Buffer
 	cmd := vm.command("exec", vm.cfg.Name, "--", "bash")
 	w, _ := cmd.StdinPipe()
-	err := cmd.Start()
 	cmd.Stdout, cmd.Stderr = &outb, &errb
+	err := cmd.Start()
 	if err != nil {
 		return errb.Bytes(), err
 	}

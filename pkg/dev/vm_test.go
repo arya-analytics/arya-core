@@ -53,6 +53,22 @@ var _ = Describe("Vm", func() {
 				Expect(vmInfo.State).To(Equal("Running"))
 			})
 		})
+		//Describe("Deleting VM", func() {
+		//	It("Should delete and purge a vm", func() {
+		//		tempVM := dev.NewVM(dev.VMConfig{Name: "testtempvm1"})
+		//		if err := tempVM.Provision(); err != nil {
+		//			Fail("Failed to provision VM")
+		//		}
+		//		if !vm.Exists() {
+		//			Fail("Failed to provision VM")
+		//		}
+		//		if err := tempVM.Delete(); err != nil {
+		//			Fail("Failed to delete Vm")
+		//		}
+		//		Expect(tempVM.Exists()).To(BeFalse())
+		//	})
+		//
+		//})
 		Describe("Checking if a VM exists", func() {
 			It("Should return false when the VM doesnt exists", func() {
 				nonExistentVm := dev.NewVM(dev.VMConfig{Name: "definitelydoesnotexist"})
@@ -83,6 +99,24 @@ var _ = Describe("Vm", func() {
 				_, err := nonExistentVm.Info()
 				Expect(err).ToNot(BeNil())
 			})
+		})
+		Describe("Executing commands", func() {
+			It("Should return the correct command output", func() {
+				cmdString := "pwd"
+				o, err := vm.Exec(cmdString)
+				if err != nil {
+					Fail(err.Error())
+				}
+				Expect(string(o[:])).To(Equal("/home/ubuntu\n"))
+			})
+			It("Should return the error output of a failed command", func() {
+				cmdString := "lsawdaw"
+				o, err := vm.Exec(cmdString)
+				Expect(err).ToNot(BeNil())
+				Expect(string(o[:])).To(Equal(
+					"bash: line 1: lsawdaw: command not found\n"))
+			})
+
 		})
 	})
 })
