@@ -65,7 +65,7 @@ func NewVM(cfg VMConfig) VM {
 // || MULTIPASS VM ||
 
 // Command to access multipass executable
-const multipassExec = "multipass"
+const multipassCmd = "multipass"
 
 type MultipassVM struct {
 	cfg VMConfig
@@ -191,7 +191,7 @@ func (vm MultipassVM) Transfer(transfer TransferDirection, srcPath, destPath str
 }
 
 func (vm MultipassVM) command(args ...string) *exec.Cmd {
-	return exec.Command(multipassExec, args...)
+	return exec.Command(multipassCmd, args...)
 }
 
 func (vm MultipassVM) logFields(vb bool) log.Fields {

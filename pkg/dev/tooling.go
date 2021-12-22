@@ -84,7 +84,7 @@ func NewTooling() Tooling {
 
 // || BREW TOOLING ||
 
-const brewCommand = "brew"
+const brewCmd = "brew"
 
 var requiredBrewVersion, _ = version.NewVersion("3.3.8")
 
@@ -118,7 +118,7 @@ func (t BrewTooling) Installed(tool string) bool {
 }
 
 func (t BrewTooling) command(args ...string) ([]byte, error) {
-	cmd := exec.Command(brewCommand, args...)
+	cmd := exec.Command(brewCmd, args...)
 	return cmd.Output()
 }
 

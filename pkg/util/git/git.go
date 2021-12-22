@@ -5,8 +5,10 @@ import (
 	"strings"
 )
 
+const gitCmd = "git"
+
 func CurrentCommitHash() string {
-	cmd := exec.Command("bash", "-c", "git log -1 --format=\"%H\"")
+	cmd := exec.Command(gitCmd, "log", "-1", "--format=\"%H\"")
 	o, err := cmd.Output()
 	if err != nil {
 		panic(err)
@@ -15,7 +17,7 @@ func CurrentCommitHash() string {
 }
 
 func Username() string {
-	cmd := exec.Command("bash", "-c", "git config user.email")
+	cmd := exec.Command(gitCmd,"git","config", "user.email")
 	o, err := cmd.Output()
 	if err != nil {
 		panic(err)
