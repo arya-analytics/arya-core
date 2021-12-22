@@ -3,6 +3,7 @@ package dev
 import (
 	"context"
 	"fmt"
+	"github.com/arya-analytics/aryacore/pkg/util/git"
 	"github.com/fsnotify/fsnotify"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart/loader"
@@ -23,24 +24,6 @@ var ignoreDirs = []string{
 	".idea",
 }
 
-func GetCommitHash() string {
-	cmd := exec.Command("bash", "-c", "git log -1 --format=\"%H\"")
-	o, err := cmd.Output()
-	if err != nil {
-		panic(err)
-	}
-	return strings.TrimSpace(string(o[:]))
-}
-
-func GetGitUserName() string {
-	cmd := exec.Command("bash", "-c", "git config user.email")
-	o, err := cmd.Output()
-	if err != nil {
-		panic(err)
-	}
-	return strings.TrimSpace(string(o[:]))
-}
-
 func WatchAndReload() {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
@@ -49,8 +32,8 @@ func WatchAndReload() {
 	defer watcher.Close()
 	done := make(chan bool)
 
-	hash := GetCommitHash()
-	username := GetGitUserName()
+	hash := git.CurrentCommitHash()
+	username := git.Username()
 
 	_, filename, _, _ := runtime.Caller(1)
 	dir := filepath.Dir(filepath.Dir(filepath.Dir(filename)))
@@ -183,8 +166,8 @@ func DeployHelmChart(imageNameTag string) {
 func RestartDeployment() {
 	fmt.Println("Restarting deployment")
 	cmd := exec.Command("bash", "-c",
-		"kubectl rollout restart deployment arya-core-aryacore" +
-		"-deployment")
+		"kubectl rollout restart deployment arya-core-aryacore"+
+			"-deployment")
 	err := cmd.Run()
 	if err != nil {
 		panic(err)
