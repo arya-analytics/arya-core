@@ -5,7 +5,7 @@ import (
 	"strconv"
 )
 
-// New creates and converts a print-able from a unicode string
+// New creates and converts a print-able emoji from a unicode string
 func New(s string) string {
 	r, err := strconv.ParseInt(s, 16, 32)
 	if err != nil {

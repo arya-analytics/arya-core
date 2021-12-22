@@ -71,22 +71,6 @@ type MultipassVM struct {
 	cfg VMConfig
 }
 
-func (vm MultipassVM) command(args ...string) *exec.Cmd {
-	return exec.Command(multipassExec, args...)
-}
-
-func (vm MultipassVM) logFields(vb bool) log.Fields {
-	f := log.Fields{
-		"name": vm.cfg.Name,
-	}
-	if vb {
-		f["memory"] = vm.cfg.Memory
-		f["cores"] = vm.cfg.Cores
-		f["storage"] = vm.cfg.Storage
-	}
-	return f
-}
-
 // Provision provisions the virtual machine based on its config.
 func (vm MultipassVM) Provision() error {
 	log.WithFields(vm.logFields(true)).Trace("Provisioning a new multipass VM")
@@ -189,7 +173,6 @@ func (vm MultipassVM) Exec(cmdStr string) ([]byte, error) {
 	return outb.Bytes(), nil
 }
 
-
 // Transfer copies a file to or from the VM.
 func (vm MultipassVM) Transfer(transfer TransferDirection, srcPath, destPath string) error {
 	if transfer == TransferTo {
@@ -205,4 +188,20 @@ func (vm MultipassVM) Transfer(transfer TransferDirection, srcPath, destPath str
 		return err
 	}
 	return nil
+}
+
+func (vm MultipassVM) command(args ...string) *exec.Cmd {
+	return exec.Command(multipassExec, args...)
+}
+
+func (vm MultipassVM) logFields(vb bool) log.Fields {
+	f := log.Fields{
+		"name": vm.cfg.Name,
+	}
+	if vb {
+		f["memory"] = vm.cfg.Memory
+		f["cores"] = vm.cfg.Cores
+		f["storage"] = vm.cfg.Storage
+	}
+	return f
 }

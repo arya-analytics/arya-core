@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/arya-analytics/aryacore/pkg/util/emoji"
 	"github.com/hashicorp/go-version"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"os/exec"
 	"strings"
 )
@@ -117,27 +117,24 @@ func (t BrewTooling) Installed(tool string) bool {
 	return strings.Contains(outStr, tool)
 }
 
-/// command wraps exec.command to add brew specific functionality.
 func (t BrewTooling) command(args ...string) ([]byte, error) {
 	cmd := exec.Command(brewCommand, args...)
 	return cmd.Output()
 }
 
-// checkPreReqs checks for necessary pre-requisites for the installer to run correctly
 func (t BrewTooling) checkPreReqs() {
 	cmdString := "brew --version | grep \"Homebrew \" | awk '{print $2}'"
 	// Need to manually create exec.Command here in order to use bash pipes
-	out, err := exec.Command("bash", "-c", cmdString).Output()
+	o, err := exec.Command("bash", "-c", cmdString).Output()
 	if err != nil {
 		log.Fatalf("%s", err)
 	}
-	outString := strings.TrimSpace(string(out[:]))
-	brewVersion, err := version.NewVersion(outString)
+	bv, err := version.NewVersion(strings.TrimSpace(string(o[:])))
 	if err != nil {
 		log.Fatalf("%s", err)
 	}
-	if brewVersion.LessThan(requiredBrewVersion) {
+	if bv.LessThan(requiredBrewVersion) {
 		log.Fatalf("Brew Version %s is less than the required version %s",
-			outString, requiredBrewVersion.String())
+			bv.String(), requiredBrewVersion.String())
 	}
 }
