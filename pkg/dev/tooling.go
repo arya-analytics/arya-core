@@ -94,8 +94,7 @@ type BrewTooling struct {
 
 // Install installs a dev tool based on its name.
 func (t BrewTooling) Install(tool string) error {
-	_, err := t.command("install", tool)
-	if err != nil {
+	if err := t.command("install", tool).Run(); err != nil {
 		log.Fatalf("%s", err)
 	}
 	return nil
@@ -103,13 +102,12 @@ func (t BrewTooling) Install(tool string) error {
 
 // Uninstall uninstalls a dev tool based on its name.
 func (t BrewTooling) Uninstall(tool string) error {
-	_, err := t.command("uninstall", tool)
-	return err
+	return t.command("uninstall", tool).Run()
 }
 
 // Installed checks if a package has already been installed.
 func (t BrewTooling) Installed(tool string) bool {
-	out, err := t.command("list")
+	out, err := t.command("list").Output()
 	if err != nil {
 		panic(err)
 	}
@@ -117,9 +115,8 @@ func (t BrewTooling) Installed(tool string) bool {
 	return strings.Contains(outStr, tool)
 }
 
-func (t BrewTooling) command(args ...string) ([]byte, error) {
-	cmd := exec.Command(brewCmd, args...)
-	return cmd.Output()
+func (t BrewTooling) command(args ...string) *exec.Cmd {
+	return exec.Command(brewCmd, args...)
 }
 
 func (t BrewTooling) checkPreReqs() {
