@@ -78,7 +78,7 @@ type Tooling interface {
 // NewTooling creates and returns the correct OS specific tooling manager.
 func NewTooling() Tooling {
 	t := BrewTooling{RequiredTools}
-	t.checkPreReqs()
+	t.preReqs()
 	return &t
 }
 
@@ -119,7 +119,7 @@ func (t BrewTooling) command(args ...string) *exec.Cmd {
 	return exec.Command(brewCmd, args...)
 }
 
-func (t BrewTooling) checkPreReqs() {
+func (t BrewTooling) preReqs() {
 	cmdString := "brew --version | grep \"Homebrew \" | awk '{print $2}'"
 	// Need to manually create exec.Command here in order to use bash pipes
 	o, err := exec.Command("bash", "-c", cmdString).Output()

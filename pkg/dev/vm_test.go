@@ -4,49 +4,12 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/dev"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	log "github.com/sirupsen/logrus"
 )
-
-var vm dev.VM
-var vmInfo dev.VMInfo
-
-var vmCfg = dev.VMConfig{
-	Name:    "adtst1",
-	Memory:  2,
-	Cores:   3,
-	Storage: 4,
-}
-
-var _ = BeforeSuite(func() {
-	vm = dev.NewVM(vmCfg)
-	if vm.Exists() {
-		if err := vm.Delete(); err != nil {
-			log.Fatalln("Failed to delete test VM")
-		}
-	}
-	if err := vm.Provision(); err != nil {
-		log.Fatalln("Failed to provision test VM")
-	}
-	vi, err := vm.Info()
-	vmInfo = vi
-	if err != nil {
-		log.Fatalln("Failed to pull info from test vm")
-	}
-})
-
-var _ = AfterSuite(func() {
-	vm = dev.NewVM(vmCfg)
-	if vm.Exists() {
-		if err := vm.Delete(); err != nil {
-			log.Fatalln("Failed to delete test VM")
-		}
-	}
-})
 
 var _ = Describe("VM", func() {
 	Describe("Multipass VM", func() {
 		Describe("Provisioning new VM", func() {
-			Context("When the VM doesn't exist", func() {
+			Context("When the VM doesn'tooling exist", func() {
 				It("Should assign the correct name ", func() {
 					Expect(vmInfo.Name).To(Equal(vmCfg.Name))
 				})
@@ -105,7 +68,7 @@ var _ = Describe("VM", func() {
 					Expect(vmInfo.ImageHash).To(ContainSubstring("(Ubuntu"))
 				})
 			})
-			Context("When a VM doesn't exist", func() {
+			Context("When a VM doesn'tooling exist", func() {
 				It("Should return an error", func() {
 					nonExistentVm := dev.NewVM(dev.VMConfig{Name: "doesnotexist"})
 					_, err := nonExistentVm.Info()

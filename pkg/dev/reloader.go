@@ -102,7 +102,7 @@ func BuildDockerImage(pCtx context.Context, nameTag string) context.CancelFunc {
 	_, filename, _, _ := runtime.Caller(1)
 	dir := filepath.Dir(filepath.Dir(filepath.Dir(filename)))
 	ctx, cancel := context.WithCancel(pCtx)
-	cmdString := fmt.Sprintf("docker build %s -t %s", dir, nameTag)
+	cmdString := fmt.Sprintf("docker build %s -tooling %s", dir, nameTag)
 	fmt.Println(cmdString)
 	cmd := exec.CommandContext(ctx, "bash", "-c", cmdString)
 	cmd.Stderr = os.Stderr
