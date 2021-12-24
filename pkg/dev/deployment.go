@@ -74,8 +74,6 @@ func (d Deployment) Install() error {
 		nodeIPs = append(nodeIPs, info.IPv4)
 	}
 
-	//clusterInitHost = d.cfg.cluster.nodes[0].vm.Name()
-
 	d.iterNodes(func(node *K3sCluster) {
 		info, err := node.vm.Info()
 		if err != nil {
