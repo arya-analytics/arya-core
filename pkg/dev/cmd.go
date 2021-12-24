@@ -94,13 +94,13 @@ var clusterCmd = &cli.Command{
 					CidrOffset: c.Int("cidrOffset"),
 				}
 				aryaCluster := NewAryaCluster(aryaCfg)
-				k3sClusters, err := aryaCluster.Provision()
+				err := aryaCluster.Provision()
 				if err != nil {
 					log.Fatalln(err)
 				}
 				aryaConfig := NewAryaConfig(aryaCfgPath)
 				fmt.Println("Merging kubeconfig")
-				for i, c := range k3sClusters {
+				for i, c := range aryaCluster.Nodes {
 					if err := aryaConfig.MergeClusterConfig(*c); err != nil {
 						log.Fatalln(err)
 					}
@@ -109,7 +109,7 @@ var clusterCmd = &cli.Command{
 						log.Fatalln(err)
 					}
 					if i == 0 {
-						nodeName := c.vm.Name()
+						nodeName := c.VM.Name()
 						log.Info("Marking node %s as the cluster orchestrator")
 						if err := aryaConfig.LabelOrchestrator(nodeName); err != nil {
 							log.Fatalln(err)

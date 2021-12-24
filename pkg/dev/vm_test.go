@@ -26,7 +26,7 @@ var _ = Describe("VM", func() {
 			})
 		})
 		Describe("Deleting VM", func() {
-			It("(SLOW) Should delete and purge a vm", func() {
+			It("(SLOW) Should delete and purge a VM", func() {
 				tempVM := dev.NewVM(dev.VMConfig{Name: "testtempvm1"})
 				if err := tempVM.Provision(); err != nil {
 					Fail("Failed to provision VM")

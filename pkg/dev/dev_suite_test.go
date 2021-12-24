@@ -48,7 +48,7 @@ var _ = BeforeSuite(func() {
 	vi, err := vm.Info()
 	vmInfo = vi
 	if err != nil {
-		log.Fatalln("Failed to pull info from test vm")
+		log.Fatalln("Failed to pull info from test VM")
 	}
 })
 

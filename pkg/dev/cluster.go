@@ -12,22 +12,22 @@ const baseNodeName = "ad"
 // Utilities for provisioning and managing development Arya Clusters
 
 type AryaClusterConfig struct {
-	Name     string
-	NumNodes int
-	Cores    int
-	Memory   int
-	Storage  int
-	ReInit   bool
+	Name       string
+	NumNodes   int
+	Cores      int
+	Memory     int
+	Storage    int
+	ReInit     bool
 	CidrOffset int
 }
 
 var BaseAryaClusterCfg = AryaClusterConfig{
-	Name:     "ad",
-	NumNodes: 3,
-	Cores:    2,
-	Memory:   4,
-	Storage:  15,
-	ReInit:   true,
+	Name:       "ad",
+	NumNodes:   3,
+	Cores:      2,
+	Memory:     4,
+	Storage:    15,
+	ReInit:     true,
 	CidrOffset: 10,
 }
 
@@ -37,14 +37,13 @@ type AryaCluster struct {
 }
 
 // NewAryaCluster creates a new Arya Cluster based off of a config.
-// NOTE: For binding to an existing cluster, only cfg.Name is necessary.
+// NOTE: For binding to an existing cluster, only Cfg.Name is necessary.
 func NewAryaCluster(cfg AryaClusterConfig) *AryaCluster {
 	return &AryaCluster{cfg: cfg}
 }
 
-// Provision provisions a new cluster base off of a.cfg
-func (a *AryaCluster) Provision() ([]*K3sCluster, error) {
-	var k3sClusters []*K3sCluster
+// Provision provisions a new cluster base off of a.Cfg
+func (a *AryaCluster) Provision() error {
 	for i := 1; i <= a.cfg.NumNodes; i++ {
 		nodeName := baseNodeName + strconv.Itoa(i)
 		log.Infof("Bootstrapping node %v  with name %s \n", i, nodeName)
@@ -52,17 +51,17 @@ func (a *AryaCluster) Provision() ([]*K3sCluster, error) {
 			a.cfg.Storage)
 		vm, err := a.ProvisionVM(nodeName)
 		if err != nil {
-			return k3sClusters, err
+			return err
 		}
-		podCidrID := a.cfg.CidrOffset + i * 2
+		podCidrID := a.cfg.CidrOffset + i*2
 		k3s, err := a.ProvisionK3s(vm, podCidrID)
 		if err != nil {
-			return k3sClusters, err
+			return err
 		}
-		k3sClusters = append(k3sClusters, k3s)
+		a.nodes = append(a.nodes, k3s)
 		log.Infof("Successfully started k3s cluster on node %s \n", nodeName)
 	}
-	return k3sClusters, nil
+	return nil
 }
 
 // ProvisionK3s provisions a K3s cluster on a VM
@@ -82,14 +81,14 @@ func (a *AryaCluster) ProvisionK3s(vm VM, podCidrID int) (*K3sCluster, error) {
 
 // ProvisionVM provisions a virtual machine for the cluster based off a node name
 // and internal config information.
-// NOTE: If a.cfg.reInit is set to true, will tear down existing VM's
+// NOTE: If a.Cfg.reInit is set to true, will tear down existing VM's
 func (a *AryaCluster) ProvisionVM(nodeName string) (VM, error) {
 	cfg := VMConfig{
 		Name:    nodeName,
 		Memory:  a.cfg.Memory,
 		Cores:   a.cfg.Cores,
 		Storage: a.cfg.Storage,
-	}	
+	}
 	vm := NewVM(cfg)
 	if !vm.Exists() {
 		fmt.Printf("Launching new VM named %s \n ", nodeName)
@@ -106,14 +105,14 @@ func (a *AryaCluster) ProvisionVM(nodeName string) (VM, error) {
 			return vm, err
 		}
 	} else {
-		return vm, fmt.Errorf("vm %s already exists and ReInit is false \n", nodeName)
+		return vm, fmt.Errorf("VM %s already exists and ReInit is false \n", nodeName)
 	}
 	return vm, nil
 }
 
 // Bind binds to an existing arya cluster based on the cluster name
 func (a *AryaCluster) Bind() {
-	for i := 1; i > 0; i ++ {
+	for i := 1; i > 0; i++ {
 		cfg := VMConfig{
 			Name: a.cfg.Name + strconv.Itoa(i),
 		}
@@ -124,6 +123,23 @@ func (a *AryaCluster) Bind() {
 		cluster := NewK3sCluster(vm, K3sClusterConfig{})
 		a.nodes = append(a.nodes, cluster)
 	}
+}
+
+// Nodes returns the nodes in the cluster
+func(a *AryaCluster) Nodes() []*K3sCluster {
+	return a.nodes
+}
+
+// Exists checks if an arya cluster with a.Cfg.name already exists
+func (a *AryaCluster) Exists() bool {
+	if len(a.Nodes()) > 0 {
+		return true
+	}
+	a.Bind()
+	if len(a.Nodes()) > 0 {
+		return true
+	}
+	return false
 }
 
 // || K3S CLUSTER ||
@@ -140,8 +156,8 @@ type K3sClusterConfig struct {
 }
 
 type K3sCluster struct {
-	vm  VM
-	cfg K3sClusterConfig
+	VM  VM
+	Cfg K3sClusterConfig
 }
 
 // NewK3sCluster creates a new k3s cluster
@@ -149,15 +165,15 @@ func NewK3sCluster(vm VM, cfg K3sClusterConfig) *K3sCluster {
 	return &K3sCluster{vm, cfg}
 }
 
-// Provision provisions a new k3s cluster on p.vm
+// Provision provisions a new k3s cluster on p.VM
 func (p K3sCluster) Provision() error {
 	curlCmd := fmt.Sprintf("curl -sfL %s", k3sAddr)
 	k3sEnv := fmt.Sprintf("INSTALL_K3S_EXEC=\"--cluster-cidr %s --service-cidr %s"+
 		" --write-kubeconfig-mode %s \"",
-		p.cfg.PodCidr, p.cfg.ServiceCidr, writeKubeConfigMode)
+		p.Cfg.PodCidr, p.Cfg.ServiceCidr, writeKubeConfigMode)
 	k3sInitCmd := "sh -s -"
 	cmdString := fmt.Sprintf("%s | %s %s", curlCmd, k3sEnv, k3sInitCmd)
-	_, err := p.vm.Exec(cmdString)
+	_, err := p.VM.Exec(cmdString)
 	return err
 }
 

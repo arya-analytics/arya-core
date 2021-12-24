@@ -62,7 +62,7 @@ func NewAryaConfig(cfgPath string) *AryaConfig {
 }
 
 func (a AryaConfig) AuthenticateCluster(c K3sCluster) error {
-	info, err := c.vm.Info()
+	info, err := c.VM.Info()
 	if err != nil {
 		return err
 	}
@@ -89,14 +89,14 @@ func (a AryaConfig) AuthenticateCluster(c K3sCluster) error {
 }
 
 func (a AryaConfig) MergeClusterConfig(c K3sCluster) error {
-	vmInfo, err := c.vm.Info()
+	vmInfo, err := c.VM.Info()
 	if err != nil {
 		return err
 	}
 	name := "kubeconfig." + vmInfo.Name
 	hostPath := hostKubeCfgPathBase + name
 	fmt.Printf("Copying kubeconfig from %s to host path %s", name, hostPath)
-	if err := c.vm.Transfer(TransferFrom, k3sKubeCfgPath,
+	if err := c.VM.Transfer(TransferFrom, k3sKubeCfgPath,
 		hostPath); err != nil {
 		return err
 	}
