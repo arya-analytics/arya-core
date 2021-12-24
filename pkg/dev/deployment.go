@@ -66,7 +66,7 @@ func (d Deployment) Install() error {
 	}
 
 	var nodeIPs []string
-	for _, node := range d.cfg.cluster.Nodes {
+	for _, node := range d.cfg.cluster.Nodes() {
 		info, err := node.VM.Info()
 		if err != nil {
 			log.Fatalln(err)
@@ -119,7 +119,7 @@ func (d Deployment) Uninstall() error {
 
 func (d Deployment) iterNodes(exec func(node *K3sCluster)) {
 	k := NewKubeCtl()
-	for _, node := range d.cfg.cluster.Nodes {
+	for _, node := range d.cfg.cluster.Nodes() {
 		if err := k.SwitchContext(node.VM.Name()); err != nil {
 			log.Fatalln(err)
 		}

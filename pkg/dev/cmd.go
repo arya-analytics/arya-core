@@ -100,7 +100,7 @@ var clusterCmd = &cli.Command{
 				}
 				aryaConfig := NewAryaConfig(aryaCfgPath)
 				fmt.Println("Merging kubeconfig")
-				for i, c := range aryaCluster.Nodes {
+				for i, c := range aryaCluster.Nodes() {
 					if err := aryaConfig.MergeClusterConfig(*c); err != nil {
 						log.Fatalln(err)
 					}
