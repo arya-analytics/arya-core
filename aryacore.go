@@ -22,7 +22,7 @@ func main() {
 	for done {
 		select {
 		case <-t.C:
-			fmt.Println("Ticker X")
+			fmt.Println("Ticker XX")
 		case <-sigs:
 			fmt.Println("Terminating")
 			done = false

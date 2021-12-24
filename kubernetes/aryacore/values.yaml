@@ -11,6 +11,6 @@ redistimeseries:
     username: *username
     password: *password
 cockroachdb:
-  join: 192.168.64.12,192.168.64.13
+  join: 192.168.64.11
 imagePullSecrets:
   name: regcred

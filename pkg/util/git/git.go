@@ -13,11 +13,11 @@ func CurrentCommitHash() string {
 	if err != nil {
 		panic(err)
 	}
-	return strings.TrimSpace(string(o[:]))
+	return strings.Trim(strings.TrimSpace(string(o[:])), "\"")
 }
 
 func Username() string {
-	cmd := exec.Command(gitCmd,"git","config", "user.email")
+	cmd := exec.Command(gitCmd,"config", "user.email")
 	o, err := cmd.Output()
 	if err != nil {
 		panic(err)

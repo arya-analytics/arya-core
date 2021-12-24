@@ -13,6 +13,8 @@ import (
 
 // VM provides a generic interface for working with a development virtual machine.
 type VM interface {
+	// Name returns the name of the VM
+	Name() string
 	// Provision launched and configures the VM.
 	Provision() error
 	// Exists checks if the VM exists.
@@ -71,6 +73,11 @@ type MultipassVM struct {
 	cfg VMConfig
 }
 
+// Name returns the name of the VM
+func (vm MultipassVM) Name() string {
+	return vm.cfg.Name
+}
+
 // Provision provisions the virtual machine based on its config.
 func (vm MultipassVM) Provision() error {
 	log.WithFields(vm.logFields(true)).Trace("Provisioning a new multipass VM")
@@ -119,7 +126,7 @@ func (vm MultipassVM) Info() (VMInfo, error) {
 			parsedInfo[i] = strings.Trim(kv[1], " ")
 			i += 1
 		} else {
-			log.WithFields(vm.logFields(false)).Warn("Encountered unknown VM info")
+			log.WithFields(vm.logFields(false)).Trace("Encountered unknown VM info")
 		}
 	}
 	info.Name = parsedInfo[0]

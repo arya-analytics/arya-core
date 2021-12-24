@@ -100,6 +100,20 @@ func (a *AryaCluster) ProvisionVM(nodeName string) (VM, error) {
 	return vm, nil
 }
 
+func (a *AryaCluster) Bind() {
+	for i := 1; i > 0; i ++ {
+		cfg := VMConfig{
+			Name: a.cfg.Name + strconv.Itoa(i),
+		}
+		vm := NewVM(cfg)
+		if !vm.Exists() {
+			break
+		}
+		cluster := NewK3sCluster(vm, K3sClusterConfig{})
+		a.nodes = append(a.nodes, cluster)
+	}
+}
+
 // || K3S CLUSTER ||
 
 const (

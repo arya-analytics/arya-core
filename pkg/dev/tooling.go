@@ -89,15 +89,13 @@ const brewCmd = "brew"
 var requiredBrewVersion, _ = version.NewVersion("3.3.8")
 
 type BrewTooling struct {
+
 	tooling ToolingConfig
 }
 
 // Install installs a dev tool based on its name.
 func (t BrewTooling) Install(tool string) error {
-	if err := t.command("install", tool).Run(); err != nil {
-		log.Fatalf("%s", err)
-	}
-	return nil
+	return t.command("install", tool).Run()
 }
 
 // Uninstall uninstalls a dev tool based on its name.
@@ -107,6 +105,7 @@ func (t BrewTooling) Uninstall(tool string) error {
 
 // Installed checks if a package has already been installed.
 func (t BrewTooling) Installed(tool string) bool {
+
 	out, err := t.command("list").Output()
 	if err != nil {
 		panic(err)

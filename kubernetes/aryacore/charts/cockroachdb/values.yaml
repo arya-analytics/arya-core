@@ -12,6 +12,6 @@ hostPath: /cockroach/cockroach-data
 cmd:
   cache: 25%
   maxSQLMemory: 25%
-join: 192.168.64.12,192.168.64.13
-nodeIP: 192.168.64.12
+join: 192.168.64.11
+nodeIP: 192.168.64.11
 clusterInitHost: ad1
