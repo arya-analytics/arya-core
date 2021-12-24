@@ -110,7 +110,7 @@ var clusterCmd = &cli.Command{
 					}
 					if i == 0 {
 						nodeName := c.VM.Name()
-						log.Info("Marking node %s as the cluster orchestrator")
+						log.Infof("Marking node %s as the cluster orchestrator", nodeName)
 						if err := aryaConfig.LabelOrchestrator(nodeName); err != nil {
 							log.Fatalln(err)
 						}

@@ -6,8 +6,6 @@ import (
 	"strconv"
 )
 
-const baseNodeName = "ad"
-
 // || ARYA CLUSTER ||
 // Utilities for provisioning and managing development Arya Clusters
 
@@ -45,16 +43,17 @@ func NewAryaCluster(cfg AryaClusterConfig) *AryaCluster {
 // Provision provisions a new cluster base off of a.Cfg
 func (a *AryaCluster) Provision() error {
 	for i := 1; i <= a.cfg.NumNodes; i++ {
-		nodeName := baseNodeName + strconv.Itoa(i)
+		nodeName := a.cfg.Name + strconv.Itoa(i)
 		log.Infof("Bootstrapping node %v  with name %s \n", i, nodeName)
-		log.Infof("Memory: %v, Cores: %v, Storage: %v \n", a.cfg.Memory, a.cfg.Cores,
+		log.Infof("Memory: %v Gb, Cores: %v, Storage: %v Gb \n", a.cfg.Memory,
+			a.cfg.Cores,
 			a.cfg.Storage)
-		vm, err := a.ProvisionVM(nodeName)
+		vm, err := a.provisionVM(nodeName)
 		if err != nil {
 			return err
 		}
 		podCidrID := a.cfg.CidrOffset + i*2
-		k3s, err := a.ProvisionK3s(vm, podCidrID)
+		k3s, err := a.provisionK3s(vm, podCidrID)
 		if err != nil {
 			return err
 		}
@@ -64,10 +63,11 @@ func (a *AryaCluster) Provision() error {
 	return nil
 }
 
-// ProvisionK3s provisions a K3s cluster on a VM
+// provisionK3s provisions a K3s cluster on a VM
 // Needs to receive a pod cidr ID (ex. 44 would result in the call Cidr(
 // 44) for the pod Cidr and Cidr(45) for the service Cidr)
-func (a *AryaCluster) ProvisionK3s(vm VM, podCidrID int) (*K3sCluster, error) {
+func (a *AryaCluster) provisionK3s(vm VM, podCidrID int) (*K3sCluster, error) {
+	log.Infof("Provisioning new K3s cluster on VM %s", vm.Name())
 	cfg := K3sClusterConfig{
 		PodCidr:     Cidr(podCidrID),
 		ServiceCidr: Cidr(podCidrID + 1),
@@ -76,13 +76,14 @@ func (a *AryaCluster) ProvisionK3s(vm VM, podCidrID int) (*K3sCluster, error) {
 	if err := c.Provision(); err != nil {
 		return c, err
 	}
+	log.Infof("Succesffully provisioned k3s cluster on VM %s", vm.Name())
 	return c, nil
 }
 
-// ProvisionVM provisions a virtual machine for the cluster based off a node name
+// provisionVM provisions a virtual machine for the cluster based off a node name
 // and internal config information.
 // NOTE: If a.Cfg.reInit is set to true, will tear down existing VM's
-func (a *AryaCluster) ProvisionVM(nodeName string) (VM, error) {
+func (a *AryaCluster) provisionVM(nodeName string) (VM, error) {
 	cfg := VMConfig{
 		Name:    nodeName,
 		Memory:  a.cfg.Memory,
@@ -91,12 +92,12 @@ func (a *AryaCluster) ProvisionVM(nodeName string) (VM, error) {
 	}
 	vm := NewVM(cfg)
 	if !vm.Exists() {
-		fmt.Printf("Launching new VM named %s \n ", nodeName)
+		log.Infof("Launching new VM named %s \n ", nodeName)
 		if err := vm.Provision(); err != nil {
 			return vm, err
 		}
 	} else if a.cfg.ReInit {
-		fmt.Printf("VM %s already existed, tearing down and re-launching \n",
+		log.Infof("VM %s already existed, tearing down and re-launching \n",
 			nodeName)
 		if err := vm.Delete(); err != nil {
 			return vm, err
@@ -107,10 +108,11 @@ func (a *AryaCluster) ProvisionVM(nodeName string) (VM, error) {
 	} else {
 		return vm, fmt.Errorf("VM %s already exists and ReInit is false \n", nodeName)
 	}
+	log.Infof("Successfully provisioned VM %s \n", nodeName)
 	return vm, nil
 }
 
-// Bind binds to an existing arya cluster based on the cluster name
+// Bind binds to an existing arya cluster based on its name
 func (a *AryaCluster) Bind() {
 	for i := 1; i > 0; i++ {
 		cfg := VMConfig{

@@ -109,10 +109,9 @@ func (d Deployment) chart() (*chart.Chart, error) {
 }
 
 func (d Deployment) Uninstall() error {
-	var err error
 	d.iterNodes(func(node *K3sCluster) {
 		client := action.NewUninstall(d.actionConfig)
-		_, err = client.Run(d.cfg.name)
+		_, _ = client.Run(d.cfg.name)
 	})
 	return nil
 }
