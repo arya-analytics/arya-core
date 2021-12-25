@@ -1,4 +1,4 @@
-package tools
+package kubectl
 
 import (
 	log "github.com/sirupsen/logrus"

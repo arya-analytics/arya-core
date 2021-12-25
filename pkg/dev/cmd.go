@@ -98,20 +98,19 @@ var clusterCmd = &cli.Command{
 				if err != nil {
 					log.Fatalln(err)
 				}
-				aryaConfig := NewAryaConfig(aryaCfgPath)
 				fmt.Println("Merging kubeconfig")
 				for i, c := range aryaCluster.Nodes() {
-					if err := aryaConfig.MergeClusterConfig(*c); err != nil {
+					if err := MergeClusterConfig(*c); err != nil {
 						log.Fatalln(err)
 					}
 					fmt.Println("Authenticating cluster")
-					if err := aryaConfig.AuthenticateCluster(*c); err != nil {
+					if err := AuthenticateCluster(*c); err != nil {
 						log.Fatalln(err)
 					}
 					if i == 0 {
 						nodeName := c.VM.Name()
 						log.Infof("Marking node %s as the cluster orchestrator", nodeName)
-						if err := aryaConfig.LabelOrchestrator(nodeName); err != nil {
+						if err := LabelOrchestrator(nodeName); err != nil {
 							log.Fatalln(err)
 						}
 					}
