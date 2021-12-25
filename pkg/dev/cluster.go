@@ -144,6 +144,15 @@ func (a *AryaCluster) Exists() bool {
 	return false
 }
 
+func (a *AryaCluster) Delete() error {
+	for _, node := range a.Nodes() {
+		if err := node.VM.Delete(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // || K3S CLUSTER ||
 // Utilities for provisioning k3S (https://k3s.io/) clusters on VM's
 

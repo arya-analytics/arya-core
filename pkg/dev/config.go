@@ -2,6 +2,7 @@ package dev
 
 import (
 	"fmt"
+	"github.com/arya-analytics/aryacore/pkg/util/kubectl"
 	log "github.com/sirupsen/logrus"
 	"os"
 	"os/exec"
@@ -9,37 +10,6 @@ import (
 
 // || KUBECTL ||
 
-type KubeCtl int
-
-const kubectlCmd = "kubectl"
-
-func NewKubeCtl() *KubeCtl {
-	var k KubeCtl
-	return &k
-}
-
-func (k *KubeCtl) Command(args ...string) *exec.Cmd {
-	return exec.Command(kubectlCmd, args...)
-}
-
-func (k *KubeCtl) Exec(args ...string) error {
-	return k.Command(args...).Run()
-}
-
-func (k *KubeCtl) CurrentContext() (string, error) {
-	o, err := k.Command("config","view","-o","template",
-		"--template='{{index . \"current-context\"}}").Output()
-	return string(o[:]), err
-}
-
-func (k *KubeCtl) SwitchContext(ctx string) error {
-	err := k.Command("config", "use-context", ctx).Run()
-	if err != nil {
-		return err
-	}
-	log.Infof("Successfully switched to kubectl context %s", ctx)
-	return nil
-}
 
 // || ARYA CONFIG ||
 
@@ -66,16 +36,15 @@ func (a AryaConfig) AuthenticateCluster(c K3sCluster) error {
 	if err != nil {
 		return err
 	}
-	kubeCtl := NewKubeCtl()
-	if err := kubeCtl.SwitchContext(info.Name); err != nil {
+	if err := kubectl.SwitchContext(info.Name); err != nil {
 		return err
 	}
 
-	if err := kubeCtl.Exec("delete", "secret", authSecretName); err != nil {
+	if err := kubectl.Exec("delete", "secret", authSecretName); err != nil {
 		fmt.Println("We're fine here")
 	}
 
-	if err := kubeCtl.Exec(
+	if err := kubectl.Exec(
 		"create",
 		"secret",
 		"generic",
@@ -141,6 +110,5 @@ func (a AryaConfig) MergeClusterConfig(c K3sCluster) error {
 }
 
 func (a AryaConfig) LabelOrchestrator(nodeName string) error {
-	k := NewKubeCtl()
-	return k.Exec("label","nodes",nodeName, "aryaRole=orchestrator")
+	return kubectl.Exec("label","nodes",nodeName, "aryaRole=orchestrator")
 }

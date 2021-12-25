@@ -2,6 +2,7 @@ package dev
 
 import (
 	"fmt"
+	"github.com/arya-analytics/aryacore/pkg/util/kubectl"
 	log "github.com/sirupsen/logrus"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart"
@@ -117,9 +118,8 @@ func (d Deployment) Uninstall() error {
 }
 
 func (d Deployment) iterNodes(exec func(node *K3sCluster)) {
-	k := NewKubeCtl()
 	for _, node := range d.cfg.cluster.Nodes() {
-		if err := k.SwitchContext(node.VM.Name()); err != nil {
+		if err := kubectl.SwitchContext(node.VM.Name()); err != nil {
 			log.Fatalln(err)
 		}
 		if err := d.InitActionConfig(); err != nil {
@@ -132,12 +132,11 @@ func (d Deployment) iterNodes(exec func(node *K3sCluster)) {
 const aryaCoreDeployment = "aryacore-deployment"
 
 func (d Deployment) RedeployArya() error {
-	k := NewKubeCtl()
 	name := d.cfg.name + "-" + aryaCoreDeployment
 	var err error
 	fmt.Println(name)
 	d.iterNodes(func(node *K3sCluster) {
-		err = k.Exec("rollout", "restart", "deployment", name)
+		err = kubectl.Exec("rollout", "restart", "deployment", name)
 	})
 	return err
 }

@@ -59,4 +59,9 @@ var _ = AfterSuite(func() {
 			log.Fatalln("Failed to delete test VM")
 		}
 	}
+	aryaCluster := dev.NewAryaCluster(dev.AryaClusterConfig{Name: dummyAryaClusterName})
+	aryaCluster.Bind()
+	if err := aryaCluster.Delete(); err != nil {
+		log.Fatalln(err)
+	}
 })
