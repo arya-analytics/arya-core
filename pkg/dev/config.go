@@ -58,6 +58,9 @@ func (a AryaConfig) AuthenticateCluster(c K3sCluster) error {
 }
 
 func (a AryaConfig) MergeClusterConfig(c K3sCluster) error {
+	if err := a.ClearClusterConfig(c); err != nil {
+		log.Fatalln(err)
+	}
 	vmInfo, err := c.VM.Info()
 	if err != nil {
 		return err
@@ -86,25 +89,24 @@ func (a AryaConfig) MergeClusterConfig(c K3sCluster) error {
 		log.Fatal(err)
 	}
 
-	if err := exec.Command("bash", "-c", "kubectl krew install konfig").Run(); err != nil {
-		fmt.Println("We're fine here 2")
+	if err := kubectl.Exec("krew", "install", "konfig"); err != nil {
+		log.Warn("krew plugin already installed. Skipping reinstallation.")
 	}
 
 	if err := exec.Command("bash", "-c",
-		fmt.Sprintf("kubectl config delete-cluster %s", vmInfo.Name)).Run(); err != nil {
-		log.Fatal(err)
-	}
-	if err := exec.Command("bash", "-c",
-		fmt.Sprintf("kubectl config delete-context %s", vmInfo.Name)).Run(); err != nil {
-		log.Fatal(err)
-	}
-	if err := exec.Command("bash", "-c",
-		fmt.Sprintf("kubectl config delete-user %s", vmInfo.Name)).Run(); err != nil {
-		log.Fatal(err)
-	}
-	if err := exec.Command("bash", "-c",
 		fmt.Sprintf("kubectl konfig import -s %s", hostPath)).Run(); err != nil {
 		log.Fatal(err)
+	}
+	return nil
+}
+
+var clearCfgCmdChain = []string{"delete-cluster","delete-user","delete-context"}
+
+func (a AryaConfig) ClearClusterConfig(c K3sCluster) error {
+	for _, v := range clearCfgCmdChain {
+		if err := kubectl.Exec("config", v, c.VM.Name()); err != nil {
+			return err
+		}
 	}
 	return nil
 }
