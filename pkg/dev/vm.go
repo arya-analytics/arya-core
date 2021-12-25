@@ -112,8 +112,8 @@ func (vm MultipassVM) Info() (VMInfo, error) {
 	var info VMInfo
 	o, err := vm.command("info", vm.cfg.Name).Output()
 	if err != nil {
-		log.WithFields(vm.logFields(false)).Trace("Couldn'tooling find VM")
-		return info, fmt.Errorf("couldn'tooling find VM named %s", vm.cfg.Name)
+		log.WithFields(vm.logFields(false)).Trace("Couldn't find VM")
+		return info, fmt.Errorf("couldn't find VM named %s", vm.cfg.Name)
 	}
 	rawInfoChain := strings.Split(string(o[:]), "\n")
 	var parsedInfo [12]string

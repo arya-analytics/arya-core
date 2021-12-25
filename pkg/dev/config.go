@@ -58,14 +58,35 @@ func MergeClusterConfig(c K3sCluster) error {
 		return err
 	}
 	name := kubeCfgBaseName + vmInfo.Name
-	hostPath := hostKubeCfgPathBase + name
+	cfgPath := hostKubeCfgPathBase + name
 
-	fmt.Printf("Copying kubeconfig from %s to host path %s", name, hostPath)
-	if err := transferKubeConfig(c.VM, hostPath); err != nil {
+	BindConfigToCluster(c, cfgPath)
+
+	fmt.Printf("Copying kubeconfig from %s to host path %s", name, cfgPath)
+	if err := transferKubeConfig(c.VM, cfgPath); err != nil {
 		log.Fatalln(err)
 	}
 
+	if err := kubectl.Exec("krew", "install", "konfig"); err != nil {
+		log.Warn("krew plugin already installed. Skipping reinstallation.")
+	}
+
+	if err := exec.Command("bash", "-c",
+		fmt.Sprintf("kubectl konfig import -s %s", cfgPath)).Run(); err != nil {
+		log.Fatal(err)
+	}
+	return nil
+}
+
+var clearCfgCmdChain = []string{"delete-cluster","delete-user","delete-context"}
+
+func BindConfigToCluster(c K3sCluster, cfgPath string) {
 	fmt.Printf("Modifying kubeconfig to bind to correct IP")
+	n := c.VM.Name()
+	info, err := c.VM.Info()
+	if err != nil {
+		log.Fatalln(err)
+	}
 	cmd := fmt.Sprintf(
 		"yq -i eval '.clusters[].cluster.server |= sub(\"127.0.0.1\", \"%s\")"+
 			" | .contexts[].name = \"%s\""+
@@ -75,25 +96,12 @@ func MergeClusterConfig(c K3sCluster) error {
 			" | .users[].name = \"%s\""+
 			" | .contexts[].context.user = \"%s\"' "+
 			"%s",
-		vmInfo.IPv4, vmInfo.Name, vmInfo.Name, vmInfo.Name, vmInfo.Name,
-		vmInfo.Name, vmInfo.Name, hostPath,
+		info.IPv4, n, n, n, n, n, n, cfgPath,
 	)
 	if err := exec.Command("bash", "-c", cmd).Run(); err != nil {
 		log.Fatal(err)
 	}
-
-	if err := kubectl.Exec("krew", "install", "konfig"); err != nil {
-		log.Warn("krew plugin already installed. Skipping reinstallation.")
-	}
-
-	if err := exec.Command("bash", "-c",
-		fmt.Sprintf("kubectl konfig import -s %s", hostPath)).Run(); err != nil {
-		log.Fatal(err)
-	}
-	return nil
 }
-
-var clearCfgCmdChain = []string{"delete-cluster","delete-user","delete-context"}
 
 func ClearClusterConfig(c K3sCluster) error {
 	for _, v := range clearCfgCmdChain {
