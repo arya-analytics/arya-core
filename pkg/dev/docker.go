@@ -37,6 +37,7 @@ func (d DockerImage) NameTag() string {
 }
 
 func (d DockerImage) Build() error {
+
 	return d.command("build", d.cfg.BuildCtxPath, "-t", d.NameTag()).Run()
 }
 

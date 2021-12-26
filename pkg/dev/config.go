@@ -50,9 +50,7 @@ func AuthenticateCluster(c K3sCluster) error {
 
 
 func MergeClusterConfig(c K3sCluster) error {
-	if err := ClearClusterConfig(c); err != nil {
-		log.Fatalln(err)
-	}
+	_ = ClearClusterConfig(c)
 	vmInfo, err := c.VM.Info()
 	if err != nil {
 		return err
@@ -60,16 +58,14 @@ func MergeClusterConfig(c K3sCluster) error {
 	name := kubeCfgBaseName + vmInfo.Name
 	cfgPath := hostKubeCfgPathBase + name
 
-	BindConfigToCluster(c, cfgPath)
-
-	fmt.Printf("Copying kubeconfig from %s to host path %s", name, cfgPath)
+	fmt.Printf("Copying kubeconfig from %s to host path %s \n", name, cfgPath)
 	if err := transferKubeConfig(c.VM, cfgPath); err != nil {
 		log.Fatalln(err)
 	}
 
-	if err := kubectl.Exec("krew", "install", "konfig"); err != nil {
-		log.Warn("krew plugin already installed. Skipping reinstallation.")
-	}
+	BindConfigToCluster(c, cfgPath)
+
+	_ = kubectl.Exec("krew", "install", "konfig")
 
 	if err := exec.Command("bash", "-c",
 		fmt.Sprintf("kubectl konfig import -s %s", cfgPath)).Run(); err != nil {
@@ -81,7 +77,7 @@ func MergeClusterConfig(c K3sCluster) error {
 var clearCfgCmdChain = []string{"delete-cluster","delete-user","delete-context"}
 
 func BindConfigToCluster(c K3sCluster, cfgPath string) {
-	fmt.Printf("Modifying kubeconfig to bind to correct IP")
+	fmt.Printf("Modifying kubeconfig to bind to correct IP \n")
 	n := c.VM.Name()
 	info, err := c.VM.Info()
 	if err != nil {
@@ -117,8 +113,5 @@ func LabelOrchestrator(nodeName string) error {
 }
 
 func transferKubeConfig(vm VM, hostPath string) error {
-	if err := vm.Transfer(TransferFrom, k3sKubeCfgPath, hostPath); err != nil {
-		return err
-	}
-	return nil
+	return vm.Transfer(TransferFrom, k3sKubeCfgPath, hostPath)
 }

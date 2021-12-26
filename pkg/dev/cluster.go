@@ -58,7 +58,6 @@ func (a *AryaCluster) Provision() error {
 			return err
 		}
 		a.nodes = append(a.nodes, k3s)
-		log.Infof("Successfully started k3s cluster on node %s \n", nodeName)
 	}
 	return nil
 }

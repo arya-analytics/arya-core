@@ -12,7 +12,7 @@ func Command(args ...string) *exec.Cmd {
 }
 
 func Exec(args ...string) error {
-	return Command(args...).Run()
+	 return Command(args...).Run()
 }
 
 func CurrentContext() (string, error) {
@@ -26,6 +26,6 @@ func SwitchContext(ctx string) error {
 	if err != nil {
 		return err
 	}
-	log.Infof("Successfully switched to kubectl context %s", ctx)
+	log.Trace("Switched to kubecontext %s", ctx)
 	return nil
 }

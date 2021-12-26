@@ -53,8 +53,6 @@ func (d Deployment) InitActionConfig() error {
 	return nil
 }
 
-
-
 func (d Deployment) Install() error {
 	client := action.NewInstall(d.actionConfig)
 	client.ReleaseName = d.cfg.name
@@ -88,17 +86,14 @@ func (d Deployment) Install() error {
 				nodeIpList = append(nodeIpList, v)
 			}
 		}
-		nodeIPsString := strings.Join(nodeIpList,",")
-		fmt.Println(nodeIPsString)
+		nodeIPsString := strings.Join(nodeIpList,"\\,")
 		joinVal := fmt.Sprintf("%s=%s", "cockroachdb.join", nodeIPsString)
 		imageVals := []string{repo, tag, nodeIPVal, joinVal }
-		log.Warn(imageVals)
 		options := values.Options{Values: imageVals}
 		v, err := options.MergeValues(getter.All(d.settings))
 		if err != nil {
 			log.Fatalln(err)
 		}
-
 
 		_, err = client.Run(c, v)
 	})

@@ -70,22 +70,22 @@ var clusterCmd = &cli.Command{
 					Usage:   "Whether to delete existing cluster infrastructure",
 				},
 				&cli.StringFlag{
-					Name:    "clusterName",
+					Name:    "name",
 					Aliases: []string{"cn"},
 					Value:   BaseAryaClusterCfg.Name,
 					Usage:   "Name of Arya cluster",
 				},
 			},
 			Action: func(c *cli.Context) error {
-				log.SetReportCaller(true)
 				if err := InstallRequired(); err != nil {
 					return err
 				}
 				numNodes := c.Int("nodes")
-				clusterName := c.String("clusterName")
+				name := c.String("name")
 				fmt.Printf("%s Provisioning an Arya Cluster named %s with %v nodes \n",
-					emoji.Bolt, clusterName, numNodes)
+					emoji.Bolt, name, numNodes)
 				aryaCfg := AryaClusterConfig{
+					Name: name,
 					NumNodes:   numNodes,
 					Cores:      c.Int("cores"),
 					Memory:     c.Int("memory"),
@@ -116,7 +116,7 @@ var clusterCmd = &cli.Command{
 					}
 				}
 				fmt.Printf(" %s Successfully initialized Arya Cluster %s",
-					emoji.Check, clusterName)
+					emoji.Check, name)
 				return nil
 			},
 		},
@@ -175,7 +175,8 @@ var reloaderCmd = &cli.Command{
 			Name:  "start",
 			Usage: "Start the hot-reloader",
 			Action: func(c *cli.Context) error {
-				log.SetReportCaller(true)
+				log.Infof("%s Starting Reloader", emoji.Bolt)
+
 				hash := git.CurrentCommitHash()
 				username := git.Username()
 				repository := "ghcr.io/arya-analytics/arya-core"
@@ -207,7 +208,6 @@ var loginCmd = &cli.Command{
 	Name:  "login",
 	Usage: "Login to Github and register credentials in config",
 	Action: func(c *cli.Context) error {
-		//ConstructConfig()
 		Login(c.Args().Get(0))
 		return nil
 	},

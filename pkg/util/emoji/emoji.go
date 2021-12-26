@@ -25,5 +25,6 @@ var (
 	Rainbow = New("1F308")
 	Bolt = New("26A1")
 	Tools = New("1F6E0")
+	Bison = New("1F9AC")
 )
 

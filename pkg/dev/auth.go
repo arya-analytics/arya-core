@@ -16,6 +16,8 @@ type Config struct {
 	Experimental string `json:"experimental"`
 }
 
+// Login creates/updates arya's config.
+// json file and supplies the appropriate credentials
 func Login(ghToken string) {
 	auth := AuthConfig{"ghcr.io": {"auth": ghToken}}
 	cfg := Config{
