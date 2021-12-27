@@ -10,45 +10,47 @@ import (
 
 // || ARYA CONFIG ||
 
-const k3sKubeCfgPath = "/etc/rancher/k3s/k3s.yaml"
+const (
+	k3sKubeCfgPath = "/etc/rancher/k3s/k3s.yaml"
+	authSecretName = "regcred"
+	kubeCfgBaseName = "kubeconfig."
+)
 
-const kubeCfgBaseName = "kubeconfig."
+var (
+	hostKubeCfgPathBase = os.ExpandEnv("$HOME") + "/.kube/"
+	aryaCfgPath = os.ExpandEnv("$HOME") + "/.arya/config.json"
+	aryaCfgType = "kubernetes.io/dockerconfigjson"
+)
 
-var hostKubeCfgPathBase = os.ExpandEnv("$HOME") + "/.kube/"
-
-var aryaCfgPath = os.ExpandEnv("$HOME") + "/.arya/config.json"
-
-var aryaCfgType = "kubernetes.io/dockerconfigjson"
-
-const authSecretName = "regcred"
-
+// AuthenticateCluster authenticate a k3s cluster by pulling auth credentials from
+// the arya config.json file and creating an auth secret that resources can access
 func AuthenticateCluster(c K3sCluster) error {
 	info, err := c.VM.Info()
 	if err != nil {
 		return err
 	}
+	log.Infof("Authenticating cluster on node %s", info.Name)
 	if err := kubectl.SwitchContext(info.Name); err != nil {
 		return err
 	}
 
-	if err := kubectl.Exec("delete", "secret", authSecretName); err != nil {
-		fmt.Println("We're fine here")
-	}
+	// Ok to skip error check as will get caught on next command
+	_ = kubectl.Exec("delete", "secret", authSecretName)
 
-	if err := kubectl.Exec(
+	err = kubectl.Exec(
 		"create",
 		"secret",
 		"generic",
 		authSecretName,
 		"--from-file=.dockerconfigjson="+aryaCfgPath,
 		"--type="+aryaCfgType,
-	); err != nil {
-		return err
-	}
-	return nil
+	)
+	return err
 }
 
 
+// MergeClusterConfig pulls the kubeconfig file from cluster c,
+// transfers it to the host machine, and merges it into the host kubeconfig.
 func MergeClusterConfig(c K3sCluster) error {
 	_ = ClearClusterConfig(c)
 	vmInfo, err := c.VM.Info()
@@ -74,8 +76,9 @@ func MergeClusterConfig(c K3sCluster) error {
 	return nil
 }
 
-var clearCfgCmdChain = []string{"delete-cluster","delete-user","delete-context"}
 
+// BindConfigToCluster binds a remote kubeconfig to the host machine by adding the
+// remote IP and setting the correct context
 func BindConfigToCluster(c K3sCluster, cfgPath string) {
 	fmt.Printf("Modifying kubeconfig to bind to correct IP \n")
 	n := c.VM.Name()
@@ -99,6 +102,9 @@ func BindConfigToCluster(c K3sCluster, cfgPath string) {
 	}
 }
 
+var clearCfgCmdChain = []string{"delete-cluster","delete-user","delete-context"}
+
+// ClearClusterConfig clears a clusters kubeconfig information from the host kubeconfig.
 func ClearClusterConfig(c K3sCluster) error {
 	for _, v := range clearCfgCmdChain {
 		if err := kubectl.Exec("config", v, c.VM.Name()); err != nil {
@@ -108,6 +114,8 @@ func ClearClusterConfig(c K3sCluster) error {
 	return nil
 }
 
+// LabelOrchestrator labels a specific kubernetes node with the Arya role of
+// orchestrator
 func LabelOrchestrator(nodeName string) error {
 	return kubectl.Exec("label","nodes",nodeName, "aryaRole=orchestrator")
 }
