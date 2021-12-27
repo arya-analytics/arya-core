@@ -88,6 +88,21 @@ var clusterCmd = &cli.Command{
 			},
 		},
 		{
+			Name: "delete",
+			Usage: "Delete an Arya development cluster",
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:    "name",
+					Aliases: []string{"cn"},
+					Value:   BaseAryaClusterCfg.Name,
+					Usage:   "Name of Arya cluster",
+				},
+			},
+			Action: func(c *cli.Context) error {
+				return DeleteLocalDevCluster(c.String("name"))
+			},
+		},
+		{
 			Name:  "stop",
 			Usage: "Stop an Arya development cluster",
 			Flags: []cli.Flag{
@@ -98,7 +113,6 @@ var clusterCmd = &cli.Command{
 				},
 			},
 			Action: func(c *cli.Context) error {
-
 				return nil
 			},
 		},

@@ -1,7 +1,6 @@
 package dev
 
 import (
-	"fmt"
 	"github.com/arya-analytics/aryacore/pkg/util/emoji"
 	"github.com/hashicorp/go-version"
 	log "github.com/sirupsen/logrus"
@@ -27,55 +26,55 @@ func RequiredTools() Tools {
 
 // InstallRequired installs tools required required for provisioning development clusters
 func InstallRequired() error {
-	fmt.Printf("%s Installing dev tools \n", emoji.Tools)
+	log.Infof("%s Installing dev tools", emoji.Tools)
 	t := NewTooling()
 	for _, k := range RequiredTools() {
 		if t.Installed(k) {
-			fmt.Printf("%s %s already installed \n", emoji.Frog, k)
+			log.Infof("%s %s already installed", emoji.Frog, k)
 		} else {
-			fmt.Printf("%s Installing %s \n", emoji.Flame, k)
+			log.Infof("%s Installing %s", emoji.Flame, k)
 			if err := t.Install(k); err != nil {
 				return err
 			}
-			fmt.Printf("%s  Installed %s \n", emoji.Check, k)
+			log.Infof("%s  Installed %s", emoji.Check, k)
 		}
 	}
-	fmt.Printf("%s  All Done! \n", emoji.Check)
+	log.Infof("%s  All Done!", emoji.Check)
 	return nil
 }
 
 // UninstallRequired uninstalls tools required for provisioning development clusters
 func UninstallRequired() error {
-	fmt.Printf("%s Uninstalling dev tools \n", emoji.Tools)
+	log.Infof("%s Uninstalling dev tools", emoji.Tools)
 	t := NewTooling()
 	for i := range RequiredTools() {
 		k := RequiredTools()[len(RequiredTools())-1-i]
 		if t.Installed(k) {
-			fmt.Printf("%s Uninstalling %s \n", emoji.Flame, k)
+			log.Infof("%s Uninstalling %s", emoji.Flame, k)
 			if err := t.Uninstall(k); err != nil {
 				return err
 			}
-			fmt.Printf("%s  Uninstalled %s \n", emoji.Check, k)
+			log.Infof("%s  Uninstalled %s", emoji.Check, k)
 
 		} else {
-			fmt.Printf("%s %s is not installed. \n", emoji.Check, k)
+			log.Infof("%s %s is not installed. \n", emoji.Check, k)
 		}
 	}
-	fmt.Printf("%s  All Done! \n", emoji.Check)
+	log.Infof("%s  All Done!", emoji.Check)
 	return nil
 }
 
 // RequiredInstalled checks to see if all mandatory dev tools are installed.
 func RequiredInstalled() bool {
-	fmt.Printf("%s Checking if required dev tools are installed\n", emoji.Tools)
+	log.Infof("%s Checking if required dev tools are installed", emoji.Tools)
 	t := NewTooling()
 	for _, v := range RequiredTools() {
 		if !t.Installed(v) {
-			fmt.Printf("%s Missing required dev tools\n", emoji.Frog)
+			log.Infof("%s Missing required dev tools\n", emoji.Frog)
 			return false
 		}
 	}
-	fmt.Printf("%s  All required dev tools installed\n", emoji.Check)
+	log.Infof("%s  All required dev tools installed\n", emoji.Check)
 	return true
 }
 

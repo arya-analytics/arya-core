@@ -17,7 +17,7 @@ func ProvisionLocalDevCluster(numNodes int, name string, cores int, memory int,
 	if err := InstallRequired(); err != nil {
 		return cluster, err
 	}
-	fmt.Printf("%s Provisioning an Arya Cluster named %s with %v nodes \n",
+	log.Infof("%s Provisioning an Arya Cluster named %s with %v nodes",
 		emoji.Bolt, name, numNodes)
 	cfg := AryaClusterConfig{
 		Name: name,
@@ -33,12 +33,12 @@ func ProvisionLocalDevCluster(numNodes int, name string, cores int, memory int,
 	if err != nil {
 		log.Fatalln(err)
 	}
-	fmt.Println("Merging kubeconfig")
+	log.Info("Merging kubeconfig")
 	for i, c := range cluster.Nodes() {
 		if err := MergeClusterConfig(*c); err != nil {
 			log.Fatalln(err)
 		}
-		fmt.Println("Authenticating cluster")
+		log.Info("Authenticating cluster")
 		AuthenticateCluster(*c)
 		if i == 0 {
 			nodeName := c.VM.Name()
@@ -51,6 +51,14 @@ func ProvisionLocalDevCluster(numNodes int, name string, cores int, memory int,
 	log.Infof(" %s Successfully initialized Arya Cluster %s",
 		emoji.Check, name)
 	return cluster, nil
+}
+
+// DeleteLocalDevCluster deletes a local development cluster based on its name.
+func DeleteLocalDevCluster(name string) error {
+	cfg := AryaClusterConfig{Name: name}
+	c := NewAryaCluster(cfg)
+	c.Bind()
+	return c.Delete()
 }
 
 // || ARYA CLUSTER ||
@@ -91,8 +99,8 @@ func NewAryaCluster(cfg AryaClusterConfig) *AryaCluster {
 func (a *AryaCluster) Provision() error {
 	for i := 1; i <= a.cfg.NumNodes; i++ {
 		nodeName := a.cfg.Name + strconv.Itoa(i)
-		log.Infof("Bootstrapping node %v  with name %s \n", i, nodeName)
-		log.Infof("Memory: %v Gb, Cores: %v, Storage: %v Gb \n", a.cfg.Memory,
+		log.Infof("Bootstrapping node %v  with name %s", i, nodeName)
+		log.Infof("Memory: %v Gb, Cores: %v, Storage: %v Gb", a.cfg.Memory,
 			a.cfg.Cores,
 			a.cfg.Storage)
 		vm, err := a.provisionVM(nodeName)
@@ -138,12 +146,12 @@ func (a *AryaCluster) provisionVM(nodeName string) (VM, error) {
 	}
 	vm := NewVM(cfg)
 	if !vm.Exists() {
-		log.Infof("Launching new VM named %s \n ", nodeName)
+		log.Infof("Launching new VM named %s ", nodeName)
 		if err := vm.Provision(); err != nil {
 			return vm, err
 		}
 	} else if a.cfg.ReInit {
-		log.Infof("VM %s already existed, tearing down and re-launching \n",
+		log.Infof("VM %s already existed, tearing down and re-launching",
 			nodeName)
 		if err := vm.Delete(); err != nil {
 			return vm, err
@@ -152,9 +160,9 @@ func (a *AryaCluster) provisionVM(nodeName string) (VM, error) {
 			return vm, err
 		}
 	} else {
-		return vm, fmt.Errorf("VM %s already exists and ReInit is false \n", nodeName)
+		return vm, fmt.Errorf("VM %s already exists and ReInit is false", nodeName)
 	}
-	log.Infof("Successfully provisioned VM %s \n", nodeName)
+	log.Infof("Successfully provisioned VM %s", nodeName)
 	return vm, nil
 }
 
