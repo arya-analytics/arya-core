@@ -24,28 +24,29 @@ var (
 
 // AuthenticateCluster authenticate a k3s cluster by pulling auth credentials from
 // the arya config.json file and creating an auth secret that resources can access
-func AuthenticateCluster(c K3sCluster) error {
+func AuthenticateCluster(c K3sCluster) {
 	info, err := c.VM.Info()
 	if err != nil {
-		return err
+		log.Fatalln(err)
 	}
 	log.Infof("Authenticating cluster on node %s", info.Name)
 	if err := kubectl.SwitchContext(info.Name); err != nil {
-		return err
+		log.Fatalln(err)
 	}
 
 	// Ok to skip error check as will get caught on next command
 	_ = kubectl.Exec("delete", "secret", authSecretName)
 
-	err = kubectl.Exec(
+	if err := kubectl.Exec(
 		"create",
 		"secret",
 		"generic",
 		authSecretName,
 		"--from-file=.dockerconfigjson="+aryaCfgPath,
 		"--type="+aryaCfgType,
-	)
-	return err
+	); err != nil {
+		log.Fatalln(err)
+	}
 }
 
 
@@ -86,6 +87,7 @@ func BindConfigToCluster(c K3sCluster, cfgPath string) {
 	if err != nil {
 		log.Fatalln(err)
 	}
+	log.Warnf("Modifying kubeconfig to contain name %s", n)
 	cmd := fmt.Sprintf(
 		"yq -i eval '.clusters[].cluster.server |= sub(\"127.0.0.1\", \"%s\")"+
 			" | .contexts[].name = \"%s\""+

@@ -9,22 +9,34 @@ import (
 
 const dummyAryaClusterName = "mytestcluster"
 
+func provisionDummyAryaClusterIfNotExists() (*dev.AryaCluster, error) {
+	cfg := dev.BaseAryaClusterCfg
+	cfg.Name = dummyAryaClusterName
+	cfg.NumNodes = 1
+	cfg.Memory = 2
+	cfg.Storage = 3
+	c := dev.NewAryaCluster(cfg)
+	c.Bind()
+	var cErr error
+	if !c.Exists() {
+		log.Warn("Cluster does not exist")
+		cErr = c.Provision()
+		for _, c := range c.Nodes() {
+			if err := dev.MergeClusterConfig(*c); err != nil {
+				log.Fatalln(err)
+			}
+			dev.AuthenticateCluster(*c)
+		}
+	}
+	return c, cErr
+}
+
 var _ = Describe("Cluster", func() {
 	Describe("AryaCluster", func() {
 		var c *dev.AryaCluster
 		var cErr error
 		BeforeEach(func() {
-			cfg := dev.BaseAryaClusterCfg
-			cfg.Name = dummyAryaClusterName
-			cfg.NumNodes = 1
-			cfg.Memory = 2
-			cfg.Storage = 3
-			c = dev.NewAryaCluster(cfg)
-			c.Bind()
-			if !c.Exists() {
-				log.Warn("Cluster does not exist")
-				cErr = c.Provision()
-			}
+			c, cErr = provisionDummyAryaClusterIfNotExists()
 		})
 		Describe("Provisioning a new cluster", func() {
 			It("Shouldn't encounter an error while provisioning the cluster", func() {

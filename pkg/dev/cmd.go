@@ -104,9 +104,7 @@ var clusterCmd = &cli.Command{
 						log.Fatalln(err)
 					}
 					fmt.Println("Authenticating cluster")
-					if err := AuthenticateCluster(*c); err != nil {
-						log.Fatalln(err)
-					}
+					AuthenticateCluster(*c)
 					if i == 0 {
 						nodeName := c.VM.Name()
 						log.Infof("Marking node %s as the cluster orchestrator", nodeName)
