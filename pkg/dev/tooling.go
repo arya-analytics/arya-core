@@ -25,8 +25,8 @@ func RequiredTools() Tools {
 
 // || REQUIRED TOOL INSTALLS ||
 
-// InstallRequired installs tools required required for provisioning dev clusters.
-func InstallRequired() error {
+// InstallRequiredTools installs tools required required for provisioning dev clusters.
+func InstallRequiredTools() {
 	log.Infof("%s Installing dev tools", emoji.Tools)
 	t := NewTooling()
 	for _, k := range RequiredTools() {
@@ -35,17 +35,16 @@ func InstallRequired() error {
 		} else {
 			log.Infof("%s Installing %s", emoji.Flame, k)
 			if err := t.Install(k); err != nil {
-				return err
+				log.Fatalln(err)
 			}
 			log.Infof("%s  Installed %s", emoji.Check, k)
 		}
 	}
 	log.Infof("%s  All Done!", emoji.Check)
-	return nil
 }
 
-// UninstallRequired uninstalls tools required for provisioning dev clusters.
-func UninstallRequired() error {
+// UninstallRequiredTools uninstalls tools required for provisioning dev clusters.
+func UninstallRequiredTools() {
 	log.Infof("%s Uninstalling dev tools", emoji.Tools)
 	t := NewTooling()
 	for i := range RequiredTools() {
@@ -53,7 +52,7 @@ func UninstallRequired() error {
 		if t.Installed(k) {
 			log.Infof("%s Uninstalling %s", emoji.Flame, k)
 			if err := t.Uninstall(k); err != nil {
-				return err
+				log.Fatalln(err)
 			}
 			log.Infof("%s  Uninstalled %s", emoji.Check, k)
 
@@ -62,11 +61,10 @@ func UninstallRequired() error {
 		}
 	}
 	log.Infof("%s  All Done!", emoji.Check)
-	return nil
 }
 
-// RequiredInstalled checks to see if all mandatory dev tools are installed.
-func RequiredInstalled() bool {
+// RequiredToolsInstalled checks to see if all mandatory dev tools are installed.
+func RequiredToolsInstalled() bool {
 	log.Infof("%s Checking if required dev tools are installed", emoji.Tools)
 	t := NewTooling()
 	for _, v := range RequiredTools() {

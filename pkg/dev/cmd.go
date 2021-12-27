@@ -128,21 +128,23 @@ var toolingCmd = &cli.Command{
 			Name:  "install",
 			Usage: "Install development tools.",
 			Action: func(c *cli.Context) error {
-				return InstallRequired()
+				InstallRequiredTools()
+				return nil
 			},
 		},
 		{
 			Name:  "uninstall",
 			Usage: "Uninstall development tools.",
 			Action: func(c *cli.Context) error {
-				return UninstallRequired()
+				UninstallRequiredTools()
+				return nil
 			},
 		},
 		{
 			Name:  "check",
 			Usage: "Check if required development tools are installed",
 			Action: func(c *cli.Context) error {
-				RequiredInstalled()
+				RequiredToolsInstalled()
 				return nil
 			},
 		},
@@ -179,7 +181,7 @@ var reloaderCmd = &cli.Command{
 
 }
 
-// || LOGIN ||
+// || LOGIN CLI ||
 
 var loginCmd = &cli.Command{
 	Name:  "login",
