@@ -1,15 +1,57 @@
 package dev
 
 import (
+	"fmt"
 	"github.com/arya-analytics/aryacore/pkg/util/emoji"
+	"github.com/arya-analytics/aryacore/pkg/util/git"
 	"github.com/fsnotify/fsnotify"
 	log "github.com/sirupsen/logrus"
+	"path/filepath"
+	"strings"
 )
 
 var ignoreDirs = []string{
 	".git",
 	".idea",
 }
+
+const (
+	imageRepo = "ghcr.io/arya-analytics/arya-core"
+	chartRelPath = "kubernetes/aryacore"
+)
+
+// DefaultBuildCtxPath returns the default build context for the arya image
+func DefaultBuildCtxPath() string {
+	ctx, err := filepath.Abs(".")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	return ctx
+}
+
+// StartReloader starts the development reloader
+func StartReloader(clusterName string, buildCtxPath string) error {
+	log.Infof("%s Starting Reloader", emoji.Bolt)
+	tag := GitImageTag()
+	cfg := AryaClusterConfig{Name: clusterName}
+	cluster := NewAryaCluster(cfg)
+	cluster.Bind()
+	chartPath := filepath.Join(buildCtxPath, chartRelPath)
+	err := WatchAndDeploy(cluster, imageRepo, tag, chartPath,
+		buildCtxPath)
+	return err
+}
+
+// GitImageTag returns an image tag built off of the current commit hash and git
+//username
+func GitImageTag() string {
+	ch := git.CurrentCommitHash()
+	u := git.Username()
+	shortHash := ch[len(ch)-8:]
+	shortUser := strings.Split(u, "@")[0]
+	return fmt.Sprintf("%s-%s", shortHash, shortUser)
+}
+
 
 func WatchAndDeploy(cluster *AryaCluster, repository, tag, chartPath, buildCtxPath string) error {
 	imgCfg := ImageCfg{

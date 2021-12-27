@@ -2,14 +2,10 @@ package dev
 
 import "C"
 import (
-	"fmt"
-	"github.com/arya-analytics/aryacore/pkg/util/emoji"
-	"github.com/arya-analytics/aryacore/pkg/util/git"
-	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
-	"path/filepath"
-	"strings"
 )
+
+// || GENERAL CLI ||
 
 var Cmd = &cli.Command{
 	Name: "dev",
@@ -24,9 +20,11 @@ var Cmd = &cli.Command{
 	},
 }
 
+// || LOCAL DEV CLUSTER CLI ||
+
 var clusterCmd = &cli.Command{
 	Name:  "cluster",
-	Usage: "Provision and manage development nodes.",
+	Usage: "Provision and manage development clusters.",
 	Subcommands: []*cli.Command{
 		{
 			Name:  "provision",
@@ -77,45 +75,16 @@ var clusterCmd = &cli.Command{
 				},
 			},
 			Action: func(c *cli.Context) error {
-				if err := InstallRequired(); err != nil {
-					return err
-				}
-				numNodes := c.Int("nodes")
-				name := c.String("name")
-				fmt.Printf("%s Provisioning an Arya Cluster named %s with %v nodes \n",
-					emoji.Bolt, name, numNodes)
-				aryaCfg := AryaClusterConfig{
-					Name: name,
-					NumNodes:   numNodes,
-					Cores:      c.Int("cores"),
-					Memory:     c.Int("memory"),
-					Storage:    c.Int("storage"),
-					ReInit:     c.Bool("reInit"),
-					CidrOffset: c.Int("cidrOffset"),
-				}
-				aryaCluster := NewAryaCluster(aryaCfg)
-				err := aryaCluster.Provision()
-				if err != nil {
-					log.Fatalln(err)
-				}
-				fmt.Println("Merging kubeconfig")
-				for i, c := range aryaCluster.Nodes() {
-					if err := MergeClusterConfig(*c); err != nil {
-						log.Fatalln(err)
-					}
-					fmt.Println("Authenticating cluster")
-					AuthenticateCluster(*c)
-					if i == 0 {
-						nodeName := c.VM.Name()
-						log.Infof("Marking node %s as the cluster orchestrator", nodeName)
-						if err := LabelOrchestrator(nodeName); err != nil {
-							log.Fatalln(err)
-						}
-					}
-				}
-				fmt.Printf(" %s Successfully initialized Arya Cluster %s",
-					emoji.Check, name)
-				return nil
+				_, err := ProvisionLocalDevCluster(
+					c.Int("nodes"),
+					c.String("name"),
+					c.Int("cores"),
+					c.Int("memory"),
+					c.Int("storage"),
+					c.Bool("reInit"),
+					c.Int("cidrOffset"),
+				)
+				return err
 			},
 		},
 		{
@@ -135,6 +104,8 @@ var clusterCmd = &cli.Command{
 		},
 	},
 }
+
+// || TOOLING CLI ||
 
 var toolingCmd = &cli.Command{
 	Name:  "tooling",
@@ -165,6 +136,8 @@ var toolingCmd = &cli.Command{
 	},
 }
 
+// || RELOADER CLI ||
+
 var reloaderCmd = &cli.Command{
 	Name:  "reloader",
 	Usage: "Operate the development hot-reloader.",
@@ -172,29 +145,25 @@ var reloaderCmd = &cli.Command{
 		{
 			Name:  "start",
 			Usage: "Start the hot-reloader",
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:    "clusterName",
+					Aliases: []string{"cn"},
+					Value:   BaseAryaClusterCfg.Name,
+					Usage:   "name of arya cluster to deploy into",
+				},
+				&cli.StringFlag{
+					Name:    "buildCtx",
+					Aliases: []string{"bc"},
+					Value:   DefaultBuildCtxPath(),
+				},
+			},
 			Action: func(c *cli.Context) error {
-				log.Infof("%s Starting Reloader", emoji.Bolt)
-
-				hash := git.CurrentCommitHash()
-				username := git.Username()
-				repository := "ghcr.io/arya-analytics/arya-core"
-				tag := fmt.Sprintf("%s-%s", hash[len(hash)-8:],
-					strings.Split(username, "@")[0])
-				buildCtxPath, _ := filepath.Abs(".")
-				cfg := AryaClusterConfig{Name: BaseAryaClusterCfg.Name}
-				cluster := NewAryaCluster(cfg)
-				cluster.Bind()
-				absPath, _ := filepath.Abs(".")
-				chartPath := filepath.Join(absPath, "kubernetes", "aryacore")
-				if err := WatchAndDeploy(cluster, repository, tag, chartPath,
-					buildCtxPath); err != nil {
-					return err
-				}
-				return nil
-
+				return StartReloader(c.String("clusterName"), c.String("buildCtx"))
 			},
 		},
 	},
+
 }
 
 var configCmd = &cli.Command{

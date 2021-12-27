@@ -2,9 +2,56 @@ package dev
 
 import (
 	"fmt"
+	"github.com/arya-analytics/aryacore/pkg/util/emoji"
 	log "github.com/sirupsen/logrus"
 	"strconv"
 )
+
+// || LOCAL DEV CLUSTER ||
+
+// ProvisionLocalDevCluster provisions a local development cluster based on the
+// specified parameters.
+func ProvisionLocalDevCluster(numNodes int, name string, cores int, memory int,
+	storage int, reInit bool, cidrOffset int) (*AryaCluster, error) {
+	var cluster *AryaCluster
+	if err := InstallRequired(); err != nil {
+		return cluster, err
+	}
+	fmt.Printf("%s Provisioning an Arya Cluster named %s with %v nodes \n",
+		emoji.Bolt, name, numNodes)
+	cfg := AryaClusterConfig{
+		Name: name,
+		NumNodes:   numNodes,
+		Cores:      cores,
+		Memory:     memory,
+		Storage:    storage,
+		ReInit:     reInit,
+		CidrOffset: cidrOffset,
+	}
+	cluster = NewAryaCluster(cfg)
+	err := cluster.Provision()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	fmt.Println("Merging kubeconfig")
+	for i, c := range cluster.Nodes() {
+		if err := MergeClusterConfig(*c); err != nil {
+			log.Fatalln(err)
+		}
+		fmt.Println("Authenticating cluster")
+		AuthenticateCluster(*c)
+		if i == 0 {
+			nodeName := c.VM.Name()
+			log.Infof("Marking node %s as the cluster orchestrator", nodeName)
+			if err := LabelOrchestrator(nodeName); err != nil {
+				log.Fatalln(err)
+			}
+		}
+	}
+	log.Infof(" %s Successfully initialized Arya Cluster %s",
+		emoji.Check, name)
+	return cluster, nil
+}
 
 // || ARYA CLUSTER ||
 // Utilities for provisioning and managing development Arya Clusters
@@ -64,7 +111,7 @@ func (a *AryaCluster) Provision() error {
 
 // provisionK3s provisions a K3s cluster on a VM
 // Needs to receive a pod cidr ID (ex. 44 would result in the call Cidr(
-// 44) for the pod Cidr and Cidr(45) for the service Cidr)
+// 44) for the pod Cidr and Cidr(45) for the service Cidr).
 func (a *AryaCluster) provisionK3s(vm VM, podCidrID int) (*K3sCluster, error) {
 	log.Infof("Provisioning new K3s cluster on VM %s", vm.Name())
 	cfg := K3sClusterConfig{
@@ -81,7 +128,7 @@ func (a *AryaCluster) provisionK3s(vm VM, podCidrID int) (*K3sCluster, error) {
 
 // provisionVM provisions a virtual machine for the cluster based off a node name
 // and internal config information.
-// NOTE: If a.Cfg.reInit is set to true, will tear down existing VM's
+// NOTE: If a.Cfg.reInit is set to true, will tear down existing VM's.
 func (a *AryaCluster) provisionVM(nodeName string) (VM, error) {
 	cfg := VMConfig{
 		Name:    nodeName,
@@ -111,7 +158,7 @@ func (a *AryaCluster) provisionVM(nodeName string) (VM, error) {
 	return vm, nil
 }
 
-// Bind binds to an existing arya cluster based on its name
+// Bind binds to an existing arya cluster based on its name.
 func (a *AryaCluster) Bind() {
 	for i := 1; i > 0; i++ {
 		cfg := VMConfig{
@@ -126,12 +173,12 @@ func (a *AryaCluster) Bind() {
 	}
 }
 
-// Nodes returns the nodes in the cluster
+// Nodes returns the nodes in the cluster.
 func(a *AryaCluster) Nodes() []*K3sCluster {
 	return a.nodes
 }
 
-// Exists checks if an arya cluster with a.Cfg.name already exists
+// Exists checks if a cluster with a.Cfg.name already exists.
 func (a *AryaCluster) Exists() bool {
 	if len(a.Nodes()) > 0 {
 		return true
@@ -143,9 +190,13 @@ func (a *AryaCluster) Exists() bool {
 	return false
 }
 
+// Delete Deletes an existing cluster and purges all of its data
 func (a *AryaCluster) Delete() error {
 	for _, node := range a.Nodes() {
 		if err := node.VM.Delete(); err != nil {
+			return err
+		}
+		if err := ClearClusterConfig(*node); err != nil {
 			return err
 		}
 	}
