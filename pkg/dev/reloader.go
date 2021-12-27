@@ -20,7 +20,7 @@ const (
 	chartRelPath = "kubernetes/aryacore"
 )
 
-// DefaultBuildCtxPath returns the default build context for the arya image
+// DefaultBuildCtxPath returns the default build context for the arya image.
 func DefaultBuildCtxPath() string {
 	ctx, err := filepath.Abs(".")
 	if err != nil {
@@ -29,7 +29,7 @@ func DefaultBuildCtxPath() string {
 	return ctx
 }
 
-// StartReloader starts the development reloader
+// StartReloader starts the development reloader.
 func StartReloader(clusterName string, buildCtxPath string) error {
 	log.Infof("%s Starting Reloader", emoji.Bolt)
 	tag := GitImageTag()
@@ -37,13 +37,13 @@ func StartReloader(clusterName string, buildCtxPath string) error {
 	cluster := NewAryaCluster(cfg)
 	cluster.Bind()
 	chartPath := filepath.Join(buildCtxPath, chartRelPath)
-	err := WatchAndDeploy(cluster, imageRepo, tag, chartPath,
+	err := WatchAndDeployToLocalCluster(cluster, imageRepo, tag, chartPath,
 		buildCtxPath)
 	return err
 }
 
 // GitImageTag returns an image tag built off of the current commit hash and git
-//username
+// username.
 func GitImageTag() string {
 	ch := git.CurrentCommitHash()
 	u := git.Username()
@@ -53,7 +53,9 @@ func GitImageTag() string {
 }
 
 
-func WatchAndDeploy(cluster *AryaCluster, repository, tag, chartPath, buildCtxPath string) error {
+// WatchAndDeployToLocalCluster starts watching for file changes and continuously
+// deploys those changes to a local development cluster.
+func WatchAndDeployToLocalCluster(cluster *AryaCluster, repository, tag, chartPath, buildCtxPath string) error {
 	imgCfg := ImageCfg{
 		Repository:   repository,
 		Tag:          tag,

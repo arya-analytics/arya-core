@@ -10,6 +10,7 @@ import (
 
 type Tools []string
 
+// RequiredTools returns a slice of the required tools for provisioning dev clusters.
 func RequiredTools() Tools {
 	return Tools{
 		"multipass",
@@ -24,7 +25,7 @@ func RequiredTools() Tools {
 
 // || REQUIRED TOOL INSTALLS ||
 
-// InstallRequired installs tools required required for provisioning development clusters
+// InstallRequired installs tools required required for provisioning dev clusters.
 func InstallRequired() error {
 	log.Infof("%s Installing dev tools", emoji.Tools)
 	t := NewTooling()
@@ -43,7 +44,7 @@ func InstallRequired() error {
 	return nil
 }
 
-// UninstallRequired uninstalls tools required for provisioning development clusters
+// UninstallRequired uninstalls tools required for provisioning dev clusters.
 func UninstallRequired() error {
 	log.Infof("%s Uninstalling dev tools", emoji.Tools)
 	t := NewTooling()
@@ -80,9 +81,14 @@ func RequiredInstalled() bool {
 
 // || GENERAL TOOLING ||
 
+// Tooling provides a generic interface for installing dev tools such as kubectl,
+// multipass, yq, etc.
 type Tooling interface {
+	// Install installs a dev tool based on its name.
 	Install(tool string) error
+	// Uninstall uninstalls a dev tool based on its name.
 	Uninstall(tool string) error
+	// Installed checks if a package has already been installed.
 	Installed(tool string) bool
 }
 
@@ -103,17 +109,14 @@ type BrewTooling struct {
 	tools Tools
 }
 
-// Install installs a dev tool based on its name.
 func (t BrewTooling) Install(tool string) error {
 	return t.command("install", tool).Run()
 }
 
-// Uninstall uninstalls a dev tool based on its name.
 func (t BrewTooling) Uninstall(tool string) error {
 	return t.command("uninstall", tool).Run()
 }
 
-// Installed checks if a package has already been installed.
 func (t BrewTooling) Installed(tool string) bool {
 
 	out, err := t.command("list").Output()

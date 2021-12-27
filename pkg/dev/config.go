@@ -14,12 +14,12 @@ const (
 	k3sKubeCfgPath = "/etc/rancher/k3s/k3s.yaml"
 	authSecretName = "regcred"
 	kubeCfgBaseName = "kubeconfig."
+	aryaCfgType = "kubernetes.io/dockerconfigjson"
 )
 
 var (
 	hostKubeCfgPathBase = os.ExpandEnv("$HOME") + "/.kube/"
 	aryaCfgPath = os.ExpandEnv("$HOME") + "/.arya/config.json"
-	aryaCfgType = "kubernetes.io/dockerconfigjson"
 )
 
 // AuthenticateCluster authenticate a k3s cluster by pulling auth credentials from
@@ -61,7 +61,6 @@ func MergeClusterConfig(c K3sCluster) error {
 	name := kubeCfgBaseName + vmInfo.Name
 	cfgPath := hostKubeCfgPathBase + name
 
-	fmt.Printf("Copying kubeconfig from %s to host path %s \n", name, cfgPath)
 	if err := transferKubeConfig(c.VM, cfgPath); err != nil {
 		log.Fatalln(err)
 	}
@@ -81,13 +80,11 @@ func MergeClusterConfig(c K3sCluster) error {
 // BindConfigToCluster binds a remote kubeconfig to the host machine by adding the
 // remote IP and setting the correct context
 func BindConfigToCluster(c K3sCluster, cfgPath string) {
-	fmt.Printf("Modifying kubeconfig to bind to correct IP \n")
 	n := c.VM.Name()
 	info, err := c.VM.Info()
 	if err != nil {
 		log.Fatalln(err)
 	}
-	log.Warnf("Modifying kubeconfig to contain name %s", n)
 	cmd := fmt.Sprintf(
 		"yq -i eval '.clusters[].cluster.server |= sub(\"127.0.0.1\", \"%s\")"+
 			" | .contexts[].name = \"%s\""+

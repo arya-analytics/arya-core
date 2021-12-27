@@ -9,10 +9,16 @@ import (
 )
 
 type WatcherConfig struct {
+	// Slice of absolute paths to track
 	Dirs       []string
+	// Whether to do a recursive watch on those paths
 	Recursive  bool
+	// List of directories to ignore
 	IgnoreDirs []string
+	// List of triggers to operate. fsnotify.Write
+	// would trigger the action on a file write.
 	Triggers   []fsnotify.Op
+	// Action to trigger when a file is modified
 	Action     func(event fsnotify.Event)
 }
 
@@ -21,22 +27,20 @@ type Watcher struct {
 	fsWatcher *fsnotify.Watcher
 }
 
+// Start starts the watcher and looks for file changes
 func (w *Watcher) Start() {
 	var err error
 	w.fsWatcher, err = fsnotify.NewWatcher()
-	defer func(fsWatcher *fsnotify.Watcher) {
-		err := fsWatcher.Close()
-		if err != nil {
+	defer func() {
+		if err := w.fsWatcher.Close(); err != nil {
 			log.Fatalln(err)
 		}
-	}(w.fsWatcher)
+	}()
 	if err != nil {
 		log.Fatalln(err)
 	}
-	done := make(chan bool)
 	w.bindPaths()
-	go w.listen()
-	<-done
+	w.listen()
 }
 
 func (w *Watcher) bindPaths() {

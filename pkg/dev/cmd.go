@@ -15,7 +15,6 @@ var Cmd = &cli.Command{
 		clusterCmd,
 		toolingCmd,
 		reloaderCmd,
-		configCmd,
 		loginCmd,
 	},
 }
@@ -180,16 +179,12 @@ var reloaderCmd = &cli.Command{
 
 }
 
-var configCmd = &cli.Command{
-	Name:  "config",
-	Usage: "Manage development configurations.",
-}
+// || LOGIN ||
 
 var loginCmd = &cli.Command{
 	Name:  "login",
 	Usage: "Login to Github and register credentials in config",
 	Action: func(c *cli.Context) error {
-		Login(c.Args().Get(0))
-		return nil
+		return Login(c.Args().Get(0))
 	},
 }
