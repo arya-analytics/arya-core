@@ -19,12 +19,10 @@ func provisionDummyAryaClusterIfNotExists() (*dev.AryaCluster, error) {
 	c.Bind()
 	var cErr error
 	if !c.Exists() {
-		log.Warn("Cluster does not exist")
+		log.Info("Test cluster does not exist")
 		cErr = c.Provision()
 		for _, c := range c.Nodes() {
-			if err := dev.MergeClusterConfig(*c); err != nil {
-				log.Fatalln(err)
-			}
+			dev.MergeClusterConfig(*c)
 			dev.AuthenticateCluster(*c)
 		}
 	}

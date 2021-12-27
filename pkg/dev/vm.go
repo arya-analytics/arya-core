@@ -189,6 +189,8 @@ func (vm MultipassVM) Transfer(transfer TransferDirection, srcPath, destPath str
 	}
 	var errb bytes.Buffer
 	cmd := vm.command("transfer", srcPath, destPath)
+	log.WithFields(vm.logFields(false)).Trace("Transferring from %s to %s", srcPath,
+		destPath)
 	cmd.Stderr = &errb
 	if err := cmd.Run(); err != nil {
 		log.WithFields(vm.logFields(false)).Error(errb.String())
