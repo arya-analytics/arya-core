@@ -7,9 +7,15 @@ import (
 	"strings"
 )
 
+const (
+	dockerCmd        = "docker"
+	nameTagSeparator = ":"
+	nameTagFormat    = "name:tag"
+)
+
 type ImageCfg struct {
-	Repository string
-	Tag string
+	Repository   string
+	Tag          string
 	BuildCtxPath string
 }
 
@@ -23,8 +29,6 @@ func NewDockerImage(cfg ImageCfg) *DockerImage {
 	}
 	return &di
 }
-
-const dockerCmd = "docker"
 
 func (d DockerImage) command(args ...string) *exec.Cmd {
 	cmd := exec.Command(dockerCmd, args...)
@@ -45,18 +49,15 @@ func (d DockerImage) Push() error {
 	return d.command("push", d.NameTag()).Run()
 }
 
-const imageNameTagSeparator = ":"
-const nameTagFormat = "name:tag"
-
-func parseNameTag(nameTag string) (repository  string, tag string, err error) {
-	split := strings.Split(nameTag, imageNameTagSeparator)
+func parseNameTag(nameTag string) (repository string, tag string, err error) {
+	split := strings.Split(nameTag, nameTagSeparator)
 	if len(split) != 2 {
-		return "", "", fmt.Errorf("nameTag %s has the incorrect format. " +
+		return "", "", fmt.Errorf("nameTag %s has the incorrect format. "+
 			"The correct format is %s", nameTag, nameTagFormat)
 	}
 	return split[0], split[1], nil
 }
 
 func createNameTag(repository, tag string) string {
-	return repository + imageNameTagSeparator + tag
+	return repository + nameTagSeparator + tag
 }
