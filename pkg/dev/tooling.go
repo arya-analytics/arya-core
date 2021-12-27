@@ -18,15 +18,14 @@ func RequiredTools() Tools {
 		"krew",
 		"yq",
 		"helm",
-		"gh",	
+		"gh",
 	}
-	
+
 }
 
 // || REQUIRED TOOL INSTALLS ||
 
-// InstallRequired installs all mandatory dev tools necessary for developing aryacore.
-// Takes a verbosity flag
+// InstallRequired installs tools required required for provisioning development clusters
 func InstallRequired() error {
 	fmt.Printf("%s Installing dev tools \n", emoji.Tools)
 	t := NewTooling()
@@ -45,8 +44,7 @@ func InstallRequired() error {
 	return nil
 }
 
-// UninstallRequired uninstalls all mandatory dev tools necessary for developing
-//aryacore. Takes a verbosity flag.
+// UninstallRequired uninstalls tools required for provisioning development clusters
 func UninstallRequired() error {
 	fmt.Printf("%s Uninstalling dev tools \n", emoji.Tools)
 	t := NewTooling()
