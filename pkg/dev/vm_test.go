@@ -9,7 +9,7 @@ import (
 var _ = Describe("VM", func() {
 	Describe("Multipass VM", func() {
 		Describe("Provisioning new VM", func() {
-			Context("When the VM doesn'tooling exist", func() {
+			Context("When the VM doesn'tools exist", func() {
 				It("Should assign the correct name ", func() {
 					Expect(vmInfo.Name).To(Equal(vmCfg.Name))
 				})
@@ -68,7 +68,7 @@ var _ = Describe("VM", func() {
 					Expect(vmInfo.ImageHash).To(ContainSubstring("(Ubuntu"))
 				})
 			})
-			Context("When a VM doesn'tooling exist", func() {
+			Context("When a VM doesn'tools exist", func() {
 				It("Should return an error", func() {
 					nonExistentVm := dev.NewVM(dev.VMConfig{Name: "doesnotexist"})
 					_, err := nonExistentVm.Info()

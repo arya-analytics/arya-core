@@ -9,6 +9,20 @@ import (
 	"strings"
 )
 
+type Tools []string
+
+func RequiredTools() Tools {
+	return Tools{
+		"multipass",
+		"kubernetes-cli",
+		"krew",
+		"yq",
+		"helm",
+		"gh",	
+	}
+	
+}
+
 // || REQUIRED TOOL INSTALLS ||
 
 // InstallRequired installs all mandatory dev tools necessary for developing aryacore.
@@ -16,7 +30,7 @@ import (
 func InstallRequired() error {
 	fmt.Printf("%s Installing dev tools \n", emoji.Tools)
 	t := NewTooling()
-	for _, k := range RequiredTools {
+	for _, k := range RequiredTools() {
 		if t.Installed(k) {
 			fmt.Printf("%s %s already installed \n", emoji.Frog, k)
 		} else {
@@ -36,8 +50,8 @@ func InstallRequired() error {
 func UninstallRequired() error {
 	fmt.Printf("%s Uninstalling dev tools \n", emoji.Tools)
 	t := NewTooling()
-	for i := range RequiredTools {
-		k := RequiredTools[len(RequiredTools)-1-i]
+	for i := range RequiredTools() {
+		k := RequiredTools()[len(RequiredTools())-1-i]
 		if t.Installed(k) {
 			fmt.Printf("%s Uninstalling %s \n", emoji.Flame, k)
 			if err := t.Uninstall(k); err != nil {
@@ -57,7 +71,7 @@ func UninstallRequired() error {
 func RequiredInstalled() bool {
 	fmt.Printf("%s Checking if required dev tools are installed\n", emoji.Tools)
 	t := NewTooling()
-	for _, v := range RequiredTools {
+	for _, v := range RequiredTools() {
 		if !t.Installed(v) {
 			fmt.Printf("%s Missing required dev tools\n", emoji.Frog)
 			return false
@@ -75,9 +89,9 @@ type Tooling interface {
 	Installed(tool string) bool
 }
 
-// NewTooling creates and returns the correct OS specific tooling manager.
+// NewTooling creates and returns the correct OS specific tools manager.
 func NewTooling() Tooling {
-	t := BrewTooling{RequiredTools}
+	t := BrewTooling{RequiredTools()}
 	t.preReqs()
 	return &t
 }
@@ -89,8 +103,7 @@ const brewCmd = "brew"
 var requiredBrewVersion, _ = version.NewVersion("3.3.8")
 
 type BrewTooling struct {
-
-	tooling ToolingConfig
+	tools Tools
 }
 
 // Install installs a dev tool based on its name.

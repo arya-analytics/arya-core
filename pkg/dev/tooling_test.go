@@ -6,7 +6,7 @@ import (
 )
 
 var _ = Describe("Tooling", func() {
-	Describe("Brew tooling", func() {
+	Describe("Brew tools", func() {
 		Context("A tool is not installed", func() {
 			Describe("Checking if a tool is installed", func() {
 				It("Should return false", func() {

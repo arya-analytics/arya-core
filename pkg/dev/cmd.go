@@ -10,7 +10,7 @@ import (
 var Cmd = &cli.Command{
 	Name: "dev",
 	Usage: "Provides access to development services such as cluster provisioning, " +
-		"tooling installs, and configuration management.",
+		"tools installs, and configuration management.",
 	Subcommands: []*cli.Command{
 		clusterCmd,
 		toolingCmd,
@@ -108,7 +108,7 @@ var clusterCmd = &cli.Command{
 // || TOOLING CLI ||
 
 var toolingCmd = &cli.Command{
-	Name:  "tooling",
+	Name:  "tools",
 	Usage: "Install and manage development tools.",
 	Subcommands: []*cli.Command{
 		{
