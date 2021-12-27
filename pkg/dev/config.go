@@ -52,17 +52,17 @@ func AuthenticateCluster(c K3sCluster) {
 
 // MergeClusterConfig pulls the kubeconfig file from cluster c,
 // transfers it to the host machine, and merges it into the host kubeconfig.
-func MergeClusterConfig(c K3sCluster) error {
-	_ = ClearClusterConfig(c)
+func MergeClusterConfig(c K3sCluster) {
+	ClearClusterConfig(c)
 	vmInfo, err := c.VM.Info()
 	if err != nil {
-		return err
+		log.Fatal(err)
 	}
 	name := kubeCfgBaseName + vmInfo.Name
 	cfgPath := hostKubeCfgPathBase + name
 
 	if err := transferKubeConfig(c.VM, cfgPath); err != nil {
-		log.Fatalln(err)
+		log.Fatal(err)
 	}
 
 	BindConfigToCluster(c, cfgPath)
@@ -73,7 +73,6 @@ func MergeClusterConfig(c K3sCluster) error {
 		fmt.Sprintf("kubectl konfig import -s %s", cfgPath)).Run(); err != nil {
 		log.Fatal(err)
 	}
-	return nil
 }
 
 
@@ -104,19 +103,22 @@ func BindConfigToCluster(c K3sCluster, cfgPath string) {
 var clearCfgCmdChain = []string{"delete-cluster","delete-user","delete-context"}
 
 // ClearClusterConfig clears a clusters kubeconfig information from the host kubeconfig.
-func ClearClusterConfig(c K3sCluster) error {
+func ClearClusterConfig(c K3sCluster) {
+	name := c.VM.Name()
 	for _, v := range clearCfgCmdChain {
-		if err := kubectl.Exec("config", v, c.VM.Name()); err != nil {
-			return err
+		if err := kubectl.Exec("config", v, name); err != nil {
+			log.Warn("Unable to delete config for cluster %s", name)
 		}
 	}
-	return nil
 }
 
 // LabelOrchestrator labels a specific kubernetes node with the Arya role of
 // orchestrator
-func LabelOrchestrator(nodeName string) error {
-	return kubectl.Exec("label","nodes",nodeName, "aryaRole=orchestrator")
+func LabelOrchestrator(nodeName string) {
+	if err := kubectl.Exec("label","nodes",nodeName,
+		"aryaRole=orchestrator"); err != nil {
+		log.Fatal("Failed to label orchestrator node %s", nodeName)
+	}
 }
 
 func transferKubeConfig(vm VM, hostPath string) error {

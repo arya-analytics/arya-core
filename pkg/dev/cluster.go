@@ -20,7 +20,7 @@ func ProvisionLocalDevCluster(numNodes int, name string, cores int, memory int,
 	log.Infof("%s Provisioning an Arya Cluster named %s with %v nodes",
 		emoji.Bolt, name, numNodes)
 	cfg := AryaClusterConfig{
-		Name: name,
+		Name:       name,
 		NumNodes:   numNodes,
 		Cores:      cores,
 		Memory:     memory,
@@ -33,23 +33,18 @@ func ProvisionLocalDevCluster(numNodes int, name string, cores int, memory int,
 	if err != nil {
 		log.Fatalln(err)
 	}
-	log.Info("Merging kubeconfig")
 	for i, c := range cluster.Nodes() {
-		if err := MergeClusterConfig(*c); err != nil {
-			log.Fatalln(err)
-		}
-		log.Info("Authenticating cluster")
+		nodeName := c.VM.Name()
+		log.Info("Merging kubeconfig for node %s", nodeName)
+		MergeClusterConfig(*c)
+		log.Info("Authenticating cluster %s", nodeName)
 		AuthenticateCluster(*c)
 		if i == 0 {
-			nodeName := c.VM.Name()
 			log.Infof("Marking node %s as the cluster orchestrator", nodeName)
-			if err := LabelOrchestrator(nodeName); err != nil {
-				log.Fatalln(err)
-			}
+			LabelOrchestrator(nodeName)
 		}
 	}
-	log.Infof(" %s Successfully initialized Arya Cluster %s",
-		emoji.Check, name)
+	log.Infof(" %s Successfully initialized Arya Cluster %s", emoji.Check, name)
 	return cluster, nil
 }
 
@@ -182,7 +177,7 @@ func (a *AryaCluster) Bind() {
 }
 
 // Nodes returns the nodes in the cluster.
-func(a *AryaCluster) Nodes() []*K3sCluster {
+func (a *AryaCluster) Nodes() []*K3sCluster {
 	return a.nodes
 }
 
@@ -204,9 +199,7 @@ func (a *AryaCluster) Delete() error {
 		if err := node.VM.Delete(); err != nil {
 			return err
 		}
-		if err := ClearClusterConfig(*node); err != nil {
-			return err
-		}
+		ClearClusterConfig(*node)
 	}
 	return nil
 }
@@ -249,8 +242,10 @@ func (p K3sCluster) Provision() error {
 // || CLUSTER NETWORKING ||
 // Utilities for networking inside of and between clusters
 
-const baseCidrPrefix = "10."
-const baseCidrSuffix = ".0.0/16"
+const (
+	baseCidrPrefix = "10."
+	baseCidrSuffix = ".0.0/16"
+)
 
 // Cidr is a utility for generating kubernetes resource IP ranges.
 // Generates an IPv4 address from a two digit unique ID (00-99)
