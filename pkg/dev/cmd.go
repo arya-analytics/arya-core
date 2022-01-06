@@ -114,16 +114,14 @@ var toolingCmd = &cli.Command{
 			Name:  "install",
 			Usage: "Install development tools.",
 			Action: func(c *cli.Context) error {
-				InstallRequiredTools()
-				return nil
+				return InstallRequiredTools()
 			},
 		},
 		{
 			Name:  "uninstall",
 			Usage: "Uninstall development tools.",
 			Action: func(c *cli.Context) error {
-				UninstallRequiredTools()
-				return nil
+				return UninstallRequiredTools()
 			},
 		},
 		{

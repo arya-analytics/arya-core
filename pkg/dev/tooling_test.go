@@ -1,11 +1,16 @@
 package dev_test
 
 import (
+	"github.com/arya-analytics/aryacore/pkg/dev"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"log"
 )
 
 var _ = Describe("Tooling", func() {
+	BeforeEach(func() {
+		dev.RequiredTools = dev.Tools{testTool}
+	})
 	Describe("Brew tools", func() {
 		Context("A tool is not installed", func() {
 			Describe("Checking if a tool is installed", func() {
@@ -53,5 +58,34 @@ var _ = Describe("Tooling", func() {
 				})
 			})
 		})
+	})
+	Describe("InstallRequiredTools()",func() {
+		It("Should install the required tools correctly", func() {
+			err := dev.InstallRequiredTools()
+			Expect(err).To(BeNil())
+		})
+	})
+	Describe("UninstallRequiredTools", func() {
+		It("Should uninstall the required tools correctly", func() {
+			err := dev.UninstallRequiredTools()
+			Expect(err).To(BeNil())
+		})
+	})
+	Describe("RequiredToolsInstalled",func() {
+		It("Should return true if the required tools are installed", func() {
+			if err := dev.InstallRequiredTools(); err != nil {
+				log.Fatalln(err)
+			}
+			i := dev.RequiredToolsInstalled()
+			Expect(i).To(BeTrue())
+		})
+		It("Should return false if the required tools aren't installed", func() {
+			if err := dev.UninstallRequiredTools(); err != nil {
+				log.Fatalln(err)
+			}
+			i := dev.RequiredToolsInstalled()
+			Expect(i).To(BeFalse())
+		})
+
 	})
 })

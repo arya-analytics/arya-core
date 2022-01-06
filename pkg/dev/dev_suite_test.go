@@ -29,6 +29,7 @@ var vmCfg = dev.VMConfig{
 }
 
 var _ = BeforeSuite(func() {
+	log.Info("Bootstrapping test suite")
 	tooling = dev.NewTooling()
 	if !tooling.Installed(testTool) {
 		if err := tooling.Install(testTool); err != nil {
@@ -50,6 +51,7 @@ var _ = BeforeSuite(func() {
 	if err != nil {
 		log.Fatalln("Failed to pull info from test VM")
 	}
+	log.Info("Test suite bootstrapped successfully")
 })
 
 var _ = AfterSuite(func() {
@@ -62,6 +64,9 @@ var _ = AfterSuite(func() {
 	aryaCluster := dev.NewAryaCluster(dev.AryaClusterConfig{Name: dummyAryaClusterName})
 	aryaCluster.Bind()
 	if err := aryaCluster.Delete(); err != nil {
+		log.Fatalln(err)
+	}
+	if err := dev.InstallRequiredTools(); err != nil {
 		log.Fatalln(err)
 	}
 })

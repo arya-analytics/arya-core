@@ -4,6 +4,7 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/dev"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -17,7 +18,7 @@ var cfg = dev.ImageCfg{
 	BuildCtxPath: "../../",
 }
 
-var _ = FDescribe("Docker", func() {
+var _ = Describe("Docker", func() {
 	Describe("DockerImage", func() {
 		Describe("Test NameTag", func() {
 			It("Should generate the correct image nameTag", func() {
@@ -40,6 +41,9 @@ var _ = FDescribe("Docker", func() {
 					BuildCtxPath: "../../",
 				}
 				di := dev.NewDockerImage(cfg)
+				if err := di.Build(); err != nil {
+					log.Fatalln(err)
+				}
 				Expect(di.Push()).To(BeNil())
 			})
 		})

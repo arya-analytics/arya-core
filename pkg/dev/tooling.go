@@ -10,9 +10,8 @@ import (
 
 type Tools []string
 
-// RequiredTools returns a slice of the required tools for provisioning dev clusters.
-func RequiredTools() Tools {
-	return Tools{
+// RequiredTools is a slice of the required tools for provisioning dev clusters.
+var RequiredTools = Tools{
 		"multipass",
 		"kubernetes-cli",
 		"krew",
@@ -21,38 +20,37 @@ func RequiredTools() Tools {
 		"gh",
 	}
 
-}
-
 // || REQUIRED TOOL INSTALLS ||
 
-// InstallRequiredTools installs tools required required for provisioning dev clusters.
-func InstallRequiredTools() {
+// InstallRequiredTools() installs tools required required for provisioning dev clusters.
+func InstallRequiredTools() error {
 	log.Infof("%s Installing dev tools", emoji.Tools)
 	t := NewTooling()
-	for _, k := range RequiredTools() {
+	for _, k := range RequiredTools {
 		if t.Installed(k) {
 			log.Infof("%s %s already installed", emoji.Frog, k)
 		} else {
 			log.Infof("%s Installing %s", emoji.Flame, k)
 			if err := t.Install(k); err != nil {
-				log.Fatalln(err)
+				return err
 			}
 			log.Infof("%s  Installed %s", emoji.Check, k)
 		}
 	}
 	log.Infof("%s  All Done!", emoji.Check)
+	return nil
 }
 
 // UninstallRequiredTools uninstalls tools required for provisioning dev clusters.
-func UninstallRequiredTools() {
+func UninstallRequiredTools() error {
 	log.Infof("%s Uninstalling dev tools", emoji.Tools)
 	t := NewTooling()
-	for i := range RequiredTools() {
-		k := RequiredTools()[len(RequiredTools())-1-i]
+	for i := range RequiredTools {
+		k := RequiredTools[len(RequiredTools)-1-i]
 		if t.Installed(k) {
 			log.Infof("%s Uninstalling %s", emoji.Flame, k)
 			if err := t.Uninstall(k); err != nil {
-				log.Fatalln(err)
+				return err
 			}
 			log.Infof("%s  Uninstalled %s", emoji.Check, k)
 
@@ -61,13 +59,14 @@ func UninstallRequiredTools() {
 		}
 	}
 	log.Infof("%s  All Done!", emoji.Check)
+	return nil
 }
 
 // RequiredToolsInstalled checks to see if all mandatory dev tools are installed.
 func RequiredToolsInstalled() bool {
 	log.Infof("%s Checking if required dev tools are installed", emoji.Tools)
 	t := NewTooling()
-	for _, v := range RequiredTools() {
+	for _, v := range RequiredTools {
 		if !t.Installed(v) {
 			log.Infof("%s Missing required dev tools\n", emoji.Frog)
 			return false
@@ -92,7 +91,7 @@ type Tooling interface {
 
 // NewTooling creates and returns the correct OS specific tools manager.
 func NewTooling() Tooling {
-	t := BrewTooling{RequiredTools()}
+	t := BrewTooling{RequiredTools}
 	t.preReqs()
 	return &t
 }

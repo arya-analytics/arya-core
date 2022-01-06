@@ -1,10 +1,8 @@
 package dev
 
 import (
-	"fmt"
 	"os"
 	"os/exec"
-	"strings"
 )
 
 const (
@@ -51,16 +49,6 @@ func (d DockerImage) Build() error {
 // Push pushes the docker image to the locally authenticated repository.
 func (d DockerImage) Push() error {
 	return d.command("push", d.NameTag()).Run()
-}
-
-// parseNameTag parses the given name tag for the repository and string parts.
-func parseNameTag(nameTag string) (repository string, tag string, err error) {
-	split := strings.Split(nameTag, nameTagSeparator)
-	if len(split) != 2 {
-		return "", "", fmt.Errorf("nameTag %s has the incorrect format. "+
-			"The correct format is %s", nameTag, nameTagFormat)
-	}
-	return split[0], split[1], nil
 }
 
 // createNameTag creates the given name tag based on the repository and tag
