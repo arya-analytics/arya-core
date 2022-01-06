@@ -33,9 +33,9 @@ func ProvisionLocalDevCluster(numNodes int, name string, cores int, memory int,
 	}
 	for i, c := range cluster.Nodes() {
 		nodeName := c.VM.Name()
-		log.Info("Merging kubeconfig for node %s", nodeName)
+		log.Infof("Merging kubeconfig for node %s", nodeName)
 		MergeClusterConfig(*c)
-		log.Info("Authenticating cluster %s", nodeName)
+		log.Infof("Authenticating cluster %s", nodeName)
 		AuthenticateCluster(*c)
 		if i == 0 {
 			log.Infof("Marking node %s as the cluster orchestrator", nodeName)
@@ -48,6 +48,7 @@ func ProvisionLocalDevCluster(numNodes int, name string, cores int, memory int,
 
 // DeleteLocalDevCluster deletes a local development cluster based on its name.
 func DeleteLocalDevCluster(name string) error {
+	log.Infof("%s Deleting dev cluster %s", emoji.Flame, name)
 	cfg := AryaClusterConfig{Name: name}
 	c := NewAryaCluster(cfg)
 	c.Bind()

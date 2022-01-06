@@ -107,7 +107,7 @@ func ClearClusterConfig(c K3sCluster) {
 	name := c.VM.Name()
 	for _, v := range clearCfgCmdChain {
 		if err := kubectl.Exec("config", v, name); err != nil {
-			log.Warn("Unable to delete config for cluster %s", name)
+			log.Warnf("Unable to delete config for cluster %s", name)
 		}
 	}
 }
@@ -117,7 +117,7 @@ func ClearClusterConfig(c K3sCluster) {
 func LabelOrchestrator(nodeName string) {
 	if err := kubectl.Exec("label","nodes",nodeName,
 		"aryaRole=orchestrator"); err != nil {
-		log.Fatal("Failed to label orchestrator node %s", nodeName)
+		log.Fatalf("Failed to label orchestrator node %s", nodeName)
 	}
 }
 

@@ -101,20 +101,6 @@ var clusterCmd = &cli.Command{
 				return DeleteLocalDevCluster(c.String("name"))
 			},
 		},
-		{
-			Name:  "stop",
-			Usage: "Stop an Arya development cluster",
-			Flags: []cli.Flag{
-				&cli.StringFlag{
-					Name:    "name",
-					Aliases: []string{"cn"},
-					Usage:   "Name of Arya cluster",
-				},
-			},
-			Action: func(c *cli.Context) error {
-				return nil
-			},
-		},
 	},
 }
 
@@ -174,7 +160,8 @@ var reloaderCmd = &cli.Command{
 				},
 			},
 			Action: func(c *cli.Context) error {
-				return StartReloader(c.String("clusterName"), c.String("buildCtx"))
+				StartReloader(c.String("clusterName"), c.String("buildCtx"))
+				return nil
 			},
 		},
 	},

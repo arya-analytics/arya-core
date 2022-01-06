@@ -28,24 +28,26 @@ type Deployment struct {
 }
 
 const (
-	helmDriverEnv = "HELM_DRIVER"
-	imageRepoKey  = "image.repository"
-	imageTagKey   = "image.tag"
+	helmDriverEnv          = "HELM_DRIVER"
+	imageRepoKey           = "image.repository"
+	imageTagKey            = "image.tag"
+	aryaCoreDeploymentName = "aryacore-deployment"
 )
 
+// NewDeployment creates a new deployment based on the specified config
 func NewDeployment(cfg DeploymentConfig) (*Deployment, error) {
 	d := Deployment{
 		cfg:          cfg,
 		actionConfig: new(action.Configuration),
 		settings:     cli.New(),
 	}
-	if err := d.InitActionConfig(); err != nil {
+	if err := d.initActionConfig(); err != nil {
 		log.Fatalln(err)
 	}
 	return &d, nil
 }
 
-func (d Deployment) InitActionConfig() error {
+func (d Deployment) initActionConfig() error {
 	if err := d.actionConfig.Init(d.settings.RESTClientGetter(), d.settings.Namespace(),
 		os.Getenv(helmDriverEnv), log.Printf); err != nil {
 		return err
@@ -53,6 +55,18 @@ func (d Deployment) InitActionConfig() error {
 	return nil
 }
 
+// RedeployArya redeploys arya into the cluster
+func (d Deployment) RedeployArya() error {
+	name := d.cfg.name + "-" + aryaCoreDeploymentName
+	var err error
+	fmt.Println(name)
+	d.iterNodes(func(node *K3sCluster) {
+		err = kubectl.Exec("rollout", "restart", "deployment", name)
+	})
+	return err
+}
+
+// Install installs the deployment into the cluster
 func (d Deployment) Install() error {
 	client := action.NewInstall(d.actionConfig)
 	client.ReleaseName = d.cfg.name
@@ -61,7 +75,6 @@ func (d Deployment) Install() error {
 	c, err := d.chart()
 	if err != nil {
 		log.Fatalln(err)
-		return err
 	}
 
 	var nodeIPs []string
@@ -104,6 +117,7 @@ func (d Deployment) chart() (*chart.Chart, error) {
 	return loader.LoadDir(d.cfg.chartPath)
 }
 
+// Uninstall uninstalls the deployment from the cluster
 func (d Deployment) Uninstall() error {
 	d.iterNodes(func(node *K3sCluster) {
 		client := action.NewUninstall(d.actionConfig)
@@ -117,21 +131,11 @@ func (d Deployment) iterNodes(exec func(node *K3sCluster)) {
 		if err := kubectl.SwitchContext(node.VM.Name()); err != nil {
 			log.Fatalln(err)
 		}
-		if err := d.InitActionConfig(); err != nil {
+		if err := d.initActionConfig(); err != nil {
 			log.Fatalln(err)
 		}
 		exec(node)
 	}
 }
 
-const aryaCoreDeployment = "aryacore-deployment"
 
-func (d Deployment) RedeployArya() error {
-	name := d.cfg.name + "-" + aryaCoreDeployment
-	var err error
-	fmt.Println(name)
-	d.iterNodes(func(node *K3sCluster) {
-		err = kubectl.Exec("rollout", "restart", "deployment", name)
-	})
-	return err
-}

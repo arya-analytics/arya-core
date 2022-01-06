@@ -16,8 +16,8 @@ var ignoreDirs = []string{
 }
 
 const (
-	imageRepo = "ghcr.io/arya-analytics/arya-core"
-	chartRelPath = "kubernetes/aryacore"
+	DefaultImageRepo    = "ghcr.io/arya-analytics/arya-core"
+	DefaultChartRelPath = "kubernetes/aryacore"
 )
 
 // DefaultBuildCtxPath returns the default build context for the arya image.
@@ -30,16 +30,17 @@ func DefaultBuildCtxPath() string {
 }
 
 // StartReloader starts the development reloader.
-func StartReloader(clusterName string, buildCtxPath string) error {
+func StartReloader(clusterName string, buildCtxPath string) {
 	log.Infof("%s Starting Reloader", emoji.Bolt)
 	tag := GitImageTag()
 	cfg := AryaClusterConfig{Name: clusterName}
 	cluster := NewAryaCluster(cfg)
 	cluster.Bind()
-	chartPath := filepath.Join(buildCtxPath, chartRelPath)
-	err := WatchAndDeployToLocalCluster(cluster, imageRepo, tag, chartPath,
-		buildCtxPath)
-	return err
+	chartPath := filepath.Join(buildCtxPath, DefaultChartRelPath)
+	if err := WatchAndDeployToLocalCluster(cluster, DefaultImageRepo, tag, chartPath,
+		buildCtxPath); err != nil {
+		log.Fatalln(err)
+	}
 }
 
 // GitImageTag returns an image tag built off of the current commit hash and git
@@ -85,7 +86,7 @@ func WatchAndDeployToLocalCluster(cluster *AryaCluster, repository, tag, chartPa
 		log.Fatalln(err)
 	}
 
-	log.Infof("%s Successfully deployed", emoji.Check)
+	log.Infof("%s  Successfully deployed", emoji.Check)
 
 	wCfg := WatcherConfig{
 		Dirs:       []string{buildCtxPath},
@@ -98,20 +99,21 @@ func WatchAndDeployToLocalCluster(cluster *AryaCluster, repository, tag, chartPa
 				log.Fatalln(err)
 			}
 
-			log.Infof("%s Pushing Image", emoji.Flame)
+			log.Infof("%s Pushing image", emoji.Flame)
 			if err := img.Push(); err != nil {
 				log.Fatalln(err)
 			}
-			log.Infof("%s Re-deploying Image", emoji.Bison)
+			log.Infof("%s Re-deploying image", emoji.Bison)
 			if err := d.RedeployArya(); err != nil {
 				log.Fatalln(err)
 			}
+			log.Infof("%s  Successfully re-deployed image", emoji.Check)
 
 		},
 	}
 
 	w := Watcher{cfg: wCfg}
-	log.Infof("%s Listening for changes", emoji.Sparks)
+	log.Infof("%s  Listening for changes", emoji.Sparks)
 	w.Start()
 	return nil
 }
