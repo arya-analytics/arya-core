@@ -1,6 +1,7 @@
-package dev
+package watcher
 
 import (
+	"fmt"
 	"github.com/fsnotify/fsnotify"
 	log "github.com/sirupsen/logrus"
 	"io/fs"
@@ -27,6 +28,14 @@ type Watcher struct {
 	fsWatcher *fsnotify.Watcher
 }
 
+// NewWatcher creates a new Watcher
+func NewWatcher(cfg WatcherConfig) (*Watcher, error) {
+	w := &Watcher{cfg: cfg}
+	fsw, err := fsnotify.NewWatcher()
+	w.fsWatcher = fsw
+	return w, err
+}
+
 // Start starts the watcher and looks for file changes
 func (w *Watcher) Start() {
 	var err error
@@ -50,8 +59,11 @@ func (w *Watcher) bindPaths() {
 			return
 		}
 		dir := os.DirFS(dirPath)
+		fmt.Println(dir)
 		if err := fs.WalkDir(dir, ".", func(path string, d fs.DirEntry,
 			err error) error {
+			fmt.Println(path)
+			fmt.Println(d.Name())
 			if err != nil {
 				log.Fatalln(err)
 			}
