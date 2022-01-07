@@ -9,7 +9,9 @@ import (
 type JSONB map[string]interface{}
 
 type Node struct {
-	ID uuid.UUID `bun:"type:uuid,default:gen_random_uuid()"`
+	ID uuid.UUID `bun:"type:uuid,default:gen_random_uuid(),pk"`
+	GossipNodeID int64
+	GossipNode *GossipNode `bun:"rel:belongs-to,join:gossip_node_id=id"`
 }
 
 type Range struct {
@@ -66,7 +68,7 @@ type GossipNode struct {
 }
 
 // GossipLiveness lives in crdb's internal schema and tracks the health of nodes in
-//the raoch cluster
+//the roach cluster
 type GossipLiveness struct {
 	bun.BaseModel   `bun:"table:crdb_internal.gossip_liveness"`
 	NodeID          int       `bun:"type:bigint"`

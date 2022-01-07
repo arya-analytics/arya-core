@@ -1,6 +1,6 @@
 package storage
 
-type Engine interface {
+type BaseEngine interface {
 	Type() EngineType
 }
 
@@ -13,5 +13,18 @@ const (
 )
 
 type MetaDataEngine interface {
-	Engine
+	BaseEngine
+	NewRetrieve() MetaDataRetrieve
+	NewUpdate() MetaDataCreate
+}
+
+type MetaDataRetrieve interface {
+	Exec() error
+	Where() MetaDataRetrieve
+	Model(interface{}) MetaDataCreate
+}
+
+type MetaDataCreate interface {
+	Exec() error
+	Model(interface{}) MetaDataCreate
 }

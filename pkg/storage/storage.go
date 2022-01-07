@@ -1,6 +1,6 @@
 package storage
 
 type Storage struct {
-	engines []Engine
+	engines []BaseEngine
 	pooler Pooler
 }
