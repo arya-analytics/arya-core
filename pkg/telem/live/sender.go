@@ -1,7 +1,7 @@
 package live
 
 import (
-	"github.com/arya-analytics/aryacore/telem"
+	"github.com/arya-analytics/aryacore/pkg/telem"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/vmihailenco/msgpack/v5"

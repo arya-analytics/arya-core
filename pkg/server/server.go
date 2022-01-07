@@ -1,8 +1,8 @@
 package server
 
 import (
-	"github.com/arya-analytics/aryacore/config"
-	"github.com/arya-analytics/aryacore/ds"
+	"github.com/arya-analytics/aryacore/pkg/config"
+	"github.com/arya-analytics/aryacore/pkg/ds"
 	"github.com/gin-gonic/gin"
 )
 

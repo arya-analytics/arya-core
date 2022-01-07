@@ -2,27 +2,26 @@ package migrations
 
 import (
 	"context"
-	"github.com/arya-analytics/aryacore/telem"
-
+	telem2 "github.com/arya-analytics/aryacore/pkg/telem"
 	"github.com/uptrace/bun"
 )
 
 func init() {
 	Migrations.MustRegister(func(ctx context.Context, db *bun.DB) error {
 		if _, err := db.NewCreateTable().
-			Model((*telem.ChannelConfig)(nil)).
+			Model((*telem2.ChannelConfig)(nil)).
 			ForeignKey(`("node_id") REFERENCES "nodes" ("id") ON DELETE CASCADE`).
 			Exec(ctx); err != nil {
 
 			panic(err)
 		}
 		if _, err := db.NewCreateTable().
-			Model((*telem.RangeReplicaToNode)(nil)).
+			Model((*telem2.RangeReplicaToNode)(nil)).
 			Exec(ctx); err != nil {
 			panic(err)
 		}
 		if _, err := db.NewCreateTable().
-			Model((*telem.Range)(nil)).
+			Model((*telem2.Range)(nil)).
 			Exec(ctx); err != nil {
 			panic(err)
 		}
@@ -39,7 +38,7 @@ func init() {
 			panic(err)
 		}
 		if _, err := db.NewCreateTable().
-			Model((*telem.ChannelChunk)(nil)).
+			Model((*telem2.ChannelChunk)(nil)).
 			ForeignKey(`("channel_config_id") REFERENCES "channel_configs" ("id") 
 						ON DELETE CASCADE`).
 			Exec(ctx); err != nil {
@@ -48,24 +47,24 @@ func init() {
 		return nil
 	}, func(ctx context.Context, db *bun.DB) error {
 		if _, err := db.NewDropTable().
-			Model((*telem.ChannelChunk)(nil)).
+			Model((*telem2.ChannelChunk)(nil)).
 			IfExists().
 			Exec(ctx); err != nil {
 			panic(err)
 		}
 		if _, err := db.NewDropTable().
-			Model((*telem.RangeReplicaToNode)(nil)).
+			Model((*telem2.RangeReplicaToNode)(nil)).
 			Exec(ctx); err != nil {
 			panic(err)
 		}
 		if _, err := db.NewDropTable().
-			Model((*telem.Range)(nil)).
+			Model((*telem2.Range)(nil)).
 			IfExists().
 			Exec(ctx); err != nil {
 			panic(err)
 		}
 		if _, err := db.NewDropTable().
-			Model((*telem.ChannelConfig)(nil)).
+			Model((*telem2.ChannelConfig)(nil)).
 			IfExists().
 			Exec(ctx); err != nil {
 			panic(err)

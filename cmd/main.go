@@ -2,10 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/arya-analytics/aryacore/cmd/migrations"
-	"github.com/arya-analytics/aryacore/config"
-	"github.com/arya-analytics/aryacore/server"
-	"github.com/arya-analytics/aryacore/telem/live"
+	"github.com/arya-analytics/aryacore/pkg/config"
+	"github.com/arya-analytics/aryacore/pkg/dev"
+	"github.com/arya-analytics/aryacore/pkg/server"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/migrate"
 	"github.com/urfave/cli/v2"
@@ -16,10 +15,12 @@ import (
 
 func main() {
 	app := &cli.App{
-		Name: "arya",
+		Name: "aryacore",
+		Usage: "Hello",
 		Commands: []*cli.Command{
-			newDBCommand(migrations.Migrations),
-			serverCommand,
+			dev.Cmd,
+			//newDBCommand(migrations.Migrations),
+			//serverCommand,
 		},
 	}
 	if err := app.Run(os.Args); err != nil {
@@ -101,18 +102,18 @@ func newDBCommand(migrations *migrate.Migrations) *cli.Command {
 	}
 }
 
-var serverCommand = &cli.Command{
-	Name:  "server",
-	Usage: "control server",
-	Subcommands: []*cli.Command{{
-		Name:  "start",
-		Usage: "start server",
-		Action: func(c *cli.Context) error {
-			sv := server.New(config.GetConfig())
-			sv.BindSlice(live.API)
-			sv.Start()
-			return nil
-		},
-	},
-	},
-}
+//var serverCommand = &cli.command{
+//	Name:  "server",
+//	Usage: "control server",
+//	Subcommands: []*cli.command{{
+//		Name:  "start",
+//		Usage: "start server",
+//		Action: func(c *cli.Context) error {
+//			sv := server.New(config.GetConfig())
+//			sv.BindSlice(live.API)
+//			sv.Start()
+//			return nil
+//		},
+//	},
+//	},
+//}

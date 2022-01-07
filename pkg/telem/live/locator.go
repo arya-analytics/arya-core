@@ -3,9 +3,9 @@ package live
 import (
 	"context"
 	"fmt"
-	"github.com/arya-analytics/aryacore/config"
-	"github.com/arya-analytics/aryacore/ds"
-	"github.com/arya-analytics/aryacore/telem"
+	"github.com/arya-analytics/aryacore/pkg/config"
+	"github.com/arya-analytics/aryacore/pkg/ds"
+	"github.com/arya-analytics/aryacore/pkg/telem"
 	"github.com/uptrace/bun"
 )
 
