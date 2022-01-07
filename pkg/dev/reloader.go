@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/arya-analytics/aryacore/pkg/util/emoji"
 	"github.com/arya-analytics/aryacore/pkg/util/git"
+	"github.com/arya-analytics/aryacore/pkg/util/watcher"
 	"github.com/fsnotify/fsnotify"
 	log "github.com/sirupsen/logrus"
 	"path/filepath"
@@ -53,7 +54,6 @@ func GitImageTag() string {
 	return fmt.Sprintf("%s-%s", shortHash, shortUser)
 }
 
-
 // WatchAndDeployToLocalCluster starts watching for file changes and continuously
 // deploys those changes to a local development cluster.
 func WatchAndDeployToLocalCluster(cluster *AryaCluster, repository, tag, chartPath, buildCtxPath string) error {
@@ -88,7 +88,7 @@ func WatchAndDeployToLocalCluster(cluster *AryaCluster, repository, tag, chartPa
 
 	log.Infof("%s  Successfully deployed", emoji.Check)
 
-	wCfg := WatcherConfig{
+	wCfg := watcher.WatcherConfig{
 		Dirs:       []string{buildCtxPath},
 		Recursive:  true,
 		IgnoreDirs: ignoreDirs,
@@ -112,7 +112,10 @@ func WatchAndDeployToLocalCluster(cluster *AryaCluster, repository, tag, chartPa
 		},
 	}
 
-	w := Watcher{cfg: wCfg}
+	w, err := watcher.NewWatcher(wCfg)
+	if err != nil {
+		log.Fatalln(err)
+	}
 	log.Infof("%s  Listening for changes", emoji.Sparks)
 	w.Start()
 	return nil
