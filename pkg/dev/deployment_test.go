@@ -9,14 +9,14 @@ import (
 
 var dummyCfg = dev.DeploymentConfig{
 	Name:      "mydummydeployment",
-	ChartPath: dev.DefaultChartRelPath,
+	ChartPath: "../../" + dev.DefaultChartRelPath,
 	ImageCfg: dev.ImageCfg{Repository: dev.DefaultImageRepo,
 		BuildCtxPath: ".",
 		Tag:          dev.GitImageTag(),
 	},
 }
 
-var _ = FDescribe("Deployment", func() {
+var _ = Describe("Deployment", func() {
 	var c *dev.AryaCluster
 	var d *dev.Deployment
 	BeforeEach(func() {
@@ -46,8 +46,10 @@ var _ = FDescribe("Deployment", func() {
 		})
 	})
 	Describe("Re-deploying arya", func() {
-		err := d.RedeployArya()
-		Expect(err).To(BeNil())
+		It("Should redeploy arya without error", func() {
+			err := d.RedeployArya()
+			Expect(err).To(BeNil())
+		})
 	})
 
 })

@@ -86,11 +86,11 @@ func BindConfigToCluster(c K3sCluster, cfgPath string) {
 	}
 	cmd := fmt.Sprintf(
 		"yq -i eval '.clusters[].cluster.server |= sub(\"127.0.0.1\", \"%s\")"+
-			" | .contexts[].Name = \"%s\""+
+			" | .contexts[].name = \"%s\""+
 			" | .current-context = \"%s\""+
-			" | .clusters[].Name = \"%s\""+
+			" | .clusters[].name = \"%s\""+
 			" | .contexts[].context.cluster=\"%s\""+
-			" | .users[].Name = \"%s\""+
+			" | .users[].name = \"%s\""+
 			" | .contexts[].context.user = \"%s\"' "+
 			"%s",
 		info.IPv4, n, n, n, n, n, n, cfgPath,

@@ -42,7 +42,7 @@ func NewDeployment(cfg DeploymentConfig) (*Deployment, error) {
 		settings:     cli.New(),
 	}
 	if err := d.initActionConfig(); err != nil {
-		log.Fatalln(err)
+		return &d, err
 	}
 	return &d, nil
 }
@@ -99,9 +99,9 @@ func (d Deployment) Install() error {
 				nodeIpList = append(nodeIpList, v)
 			}
 		}
-		nodeIPsString := strings.Join(nodeIpList,"\\,")
+		nodeIPsString := strings.Join(nodeIpList, "\\,")
 		joinVal := fmt.Sprintf("%s=%s", "cockroachdb.join", nodeIPsString)
-		imageVals := []string{repo, tag, nodeIPVal, joinVal }
+		imageVals := []string{repo, tag, nodeIPVal, joinVal}
 		options := values.Options{Values: imageVals}
 		v, err := options.MergeValues(getter.All(d.settings))
 		if err != nil {
@@ -137,5 +137,3 @@ func (d Deployment) iterNodes(exec func(node *K3sCluster)) {
 		exec(node)
 	}
 }
-
-
