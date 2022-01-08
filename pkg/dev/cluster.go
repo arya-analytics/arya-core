@@ -56,7 +56,7 @@ func DeleteLocalDevCluster(name string) error {
 }
 
 // || ARYA CLUSTER ||
-// Utilities for provisioning and managing development Arya Clusters
+// Utilities for provisioning and managing development Arya Clusters.
 
 type AryaClusterConfig struct {
 	Name       string
@@ -89,7 +89,7 @@ func NewAryaCluster(cfg AryaClusterConfig) *AryaCluster {
 	return &AryaCluster{cfg: cfg}
 }
 
-// Provision provisions a new Cluster base off of a.Cfg
+// Provision provisions a new Cluster base off of a.Cfg.
 func (a *AryaCluster) Provision() error {
 	for i := 1; i <= a.cfg.NumNodes; i++ {
 		nodeName := a.cfg.Name + strconv.Itoa(i)
@@ -192,7 +192,7 @@ func (a *AryaCluster) Exists() bool {
 	return false
 }
 
-// Delete Deletes an existing Cluster and purges all of its data
+// Delete Deletes an existing Cluster and purges all of its data.
 func (a *AryaCluster) Delete() error {
 	for _, node := range a.Nodes() {
 		if err := node.VM.Delete(); err != nil {
@@ -204,7 +204,7 @@ func (a *AryaCluster) Delete() error {
 }
 
 // || K3S CLUSTER ||
-// Utilities for provisioning k3S (https://k3s.io/) clusters on VM's
+// Utilities for provisioning k3S (https://k3s.io/) clusters on VM's.
 
 const (
 	k3sAddr             = "https://get.k3s.io"
@@ -221,12 +221,12 @@ type K3sCluster struct {
 	Cfg K3sClusterConfig
 }
 
-// NewK3sCluster creates a new k3s Cluster
+// NewK3sCluster creates a new k3s Cluster.
 func NewK3sCluster(vm VM, cfg K3sClusterConfig) *K3sCluster {
 	return &K3sCluster{vm, cfg}
 }
 
-// Provision provisions a new k3s Cluster on p.VM
+// Provision provisions a new k3s Cluster on p.VM.
 func (p K3sCluster) Provision() error {
 	curlCmd := fmt.Sprintf("curl -sfL %s", k3sAddr)
 	k3sEnv := fmt.Sprintf("INSTALL_K3S_EXEC=\"--cluster-cidr %s --service-cidr %s"+
@@ -239,7 +239,7 @@ func (p K3sCluster) Provision() error {
 }
 
 // || CLUSTER NETWORKING ||
-// Utilities for networking inside of and between clusters
+// Utilities for networking inside of and between clusters.
 
 const (
 	baseCidrPrefix = "10."
@@ -247,7 +247,7 @@ const (
 )
 
 // Cidr is a utility for generating kubernetes resource IP ranges.
-// Generates an IPv4 address from a two digit unique ID (00-99)
+// Generates an IPv4 address from a two digit unique ID (00-99).
 func Cidr(ID int) string {
 	return baseCidrPrefix + strconv.Itoa(ID) + baseCidrSuffix
 }

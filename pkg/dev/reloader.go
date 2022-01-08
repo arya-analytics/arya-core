@@ -55,7 +55,7 @@ func GitImageTag() string {
 }
 
 // WatchAndDeployToLocalCluster starts watching for file changes and continuously
-// deploys those changes to a local development Cluster.
+// deploys those changes to a local development cluster.
 func WatchAndDeployToLocalCluster(cluster *AryaCluster, repository, tag, chartPath, buildCtxPath string) error {
 	imgCfg := ImageCfg{
 		Repository:   repository,

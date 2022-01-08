@@ -21,7 +21,7 @@ type DockerImage struct {
 	cfg ImageCfg
 }
 
-// NewDockerImage creates a new docker image based off of the provided config
+// NewDockerImage creates a new docker image based off of the provided config.
 func NewDockerImage(cfg ImageCfg) *DockerImage {
 	di := DockerImage{
 		cfg: cfg,
@@ -51,7 +51,7 @@ func (d DockerImage) Push() error {
 	return d.command("push", d.NameTag()).Run()
 }
 
-// createNameTag creates the given Name tag based on the repository and tag
+// createNameTag creates the given Name tag based on the repository and tag.
 func createNameTag(repository, tag string) string {
 	return repository + nameTagSeparator + tag
 }

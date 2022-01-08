@@ -11,19 +11,20 @@ import (
 // || ARYA CONFIG ||
 
 const (
-	k3sKubeCfgPath = "/etc/rancher/k3s/k3s.yaml"
-	authSecretName = "regcred"
-	kubeCfgBaseName = "kubeconfig."
-	aryaCfgType = "kubernetes.io/dockerconfigjson"
+	k3sKubeCfgPath    = "/etc/rancher/k3s/k3s.yaml"
+	authSecretName    = "regcred"
+	kubeCfgBaseName   = "kubeconfig."
+	aryaCfgType       = "kubernetes.io/dockerconfigjson"
+	orchestratorLabel = "aryaRole=orchestrator"
 )
 
 var (
 	hostKubeCfgPathBase = os.ExpandEnv("$HOME") + "/.kube/"
-	aryaCfgPath = os.ExpandEnv("$HOME") + "/.arya/config.json"
+	aryaCfgPath         = os.ExpandEnv("$HOME") + "/.arya/config.json"
 )
 
 // AuthenticateCluster authenticate a k3s cluster by pulling auth credentials from
-// the arya config.json file and creating an auth secret that resources can access
+// the arya config.json file and creating an auth secret that resources can access.
 func AuthenticateCluster(c K3sCluster) {
 	info, err := c.VM.Info()
 	if err != nil {
@@ -48,7 +49,6 @@ func AuthenticateCluster(c K3sCluster) {
 		log.Fatalln(err)
 	}
 }
-
 
 // MergeClusterConfig pulls the kubeconfig file from cluster c,
 // transfers it to the host machine, and merges it into the host kubeconfig.
@@ -75,9 +75,8 @@ func MergeClusterConfig(c K3sCluster) {
 	}
 }
 
-
 // BindConfigToCluster binds a remote kubeconfig to the host machine by adding the
-// remote IP and setting the correct context
+// remote IP and setting the correct context.
 func BindConfigToCluster(c K3sCluster, cfgPath string) {
 	n := c.VM.Name()
 	info, err := c.VM.Info()
@@ -100,9 +99,10 @@ func BindConfigToCluster(c K3sCluster, cfgPath string) {
 	}
 }
 
-var clearCfgCmdChain = []string{"delete-cluster","delete-user","delete-context"}
+var clearCfgCmdChain = []string{"delete-cluster", "delete-user", "delete-context"}
 
-// ClearClusterConfig clears a clusters kubeconfig information from the host kubeconfig.
+// ClearClusterConfig clears a clusters kubeconfig information from the host
+// kubeconfig.
 func ClearClusterConfig(c K3sCluster) {
 	name := c.VM.Name()
 	for _, v := range clearCfgCmdChain {
@@ -113,10 +113,9 @@ func ClearClusterConfig(c K3sCluster) {
 }
 
 // LabelOrchestrator labels a specific kubernetes node with the Arya role of
-// orchestrator
+// orchestrator.
 func LabelOrchestrator(nodeName string) {
-	if err := kubectl.Exec("label","nodes",nodeName,
-		"aryaRole=orchestrator"); err != nil {
+	if err := kubectl.Exec("label", "nodes", nodeName, orchestratorLabel); err != nil {
 		log.Fatalf("Failed to label orchestrator node %s", nodeName)
 	}
 }

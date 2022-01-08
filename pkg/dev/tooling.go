@@ -22,7 +22,7 @@ var RequiredTools = Tools{
 
 // || REQUIRED TOOL INSTALLS ||
 
-// InstallRequiredTools() installs tools required required for provisioning dev clusters.
+// InstallRequiredTools installs tools required required for provisioning dev clusters.
 func InstallRequiredTools() error {
 	log.Infof("%s Installing dev tools", emoji.Tools)
 	t := NewTooling()
@@ -106,16 +106,18 @@ type BrewTooling struct {
 	tools Tools
 }
 
+// Install installs the specified tool.
 func (t BrewTooling) Install(tool string) error {
 	return t.command("install", tool).Run()
 }
 
+// Uninstall uninstalls the specified tool.
 func (t BrewTooling) Uninstall(tool string) error {
 	return t.command("uninstall", tool).Run()
 }
 
+// Installed checks if the specified tool is installed.
 func (t BrewTooling) Installed(tool string) bool {
-
 	out, err := t.command("list").Output()
 	if err != nil {
 		panic(err)

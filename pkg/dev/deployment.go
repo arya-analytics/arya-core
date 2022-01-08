@@ -34,7 +34,7 @@ const (
 	aryaCoreDeploymentName = "aryacore-deployment"
 )
 
-// NewDeployment creates a new deployment based on the specified config
+// NewDeployment creates a new deployment based on the specified config.
 func NewDeployment(cfg DeploymentConfig) (*Deployment, error) {
 	d := Deployment{
 		cfg:          cfg,
@@ -55,7 +55,7 @@ func (d Deployment) initActionConfig() error {
 	return nil
 }
 
-// RedeployArya redeploys arya into the Cluster
+// RedeployArya redeploys arya into the cluster.
 func (d Deployment) RedeployArya() error {
 	name := d.cfg.Name + "-" + aryaCoreDeploymentName
 	var err error
@@ -66,7 +66,7 @@ func (d Deployment) RedeployArya() error {
 	return err
 }
 
-// Install installs the deployment into the Cluster
+// Install installs the deployment into the cluster.
 func (d Deployment) Install() error {
 	client := action.NewInstall(d.actionConfig)
 	client.ReleaseName = d.cfg.Name
@@ -117,7 +117,7 @@ func (d Deployment) chart() (*chart.Chart, error) {
 	return loader.LoadDir(d.cfg.ChartPath)
 }
 
-// Uninstall uninstalls the deployment from the Cluster
+// Uninstall uninstalls the deployment from the cluster.
 func (d Deployment) Uninstall() error {
 	d.iterNodes(func(node *K3sCluster) {
 		client := action.NewUninstall(d.actionConfig)

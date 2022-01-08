@@ -17,7 +17,7 @@ type Config struct {
 }
 
 // Login creates/updates arya's config.
-// json file and supplies the appropriate credentials
+// json file and supplies the appropriate credentials.
 func Login(ghToken string) error {
 	auth := AuthConfig{"ghcr.io": {"auth": ghToken}}
 	cfg := Config{
