@@ -31,7 +31,7 @@ const (
 	helmDriverEnv          = "HELM_DRIVER"
 	imageRepoKey           = "image.repository"
 	imageTagKey            = "image.tag"
-	aryaCoreDeploymentName = "aryacore-deployment"
+	aryaCoreDeploymentName = "arya-core-deployment"
 )
 
 // NewDeployment creates a new deployment based on the specified config.

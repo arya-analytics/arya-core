@@ -18,7 +18,7 @@ var ignoreDirs = []string{
 
 const (
 	DefaultImageRepo    = "ghcr.io/arya-analytics/arya-core"
-	DefaultChartRelPath = "kubernetes/aryacore"
+	DefaultChartRelPath = "kubernetes/arya-core"
 )
 
 // DefaultBuildCtxPath returns the default build context for the arya image.
@@ -65,7 +65,7 @@ func WatchAndDeployToLocalCluster(cluster *AryaCluster, repository, tag, chartPa
 
 	img := NewDockerImage(imgCfg)
 	dCfg := DeploymentConfig{
-		Name:      "aryacore",
+		Name:      "arya-core",
 		ChartPath: chartPath,
 		Cluster:   cluster,
 		ImageCfg:  imgCfg,
