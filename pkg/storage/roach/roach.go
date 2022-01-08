@@ -6,15 +6,29 @@ import (
 )
 
 const (
-	Key = "roach"
+	engineRole = storage.EngineRoleMetaData
+	engineType = storage.EngineTypeRoach
 )
 
 type Engine struct {
 	pooler storage.Pooler
 }
 
+func NewEngine(pooler storage.Pooler) *Engine {
+	return &Engine{pooler: pooler}
+
+}
+
+func (e Engine) Role() storage.EngineRole {
+	return engineRole
+}
+
+func (e Engine) Type() storage.EngineType {
+	return engineType
+}
+
 func (e Engine) conn() *bun.DB {
-	a := e.pooler.Retrieve(Key)
+	a := e.pooler.Retrieve(storage.EngineTypeRoach)
 	return a.Conn().(*bun.DB)
 }
 
@@ -25,15 +39,3 @@ func (e Engine) NewRetrieve() *Retrieve {
 func (e Engine) NewCreate() *Create {
 	return NewCreate(e.conn())
 }
-
-
-
-
-
-
-
-
-
-
-
-

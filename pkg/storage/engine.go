@@ -1,15 +1,25 @@
 package storage
 
 type BaseEngine interface {
+	Role() EngineRole
 	Type() EngineType
 }
 
 type EngineType int
 
+// TODO: Generate stringers for enums
 const (
-	MetaData EngineType = iota
-	Bulk
-	Cache
+	EngineTypeRoach EngineType = iota
+	EngineTypeMinio
+	EngineTypeRedisTS
+)
+
+type EngineRole int
+
+const (
+	EngineRoleMetaData EngineRole = iota
+	EngineRoleBulk
+	EngineRoleCache
 )
 
 type MetaDataEngine interface {

@@ -1,6 +1,15 @@
 package storage
 
 type Storage struct {
-	engines []BaseEngine
-	pooler Pooler
+	pooler   Pooler
+	cfgChain ConfigChain
 }
+
+func NewStorage(cfgChain ConfigChain, pooler Pooler) *Storage {
+	return &Storage{
+		cfgChain: cfgChain,
+		pooler:   pooler,
+	}
+}
+
+

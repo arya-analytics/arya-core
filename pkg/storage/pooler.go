@@ -1,7 +1,7 @@
 package storage
 
 type Pooler interface {
-	Retrieve(key string) Adapter
+	Retrieve(et EngineType) Adapter
 }
 
 type Adapter interface {
