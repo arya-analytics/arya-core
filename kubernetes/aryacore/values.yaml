@@ -1,4 +1,4 @@
-resourcePrefix: aryacore
+resourcePrefix: arya-core
 image:
   repository: ghcr.io/arya-analytics/arya-core
   tag: bcc0b66-dirty

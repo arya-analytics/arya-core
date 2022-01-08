@@ -15,7 +15,7 @@ import (
 
 func main() {
 	app := &cli.App{
-		Name: "aryacore",
+		Name: "arya-core",
 		Usage: "Hello",
 		Commands: []*cli.Command{
 			dev.Cmd,
