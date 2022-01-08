@@ -13,7 +13,7 @@ import (
 
 // VM provides a generic interface for working with a development virtual machine.
 type VM interface {
-	// Name returns the name of the VM
+	// Name returns the Name of the VM
 	Name() string
 	// Provision launched and configures the VM.
 	Provision() error
@@ -73,7 +73,7 @@ type MultipassVM struct {
 	cfg VMConfig
 }
 
-// Name returns the name of the VM
+// Name returns the Name of the VM
 func (vm MultipassVM) Name() string {
 	return vm.cfg.Name
 }
@@ -205,7 +205,7 @@ func (vm MultipassVM) command(args ...string) *exec.Cmd {
 
 func (vm MultipassVM) logFields(vb bool) log.Fields {
 	f := log.Fields{
-		"name": vm.cfg.Name,
+		"Name": vm.cfg.Name,
 	}
 	if vb {
 		f["memory"] = vm.cfg.Memory

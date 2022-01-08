@@ -81,9 +81,9 @@ func RequiredToolsInstalled() bool {
 // Tooling provides a generic interface for installing dev tools such as kubectl,
 // multipass, yq, etc.
 type Tooling interface {
-	// Install installs a dev tool based on its name.
+	// Install installs a dev tool based on its Name.
 	Install(tool string) error
-	// Uninstall uninstalls a dev tool based on its name.
+	// Uninstall uninstalls a dev tool based on its Name.
 	Uninstall(tool string) error
 	// Installed checks if a package has already been installed.
 	Installed(tool string) bool

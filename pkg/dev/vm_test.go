@@ -10,7 +10,7 @@ var _ = Describe("VM", func() {
 	Describe("Multipass VM", func() {
 		Describe("Provisioning new VM", func() {
 			Context("When the VM doesn'tools exist", func() {
-				It("Should assign the correct name ", func() {
+				It("Should assign the correct Name ", func() {
 					Expect(vmInfo.Name).To(Equal(vmCfg.Name))
 				})
 				It("`Should be in a running state", func() {

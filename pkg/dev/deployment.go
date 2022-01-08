@@ -15,10 +15,10 @@ import (
 )
 
 type DeploymentConfig struct {
-	name      string
-	chartPath string
-	cluster   *AryaCluster
-	imageCfg  ImageCfg
+	Name      string
+	ChartPath string
+	Cluster   *AryaCluster
+	ImageCfg  ImageCfg
 }
 
 type Deployment struct {
@@ -55,9 +55,9 @@ func (d Deployment) initActionConfig() error {
 	return nil
 }
 
-// RedeployArya redeploys arya into the cluster
+// RedeployArya redeploys arya into the Cluster
 func (d Deployment) RedeployArya() error {
-	name := d.cfg.name + "-" + aryaCoreDeploymentName
+	name := d.cfg.Name + "-" + aryaCoreDeploymentName
 	var err error
 	fmt.Println(name)
 	d.iterNodes(func(node *K3sCluster) {
@@ -66,19 +66,19 @@ func (d Deployment) RedeployArya() error {
 	return err
 }
 
-// Install installs the deployment into the cluster
+// Install installs the deployment into the Cluster
 func (d Deployment) Install() error {
 	client := action.NewInstall(d.actionConfig)
-	client.ReleaseName = d.cfg.name
-	repo := fmt.Sprintf("%s=%s", imageRepoKey, d.cfg.imageCfg.Repository)
-	tag := fmt.Sprintf("%s=%s", imageTagKey, d.cfg.imageCfg.Tag)
+	client.ReleaseName = d.cfg.Name
+	repo := fmt.Sprintf("%s=%s", imageRepoKey, d.cfg.ImageCfg.Repository)
+	tag := fmt.Sprintf("%s=%s", imageTagKey, d.cfg.ImageCfg.Tag)
 	c, err := d.chart()
 	if err != nil {
 		log.Fatalln(err)
 	}
 
 	var nodeIPs []string
-	for _, node := range d.cfg.cluster.Nodes() {
+	for _, node := range d.cfg.Cluster.Nodes() {
 		info, err := node.VM.Info()
 		if err != nil {
 			log.Fatalln(err)
@@ -114,20 +114,20 @@ func (d Deployment) Install() error {
 }
 
 func (d Deployment) chart() (*chart.Chart, error) {
-	return loader.LoadDir(d.cfg.chartPath)
+	return loader.LoadDir(d.cfg.ChartPath)
 }
 
-// Uninstall uninstalls the deployment from the cluster
+// Uninstall uninstalls the deployment from the Cluster
 func (d Deployment) Uninstall() error {
 	d.iterNodes(func(node *K3sCluster) {
 		client := action.NewUninstall(d.actionConfig)
-		_, _ = client.Run(d.cfg.name)
+		_, _ = client.Run(d.cfg.Name)
 	})
 	return nil
 }
 
 func (d Deployment) iterNodes(exec func(node *K3sCluster)) {
-	for _, node := range d.cfg.cluster.Nodes() {
+	for _, node := range d.cfg.Cluster.Nodes() {
 		if err := kubectl.SwitchContext(node.VM.Name()); err != nil {
 			log.Fatalln(err)
 		}

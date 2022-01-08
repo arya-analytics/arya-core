@@ -9,7 +9,7 @@ import (
 
 var Cmd = &cli.Command{
 	Name: "dev",
-	Usage: "Provides access to development services such as cluster provisioning, " +
+	Usage: "Provides access to development services such as Cluster provisioning, " +
 		"tools installs, and configuration management.",
 	Subcommands: []*cli.Command{
 		clusterCmd,
@@ -22,18 +22,18 @@ var Cmd = &cli.Command{
 // || LOCAL DEV CLUSTER CLI ||
 
 var clusterCmd = &cli.Command{
-	Name:  "cluster",
+	Name:  "Cluster",
 	Usage: "Provision and manage development clusters.",
 	Subcommands: []*cli.Command{
 		{
 			Name:  "provision",
-			Usage: "Provision an Arya development cluster.",
+			Usage: "Provision an Arya development Cluster.",
 			Flags: []cli.Flag{
 				&cli.IntFlag{
 					Name:    "nodes",
 					Aliases: []string{"n"},
 					Value:   3,
-					Usage:   "Number of vms in cluster",
+					Usage:   "Number of vms in Cluster",
 				},
 				&cli.IntFlag{
 					Name:    "cores",
@@ -57,26 +57,26 @@ var clusterCmd = &cli.Command{
 					Name:    "cidrOffset",
 					Aliases: []string{"co"},
 					Value:   BaseAryaClusterCfg.CidrOffset,
-					Usage: "Value to offset cluster node cidrs by (ex. " +
+					Usage: "Value to offset Cluster node cidrs by (ex. " +
 						"an offset of 10 would make the first nodes cidr 10.11.0.0/16)",
 				},
 				&cli.BoolFlag{
 					Name:    "reInit",
 					Aliases: []string{"r"},
 					Value:   BaseAryaClusterCfg.ReInit,
-					Usage:   "Whether to delete existing cluster infrastructure",
+					Usage:   "Whether to delete existing Cluster infrastructure",
 				},
 				&cli.StringFlag{
-					Name:    "name",
+					Name:    "Name",
 					Aliases: []string{"cn"},
 					Value:   BaseAryaClusterCfg.Name,
-					Usage:   "Name of Arya cluster",
+					Usage:   "Name of Arya Cluster",
 				},
 			},
 			Action: func(c *cli.Context) error {
 				_, err := ProvisionLocalDevCluster(
 					c.Int("nodes"),
-					c.String("name"),
+					c.String("Name"),
 					c.Int("cores"),
 					c.Int("memory"),
 					c.Int("storage"),
@@ -88,17 +88,17 @@ var clusterCmd = &cli.Command{
 		},
 		{
 			Name: "delete",
-			Usage: "Delete an Arya development cluster",
+			Usage: "Delete an Arya development Cluster",
 			Flags: []cli.Flag{
 				&cli.StringFlag{
-					Name:    "name",
+					Name:    "Name",
 					Aliases: []string{"cn"},
 					Value:   BaseAryaClusterCfg.Name,
-					Usage:   "Name of Arya cluster",
+					Usage:   "Name of Arya Cluster",
 				},
 			},
 			Action: func(c *cli.Context) error {
-				return DeleteLocalDevCluster(c.String("name"))
+				return DeleteLocalDevCluster(c.String("Name"))
 			},
 		},
 	},
@@ -151,7 +151,7 @@ var reloaderCmd = &cli.Command{
 					Name:    "clusterName",
 					Aliases: []string{"cn"},
 					Value:   BaseAryaClusterCfg.Name,
-					Usage:   "name of arya cluster to deploy into",
+					Usage:   "Name of arya Cluster to deploy into",
 				},
 				&cli.StringFlag{
 					Name:    "buildCtx",

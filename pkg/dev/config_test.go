@@ -20,7 +20,7 @@ var _ = Describe("Config", func() {
 			log.Fatalln(cErr)
 		}
 	})
-	Describe("Authenticating a cluster", func() {
+	Describe("Authenticating a Cluster", func() {
 		It("Should generate the correct authentication secret", func() {
 			nodes := c.Nodes()
 			fmt.Println(nodes[0].VM.Name())

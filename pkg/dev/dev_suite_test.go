@@ -2,11 +2,10 @@ package dev_test
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/dev"
-	log "github.com/sirupsen/logrus"
-	"testing"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	log "github.com/sirupsen/logrus"
+	"testing"
 )
 
 func TestDev(t *testing.T) {
@@ -26,6 +25,26 @@ var vmCfg = dev.VMConfig{
 	Memory:  2,
 	Cores:   3,
 	Storage: 4,
+}
+
+func provisionDummyAryaClusterIfNotExists() (*dev.AryaCluster, error) {
+	cfg := dev.BaseAryaClusterCfg
+	cfg.Name = dummyAryaClusterName
+	cfg.NumNodes = 1
+	cfg.Memory = 2
+	cfg.Storage = 3
+	c := dev.NewAryaCluster(cfg)
+	c.Bind()
+	var cErr error
+	if !c.Exists() {
+		log.Info("Test Cluster does not exist")
+		cErr = c.Provision()
+		for _, c := range c.Nodes() {
+			dev.MergeClusterConfig(*c)
+			dev.AuthenticateCluster(*c)
+		}
+	}
+	return c, cErr
 }
 
 var _ = BeforeSuite(func() {

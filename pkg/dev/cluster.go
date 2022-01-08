@@ -9,7 +9,7 @@ import (
 
 // || LOCAL DEV CLUSTER ||
 
-// ProvisionLocalDevCluster provisions a local development cluster based on the
+// ProvisionLocalDevCluster provisions a local development Cluster based on the
 // specified parameters.
 func ProvisionLocalDevCluster(numNodes int, name string, cores int, memory int,
 	storage int, reInit bool, cidrOffset int) (*AryaCluster, error) {
@@ -35,10 +35,10 @@ func ProvisionLocalDevCluster(numNodes int, name string, cores int, memory int,
 		nodeName := c.VM.Name()
 		log.Infof("Merging kubeconfig for node %s", nodeName)
 		MergeClusterConfig(*c)
-		log.Infof("Authenticating cluster %s", nodeName)
+		log.Infof("Authenticating Cluster %s", nodeName)
 		AuthenticateCluster(*c)
 		if i == 0 {
-			log.Infof("Marking node %s as the cluster orchestrator", nodeName)
+			log.Infof("Marking node %s as the Cluster orchestrator", nodeName)
 			LabelOrchestrator(nodeName)
 		}
 	}
@@ -46,9 +46,9 @@ func ProvisionLocalDevCluster(numNodes int, name string, cores int, memory int,
 	return cluster, nil
 }
 
-// DeleteLocalDevCluster deletes a local development cluster based on its name.
+// DeleteLocalDevCluster deletes a local development Cluster based on its Name.
 func DeleteLocalDevCluster(name string) error {
-	log.Infof("%s Deleting dev cluster %s", emoji.Flame, name)
+	log.Infof("%s Deleting dev Cluster %s", emoji.Flame, name)
 	cfg := AryaClusterConfig{Name: name}
 	c := NewAryaCluster(cfg)
 	c.Bind()
@@ -84,12 +84,12 @@ type AryaCluster struct {
 }
 
 // NewAryaCluster creates a new Arya Cluster based off of a config.
-// NOTE: For binding to an existing cluster, only Cfg.Name is necessary.
+// NOTE: For binding to an existing Cluster, only Cfg.Name is necessary.
 func NewAryaCluster(cfg AryaClusterConfig) *AryaCluster {
 	return &AryaCluster{cfg: cfg}
 }
 
-// Provision provisions a new cluster base off of a.Cfg
+// Provision provisions a new Cluster base off of a.Cfg
 func (a *AryaCluster) Provision() error {
 	for i := 1; i <= a.cfg.NumNodes; i++ {
 		nodeName := a.cfg.Name + strconv.Itoa(i)
@@ -111,11 +111,11 @@ func (a *AryaCluster) Provision() error {
 	return nil
 }
 
-// provisionK3s provisions a K3s cluster on a VM
+// provisionK3s provisions a K3s Cluster on a VM
 // Needs to receive a pod cidr ID (ex. 44 would result in the call Cidr(
 // 44) for the pod Cidr and Cidr(45) for the service Cidr).
 func (a *AryaCluster) provisionK3s(vm VM, podCidrID int) (*K3sCluster, error) {
-	log.Infof("Provisioning new K3s cluster on VM %s", vm.Name())
+	log.Infof("Provisioning new K3s Cluster on VM %s", vm.Name())
 	cfg := K3sClusterConfig{
 		PodCidr:     Cidr(podCidrID),
 		ServiceCidr: Cidr(podCidrID + 1),
@@ -124,11 +124,11 @@ func (a *AryaCluster) provisionK3s(vm VM, podCidrID int) (*K3sCluster, error) {
 	if err := c.Provision(); err != nil {
 		return c, err
 	}
-	log.Infof("Succesffully provisioned k3s cluster on VM %s", vm.Name())
+	log.Infof("Succesffully provisioned k3s Cluster on VM %s", vm.Name())
 	return c, nil
 }
 
-// provisionVM provisions a virtual machine for the cluster based off a node name
+// provisionVM provisions a virtual machine for the Cluster based off a node Name
 // and internal config information.
 // NOTE: If a.Cfg.reInit is set to true, will tear down existing VM's.
 func (a *AryaCluster) provisionVM(nodeName string) (VM, error) {
@@ -160,7 +160,7 @@ func (a *AryaCluster) provisionVM(nodeName string) (VM, error) {
 	return vm, nil
 }
 
-// Bind binds to an existing arya cluster based on its name.
+// Bind binds to an existing arya Cluster based on its Name.
 func (a *AryaCluster) Bind() {
 	for i := 1; i > 0; i++ {
 		cfg := VMConfig{
@@ -175,12 +175,12 @@ func (a *AryaCluster) Bind() {
 	}
 }
 
-// Nodes returns the nodes in the cluster.
+// Nodes returns the nodes in the Cluster.
 func (a *AryaCluster) Nodes() []*K3sCluster {
 	return a.nodes
 }
 
-// Exists checks if a cluster with a.Cfg.name already exists.
+// Exists checks if a Cluster with a.Cfg.Name already exists.
 func (a *AryaCluster) Exists() bool {
 	if len(a.Nodes()) > 0 {
 		return true
@@ -192,7 +192,7 @@ func (a *AryaCluster) Exists() bool {
 	return false
 }
 
-// Delete Deletes an existing cluster and purges all of its data
+// Delete Deletes an existing Cluster and purges all of its data
 func (a *AryaCluster) Delete() error {
 	for _, node := range a.Nodes() {
 		if err := node.VM.Delete(); err != nil {
@@ -221,12 +221,12 @@ type K3sCluster struct {
 	Cfg K3sClusterConfig
 }
 
-// NewK3sCluster creates a new k3s cluster
+// NewK3sCluster creates a new k3s Cluster
 func NewK3sCluster(vm VM, cfg K3sClusterConfig) *K3sCluster {
 	return &K3sCluster{vm, cfg}
 }
 
-// Provision provisions a new k3s cluster on p.VM
+// Provision provisions a new k3s Cluster on p.VM
 func (p K3sCluster) Provision() error {
 	curlCmd := fmt.Sprintf("curl -sfL %s", k3sAddr)
 	k3sEnv := fmt.Sprintf("INSTALL_K3S_EXEC=\"--cluster-cidr %s --service-cidr %s"+

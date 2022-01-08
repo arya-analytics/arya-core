@@ -59,7 +59,7 @@ var _ = Describe("Tooling", func() {
 			})
 		})
 	})
-	Describe("InstallRequiredTools()",func() {
+	Describe("InstallRequiredTools",func() {
 		It("Should install the required tools correctly", func() {
 			err := dev.InstallRequiredTools()
 			Expect(err).To(BeNil())

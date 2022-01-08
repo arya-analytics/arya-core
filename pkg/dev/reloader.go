@@ -55,7 +55,7 @@ func GitImageTag() string {
 }
 
 // WatchAndDeployToLocalCluster starts watching for file changes and continuously
-// deploys those changes to a local development cluster.
+// deploys those changes to a local development Cluster.
 func WatchAndDeployToLocalCluster(cluster *AryaCluster, repository, tag, chartPath, buildCtxPath string) error {
 	imgCfg := ImageCfg{
 		Repository:   repository,
@@ -65,10 +65,10 @@ func WatchAndDeployToLocalCluster(cluster *AryaCluster, repository, tag, chartPa
 
 	img := NewDockerImage(imgCfg)
 	dCfg := DeploymentConfig{
-		name:      "aryacore",
-		chartPath: chartPath,
-		cluster:   cluster,
-		imageCfg:  imgCfg,
+		Name:      "aryacore",
+		ChartPath: chartPath,
+		Cluster:   cluster,
+		ImageCfg:  imgCfg,
 	}
 
 	d, err := NewDeployment(dCfg)

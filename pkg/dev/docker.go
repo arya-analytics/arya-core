@@ -8,7 +8,7 @@ import (
 const (
 	dockerCmd        = "docker"
 	nameTagSeparator = ":"
-	nameTagFormat    = "name:tag"
+	nameTagFormat    = "Name:tag"
 )
 
 type ImageCfg struct {
@@ -35,7 +35,7 @@ func (d DockerImage) command(args ...string) *exec.Cmd {
 	return cmd
 }
 
-// NameTag returns the name tag for the docker image.
+// NameTag returns the Name tag for the docker image.
 func (d DockerImage) NameTag() string {
 	return createNameTag(d.cfg.Repository, d.cfg.Tag)
 }
@@ -51,7 +51,7 @@ func (d DockerImage) Push() error {
 	return d.command("push", d.NameTag()).Run()
 }
 
-// createNameTag creates the given name tag based on the repository and tag
+// createNameTag creates the given Name tag based on the repository and tag
 func createNameTag(repository, tag string) string {
 	return repository + nameTagSeparator + tag
 }
