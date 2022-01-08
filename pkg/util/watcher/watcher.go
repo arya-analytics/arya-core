@@ -6,6 +6,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"io/fs"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -55,7 +56,7 @@ func (w *Watcher) Start() {
 func (w *Watcher) bindPaths() {
 	for _, dirPath := range w.cfg.Dirs {
 		if !w.cfg.Recursive {
-			w.addDir(dirPath)
+			w.addDir(dirPath, "")
 			return
 		}
 		dir := os.DirFS(dirPath)
@@ -68,7 +69,7 @@ func (w *Watcher) bindPaths() {
 				log.Fatalln(err)
 			}
 			if !w.ignored(path) && d.IsDir() {
-				w.addDir(path)
+				w.addDir(dirPath, path)
 			}
 			return nil
 		}); err != nil {
@@ -77,8 +78,9 @@ func (w *Watcher) bindPaths() {
 	}
 }
 
-func (w *Watcher) addDir(path string) {
-	if err := w.fsWatcher.Add(path); err != nil {
+func (w *Watcher) addDir(dirPath string, path string) {
+	aPath := filepath.Join(dirPath, path)
+	if err := w.fsWatcher.Add(aPath); err != nil {
 		log.Fatalln(err)
 	}
 
