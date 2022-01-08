@@ -13,7 +13,7 @@ import (
 
 // VM provides a generic interface for working with a development virtual machine.
 type VM interface {
-	// Name returns the name of the VM
+	// Name returns the Name of the VM
 	Name() string
 	// Provision launched and configures the VM.
 	Provision() error
@@ -32,14 +32,17 @@ type VM interface {
 	Transfer(direction TransferDirection, srcPath string, destPath string) error
 }
 
+// TransferDirection specifies the direction for transferring a file to/from a VM.
 type TransferDirection int
 
 const (
+	// TransferTo specifies a transfer TO the VM FROM the host machine.
 	TransferTo TransferDirection = iota
+	// TransferFrom specifies a transfer FROM the VM TO the host machine.
 	TransferFrom
 )
 
-// VMInfo stores information describing a virtual machine
+// VMInfo stores information describing a virtual machine.
 type VMInfo struct {
 	Name      string
 	State     string
@@ -51,7 +54,7 @@ type VMInfo struct {
 	Memory    string
 }
 
-// VMConfig stores information for configuring a new virtual machine
+// VMConfig stores information for configuring a new virtual machine.
 type VMConfig struct {
 	Name    string
 	Memory  int
@@ -59,21 +62,21 @@ type VMConfig struct {
 	Storage int
 }
 
-// NewVM returns a type implementing the VM interface
+// NewVM returns a type implementing the VM interface.
 func NewVM(cfg VMConfig) VM {
 	return &MultipassVM{cfg}
 }
 
 // || MULTIPASS VM ||
 
-// Command to access multipass executable
+// Command to access multipass executable.
 const multipassCmd = "multipass"
 
 type MultipassVM struct {
 	cfg VMConfig
 }
 
-// Name returns the name of the VM
+// Name returns the Name of the VM.
 func (vm MultipassVM) Name() string {
 	return vm.cfg.Name
 }
@@ -205,7 +208,7 @@ func (vm MultipassVM) command(args ...string) *exec.Cmd {
 
 func (vm MultipassVM) logFields(vb bool) log.Fields {
 	f := log.Fields{
-		"name": vm.cfg.Name,
+		"Name": vm.cfg.Name,
 	}
 	if vb {
 		f["memory"] = vm.cfg.Memory

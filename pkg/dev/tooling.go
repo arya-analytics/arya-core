@@ -22,7 +22,7 @@ var RequiredTools = Tools{
 
 // || REQUIRED TOOL INSTALLS ||
 
-// InstallRequiredTools() installs tools required required for provisioning dev clusters.
+// InstallRequiredTools installs tools required required for provisioning dev clusters.
 func InstallRequiredTools() error {
 	log.Infof("%s Installing dev tools", emoji.Tools)
 	t := NewTooling()
@@ -81,9 +81,9 @@ func RequiredToolsInstalled() bool {
 // Tooling provides a generic interface for installing dev tools such as kubectl,
 // multipass, yq, etc.
 type Tooling interface {
-	// Install installs a dev tool based on its name.
+	// Install installs a dev tool based on its Name.
 	Install(tool string) error
-	// Uninstall uninstalls a dev tool based on its name.
+	// Uninstall uninstalls a dev tool based on its Name.
 	Uninstall(tool string) error
 	// Installed checks if a package has already been installed.
 	Installed(tool string) bool
@@ -106,16 +106,18 @@ type BrewTooling struct {
 	tools Tools
 }
 
+// Install installs the specified tool.
 func (t BrewTooling) Install(tool string) error {
 	return t.command("install", tool).Run()
 }
 
+// Uninstall uninstalls the specified tool.
 func (t BrewTooling) Uninstall(tool string) error {
 	return t.command("uninstall", tool).Run()
 }
 
+// Installed checks if the specified tool is installed.
 func (t BrewTooling) Installed(tool string) bool {
-
 	out, err := t.command("list").Output()
 	if err != nil {
 		panic(err)

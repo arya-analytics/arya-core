@@ -65,10 +65,10 @@ func WatchAndDeployToLocalCluster(cluster *AryaCluster, repository, tag, chartPa
 
 	img := NewDockerImage(imgCfg)
 	dCfg := DeploymentConfig{
-		name:      "aryacore",
-		chartPath: chartPath,
-		cluster:   cluster,
-		imageCfg:  imgCfg,
+		Name:      "aryacore",
+		ChartPath: chartPath,
+		Cluster:   cluster,
+		ImageCfg:  imgCfg,
 	}
 
 	d, err := NewDeployment(dCfg)

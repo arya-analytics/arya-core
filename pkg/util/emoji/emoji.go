@@ -5,7 +5,7 @@ import (
 	"strconv"
 )
 
-// New creates and converts a print-able emoji from a unicode string
+// New creates and converts a print-able emoji from a unicode string.
 func New(s string) string {
 	r, err := strconv.ParseInt(s, 16, 32)
 	if err != nil {
@@ -15,7 +15,7 @@ func New(s string) string {
 }
 
 // || EMOJI VARS ||
-// Pulled from http://www.unicode.org/emoji/charts/full-emoji-list.html
+// Pulled from http://www.unicode.org/emoji/charts/full-emoji-list.html.
 var (
 	Frog = New("1F438")
 	Check = New("2705")

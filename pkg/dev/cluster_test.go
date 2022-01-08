@@ -4,30 +4,9 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/dev"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	log "github.com/sirupsen/logrus"
 )
 
 const dummyAryaClusterName = "mytestcluster"
-
-func provisionDummyAryaClusterIfNotExists() (*dev.AryaCluster, error) {
-	cfg := dev.BaseAryaClusterCfg
-	cfg.Name = dummyAryaClusterName
-	cfg.NumNodes = 1
-	cfg.Memory = 2
-	cfg.Storage = 3
-	c := dev.NewAryaCluster(cfg)
-	c.Bind()
-	var cErr error
-	if !c.Exists() {
-		log.Info("Test cluster does not exist")
-		cErr = c.Provision()
-		for _, c := range c.Nodes() {
-			dev.MergeClusterConfig(*c)
-			dev.AuthenticateCluster(*c)
-		}
-	}
-	return c, cErr
-}
 
 var _ = Describe("Cluster", func() {
 	Describe("AryaCluster", func() {
@@ -36,8 +15,8 @@ var _ = Describe("Cluster", func() {
 		BeforeEach(func() {
 			c, cErr = provisionDummyAryaClusterIfNotExists()
 		})
-		Describe("Provisioning a new cluster", func() {
-			It("Shouldn't encounter an error while provisioning the cluster", func() {
+		Describe("Provisioning a new Cluster", func() {
+			It("Shouldn't encounter an error while provisioning the Cluster", func() {
 				Expect(cErr).To(BeNil())
 			})
 			It("Should provision the correct vms", func() {
@@ -54,19 +33,19 @@ var _ = Describe("Cluster", func() {
 				Expect(len(c.Nodes())).To(Equal(1))
 			})
 		})
-		Describe("Checking if a cluster exists", func() {
-			It("Should return true when the cluster exists", func() {
+		Describe("Checking if a Cluster exists", func() {
+			It("Should return true when the Cluster exists", func() {
 				cfg := dev.AryaClusterConfig{Name: dummyAryaClusterName}
 				existingCluster := dev.NewAryaCluster(cfg)
 				Expect(existingCluster.Exists()).To(BeTrue())
 			})
-			It("Should return false when the cluster doesn't exist", func() {
+			It("Should return false when the Cluster doesn't exist", func() {
 				cfg := dev.AryaClusterConfig{Name: "randomclustername12414"}
 				nonExistentCluster := dev.NewAryaCluster(cfg)
 				Expect(nonExistentCluster.Exists()).To(BeFalse())
 			})
 		})
-		Describe("Binding to an existing cluster", func() {
+		Describe("Binding to an existing Cluster", func() {
 			It("Should effectively bind to the correct number of nodes", func() {
 				bindCluster := dev.NewAryaCluster(dev.AryaClusterConfig{Name: dummyAryaClusterName})
 				bindCluster.Bind()
