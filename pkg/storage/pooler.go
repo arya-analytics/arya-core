@@ -33,6 +33,7 @@ func (p PoolerError) Error() string {
 	return fmt.Sprintf("%s %v", p.Op, p.Et)
 }
 
+// NewPooler creates a new Pooler.
 func NewPooler(cfgChain ConfigChain) *Pooler {
 	return &Pooler{cfgChain: cfgChain, adapters: map[Adapter]bool{}}
 }
