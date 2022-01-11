@@ -6,7 +6,6 @@ import (
 
 type Config interface {
 	Args() interface{}
-	DSN() string
 	Type() EngineType
 	Role() EngineRole
 }
@@ -18,31 +17,23 @@ type ConfigError struct {
 	Et EngineType
 }
 
-func NewConfigError(op string, et EngineType) ConfigError {
-	return ConfigError{Op: op, Et: et}
-}
-
 func (e ConfigError) Error() string {
 	return fmt.Sprintf("%s %v", e.Op, e.Et)
 }
 
-func (cc ConfigChain) Retrieve(t EngineType) (Config, error) {
+func (cc ConfigChain) Retrieve(et EngineType) (Config, error) {
 	for _, cfg := range cc {
-		if cfg.Type() == t {
+		if cfg.Type() == et {
 			return cfg, nil
 		}
 	}
-	return nil, NewConfigError("Config not found in config chain", t)
+	return nil, ConfigError{Op: "config not found in config chain", Et: et}
 }
 
 type MDStubConfig struct{}
 
 func (a MDStubConfig) Args() interface{} {
 	return []string{""}
-}
-
-func (a MDStubConfig) DSN() string {
-	return ""
 }
 
 func (a MDStubConfig) Role() EngineRole {
@@ -57,10 +48,6 @@ type CacheStubConfig struct {}
 
 func (a CacheStubConfig) Args() interface{} {
 	return []string{""}
-}
-
-func (a CacheStubConfig) DSN() string {
-	return ""
 }
 
 func (a CacheStubConfig) Role() EngineRole {

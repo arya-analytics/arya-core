@@ -40,7 +40,9 @@ var _ = Describe("Pooler", func() {
 				Expect(err).ToNot(BeNil())
 				cfgErr, ok := err.(storage.ConfigError)
 				Expect(ok).To(BeTrue())
-				Expect(cfgErr.Et).To(Equal(storage.EngineTypeBulkStub))
+				Expect(cfgErr.Error()).To(Equal(
+					fmt.Sprintf("config not found in config chain %v", storage.
+						EngineTypeBulkStub)))
 			})
 		})
 		Context("The adapter does not exist", func() {
