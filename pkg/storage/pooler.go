@@ -1,12 +1,12 @@
 package storage
 
-import "log"
-
-type Pooler interface {
-	Retrieve(et EngineType) Adapter
-}
+import (
+	"github.com/google/uuid"
+	log "github.com/sirupsen/logrus"
+)
 
 type Adapter interface {
+	ID() uuid.UUID
 	Release() error
 	Status() ConnStatus
 	Conn() interface{}
@@ -21,15 +21,20 @@ const (
 	ConnStatusReady ConnStatus = iota
 )
 
-type DefaultPooler struct {
-	cfgChain ConfigChain
-	adapters map[Adapter]bool
+func NewPooler(cfgChain ConfigChain) *Pooler {
+	return &Pooler{cfgChain: cfgChain, adapters: []Adapter{}}
 }
 
-func (p *DefaultPooler) Retrieve(r EngineRole) (a Adapter) {
+type Pooler struct {
+	cfgChain ConfigChain
+	adapters []Adapter
+}
+
+func (p *Pooler) Retrieve(r EngineRole) (a Adapter) {
 	a, ok := p.findAdapter(r)
 	if !ok {
-		a, err := p.newAdapter(r)
+		var err error
+		a, err = p.newAdapter(r)
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -38,16 +43,17 @@ func (p *DefaultPooler) Retrieve(r EngineRole) (a Adapter) {
 	return a
 }
 
-func (p *DefaultPooler) findAdapter(r EngineRole) (Adapter, bool) {
-	for a := range p.adapters {
+func (p *Pooler) findAdapter(r EngineRole) (Adapter, bool) {
+	for _, a := range p.adapters {
 		if a.Role() == r {
 			return a, true
 		}
 	}
+
 	return nil, false
 }
 
-func (p *DefaultPooler) newAdapter(r EngineRole) (Adapter, error) {
+func (p *Pooler) newAdapter(r EngineRole) (Adapter, error) {
 	cfg, err := p.cfgChain.Retrieve(r)
 	if err != nil {
 		log.Fatalln(err)
@@ -59,8 +65,8 @@ func (p *DefaultPooler) newAdapter(r EngineRole) (Adapter, error) {
 	return a, nil
 }
 
-func (p *DefaultPooler) addAdapter(a Adapter) {
-	p.adapters[a] = true
+func (p *Pooler) addAdapter(a Adapter) {
+	p.adapters = append(p.adapters, a)
 }
 
 func NewAdapter(cfg Config) (Adapter, error) {
@@ -71,36 +77,44 @@ func NewAdapter(cfg Config) (Adapter, error) {
 	return nil, nil
 }
 
+type MDStubConn struct {}
+
 type MDStubAdapter struct {
-	cfg Config
+	id uuid.UUID
+	cfg  Config
+	conn *MDStubConn
 }
 
-func NewMDStubAdapter(cfg Config) (a MDStubAdapter, err error){
-	a = MDStubAdapter{cfg}
+func NewMDStubAdapter(cfg Config) (a *MDStubAdapter, err error) {
+	a = &MDStubAdapter{cfg: cfg, conn: &MDStubConn{}, id: uuid.New()}
 	err = a.open()
 	return a, err
 }
 
-func (a MDStubAdapter) Release() error {
+func (a *MDStubAdapter) ID() uuid.UUID {
+	return a.id
+}
+
+func (a *MDStubAdapter) Release() error {
 	return nil
 }
 
-func (a MDStubAdapter) Status() ConnStatus {
+func (a *MDStubAdapter) Status() ConnStatus {
 	return ConnStatusReady
 }
 
-func (a MDStubAdapter) Role() EngineRole {
+func (a *MDStubAdapter) Role() EngineRole {
 	return EngineRoleMetaData
 }
 
-func (a MDStubAdapter) close() error {
+func (a *MDStubAdapter) close() error {
 	return nil
 }
 
-func (a MDStubAdapter) open() error {
+func (a *MDStubAdapter) open() error {
 	return nil
 }
 
-func (a MDStubAdapter) Conn() interface{} {
-	return nil
+func (a *MDStubAdapter) Conn() interface{} {
+	return a.conn
 }
