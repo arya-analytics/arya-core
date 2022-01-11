@@ -24,7 +24,7 @@ jobs:
       - name: Test
         run: ginkgo -r --covermode=atomic --coverprofile=coverage.txt -covermode=atomic
           --skip-package=dev
-      - name: Upload coverage to Codecov
+      - name: Upload coverage
         uses: codecov/codecov-action@v2
         with:
           fail_ci_if_error: true
