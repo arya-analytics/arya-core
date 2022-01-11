@@ -24,7 +24,9 @@ jobs:
       - name: Test
         run: ginkgo -r --covermode=atomic --coverprofile=coverage.txt -covermode=atomic
           --skip-package=dev
-      - name: Upload coverage report
-        run: bash <(curl -s https://codecov.io/bash)
-
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v2
+        with:
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
 
