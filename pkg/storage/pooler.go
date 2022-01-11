@@ -33,10 +33,6 @@ func (p PoolerError) Error() string {
 	return fmt.Sprintf("%s %v", p.Op, p.Et)
 }
 
-func NewPoolerError(op string, Et EngineType) PoolerError {
-	return PoolerError{Op: op, Et: Et}
-}
-
 func NewPooler(cfgChain ConfigChain) *Pooler {
 	return &Pooler{cfgChain: cfgChain, adapters: map[Adapter]bool{}}
 }
@@ -48,6 +44,7 @@ type Pooler struct {
 	adapters map[Adapter]bool
 }
 
+// Retrieve retrieves an Adapter based on the EngineType specified.
 func (p *Pooler) Retrieve(et EngineType) (a Adapter, err error) {
 	a, ok := p.findAdapter(et)
 	if !ok {
@@ -75,7 +72,7 @@ func (p *Pooler) newAdapter(et EngineType) (Adapter, error) {
 	if err != nil {
 		return nil, err
 	}
-	a, err := NewAdapter(cfg)
+	a, err := newAdapter(cfg)
 	if err != nil {
 		return a, err
 	}
@@ -86,12 +83,12 @@ func (p *Pooler) addAdapter(a Adapter) {
 	p.adapters[a] = true
 }
 
-func NewAdapter(cfg Config) (Adapter, error) {
+func newAdapter(cfg Config) (Adapter, error) {
 	et := cfg.Type()
 	switch et {
 	case EngineTypeMDStub:
 		return NewMDStubAdapter(cfg)
 	default:
-		return nil, NewPoolerError("adapter type does not exist", et)
+		return nil, PoolerError{Op: "adapter type does not exist", Et: et}
 	}
 }

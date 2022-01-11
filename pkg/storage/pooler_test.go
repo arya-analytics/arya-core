@@ -1,6 +1,7 @@
 package storage_test
 
 import (
+	"fmt"
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -48,7 +49,9 @@ var _ = Describe("Pooler", func() {
 				Expect(err).ToNot(BeNil())
 				cfgErr, ok := err.(storage.PoolerError)
 				Expect(ok).To(BeTrue())
-				Expect(cfgErr.Et).To(Equal(storage.EngineTypeCacheStub))
+				Expect(cfgErr.Error()).To(Equal(
+					fmt.Sprintf("adapter type does not exist %v", storage.
+						EngineTypeCacheStub)))
 			})
 		})
 	})

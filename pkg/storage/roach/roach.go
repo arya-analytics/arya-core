@@ -36,8 +36,6 @@ func (e Engine) conn() *bun.DB {
 	return a.Conn().(*bun.DB)
 }
 
-
-
 func (e Engine) NewRetrieve() *Retrieve {
 	return NewRetrieve(e.conn())
 }
