@@ -1,4 +1,3 @@
 .idea/
-./coverage.txt
-./main
-./coverprofile.out
+coverprofile.out
+coverage.txt
