@@ -16,7 +16,10 @@ jobs:
       run: go build -v ./...
 
     - name: Setup Tests
-      run: go install github.com/onsi/ginkgo/v2/ginkgo
-
+      run: |
+        go get github.com/onsi/ginkgo/v2/ginkgo/generators@v2.0.0
+        go get github.com/onsi/ginkgo/v2/ginkgo/internal@v2.0.0
+        go get github.com/onsi/ginkgo/v2/ginkgo/labels@v2.0.0
+        go install github.com/onsi/ginkgo/v2/ginkgo
     - name: Test
       run: ginkgo -r --skip-package=dev
