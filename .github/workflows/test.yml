@@ -7,7 +7,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Set up Go
+      - name: Set Up Go
         uses: actions/setup-go@v2
         with:
           go-version: 1.17
@@ -15,7 +15,7 @@ jobs:
       - name: Build
         run: go build -v ./...
 
-      - name: Set up Tests
+      - name: Set Up Tests
         run: |
           go get github.com/onsi/ginkgo/v2/ginkgo/generators@v2.0.0
           go get github.com/onsi/ginkgo/v2/ginkgo/internal@v2.0.0
@@ -24,7 +24,7 @@ jobs:
       - name: Test
         run: ginkgo -r --covermode=atomic --coverprofile=coverage.txt -covermode=atomic
           --skip-package=dev
-      - name: Upload coverage
+      - name: Upload Coverage
         uses: codecov/codecov-action@v2
         with:
           fail_ci_if_error: true
