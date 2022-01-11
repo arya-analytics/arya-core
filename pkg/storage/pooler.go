@@ -1,120 +1,97 @@
 package storage
 
 import (
+	"fmt"
 	"github.com/google/uuid"
-	log "github.com/sirupsen/logrus"
 )
+
+// || ADAPTER ||
 
 type Adapter interface {
 	ID() uuid.UUID
-	Release() error
-	Status() ConnStatus
+	Status() AdapterStatus
 	Conn() interface{}
-	Role() EngineRole
+	Type() EngineType
 	close() error
 	open() error
 }
 
-type ConnStatus int
+type AdapterStatus int
 
 const (
-	ConnStatusReady ConnStatus = iota
+	ConnStatusReady AdapterStatus = iota
 )
 
-func NewPooler(cfgChain ConfigChain) *Pooler {
-	return &Pooler{cfgChain: cfgChain, adapters: []Adapter{}}
+// || POOLER ERROR ||
+
+type PoolerError struct {
+	Op string
+	Et EngineType
 }
+
+func (p PoolerError) Error() string {
+	return fmt.Sprintf("%s %v", p.Op, p.Et)
+}
+
+func NewPoolerError(op string, Et EngineType) PoolerError {
+	return PoolerError{Op: op, Et: Et}
+}
+
+func NewPooler(cfgChain ConfigChain) *Pooler {
+	return &Pooler{cfgChain: cfgChain, adapters: map[Adapter]bool{}}
+}
+
+// || POOLER ||
 
 type Pooler struct {
 	cfgChain ConfigChain
-	adapters []Adapter
+	adapters map[Adapter]bool
 }
 
-func (p *Pooler) Retrieve(r EngineRole) (a Adapter) {
-	a, ok := p.findAdapter(r)
+func (p *Pooler) Retrieve(et EngineType) (a Adapter, err error) {
+	a, ok := p.findAdapter(et)
 	if !ok {
 		var err error
-		a, err = p.newAdapter(r)
+		a, err = p.newAdapter(et)
 		if err != nil {
-			log.Fatalln(err)
+			return a, err
 		}
 		p.addAdapter(a)
 	}
-	return a
+	return a, nil
 }
 
-func (p *Pooler) findAdapter(r EngineRole) (Adapter, bool) {
-	for _, a := range p.adapters {
-		if a.Role() == r {
+func (p *Pooler) findAdapter(et EngineType) (Adapter, bool) {
+	for a := range p.adapters {
+		if a.Type() == et {
 			return a, true
 		}
 	}
-
 	return nil, false
 }
 
-func (p *Pooler) newAdapter(r EngineRole) (Adapter, error) {
-	cfg, err := p.cfgChain.Retrieve(r)
+func (p *Pooler) newAdapter(et EngineType) (Adapter, error) {
+	cfg, err := p.cfgChain.Retrieve(et)
 	if err != nil {
-		log.Fatalln(err)
+		return nil, err
 	}
 	a, err := NewAdapter(cfg)
 	if err != nil {
-		log.Fatalln(err)
+		return a, err
 	}
 	return a, nil
 }
 
 func (p *Pooler) addAdapter(a Adapter) {
-	p.adapters = append(p.adapters, a)
+	p.adapters[a] = true
 }
 
 func NewAdapter(cfg Config) (Adapter, error) {
-	switch cfg.Type() {
+	et := cfg.Type()
+	switch et {
 	case EngineTypeMDStub:
 		return NewMDStubAdapter(cfg)
+	default:
+		return nil, NewPoolerError("adapter type does not exist", et)
 	}
-	return nil, nil
-}
-
-type MDStubConn struct {}
-
-type MDStubAdapter struct {
-	id uuid.UUID
-	cfg  Config
-	conn *MDStubConn
-}
-
-func NewMDStubAdapter(cfg Config) (a *MDStubAdapter, err error) {
-	a = &MDStubAdapter{cfg: cfg, conn: &MDStubConn{}, id: uuid.New()}
-	err = a.open()
-	return a, err
-}
-
-func (a *MDStubAdapter) ID() uuid.UUID {
-	return a.id
-}
-
-func (a *MDStubAdapter) Release() error {
-	return nil
-}
-
-func (a *MDStubAdapter) Status() ConnStatus {
-	return ConnStatusReady
-}
-
-func (a *MDStubAdapter) Role() EngineRole {
-	return EngineRoleMetaData
-}
-
-func (a *MDStubAdapter) close() error {
-	return nil
-}
-
-func (a *MDStubAdapter) open() error {
-	return nil
-}
-
-func (a *MDStubAdapter) Conn() interface{} {
-	return a.conn
 }

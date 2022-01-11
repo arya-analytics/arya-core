@@ -9,8 +9,8 @@ import (
 
 var cfgChain = storage.ConfigChain{
 	storage.MDStubConfig{},
+	storage.CacheStubConfig{},
 }
-
 
 var _ = Describe("Pooler", func() {
 	var p *storage.Pooler
@@ -19,14 +19,37 @@ var _ = Describe("Pooler", func() {
 		p = storage.NewPooler(cfgChain)
 	})
 	Describe("Retrieving a new adapter", func() {
-		It("Should retrieve an adapter", func() {
-			a := p.Retrieve(storage.EngineRoleMetaData)
-			Expect(a.Status()).To(Equal(storage.ConnStatusReady))
+		Context("The config was provided", func() {
+			It("Should retrieve an adapter", func() {
+				a, err := p.Retrieve(storage.EngineTypeMDStub)
+				Expect(err).To(BeNil())
+				Expect(a.Status()).To(Equal(storage.ConnStatusReady))
+			})
+			It("Should retrieve the same adapter if queried twice", func() {
+				aOne, err := p.Retrieve(storage.EngineTypeMDStub)
+				Expect(err).To(BeNil())
+				aTwo, err := p.Retrieve(storage.EngineTypeMDStub)
+				Expect(err).To(BeNil())
+				Expect(aOne.ID()).To(Equal(aTwo.ID()))
+			})
 		})
-		It("Should retrieve the same adapter if queried twice", func() {
-			aOne := p.Retrieve(storage.EngineRoleMetaData)
-			aTwo := p.Retrieve(storage.EngineRoleMetaData)
-			Expect(aOne.ID()).To(Equal(aTwo.ID()))
+		Context("The config was not provided", func() {
+			It("Should return a config error", func() {
+				_, err := p.Retrieve(storage.EngineTypeBulkStub)
+				Expect(err).ToNot(BeNil())
+				cfgErr, ok := err.(storage.ConfigError)
+				Expect(ok).To(BeTrue())
+				Expect(cfgErr.Et).To(Equal(storage.EngineTypeBulkStub))
+			})
+		})
+		Context("The adapter does not exist", func() {
+			It("Should return a pooler error", func() {
+				_, err := p.Retrieve(storage.EngineTypeCacheStub)
+				Expect(err).ToNot(BeNil())
+				cfgErr, ok := err.(storage.PoolerError)
+				Expect(ok).To(BeTrue())
+				Expect(cfgErr.Et).To(Equal(storage.EngineTypeCacheStub))
+			})
 		})
 	})
 })
