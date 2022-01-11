@@ -15,7 +15,7 @@ jobs:
     - name: Build
       run: go build -v ./...
 
-    - name: Setup Tests
+    - name: Set up Tests
       run: |
         go get github.com/onsi/ginkgo/v2/ginkgo/generators@v2.0.0
         go get github.com/onsi/ginkgo/v2/ginkgo/internal@v2.0.0
