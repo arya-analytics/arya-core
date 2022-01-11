@@ -3,14 +3,14 @@ package watcher_test
 import (
 	"github.com/arya-analytics/aryacore/pkg/util/watcher"
 	"github.com/fsnotify/fsnotify"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"log"
 	"os"
 	"time"
 )
 
-var _ = FDescribe("Watcher", func() {
+var _ = Describe("Watcher", func() {
 	Describe("NewWatcher", func() {
 		It("Should create a new watcher", func() {
 			cfg := watcher.WatcherConfig{}

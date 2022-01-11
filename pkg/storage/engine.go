@@ -12,6 +12,9 @@ const (
 	EngineTypeRoach EngineType = iota
 	EngineTypeMinio
 	EngineTypeRedisTS
+	EngineTypeMDStub
+	EngineTypeBulkStub
+	EngineTypeCacheStub
 )
 
 type EngineRole int

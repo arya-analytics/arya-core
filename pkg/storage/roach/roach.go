@@ -2,6 +2,7 @@ package roach
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/storage"
+	log "github.com/sirupsen/logrus"
 	"github.com/uptrace/bun"
 )
 
@@ -28,7 +29,10 @@ func (e Engine) Type() storage.EngineType {
 }
 
 func (e Engine) conn() *bun.DB {
-	a := e.pooler.Retrieve(storage.EngineTypeRoach)
+	a, err := e.pooler.Retrieve(storage.EngineTypeRoach)
+	if err != nil {
+		log.Fatalln(err)
+	}
 	return a.Conn().(*bun.DB)
 }
 
