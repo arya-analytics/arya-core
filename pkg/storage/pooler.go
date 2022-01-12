@@ -1,56 +1,24 @@
 package storage
 
-import (
-	"fmt"
-	"github.com/google/uuid"
-)
-
-// || ADAPTER ||
-
-type Adapter interface {
-	ID() uuid.UUID
-	Status() AdapterStatus
-	Conn() interface{}
-	Type() EngineType
-	close() error
-	open() error
-}
-
-type AdapterStatus int
-
-const (
-	ConnStatusReady AdapterStatus = iota
-)
-
-// || POOLER ERROR ||
-
-type PoolerError struct {
-	Op string
-	Et EngineType
-}
-
-func (p PoolerError) Error() string {
-	return fmt.Sprintf("%s %v", p.Op, p.Et)
-}
-
 // NewPooler creates a new Pooler.
-func NewPooler(cfgChain ConfigChain) *Pooler {
-	return &Pooler{cfgChain: cfgChain, adapters: map[Adapter]bool{}}
+func NewPooler() *Pooler {
+	return &Pooler{
+		adapters: map[Adapter]bool{},
+	}
 }
 
 // || POOLER ||
 
 type Pooler struct {
-	cfgChain ConfigChain
 	adapters map[Adapter]bool
 }
 
-// Retrieve retrieves an Adapter based on the EngineType specified.
-func (p *Pooler) Retrieve(et EngineType) (a Adapter, err error) {
-	a, ok := p.findAdapter(et)
+// Retrieve retrieves an engine.Adapter based on the EngineType specified.
+func (p *Pooler) Retrieve(e Engine) (a Adapter, err error) {
+	a, ok := p.findAdapter(e)
 	if !ok {
 		var err error
-		a, err = p.newAdapter(et)
+		a, err = p.newAdapter(e)
 		if err != nil {
 			return a, err
 		}
@@ -59,37 +27,20 @@ func (p *Pooler) Retrieve(et EngineType) (a Adapter, err error) {
 	return a, nil
 }
 
-func (p *Pooler) findAdapter(et EngineType) (Adapter, bool) {
+func (p *Pooler) findAdapter(e Engine) (Adapter, bool) {
 	for a := range p.adapters {
-		if a.Type() == et {
+		if e.IsAdapter(a) {
 			return a, true
 		}
 	}
 	return nil, false
 }
 
-func (p *Pooler) newAdapter(et EngineType) (Adapter, error) {
-	cfg, err := p.cfgChain.Retrieve(et)
-	if err != nil {
-		return nil, err
-	}
-	a, err := newAdapter(cfg)
-	if err != nil {
-		return a, err
-	}
+func (p *Pooler) newAdapter(e Engine) (Adapter, error) {
+	a := e.NewAdapter()
 	return a, nil
 }
 
 func (p *Pooler) addAdapter(a Adapter) {
 	p.adapters[a] = true
-}
-
-func newAdapter(cfg Config) (Adapter, error) {
-	et := cfg.Type()
-	switch et {
-	case EngineTypeMDStub:
-		return NewMDStubAdapter(cfg)
-	default:
-		return nil, PoolerError{Op: "adapter type does not exist", Et: et}
-	}
 }

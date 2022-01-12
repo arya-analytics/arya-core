@@ -1,43 +1,33 @@
 package storage
 
-type BaseEngine interface {
-	Role() EngineRole
-	Type() EngineType
-}
-
-type EngineType int
-
-// TODO: Generate stringers for enums
-const (
-	EngineTypeRoach EngineType = iota
-	EngineTypeMinio
-	EngineTypeRedisTS
-	EngineTypeMDStub
-	EngineTypeBulkStub
-	EngineTypeCacheStub
+import (
+	"context"
+	"github.com/google/uuid"
 )
+
+type Adapter interface {
+	ID() uuid.UUID
+}
 
 type EngineRole int
 
 const (
-	EngineRoleMetaData EngineRole = iota
-	EngineRoleBulk
+	EngineRoleMetaData = iota
 	EngineRoleCache
+	EngineRoleBulk
 )
 
+type Engine interface {
+	NewAdapter() Adapter
+	IsAdapter(Adapter) bool
+}
+
 type MetaDataEngine interface {
-	BaseEngine
-	NewRetrieve() MetaDataRetrieve
-	NewUpdate() MetaDataCreate
+	NewRetrieve(a Adapter) MetaDataRetrieve
 }
 
 type MetaDataRetrieve interface {
-	Exec() error
-	Where() MetaDataRetrieve
-	Model(interface{}) MetaDataCreate
-}
-
-type MetaDataCreate interface {
-	Exec() error
-	Model(interface{}) MetaDataCreate
+	Model(model interface{}) MetaDataRetrieve
+	Where(query string, args ...interface{}) MetaDataRetrieve
+	Exec(ctx context.Context) error
 }
