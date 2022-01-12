@@ -24,7 +24,7 @@ var _ = Describe("Pooler", func() {
 			It("Should retrieve an adapter", func() {
 				a, err := p.Retrieve(storage.EngineTypeMDStub)
 				Expect(err).To(BeNil())
-				Expect(a.Status()).To(Equal(storage.ConnStatusReady))
+				Expect(a.Status()).To(Equal(ConnStatusReady))
 			})
 			It("Should retrieve the same adapter if queried twice", func() {
 				aOne, err := p.Retrieve(storage.EngineTypeMDStub)
@@ -49,7 +49,7 @@ var _ = Describe("Pooler", func() {
 			It("Should return a pooler error", func() {
 				_, err := p.Retrieve(storage.EngineTypeCacheStub)
 				Expect(err).ToNot(BeNil())
-				cfgErr, ok := err.(storage.PoolerError)
+				cfgErr, ok := err.(PoolerError)
 				Expect(ok).To(BeTrue())
 				Expect(cfgErr.Error()).To(Equal(
 					fmt.Sprintf("adapter type does not exist %v", storage.

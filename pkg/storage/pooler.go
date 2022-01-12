@@ -1,56 +1,30 @@
 package storage
 
 import (
-	"fmt"
-	"github.com/google/uuid"
+	"github.com/arya-analytics/aryacore/pkg/storage/engine"
 )
-
-// || ADAPTER ||
-
-type Adapter interface {
-	ID() uuid.UUID
-	Status() AdapterStatus
-	Conn() interface{}
-	Type() EngineType
-	close() error
-	open() error
-}
-
-type AdapterStatus int
-
-const (
-	ConnStatusReady AdapterStatus = iota
-)
-
-// || POOLER ERROR ||
-
-type PoolerError struct {
-	Op string
-	Et EngineType
-}
-
-func (p PoolerError) Error() string {
-	return fmt.Sprintf("%s %v", p.Op, p.Et)
-}
 
 // NewPooler creates a new Pooler.
-func NewPooler(cfgChain ConfigChain) *Pooler {
-	return &Pooler{cfgChain: cfgChain, adapters: map[Adapter]bool{}}
+func NewPooler(engines []engine.Base) *Pooler {
+	return &Pooler{
+		adapters: map[engine.Adapter]bool{},
+		engines:  engines,
+	}
 }
 
 // || POOLER ||
 
 type Pooler struct {
-	cfgChain ConfigChain
-	adapters map[Adapter]bool
+	engines  []engine.Base
+	adapters map[engine.Adapter]bool
 }
 
-// Retrieve retrieves an Adapter based on the EngineType specified.
-func (p *Pooler) Retrieve(et EngineType) (a Adapter, err error) {
-	a, ok := p.findAdapter(et)
+// Retrieve retrieves an engine.Adapter based on the EngineType specified.
+func (p *Pooler) Retrieve(r engine.Role) (a engine.Adapter, err error) {
+	a, ok := p.findAdapter(r)
 	if !ok {
 		var err error
-		a, err = p.newAdapter(et)
+		a, err = p.newAdapter(r)
 		if err != nil {
 			return a, err
 		}
@@ -59,37 +33,30 @@ func (p *Pooler) Retrieve(et EngineType) (a Adapter, err error) {
 	return a, nil
 }
 
-func (p *Pooler) findAdapter(et EngineType) (Adapter, bool) {
+func (p *Pooler) findAdapter(r engine.Role) (engine.Adapter, bool) {
 	for a := range p.adapters {
-		if a.Type() == et {
+		if a.Role() == r {
 			return a, true
 		}
 	}
 	return nil, false
 }
 
-func (p *Pooler) newAdapter(et EngineType) (Adapter, error) {
-	cfg, err := p.cfgChain.Retrieve(et)
-	if err != nil {
-		return nil, err
+func (p *Pooler) findEngine(r engine.Role) engine.Base {
+	for _, e := range p.engines {
+		if e.Role() == r {
+			return e
+		}
 	}
-	a, err := newAdapter(cfg)
-	if err != nil {
-		return a, err
-	}
+	return nil
+}
+
+func (p *Pooler) newAdapter(r engine.Role) (engine.Adapter, error) {
+	e := p.findEngine(r)
+	a := e.NewAdapter()
 	return a, nil
 }
 
-func (p *Pooler) addAdapter(a Adapter) {
+func (p *Pooler) addAdapter(a engine.Adapter) {
 	p.adapters[a] = true
-}
-
-func newAdapter(cfg Config) (Adapter, error) {
-	et := cfg.Type()
-	switch et {
-	case EngineTypeMDStub:
-		return NewMDStubAdapter(cfg)
-	default:
-		return nil, PoolerError{Op: "adapter type does not exist", Et: et}
-	}
 }

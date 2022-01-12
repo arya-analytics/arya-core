@@ -1,6 +1,8 @@
 package storage
 
-import "github.com/google/uuid"
+import (
+	"github.com/google/uuid"
+)
 
 // || META DATA STUBS ||
 
@@ -20,18 +22,6 @@ func NewMDStubAdapter(cfg Config) (a *MDStubAdapter, err error) {
 
 func (a *MDStubAdapter) ID() uuid.UUID {
 	return a.id
-}
-
-func (a *MDStubAdapter) Release() error {
-	return nil
-}
-
-func (a *MDStubAdapter) Status() AdapterStatus {
-	return ConnStatusReady
-}
-
-func (a *MDStubAdapter) Type() EngineType {
-	return EngineTypeMDStub
 }
 
 func (a *MDStubAdapter) close() error {
