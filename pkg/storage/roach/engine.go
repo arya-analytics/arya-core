@@ -1,6 +1,7 @@
 package roach
 
 import (
+	"context"
 	"crypto/tls"
 	"database/sql"
 	"fmt"
@@ -33,19 +34,19 @@ type Engine struct {
 	// Password for the database. Does not need to be specified if using DriverSQLite.
 	Password string
 	// Host IP for the database. Does not need to be specified if using DriverSQLite.
-	Host     string
+	Host string
 	// Port to connect to at Host. Does not need to be specified if using DriverSQLite.
-	Port     int
+	Port int
 	// Database to connect to. Does not need to be specified if using DriverSQLite.
 	Database string
 	// Whether to open a TLS connection or not.
 	// Does not need to be specified if using DriverSQLite.
-	UseTLS   bool
+	UseTLS bool
 	// Driver is the connection driver used for the roach data store.
 	// Current options are:
 	// DriverPG which connects via the Postgres wire protocol.
 	// DriverSQLite which uses an in memory SQLite database
-	Driver   Driver
+	Driver Driver
 }
 
 // NewAdapter opens a new connection with the data store and returns a storage.Adapter.
@@ -68,6 +69,27 @@ func (e *Engine) NewRetrieve(a storage.Adapter) storage.MetaDataRetrieve {
 	ra, _ := e.bindAdapter(a)
 	r := newRetrieve(e.conn(ra))
 	return r
+}
+
+// Migrate migrates the database.
+func (e *Engine) Migrate(ctx context.Context, a storage.Adapter) error {
+	ra, _ := e.bindAdapter(a)
+	db := e.conn(ra)
+	m := newMigrator(db)
+	err := m.init(ctx)
+	if err != nil {
+		return err
+	}
+	err = m.migrate(ctx)
+	return err
+}
+
+// VerifyMigrations verifies that the migrations were executed correctly
+func (e *Engine) VerifyMigrations(ctx context.Context, a storage.Adapter) error {
+	ra, _ := e.bindAdapter(a)
+	db := e.conn(ra)
+	m := newMigrator(db)
+	return m.verify(ctx)
 }
 
 func (e *Engine) bindAdapter(a storage.Adapter) (*adapter, bool) {

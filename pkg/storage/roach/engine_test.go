@@ -1,6 +1,7 @@
 package roach_test
 
 import (
+	"context"
 	"github.com/arya-analytics/aryacore/pkg/storage/roach"
 	"github.com/arya-analytics/aryacore/pkg/storage/stub"
 	"github.com/google/uuid"
@@ -33,6 +34,23 @@ var _ = Describe("Engine", func() {
 					a := e.NewAdapter()
 					Expect(dummyEngine.IsAdapter(a)).To(BeFalse())
 				})
+			})
+		})
+	})
+	Describe("Migrations", func() {
+		Describe("Init Migrations", func() {
+			It("Should initialize the migrations without error", func() {
+				a := dummyEngine.NewAdapter()
+				ctx := context.Background()
+				err := dummyEngine.Migrate(ctx, a)
+				Expect(err).To(BeNil())
+			})
+			It("Should create all of the tables correctly", func() {
+				a := dummyEngine.NewAdapter()
+				ctx := context.Background()
+				_ = dummyEngine.Migrate(ctx, a)
+				err := dummyEngine.VerifyMigrations(ctx, a)
+				Expect(err).To(BeNil())
 			})
 		})
 	})

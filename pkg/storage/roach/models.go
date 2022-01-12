@@ -10,7 +10,7 @@ import (
 type JSONB map[string]interface{}
 
 var models = map[interface{}]interface{}{
-	storage.ChannelConfig{}: ChannelConfig{},
+	(*storage.ChannelConfig)(nil): (*ChannelConfig)(nil),
 }
 
 func roachModel(m interface{}) interface{} {
@@ -19,8 +19,8 @@ func roachModel(m interface{}) interface{} {
 
 type Node struct {
 	ID uuid.UUID `bun:"type:uuid,default:gen_random_uuid(),pk"`
-	GossipNodeID int64
-	GossipNode *GossipNode `bun:"rel:belongs-to,join:gossip_node_id=id"`
+	//GossipNodeID int64
+	//GossipNode *GossipNode `bun:"rel:belongs-to,join:gossip_node_id=id"`
 }
 
 type Range struct {
@@ -59,7 +59,7 @@ type ChannelChunk struct {
 // GossipNode lives in crdb's internal schema and tracks the nodes in the roach cluster
 type GossipNode struct {
 	bun.BaseModel       `bun:"table:crdb_internal.gossip_nodes"`
-	NodeID              int       `bun:"type:bigint"`
+	NodeID              int       `bun:"type:bigint,pk"`
 	Network             string    `bun:"type:text"`
 	Address             string    `bun:"type:text"`
 	AdvertiseAddress    string    `bun:"type:text"`
