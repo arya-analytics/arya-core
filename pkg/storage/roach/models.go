@@ -1,12 +1,21 @@
 package roach
 
 import (
+	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/google/uuid"
 	"github.com/uptrace/bun"
 	"time"
 )
 
 type JSONB map[string]interface{}
+
+var models = map[interface{}]interface{}{
+	storage.ChannelConfig{}: ChannelConfig{},
+}
+
+func roachModel(m interface{}) interface{} {
+	return models[m]
+}
 
 type Node struct {
 	ID uuid.UUID `bun:"type:uuid,default:gen_random_uuid(),pk"`

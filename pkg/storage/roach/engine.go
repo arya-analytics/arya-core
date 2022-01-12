@@ -64,6 +64,12 @@ func (e *Engine) IsAdapter(a storage.Adapter) bool {
 	return ok
 }
 
+func (e *Engine) NewRetrieve(a storage.Adapter) storage.MetaDataRetrieve {
+	ra, _ := e.bindAdapter(a)
+	r := newRetrieve(e.conn(ra))
+	return r
+}
+
 func (e *Engine) bindAdapter(a storage.Adapter) (*adapter, bool) {
 	ra, ok := a.(*adapter)
 	return ra, ok

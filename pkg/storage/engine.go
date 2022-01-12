@@ -23,6 +23,7 @@ type Engine interface {
 }
 
 type MetaDataEngine interface {
+	Engine
 	NewRetrieve(a Adapter) MetaDataRetrieve
 }
 
