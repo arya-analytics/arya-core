@@ -10,7 +10,7 @@ require (
 	github.com/onsi/gomega v1.17.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/uptrace/bun v1.0.21
-	github.com/uptrace/bun/dialect/pgdialect v1.0.15
+	github.com/uptrace/bun/dialect/pgdialect v1.0.21
 	github.com/uptrace/bun/dialect/sqlitedialect v1.0.21
 	github.com/uptrace/bun/driver/pgdriver v1.0.15
 	github.com/uptrace/bun/driver/sqliteshim v1.0.21
