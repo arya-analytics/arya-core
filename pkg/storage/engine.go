@@ -1,6 +1,9 @@
 package storage
 
-import "github.com/google/uuid"
+import (
+	"context"
+	"github.com/google/uuid"
+)
 
 type Adapter interface {
 	ID() uuid.UUID
@@ -14,8 +17,17 @@ const (
 	EngineRoleBulk
 )
 
-type EngineBase interface {
+type Engine interface {
 	NewAdapter() Adapter
-	IsAdapter(interface{}) bool
-	Role() EngineRole
+	IsAdapter(Adapter) bool
+}
+
+type MetaDataEngine interface {
+	NewRetrieve(a Adapter) MetaDataRetrieve
+}
+
+type MetaDataRetrieve interface {
+	Model(model interface{}) MetaDataRetrieve
+	Where(query string, args ...interface{}) MetaDataRetrieve
+	Exec(ctx context.Context) error
 }

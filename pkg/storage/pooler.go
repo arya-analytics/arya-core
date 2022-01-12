@@ -14,7 +14,7 @@ type Pooler struct {
 }
 
 // Retrieve retrieves an engine.Adapter based on the EngineType specified.
-func (p *Pooler) Retrieve(e EngineBase) (a Adapter, err error) {
+func (p *Pooler) Retrieve(e Engine) (a Adapter, err error) {
 	a, ok := p.findAdapter(e)
 	if !ok {
 		var err error
@@ -27,7 +27,7 @@ func (p *Pooler) Retrieve(e EngineBase) (a Adapter, err error) {
 	return a, nil
 }
 
-func (p *Pooler) findAdapter(e EngineBase) (Adapter, bool) {
+func (p *Pooler) findAdapter(e Engine) (Adapter, bool) {
 	for a := range p.adapters {
 		if e.IsAdapter(a) {
 			return a, true
@@ -36,7 +36,7 @@ func (p *Pooler) findAdapter(e EngineBase) (Adapter, bool) {
 	return nil, false
 }
 
-func (p *Pooler) newAdapter(e EngineBase) (Adapter, error) {
+func (p *Pooler) newAdapter(e Engine) (Adapter, error) {
 	a := e.NewAdapter()
 	return a, nil
 }

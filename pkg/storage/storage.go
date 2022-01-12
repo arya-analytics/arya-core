@@ -1,6 +1,6 @@
 package storage
 
-type EngineConfig map[EngineRole]EngineBase
+type EngineConfig map[EngineRole]Engine
 
 type Storage struct {
 	cfg    EngineConfig

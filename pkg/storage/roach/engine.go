@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"database/sql"
 	"fmt"
+	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	"github.com/uptrace/bun"
@@ -34,13 +35,31 @@ type Engine struct {
 	Driver   Driver
 }
 
-func (e *Engine) NewAdapter() (a *adapter, err error) {
-	a = &adapter{
+func (e *Engine) NewAdapter() storage.Adapter {
+	a := &adapter{
 		id: uuid.New(),
 		e:  e,
 	}
 	a.open()
-	return a, err
+	return a
+}
+
+func (e *Engine) IsAdapter(a storage.Adapter) bool {
+	_, ok := e.bindAdapter(a)
+	return ok
+}
+
+func (e *Engine) bindAdapter(a storage.Adapter) (*adapter, bool) {
+	ra, ok := a.(*adapter)
+	return ra, ok
+}
+
+func (e *Engine) conn(a *adapter) *bun.DB {
+	c, ok := a.conn().(*bun.DB)
+	if !ok {
+		log.Fatalln("Incorrect type specified")
+	}
+	return c
 }
 
 func (e *Engine) addr() string {
@@ -51,13 +70,6 @@ func (e *Engine) tlsConfig() *tls.Config {
 	return &tls.Config{
 		InsecureSkipVerify: e.UseTLS,
 	}
-}
-
-func (e *Engine) IsAdapter(a interface{}) bool {
-	if _, ok := a.(*adapter); !ok {
-		return false
-	}
-	return true
 }
 
 // || ADAPTER ||
