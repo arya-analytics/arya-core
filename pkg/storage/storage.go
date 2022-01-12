@@ -1,16 +1,15 @@
 package storage
 
+type EngineConfig map[EngineRole]EngineBase
+
 type Storage struct {
-	pooler   Pooler
-	cfgChain ConfigChain
+	cfg    EngineConfig
+	pooler *Pooler
 }
 
-func NewStorage(cfgChain ConfigChain, pooler Pooler) *Storage {
+func NewStorage(cfg EngineConfig) *Storage {
 	return &Storage{
-		cfgChain: cfgChain,
-		pooler:   pooler,
+		cfg:    cfg,
+		pooler: NewPooler(),
 	}
 }
-
-
-

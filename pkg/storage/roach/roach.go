@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"database/sql"
 	"fmt"
-	"github.com/arya-analytics/aryacore/pkg/storage/engine"
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	"github.com/uptrace/bun"
@@ -12,10 +11,6 @@ import (
 	"github.com/uptrace/bun/dialect/sqlitedialect"
 	"github.com/uptrace/bun/driver/pgdriver"
 	"github.com/uptrace/bun/driver/sqliteshim"
-)
-
-const (
-	role = engine.RoleMetaData
 )
 
 // || DRIVER ||
@@ -39,10 +34,6 @@ type Engine struct {
 	Driver   Driver
 }
 
-func (e *Engine) Role() engine.Role {
-	return role
-}
-
 func (e *Engine) NewAdapter() (a *adapter, err error) {
 	a = &adapter{
 		id: uuid.New(),
@@ -62,12 +53,23 @@ func (e *Engine) tlsConfig() *tls.Config {
 	}
 }
 
+func (e *Engine) IsAdapter(a interface{}) bool {
+	if _, ok := a.(*adapter); !ok {
+		return false
+	}
+	return true
+}
+
 // || ADAPTER ||
 
 type adapter struct {
 	id uuid.UUID
 	db *bun.DB
 	e  *Engine
+}
+
+func (a *adapter) ID() uuid.UUID {
+	return a.id
 }
 
 func (a *adapter) conn() interface{} {
@@ -86,10 +88,6 @@ func (a *adapter) open() {
 		a.db = sqlLiteConnect()
 
 	}
-}
-
-func (a *adapter) Role() engine.Role {
-	return a.e.Role()
 }
 
 // || CONNECTORS ||
