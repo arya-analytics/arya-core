@@ -28,8 +28,7 @@ func (r *retrieve) Where(query string, args ...interface{}) storage.MetaDataRetr
 }
 
 func (r *retrieve) WhereID(id interface{}) storage.MetaDataRetrieve {
-	r.q = r.q.Where("ID = ?", id)
-	return r
+	return r.Where("ID = ?", id)
 }
 
 func (r *retrieve) Exec(ctx context.Context) error {
