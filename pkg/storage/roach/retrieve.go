@@ -7,8 +7,8 @@ import (
 )
 
 type Retrieve struct {
-	q *bun.SelectQuery
-	model interface{}
+	q      *bun.SelectQuery
+	model  interface{}
 	rModel interface{}
 }
 
@@ -19,7 +19,7 @@ func newRetrieve(db *bun.DB) *Retrieve {
 
 func (r *Retrieve) Model(m interface{}) storage.MetaDataRetrieve {
 	r.model = m
-	rm := roachModel(m)
+	rm := model(m)
 	r.rModel = rm
 	r.q = r.q.Model(rm)
 	return r

@@ -9,12 +9,16 @@ import (
 
 type JSONB map[string]interface{}
 
-var models = map[interface{}]interface{}{
+var _models = map[interface{}]interface{}{
 	(*storage.ChannelConfig)(nil): (*ChannelConfig)(nil),
 }
 
-func roachModel(m interface{}) interface{} {
-	return models[m]
+func models() map[interface{}]interface{} {
+	return _models
+}
+
+func model(m interface{}) interface{} {
+	return _models[m]
 }
 
 type Node struct {

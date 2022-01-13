@@ -42,7 +42,7 @@ func (m *migrator) migrate(ctx context.Context) error {
 }
 
 func (m *migrator) verify(ctx context.Context) (err error) {
-	for _, rm := range models {
+	for _, rm := range models() {
 		_, err = m.db.NewSelect().Model(rm).Count(ctx)
 	}
 	return err
