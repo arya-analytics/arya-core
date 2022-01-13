@@ -17,14 +17,6 @@ const (
 	EngineRoleBulk
 )
 
-type Query int
-
-const (
-	QueryRetrieve = iota
-	QueryCreate
-)
-
-
 type Engine interface {
 	NewAdapter() Adapter
 	IsAdapter(Adapter) bool

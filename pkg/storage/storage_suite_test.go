@@ -10,6 +10,7 @@ import (
 	"testing"
 )
 
+
 var (
 	dummyEngineCfg = storage.EngineConfig{
 		storage.EngineRoleMetaData: &roach.Engine{
