@@ -31,6 +31,7 @@ type MetaDataEngine interface {
 type MetaDataRetrieve interface {
 	Model(model interface{}) MetaDataRetrieve
 	Where(query string, args ...interface{}) MetaDataRetrieve
+	WhereID(id interface{}) MetaDataRetrieve
 	Exec(ctx context.Context) error
 }
 
