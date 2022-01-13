@@ -1,15 +1,48 @@
 package roach_test
 
 import (
+	"context"
+	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/storage/roach"
+	log "github.com/sirupsen/logrus"
 	"testing"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
-var dummyEngine = &roach.Engine{
-	Driver: roach.DriverSQLite,
+var (
+	dummyEngine = &roach.Engine{
+		Driver: roach.DriverSQLite,
+	}
+	dummyModel = &storage.ChannelConfig{
+		ID:   432,
+		Name: "Cool Name",
+	}
+	dummyCtx = context.Background()
+	dummyAdapter = dummyEngine.NewAdapter()
+)
+
+func migrate() {
+	err := dummyEngine.VerifyMigrations(dummyCtx, dummyAdapter)
+	if err != nil {
+		if err := dummyEngine.Migrate(dummyCtx, dummyAdapter); err != nil {
+			log.Fatalln(err)
+		}
+	}
+}
+
+func createDummyModel() {
+	if err := dummyEngine.NewCreate(dummyAdapter).Model(dummyModel).Exec(dummyCtx); err != nil {
+		log.Fatalln(err)
+	}
+}
+
+func deleteDummyModel() {
+	if err := dummyEngine.NewDelete(dummyAdapter).Model(dummyModel).WhereID(
+		dummyModel.ID).Exec(dummyCtx); err != nil {
+		log.Fatalln(err)
+	}
 }
 
 func TestRoach(t *testing.T) {
