@@ -3,7 +3,7 @@ package storage
 import "context"
 
 type retrieveQuery struct {
-	base
+	baseQuery
 	_mdQuery MetaDataRetrieve
 }
 

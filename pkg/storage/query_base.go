@@ -1,11 +1,11 @@
 package storage
 
-type base struct {
+type baseQuery struct {
 	storage  *Storage
 	mdEngine MetaDataEngine
 }
 
-func (b *base) init(s *Storage) {
+func (b *baseQuery) init(s *Storage) {
 	b.storage = s
 	b.mdEngine = b.storage.retrieveMDEngine()
 }

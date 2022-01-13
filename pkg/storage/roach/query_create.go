@@ -8,7 +8,7 @@ import (
 )
 
 type createQuery struct {
-	base
+	baseQuery
 	q *bun.InsertQuery
 }
 

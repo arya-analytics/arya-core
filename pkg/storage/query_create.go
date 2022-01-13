@@ -3,7 +3,7 @@ package storage
 import "context"
 
 type createQuery struct {
-	base
+	baseQuery
 	_mdQuery MetaDataCreate
 }
 

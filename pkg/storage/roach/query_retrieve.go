@@ -7,7 +7,7 @@ import (
 )
 
 type retrieveQuery struct {
-	base
+	baseQuery
 	q *bun.SelectQuery
 }
 

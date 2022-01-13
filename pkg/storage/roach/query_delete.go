@@ -7,7 +7,7 @@ import (
 )
 
 type deleteQuery struct {
-	base
+	baseQuery
 	q *bun.DeleteQuery
 }
 
