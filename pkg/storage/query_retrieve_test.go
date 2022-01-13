@@ -9,7 +9,7 @@ import (
 var _ = Describe("retrieveQuery", func() {
 	BeforeEach(createDummyModel)
 	AfterEach(deleteDummyModel)
-	Describe("Retrieve a new channel config", func() {
+	Describe("Retrieve a channel config", func() {
 		It("Should retrieve without error", func() {
 			m := &storage.ChannelConfig{}
 			err := dummyStorage.NewRetrieve().Model(m).WhereID(dummyModel.ID).Exec(dummyCtx)
