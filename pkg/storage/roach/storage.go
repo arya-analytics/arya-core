@@ -60,9 +60,17 @@ func (e *Engine) IsAdapter(a storage.Adapter) bool {
 	return ok
 }
 
+// NewRetrieve opens a new retrieve query with the correct storage.Adapter.
 func (e *Engine) NewRetrieve(a storage.Adapter) storage.MetaDataRetrieve {
 	ra, _ := e.bindAdapter(a)
 	r := newRetrieve(e.conn(ra))
+	return r
+}
+
+// NewCreate opens a new create query with the correct storage.Adapter.
+func (e *Engine) NewCreate(a storage.Adapter) storage.MetaDataCreate {
+	ra, _ := e.bindAdapter(a)
+	r := newCreate(e.conn(ra))
 	return r
 }
 
@@ -109,6 +117,3 @@ func (e *Engine) tlsConfig() *tls.Config {
 		InsecureSkipVerify: e.UseTLS,
 	}
 }
-
-
-

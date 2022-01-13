@@ -1,24 +1,30 @@
 package roach
 
 import (
-	"github.com/arya-analytics/aryacore/pkg/storage"
+	"fmt"
 	"github.com/google/uuid"
 	"github.com/uptrace/bun"
+	"reflect"
 	"time"
 )
 
 type JSONB map[string]interface{}
 
-var _models = map[interface{}]interface{}{
-	(*storage.ChannelConfig)(nil): (*ChannelConfig)(nil),
+func models() []reflect.Type {
+	return []reflect.Type{
+		reflect.TypeOf(ChannelConfig{}),
+	}
 }
 
-func models() map[interface{}]interface{} {
-	return _models
-}
-
-func model(m interface{}) interface{} {
-	return _models[m]
+func roachModelFromStorage(m interface{}) interface{} {
+	for _, rm := range models() {
+		rmName := rm.Name()
+		mName := reflect.TypeOf(m).Elem().Name()
+		if rmName == mName {
+			return reflect.New(rm).Interface()
+		}
+	}
+	return fmt.Errorf("roach model could not be found")
 }
 
 type Node struct {
@@ -46,8 +52,8 @@ type RangeReplicaToNode struct {
 type ChannelConfig struct {
 	ID     int32 `bun:",pk"`
 	Name   string
-	NodeId uuid.UUID `bun:"type:uuid"`
-	Node   *Node     `bun:"rel:belongs-to,join:node_id=id"`
+	//NodeId uuid.UUID `bun:"type:uuid"`
+	//Node   *Node     `bun:"rel:belongs-to,join:node_id=id"`
 }
 
 type ChannelChunk struct {

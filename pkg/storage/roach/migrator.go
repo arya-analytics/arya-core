@@ -5,6 +5,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/migrate"
+	"reflect"
 )
 
 type migrator struct {
@@ -43,7 +44,7 @@ func (m *migrator) migrate(ctx context.Context) error {
 
 func (m *migrator) verify(ctx context.Context) (err error) {
 	for _, rm := range models() {
-		_, err = m.db.NewSelect().Model(rm).Count(ctx)
+		_, err = m.db.NewSelect().Model(reflect.New(rm).Interface()).Count(ctx)
 	}
 	return err
 }

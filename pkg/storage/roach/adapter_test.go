@@ -2,16 +2,13 @@ package roach_test
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/storage"
-	"github.com/arya-analytics/aryacore/pkg/storage/roach"
 	"github.com/arya-analytics/aryacore/pkg/storage/stub"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
-var dummyEngine = &roach.Engine{
-	Driver: roach.DriverSQLite,
-}
+
 
 var _ = Describe("Engine", func() {
 	Describe("Adapter", func() {
