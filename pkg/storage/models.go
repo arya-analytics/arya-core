@@ -35,15 +35,15 @@ func (mw *ModelWrapper) BindVals(mv ModelValues) error {
 		f := dv.FieldByName(k)
 		v := reflect.ValueOf(rv)
 		if !f.IsValid() {
-			return fmt.Errorf("invalid key %s while binding to %v", k, dv.Type())
+			return fmt.Errorf("invalid key %storage while binding to %v", k, dv.Type())
 		}
 		if !f.CanSet() {
-			return fmt.Errorf("unsettable key %s in vals while binding to %v ",
+			return fmt.Errorf("unsettable key %storage in vals while binding to %v ",
 				k, dv.Type())
 		}
 		vt, ft := v.Type(), f.Type()
 		if vt != ft {
-			return fmt.Errorf("invalid type %v for field '%s' with type %v- "+
+			return fmt.Errorf("invalid type %v for field '%storage' with type %v- "+
 				"this is a no-op", vt, k, ft)
 		}
 		f.Set(v)

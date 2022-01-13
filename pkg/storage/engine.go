@@ -17,9 +17,18 @@ const (
 	EngineRoleBulk
 )
 
+type Query int
+
+const (
+	QueryRetrieve = iota
+	QueryCreate
+)
+
+
 type Engine interface {
 	NewAdapter() Adapter
 	IsAdapter(Adapter) bool
+	Migrate(ctx context.Context, adapter Adapter) error
 }
 
 type MetaDataEngine interface {
@@ -28,7 +37,10 @@ type MetaDataEngine interface {
 	NewCreate(a Adapter) MetaDataCreate
 }
 
+type MetaDataQuery interface {}
+
 type MetaDataRetrieve interface {
+	MetaDataQuery
 	Model(model interface{}) MetaDataRetrieve
 	Where(query string, args ...interface{}) MetaDataRetrieve
 	WhereID(id interface{}) MetaDataRetrieve
@@ -36,6 +48,7 @@ type MetaDataRetrieve interface {
 }
 
 type MetaDataCreate interface {
+	MetaDataQuery
 	Model(model interface{}) MetaDataCreate
 	Exec(ctx context.Context) error
 }

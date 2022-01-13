@@ -23,6 +23,7 @@ func (r *retrieve) Model(m interface{}) storage.MetaDataRetrieve {
 }
 
 func (r *retrieve) Where(query string, args ...interface{}) storage.MetaDataRetrieve {
+	// TODO: look into if this is actually necessary
 	r.q = r.q.Where(query, args...)
 	return r
 }
