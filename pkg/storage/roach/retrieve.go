@@ -8,7 +8,7 @@ import (
 
 type retrieve struct {
 	base
-	q              *bun.SelectQuery
+	q *bun.SelectQuery
 }
 
 func newRetrieve(db *bun.DB) *retrieve {
@@ -33,5 +33,10 @@ func (r *retrieve) WhereID(id interface{}) storage.MetaDataRetrieve {
 }
 
 func (r *retrieve) Exec(ctx context.Context) error {
-	return r.q.Scan(ctx)
+	err := r.q.Scan(ctx)
+	if err != nil {
+		return err
+	}
+	err = r.storageWrapper.BindVals(r.roachWrapper.MapVals())
+	return err
 }
