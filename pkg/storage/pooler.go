@@ -13,7 +13,7 @@ type Pooler struct {
 	adapters map[Adapter]bool
 }
 
-// retrieve retrieves an engine.Adapter based on the EngineType specified.
+// Retrieve retrieves an engine.Adapter based on the EngineType specified.
 func (p *Pooler) Retrieve(e Engine) (a Adapter, err error) {
 	a, ok := p.findAdapter(e)
 	if !ok {

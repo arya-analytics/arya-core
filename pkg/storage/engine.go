@@ -17,22 +17,25 @@ const (
 	EngineRoleBulk
 )
 
+// |||| ENGINE ||||
+
 type Engine interface {
 	NewAdapter() Adapter
 	IsAdapter(Adapter) bool
 	Migrate(ctx context.Context, adapter Adapter) error
 }
 
+
+// || META DATA ||
+
 type MetaDataEngine interface {
 	Engine
 	NewRetrieve(a Adapter) MetaDataRetrieve
 	NewCreate(a Adapter) MetaDataCreate
+	NewDelete(a Adapter) MetaDataDelete
 }
 
-type MetaDataQuery interface {}
-
 type MetaDataRetrieve interface {
-	MetaDataQuery
 	Model(model interface{}) MetaDataRetrieve
 	Where(query string, args ...interface{}) MetaDataRetrieve
 	WhereID(id interface{}) MetaDataRetrieve
@@ -40,7 +43,12 @@ type MetaDataRetrieve interface {
 }
 
 type MetaDataCreate interface {
-	MetaDataQuery
 	Model(model interface{}) MetaDataCreate
+	Exec(ctx context.Context) error
+}
+
+type MetaDataDelete interface {
+	WhereID(id interface{}) MetaDataDelete
+	Model(model interface{}) MetaDataDelete
 	Exec(ctx context.Context) error
 }

@@ -15,7 +15,7 @@ var c = &storage.ChannelConfig{
 
 var _ = Describe("Create", func() {
 	Describe("Create a new Channel Config", func() {
-		It("Should create it without error", func() {
+		It("Should createQuery it without error", func() {
 			ctx := context.Background()
 			a := dummyEngine.NewAdapter()
 			if err := dummyEngine.Migrate(ctx, a); err != nil {

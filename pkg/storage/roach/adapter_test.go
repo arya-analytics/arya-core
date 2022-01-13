@@ -17,7 +17,7 @@ var _ = Describe("Engine", func() {
 			a = dummyEngine.NewAdapter()
 		})
 		Describe("New Adapter", func() {
-			It("Should create a new adapter without error", func() {
+			It("Should createQuery a new adapter without error", func() {
 				Expect(len(a.ID().String())).To(Equal(len(uuid.New().String())))
 			})
 		})

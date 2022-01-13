@@ -19,7 +19,7 @@ var _ = Describe("Migrator", func() {
 		It("Should initialize the migrations without error", func() {
 			Expect(mErr).To(BeNil())
 		})
-		It("Should create all of the tables correctly", func() {
+		It("Should createQuery all of the tables correctly", func() {
 			ctx := context.Background()
 			err := dummyEngine.VerifyMigrations(ctx, a)
 			Expect(err).To(BeNil())

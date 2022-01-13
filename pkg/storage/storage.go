@@ -24,12 +24,16 @@ func (s *Storage) Migrate(ctx context.Context) error {
 	return err
 }
 
-func (s *Storage) NewRetrieve() *retrieve {
+func (s *Storage) NewRetrieve() *retrieveQuery {
 	return newRetrieve(s)
 }
 
-func (s *Storage) NewCreate() *create {
+func (s *Storage) NewCreate() *createQuery {
 	return newCreate(s)
+}
+
+func (s *Storage) NewDelete() *deleteQuery {
+	return newDelete(s)
 }
 
 func (s *Storage) retrieveEngine(r EngineRole) Engine {
@@ -37,12 +41,7 @@ func (s *Storage) retrieveEngine(r EngineRole) Engine {
 }
 
 func (s *Storage) retrieveMDEngine() MetaDataEngine {
-	e := s.retrieveEngine(EngineRoleMetaData)
-	me, ok := e.(MetaDataEngine)
-	if !ok {
-		log.Fatalln("Couldn't bind engine")
-	}
-	return me
+	return s.retrieveEngine(EngineRoleMetaData).(MetaDataEngine)
 }
 
 func (s *Storage) adapter(role EngineRole) (a Adapter) {

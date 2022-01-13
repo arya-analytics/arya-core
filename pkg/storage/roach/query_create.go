@@ -7,17 +7,17 @@ import (
 	"github.com/uptrace/bun"
 )
 
-type create struct {
+type createQuery struct {
 	base
 	q *bun.InsertQuery
 }
 
-func newCreate(db *bun.DB) *create {
-	r := &create{q: db.NewInsert()}
+func newCreate(db *bun.DB) *createQuery {
+	r := &createQuery{q: db.NewInsert()}
 	return r
 }
 
-func (c *create) Model(m interface{}) storage.MetaDataCreate {
+func (c *createQuery) Model(m interface{}) storage.MetaDataCreate {
 	c.bindWrappers(m)
 	if err := c.roachWrapper.BindVals(c.storageWrapper.MapVals()); err != nil {
 		log.Fatalln(err)
@@ -26,7 +26,7 @@ func (c *create) Model(m interface{}) storage.MetaDataCreate {
 	return c
 }
 
-func (c *create) Exec(ctx context.Context) error {
+func (c *createQuery) Exec(ctx context.Context) error {
 	_, err := c.q.Exec(ctx)
 	return err
 }

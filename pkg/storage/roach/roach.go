@@ -60,17 +60,24 @@ func (e *Engine) IsAdapter(a storage.Adapter) bool {
 	return ok
 }
 
-// NewRetrieve opens a new retrieve query with the correct storage.Adapter.
+// NewRetrieve opens a new retrieveQuery query with the provided storage.Adapter.
 func (e *Engine) NewRetrieve(a storage.Adapter) storage.MetaDataRetrieve {
 	ra, _ := e.bindAdapter(a)
 	r := newRetrieve(e.conn(ra))
 	return r
 }
 
-// NewCreate opens a new create query with the correct storage.Adapter.
+// NewCreate opens a new createQuery query with the provided storage.Adapter.
 func (e *Engine) NewCreate(a storage.Adapter) storage.MetaDataCreate {
 	ra, _ := e.bindAdapter(a)
 	r := newCreate(e.conn(ra))
+	return r
+}
+
+// NewDelete opens a new deleteQuery with the provided storage.Adapter;
+func (e *Engine) NewDelete(a storage.Adapter) storage.MetaDataDelete {
+	ra, _ := e.bindAdapter(a)
+	r := newDelete(e.conn(ra))
 	return r
 }
 

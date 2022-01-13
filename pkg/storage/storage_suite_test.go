@@ -19,7 +19,25 @@ var (
 	}
 	dummyStorage = storage.New(dummyEngineCfg)
 	dummyCtx = context.Background()
+	dummyModel = &storage.ChannelConfig{
+		ID:   432,
+		Name: "Cool Name",
+	}
 )
+
+func createDummyModel() {
+	if err := dummyStorage.NewCreate().Model(dummyModel).Exec(
+		dummyCtx); err != nil {
+		log.Fatalln(err)
+	}
+}
+
+func deleteDummyModel() {
+	if err := dummyStorage.NewDelete().Model(dummyModel).WhereID(dummyModel.ID).Exec(
+		dummyCtx); err != nil {
+		log.Fatalln(err)
+	}
+}
 
 
 func TestStorage(t *testing.T) {
