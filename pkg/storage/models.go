@@ -2,7 +2,6 @@ package storage
 
 import (
 	"fmt"
-	"github.com/google/uuid"
 	"reflect"
 )
 
@@ -13,20 +12,25 @@ const (
 )
 
 type ChannelConfig struct {
-	ID   uuid.UUID
+	ID   int32
 	Name string
 }
 
 type ModelValues map[string]interface{}
 
-type Model struct {
-	Dest interface{}
+type ModelWrapper struct {
+	model interface{}
 }
 
-// BindVals binds a set of ModelValues to the Model fields.
+// NewModelWrapper creates a new ModelWrapper from a provided model struct.
+func NewModelWrapper(dest interface{}) *ModelWrapper {
+	return &ModelWrapper{model: dest}
+}
+
+// BindVals binds a set of ModelValues to the ModelWrapper fields.
 // Returns an error for invalid / non-existent keys and invalid types.
-func (m *Model) BindVals(mv ModelValues) error {
-	dv := m.destVal()
+func (mw *ModelWrapper) BindVals(mv ModelValues) error {
+	dv := mw.destVal()
 	for k, rv := range mv {
 		f := dv.FieldByName(k)
 		v := reflect.ValueOf(rv)
@@ -47,10 +51,10 @@ func (m *Model) BindVals(mv ModelValues) error {
 	return nil
 }
 
-// MapVals maps Model fields to ModelValues.
-func (m *Model) MapVals() ModelValues {
+// MapVals maps ModelWrapper fields to ModelValues.
+func (mw *ModelWrapper) MapVals() ModelValues {
 	var mv = ModelValues{}
-	dv := m.destVal()
+	dv := mw.destVal()
 	for i := 0; i < dv.NumField(); i++ {
 		t := dv.Type().Field(i)
 		f := dv.Field(i)
@@ -59,14 +63,13 @@ func (m *Model) MapVals() ModelValues {
 	return mv
 }
 
-// Interface returns the model field as an interface that can be rebound to its
-// original struct.
-func (m *Model) Interface() interface{} {
-	return m.Dest
+// Model returns the wrappers model
+func (m *ModelWrapper) Model() interface{} {
+	return m.model
 }
 
-func (m *Model) destVal() (v reflect.Value) {
-	v = reflect.ValueOf(&m.Dest)
+func (mw *ModelWrapper) destVal() (v reflect.Value) {
+	v = reflect.ValueOf(&mw.model)
 	for i := 0; i <= destValueDepth; i++ {
 		v = v.Elem()
 	}

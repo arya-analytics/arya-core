@@ -2,7 +2,6 @@ package storage_test
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/storage"
-	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -10,13 +9,13 @@ import (
 var _ = Describe("Models", func() {
 	Describe("Binding Values", func() {
 		var c *storage.ChannelConfig
-		var m *storage.Model
+		var m *storage.ModelWrapper
 		BeforeEach(func() {
 			c = &storage.ChannelConfig{}
-			m = &storage.Model{Dest: c}
+			m = storage.NewModelWrapper(c)
 		})
 		It("Should set the model values correctly", func() {
-			id := uuid.New()
+			var id int32 = 445
 			err := m.BindVals(storage.ModelValues{"Name": "Hello", "ID": id})
 			Expect(err).To(BeNil())
 			Expect(c.Name).To(Equal("Hello"))
@@ -33,11 +32,13 @@ var _ = Describe("Models", func() {
 	})
 	Describe("Mapping Values", func() {
 		It("Should map all values correctly", func() {
-			id := uuid.New()
+			var id int32 = 445
 			c := &storage.ChannelConfig{Name: "Hello", ID: id}
-			m := &storage.Model{Dest: c}
+			m := storage.NewModelWrapper(c)
 			mv := m.MapVals()
 			Expect(mv).To(Equal(storage.ModelValues{"Name": "Hello", "ID": id}))
 		})
+	})
+	Describe("Re-binding to interface", func() {
 	})
 })
