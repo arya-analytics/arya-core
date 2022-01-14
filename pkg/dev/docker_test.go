@@ -36,8 +36,8 @@ var _ = Describe("Docker", func() {
 		Describe("Test Push", func() {
 			It("Should push the docker image correctly", func() {
 				cfg := dev.ImageCfg{
-					Repository: dev.DefaultImageRepo,
-					Tag: dev.GitImageTag(),
+					Repository:   dev.DefaultImageRepo,
+					Tag:          dev.GitImageTag(),
 					BuildCtxPath: "../../",
 				}
 				di := dev.NewDockerImage(cfg)
