@@ -4,7 +4,7 @@ import "context"
 
 type createQuery struct {
 	baseQuery
-	_mdQuery MetaDataCreate
+	_mdQuery MDCreateQuery
 }
 
 func newCreate(s *Storage) *createQuery {
@@ -14,14 +14,14 @@ func newCreate(s *Storage) *createQuery {
 }
 
 //TODO: use generics here
-func (c *createQuery) mdQuery() MetaDataCreate {
+func (c *createQuery) mdQuery() MDCreateQuery {
 	if c._mdQuery == nil {
-		c._mdQuery = c.mdEngine.NewCreate(c.storage.adapter(EngineRoleMetaData))
+		c._mdQuery = c.mdEngine.NewCreate(c.storage.adapter(EngineRoleMD))
 	}
 	return c._mdQuery
 }
 
-func (c *createQuery) setMdQuery(q MetaDataCreate) {
+func (c *createQuery) setMdQuery(q MDCreateQuery) {
 	c._mdQuery = q
 }
 

@@ -4,7 +4,7 @@ import "context"
 
 type retrieveQuery struct {
 	baseQuery
-	_mdQuery MetaDataRetrieve
+	_mdQuery MDRetrieveQuery
 }
 
 func newRetrieve(s *Storage) *retrieveQuery {
@@ -13,14 +13,14 @@ func newRetrieve(s *Storage) *retrieveQuery {
 	return r
 }
 
-func (r *retrieveQuery) mdQuery() MetaDataRetrieve {
+func (r *retrieveQuery) mdQuery() MDRetrieveQuery {
 	if r._mdQuery == nil {
-		r._mdQuery = r.mdEngine.NewRetrieve(r.storage.adapter(EngineRoleMetaData))
+		r._mdQuery = r.mdEngine.NewRetrieve(r.storage.adapter(EngineRoleMD))
 	}
 	return r._mdQuery
 }
 
-func (r *retrieveQuery) setMDQuery(q MetaDataRetrieve) {
+func (r *retrieveQuery) setMDQuery(q MDRetrieveQuery) {
 	r._mdQuery = q
 }
 

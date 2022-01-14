@@ -6,13 +6,13 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Models", func() {
+var _ = Describe("Model Adapter", func() {
 	Describe("Binding Values", func() {
 		var c *storage.ChannelConfig
-		var m *storage.ModelWrapper
+		var m *storage.AdaptedModel
 		BeforeEach(func() {
 			c = &storage.ChannelConfig{}
-			m = storage.NewModelWrapper(c)
+			m = storage.NewAdaptedModel(c)
 		})
 		It("Should set the model values correctly", func() {
 			var id int32 = 445
@@ -34,7 +34,7 @@ var _ = Describe("Models", func() {
 		It("Should map all values correctly", func() {
 			var id int32 = 445
 			c := &storage.ChannelConfig{Name: "Hello", ID: id}
-			m := storage.NewModelWrapper(c)
+			m := storage.NewAdaptedModel(c)
 			mv := m.MapVals()
 			Expect(mv).To(Equal(storage.ModelValues{"Name": "Hello", "ID": id}))
 		})

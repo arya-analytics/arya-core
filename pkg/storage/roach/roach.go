@@ -49,7 +49,7 @@ func (e Config) tls() *tls.Config {
 // |||| ENGINE ||||
 
 // Engine opens connections and execute queries with a roach database.
-// implements the storage.MetaDataEngine interface.
+// implements the storage.MDEngine interface.
 type Engine struct {
 	cfg Config
 }
@@ -70,17 +70,17 @@ func (e *Engine) IsAdapter(a storage.Adapter) bool {
 }
 
 // NewRetrieve opens a new retrieveQuery query with the provided storage.Adapter.
-func (e *Engine) NewRetrieve(a storage.Adapter) storage.MetaDataRetrieve {
+func (e *Engine) NewRetrieve(a storage.Adapter) storage.MDRetrieveQuery {
 	return newRetrieve(conn(a))
 }
 
 // NewCreate opens a new createQuery query with the provided storage.Adapter.
-func (e *Engine) NewCreate(a storage.Adapter) storage.MetaDataCreate {
+func (e *Engine) NewCreate(a storage.Adapter) storage.MDCreateQuery {
 	return newCreate(conn(a))
 }
 
 // NewDelete opens a new deleteQuery with the provided storage.Adapter;
-func (e *Engine) NewDelete(a storage.Adapter) storage.MetaDataDelete {
+func (e *Engine) NewDelete(a storage.Adapter) storage.MDDeleteQuery {
 	return newDelete(conn(a))
 }
 

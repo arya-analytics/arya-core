@@ -5,7 +5,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type EngineConfig map[EngineRole]Engine
+type EngineConfig map[EngineRole]BaseEngine
 
 type Storage struct {
 	cfg    EngineConfig
@@ -20,7 +20,7 @@ func New(cfg EngineConfig) *Storage {
 }
 
 func (s *Storage) Migrate(ctx context.Context) error {
-	return s.retrieveMDEngine().NewMigrate(s.adapter(EngineRoleMetaData)).Exec(ctx)
+	return s.retrieveMDEngine().NewMigrate(s.adapter(EngineRoleMD)).Exec(ctx)
 }
 
 func (s *Storage) NewRetrieve() *retrieveQuery {
@@ -35,18 +35,18 @@ func (s *Storage) NewDelete() *deleteQuery {
 	return newDelete(s)
 }
 
-func (s *Storage) retrieveEngine(r EngineRole) Engine {
+func (s *Storage) retrieveEngine(r EngineRole) BaseEngine {
 	return s.cfg[r]
 }
 
-func (s *Storage) retrieveMDEngine() MetaDataEngine {
-	return s.retrieveEngine(EngineRoleMetaData).(MetaDataEngine)
+func (s *Storage) retrieveMDEngine() MDEngine {
+	return s.retrieveEngine(EngineRoleMD).(MDEngine)
 }
 
 func (s *Storage) adapter(role EngineRole) (a Adapter) {
 	var err error
 	switch role {
-	case EngineRoleMetaData:
+	case EngineRoleMD:
 		a, err = s.pooler.Retrieve(s.retrieveMDEngine())
 	}
 	if err != nil {

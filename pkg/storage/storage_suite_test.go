@@ -12,7 +12,7 @@ import (
 
 var (
 	dummyEngineCfg = storage.EngineConfig{
-		storage.EngineRoleMetaData: roach.New(roach.Config{Driver: roach.DriverSQLite}),
+		storage.EngineRoleMD: roach.New(roach.Config{Driver: roach.DriverSQLite}),
 	}
 	dummyStorage = storage.New(dummyEngineCfg)
 	dummyCtx     = context.Background()

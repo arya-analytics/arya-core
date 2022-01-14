@@ -10,7 +10,7 @@ import (
 
 
 
-var _ = Describe("Engine", func() {
+var _ = Describe("BaseEngine", func() {
 	Describe("Adapter", func() {
 		var a storage.Adapter
 		BeforeEach(func() {

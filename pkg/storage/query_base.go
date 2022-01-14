@@ -2,7 +2,7 @@ package storage
 
 type baseQuery struct {
 	storage  *Storage
-	mdEngine MetaDataEngine
+	mdEngine MDEngine
 }
 
 func (b *baseQuery) init(s *Storage) {

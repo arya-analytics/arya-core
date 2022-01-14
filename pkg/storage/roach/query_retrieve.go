@@ -16,19 +16,18 @@ func newRetrieve(db *bun.DB) *retrieveQuery {
 	return r
 }
 
-func (r *retrieveQuery) Model(m interface{}) storage.MetaDataRetrieve {
-	r.bindWrappers(m)
-	r.q = r.q.Model(r.roachWrapper.Model())
+func (r *retrieveQuery) Model(m interface{}) storage.MDRetrieveQuery {
+	r.q = r.q.Model(r.model(m))
 	return r
 }
 
-func (r *retrieveQuery) Where(query string, args ...interface{}) storage.MetaDataRetrieve {
+func (r *retrieveQuery) Where(query string, args ...interface{}) storage.MDRetrieveQuery {
 	// TODO: look into if this is actually necessary
 	r.q = r.q.Where(query, args...)
 	return r
 }
 
-func (r *retrieveQuery) WhereID(id interface{}) storage.MetaDataRetrieve {
+func (r *retrieveQuery) WhereID(id interface{}) storage.MDRetrieveQuery {
 	return r.Where("ID = ?", id)
 }
 
@@ -37,6 +36,6 @@ func (r *retrieveQuery) Exec(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	err = r.storageWrapper.BindVals(r.roachWrapper.MapVals())
+	r.adaptToSource()
 	return err
 }

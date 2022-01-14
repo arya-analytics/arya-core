@@ -16,18 +16,17 @@ func newDelete(db *bun.DB) *deleteQuery {
 	return r
 }
 
-func (d *deleteQuery) WhereID(id interface{}) storage.MetaDataDelete {
+func (d *deleteQuery) WhereID(id interface{}) storage.MDDeleteQuery {
 	return d.Where("ID = ?", id)
 }
 
-func (d *deleteQuery) Where(query string, args ...interface{}) storage.MetaDataDelete {
+func (d *deleteQuery) Where(query string, args ...interface{}) storage.MDDeleteQuery {
 	d.q = d.q.Where(query, args...)
 	return d
 }
 
-func (d *deleteQuery) Model(m interface{}) storage.MetaDataDelete {
-	d.bindWrappers(m)
-	d.q = d.q.Model(d.roachWrapper.Model())
+func (d *deleteQuery) Model(m interface{}) storage.MDDeleteQuery {
+	d.q = d.q.Model(d.model(m))
 	return d
 }
 

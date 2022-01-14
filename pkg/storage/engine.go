@@ -12,49 +12,57 @@ type Adapter interface {
 type EngineRole int
 
 const (
-	EngineRoleMetaData = iota
+	EngineRoleMD = iota
 	EngineRoleCache
 	EngineRoleBulk
 )
 
 // |||| ENGINE ||||
 
-type Engine interface {
+type BaseEngine interface {
 	NewAdapter() Adapter
 	IsAdapter(a Adapter) bool
 	NewMigrate(a Adapter) Migrate
 }
 
-// || MIGRATE ||
+// || META DATA ||
 
-type Migrate interface {
-	Verify(ctx context.Context) error
+type MDEngine interface {
+	BaseEngine
+	NewRetrieve(a Adapter) MDRetrieveQuery
+	NewCreate(a Adapter) MDCreateQuery
+	NewDelete(a Adapter) MDDeleteQuery
+}
+
+// |||| QUERY ||||
+
+type BaseQuery interface {
 	Exec(ctx context.Context) error
 }
 
 // || META DATA ||
 
-type MetaDataEngine interface {
-	Engine
-	NewRetrieve(a Adapter) MetaDataRetrieve
-	NewCreate(a Adapter) MetaDataCreate
-	NewDelete(a Adapter) MetaDataDelete
+type MDRetrieveQuery interface {
+	BaseQuery
+	Model(model interface{}) MDRetrieveQuery
+	Where(query string, args ...interface{}) MDRetrieveQuery
+	WhereID(id interface{}) MDRetrieveQuery
 }
 
-type MetaDataRetrieve interface {
-	Model(model interface{}) MetaDataRetrieve
-	Where(query string, args ...interface{}) MetaDataRetrieve
-	WhereID(id interface{}) MetaDataRetrieve
-	Exec(ctx context.Context) error
+type MDCreateQuery interface {
+	BaseQuery
+	Model(model interface{}) MDCreateQuery
 }
 
-type MetaDataCreate interface {
-	Model(model interface{}) MetaDataCreate
-	Exec(ctx context.Context) error
+type MDDeleteQuery interface {
+	BaseQuery
+	WhereID(id interface{}) MDDeleteQuery
+	Model(model interface{}) MDDeleteQuery
 }
 
-type MetaDataDelete interface {
-	WhereID(id interface{}) MetaDataDelete
-	Model(model interface{}) MetaDataDelete
+// ||| MIGRATE |||
+
+type Migrate interface {
+	Verify(ctx context.Context) error
 	Exec(ctx context.Context) error
 }

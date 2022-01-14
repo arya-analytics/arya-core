@@ -4,7 +4,7 @@ import "context"
 
 type deleteQuery struct {
 	baseQuery
-	_mdQuery MetaDataDelete
+	_mdQuery MDDeleteQuery
 }
 
 func newDelete(s *Storage) *deleteQuery {
@@ -13,14 +13,14 @@ func newDelete(s *Storage) *deleteQuery {
 	return d
 }
 
-func (d *deleteQuery) mdQuery() MetaDataDelete {
+func (d *deleteQuery) mdQuery() MDDeleteQuery {
 	if d._mdQuery == nil {
-		d._mdQuery = d.mdEngine.NewDelete(d.storage.adapter(EngineRoleMetaData))
+		d._mdQuery = d.mdEngine.NewDelete(d.storage.adapter(EngineRoleMD))
 	}
 	return d._mdQuery
 }
 
-func (d *deleteQuery) setMDQuery(q MetaDataDelete) {
+func (d *deleteQuery) setMDQuery(q MDDeleteQuery) {
 	d._mdQuery = q
 }
 
