@@ -10,14 +10,14 @@ import (
 
 type JSONB map[string]interface{}
 
-func models() []reflect.Type {
+func allModelTypes() []reflect.Type {
 	return []reflect.Type{
 		reflect.TypeOf(ChannelConfig{}),
 	}
 }
 
-func roachModelFromStorage(m interface{}) interface{} {
-	for _, rm := range models() {
+func newRoachModelFromStorage(m interface{}) interface{} {
+	for _, rm := range allModelTypes() {
 		rmName := rm.Name()
 		mName := reflect.TypeOf(m).Elem().Name()
 		if rmName == mName {
@@ -28,9 +28,9 @@ func roachModelFromStorage(m interface{}) interface{} {
 }
 
 type Node struct {
-	ID uuid.UUID `bun:"type:uuid,default:gen_random_uuid(),pk"`
+	ID           uuid.UUID `bun:"type:uuid,default:gen_random_uuid(),pk"`
 	GossipNodeID int64
-	GossipNode *GossipNode `bun:"rel:belongs-to,join:gossip_node_id=id"`
+	GossipNode   *GossipNode `bun:"rel:belongs-to,join:gossip_node_id=id"`
 }
 
 type Range struct {
@@ -50,8 +50,8 @@ type RangeReplicaToNode struct {
 }
 
 type ChannelConfig struct {
-	ID     int32 `bun:",pk"`
-	Name   string
+	ID   int32 `bun:",pk"`
+	Name string
 	//NodeId uuid.UUID `bun:"type:uuid"`
 	//Node   *Node     `bun:"rel:belongs-to,join:node_id=id"`
 }

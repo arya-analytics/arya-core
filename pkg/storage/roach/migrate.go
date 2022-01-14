@@ -48,7 +48,7 @@ func (m *migrate) Exec(ctx context.Context) error {
 }
 
 func (m *migrate) Verify(ctx context.Context) (err error) {
-	for _, rm := range models() {
+	for _, rm := range allModelTypes() {
 		_, err = m.db.NewSelect().Model(reflect.New(rm).Interface()).Count(ctx)
 	}
 	log.Warn(err)
