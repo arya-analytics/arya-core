@@ -2,6 +2,7 @@ package roach
 
 import (
 	"database/sql"
+	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	"github.com/uptrace/bun"
@@ -14,9 +15,31 @@ import (
 // || ADAPTER ||
 
 type adapter struct {
-	id uuid.UUID
-	db *bun.DB
-	e  *Engine
+	id  uuid.UUID
+	db  *bun.DB
+	cfg Config
+}
+
+func newAdapter(cfg Config) *adapter {
+	a := &adapter{
+		id:  uuid.New(),
+		cfg: cfg,
+	}
+	a.open()
+	return a
+}
+
+func bindAdapter(a storage.Adapter) (*adapter, bool) {
+	ra, ok := a.(*adapter)
+	return ra, ok
+}
+
+func conn(a storage.Adapter) *bun.DB {
+	ra, ok := bindAdapter(a)
+	if !ok {
+		log.Fatalln("Couldn't bind roach adapter.")
+	}
+	return ra.conn()
 }
 
 // ID implements the storage.Adapter interface.
@@ -24,7 +47,7 @@ func (a *adapter) ID() uuid.UUID {
 	return a.id
 }
 
-func (a *adapter) conn() interface{} {
+func (a *adapter) conn() *bun.DB {
 	return a.db
 }
 
@@ -33,25 +56,24 @@ func (a *adapter) close() error {
 }
 
 func (a *adapter) open() {
-	switch a.e.Driver {
+	switch a.cfg.Driver {
 	case DriverPG:
-		a.db = pgConnect(a.e)
+		a.db = pgConnect(a.cfg)
 	case DriverSQLite:
 		a.db = sqlLiteConnect()
-
 	}
 }
 
 // || CONNECTORS ||
 
-func pgConnect(e *Engine) *bun.DB {
+func pgConnect(cfg Config) *bun.DB {
 	db := sql.OpenDB(
 		pgdriver.NewConnector(
-			pgdriver.WithAddr(e.addr()),
-			pgdriver.WithUser(e.Username),
-			pgdriver.WithPassword(e.Password),
-			pgdriver.WithDatabase(e.Database),
-			pgdriver.WithTLSConfig(e.tlsConfig()),
+			pgdriver.WithAddr(cfg.addr()),
+			pgdriver.WithUser(cfg.Username),
+			pgdriver.WithPassword(cfg.Password),
+			pgdriver.WithDatabase(cfg.Database),
+			pgdriver.WithTLSConfig(cfg.tls()),
 		),
 	)
 	return bun.NewDB(db, pgdialect.New())

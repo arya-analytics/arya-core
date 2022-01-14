@@ -10,16 +10,13 @@ import (
 	"testing"
 )
 
-
 var (
 	dummyEngineCfg = storage.EngineConfig{
-		storage.EngineRoleMetaData: &roach.Engine{
-			Driver: roach.DriverSQLite,
-		},
+		storage.EngineRoleMetaData: roach.New(roach.Config{Driver: roach.DriverSQLite}),
 	}
 	dummyStorage = storage.New(dummyEngineCfg)
-	dummyCtx = context.Background()
-	dummyModel = &storage.ChannelConfig{
+	dummyCtx     = context.Background()
+	dummyModel   = &storage.ChannelConfig{
 		ID:   432,
 		Name: "Cool Name",
 	}
@@ -39,7 +36,6 @@ func deleteDummyModel() {
 	}
 }
 
-
 func TestStorage(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Storage Suite")
@@ -51,4 +47,3 @@ var _ = BeforeSuite(func() {
 		log.Fatalln(err)
 	}
 })
-

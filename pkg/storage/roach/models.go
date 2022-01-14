@@ -29,8 +29,8 @@ func roachModelFromStorage(m interface{}) interface{} {
 
 type Node struct {
 	ID uuid.UUID `bun:"type:uuid,default:gen_random_uuid(),pk"`
-	//GossipNodeID int64
-	//GossipNode *GossipNode `bun:"rel:belongs-to,join:gossip_node_id=id"`
+	GossipNodeID int64
+	GossipNode *GossipNode `bun:"rel:belongs-to,join:gossip_node_id=id"`
 }
 
 type Range struct {

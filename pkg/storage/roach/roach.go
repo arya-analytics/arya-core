@@ -1,16 +1,12 @@
 package roach
 
 import (
-	"context"
 	"crypto/tls"
 	"fmt"
 	"github.com/arya-analytics/aryacore/pkg/storage"
-	"github.com/google/uuid"
-	log "github.com/sirupsen/logrus"
-	"github.com/uptrace/bun"
 )
 
-// || DRIVER ||
+// |||| CONFIG ||||
 
 type Driver int
 
@@ -19,11 +15,7 @@ const (
 	DriverSQLite
 )
 
-// || ENGINE ||
-
-// Engine opens connections and execute queries with a roach database.
-// implements the storage.MetaDataEngine interface.
-type Engine struct {
+type Config struct {
 	// Username for the database. Does not need to be specified if using DriverSQLite.
 	Username string
 	// Password for the database. Does not need to be specified if using DriverSQLite.
@@ -44,83 +36,55 @@ type Engine struct {
 	Driver Driver
 }
 
+func (e Config) addr() string {
+	return fmt.Sprintf("%s:%v", e.Host, e.Port)
+}
+
+func (e Config) tls() *tls.Config {
+	return &tls.Config{
+		InsecureSkipVerify: e.UseTLS,
+	}
+}
+
+// |||| ENGINE ||||
+
+// Engine opens connections and execute queries with a roach database.
+// implements the storage.MetaDataEngine interface.
+type Engine struct {
+	cfg Config
+}
+
+func New(cfg Config) *Engine {
+	return &Engine{cfg}
+}
+
 // NewAdapter opens a new connection with the data store and returns a storage.Adapter.
 func (e *Engine) NewAdapter() storage.Adapter {
-	a := &adapter{
-		id: uuid.New(),
-		e:  e,
-	}
-	a.open()
-	return a
+	return newAdapter(e.cfg)
 }
 
 // IsAdapter checks if the provided adapter is a roach adapter.
 func (e *Engine) IsAdapter(a storage.Adapter) bool {
-	_, ok := e.bindAdapter(a)
+	_, ok := bindAdapter(a)
 	return ok
 }
 
 // NewRetrieve opens a new retrieveQuery query with the provided storage.Adapter.
 func (e *Engine) NewRetrieve(a storage.Adapter) storage.MetaDataRetrieve {
-	ra, _ := e.bindAdapter(a)
-	r := newRetrieve(e.conn(ra))
-	return r
+	return newRetrieve(conn(a))
 }
 
 // NewCreate opens a new createQuery query with the provided storage.Adapter.
 func (e *Engine) NewCreate(a storage.Adapter) storage.MetaDataCreate {
-	ra, _ := e.bindAdapter(a)
-	r := newCreate(e.conn(ra))
-	return r
+	return newCreate(conn(a))
 }
 
 // NewDelete opens a new deleteQuery with the provided storage.Adapter;
 func (e *Engine) NewDelete(a storage.Adapter) storage.MetaDataDelete {
-	ra, _ := e.bindAdapter(a)
-	r := newDelete(e.conn(ra))
-	return r
+	return newDelete(conn(a))
 }
 
-// Migrate migrates the database.
-func (e *Engine) Migrate(ctx context.Context, a storage.Adapter) error {
-	ra, _ := e.bindAdapter(a)
-	db := e.conn(ra)
-	m := newMigrator(db)
-	err := m.init(ctx)
-	if err != nil {
-		return err
-	}
-	err = m.migrate(ctx)
-	return err
-}
-
-// VerifyMigrations verifies that the migrations were executed correctly
-func (e *Engine) VerifyMigrations(ctx context.Context, a storage.Adapter) error {
-	ra, _ := e.bindAdapter(a)
-	db := e.conn(ra)
-	m := newMigrator(db)
-	return m.verify(ctx)
-}
-
-func (e *Engine) bindAdapter(a storage.Adapter) (*adapter, bool) {
-	ra, ok := a.(*adapter)
-	return ra, ok
-}
-
-func (e *Engine) conn(a *adapter) *bun.DB {
-	c, ok := a.conn().(*bun.DB)
-	if !ok {
-		log.Fatalln("Incorrect type specified")
-	}
-	return c
-}
-
-func (e *Engine) addr() string {
-	return fmt.Sprintf("%s:%v", e.Host, e.Port)
-}
-
-func (e *Engine) tlsConfig() *tls.Config {
-	return &tls.Config{
-		InsecureSkipVerify: e.UseTLS,
-	}
+// NewMigrate opens a new migrate with the provided storage.Adapter;
+func (e *Engine) NewMigrate(a storage.Adapter) storage.Migrate {
+	return newMigrate(conn(a), e.cfg.Driver)
 }

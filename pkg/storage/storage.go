@@ -20,8 +20,7 @@ func New(cfg EngineConfig) *Storage {
 }
 
 func (s *Storage) Migrate(ctx context.Context) error {
-	err := s.retrieveMDEngine().Migrate(ctx, s.adapter(EngineRoleMetaData))
-	return err
+	return s.retrieveMDEngine().NewMigrate(s.adapter(EngineRoleMetaData)).Exec(ctx)
 }
 
 func (s *Storage) NewRetrieve() *retrieveQuery {

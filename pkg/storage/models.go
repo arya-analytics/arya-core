@@ -11,11 +11,6 @@ const (
 	destValueDepth = 2
 )
 
-type ChannelConfig struct {
-	ID   int32
-	Name string
-}
-
 type ModelValues map[string]interface{}
 
 type ModelWrapper struct {
@@ -63,9 +58,9 @@ func (mw *ModelWrapper) MapVals() ModelValues {
 	return mv
 }
 
-// Model returns the wrappers model
-func (m *ModelWrapper) Model() interface{} {
-	return m.model
+// Model returns the wrapped model
+func (mw *ModelWrapper) Model() interface{} {
+	return mw.model
 }
 
 func (mw *ModelWrapper) destVal() (v reflect.Value) {
@@ -74,4 +69,9 @@ func (mw *ModelWrapper) destVal() (v reflect.Value) {
 		v = v.Elem()
 	}
 	return v
+}
+
+type ChannelConfig struct {
+	ID   int32
+	Name string
 }

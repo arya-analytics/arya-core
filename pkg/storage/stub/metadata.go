@@ -8,8 +8,8 @@ import (
 
 type MDEngine struct{}
 
-func (e *MDEngine) Migrate(ctx context.Context, a storage.Adapter) error {
-	return nil
+func (e *MDEngine) NewMigrate(a storage.Adapter) storage.Migrate {
+	return &mdMigrate{}
 }
 
 func (e *MDEngine) NewAdapter() storage.Adapter {
@@ -32,4 +32,13 @@ type mdAdapter struct {
 
 func (a *mdAdapter) ID() uuid.UUID {
 	return a.id
+}
+
+type mdMigrate struct{}
+
+func (m *mdMigrate) Verify(ctx context.Context) error {
+	return nil
+}
+func (m *mdMigrate) Exec(ctx context.Context) error {
+	return nil
 }

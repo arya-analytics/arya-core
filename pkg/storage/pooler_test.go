@@ -21,7 +21,7 @@ var _ = Describe("Pooler", func() {
 			Expect(err).To(BeNil())
 			Expect(len(a.ID().String())).To(Equal(len(uuid.New().String())))
 		})
-		It("Should retrieveQuery the same adapter if queried twice", func() {
+		It("Should retrieve the same adapter if queried twice", func() {
 			aOne, err := p.Retrieve(&stub.MDEngine{})
 			Expect(err).To(BeNil())
 			aTwo, err := p.Retrieve(&stub.MDEngine{})

@@ -12,21 +12,19 @@ import (
 )
 
 var (
-	dummyEngine = &roach.Engine{
-		Driver: roach.DriverSQLite,
-	}
-	dummyModel = &storage.ChannelConfig{
+	dummyEngine = roach.New(roach.Config{Driver: roach.DriverSQLite})
+	dummyModel  = &storage.ChannelConfig{
 		ID:   432,
 		Name: "Cool Name",
 	}
-	dummyCtx = context.Background()
+	dummyCtx     = context.Background()
 	dummyAdapter = dummyEngine.NewAdapter()
 )
 
 func migrate() {
-	err := dummyEngine.VerifyMigrations(dummyCtx, dummyAdapter)
+	err := dummyEngine.NewMigrate(dummyAdapter).Verify(dummyCtx)
 	if err != nil {
-		if err := dummyEngine.Migrate(dummyCtx, dummyAdapter); err != nil {
+		if err := dummyEngine.NewMigrate(dummyAdapter).Exec(dummyCtx); err != nil {
 			log.Fatalln(err)
 		}
 	}

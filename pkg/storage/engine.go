@@ -21,10 +21,16 @@ const (
 
 type Engine interface {
 	NewAdapter() Adapter
-	IsAdapter(Adapter) bool
-	Migrate(ctx context.Context, adapter Adapter) error
+	IsAdapter(a Adapter) bool
+	NewMigrate(a Adapter) Migrate
 }
 
+// || MIGRATE ||
+
+type Migrate interface {
+	Verify(ctx context.Context) error
+	Exec(ctx context.Context) error
+}
 
 // || META DATA ||
 

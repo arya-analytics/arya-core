@@ -3,21 +3,25 @@ package roach
 import (
 	"context"
 	"github.com/uptrace/bun"
-	"github.com/uptrace/bun/migrate"
+	bunMigrate "github.com/uptrace/bun/migrate"
 )
 
-func migrateUp(ctx context.Context, db *bun.DB) error {
-	if _, err := db.NewCreateTable().Model((*ChannelConfig)(nil)).Exec(
-		ctx); err != nil {
-		panic(err)
+func migrateUpFunc(d Driver) bunMigrate.MigrationFunc {
+	return func(ctx context.Context, db *bun.DB) error {
+		if _, err := db.NewCreateTable().Model((*ChannelConfig)(nil)).Exec(
+			ctx); err != nil {
+			panic(err)
+		}
+		return nil
 	}
-	return nil
 }
 
-func migrateDown(ctx context.Context, db *bun.DB) error {
-	return nil
+func migrateDownFunc(d Driver) bunMigrate.MigrationFunc {
+	return func(ctx context.Context, db *bun.DB) error {
+		return nil
+	}
 }
 
-func bindMigrations(m *migrate.Migrations) {
-	m.MustRegister(migrateUp, migrateDown)
+func bindMigrations(m *bunMigrate.Migrations, d Driver) {
+	m.MustRegister(migrateUpFunc(d), migrateDownFunc(d))
 }
