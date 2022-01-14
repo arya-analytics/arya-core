@@ -8,7 +8,7 @@ import (
 
 type MDEngine struct{}
 
-func (e *MDEngine) NewMigrate(a storage.Adapter) storage.Migrate {
+func (e *MDEngine) NewMigrate(a storage.Adapter) storage.MigrateQuery {
 	return &mdMigrate{}
 }
 

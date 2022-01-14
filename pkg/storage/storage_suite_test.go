@@ -43,7 +43,7 @@ func TestStorage(t *testing.T) {
 
 var _ = BeforeSuite(func() {
 	ctx := context.Background()
-	if err := dummyStorage.Migrate(ctx); err != nil {
+	if err := dummyStorage.NewMigrate().Exec(ctx); err != nil {
 		log.Fatalln(err)
 	}
 })

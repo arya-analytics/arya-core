@@ -7,46 +7,5 @@ type baseQuery struct {
 
 func (b *baseQuery) init(s *Storage) {
 	b.storage = s
-	b.mdEngine = b.storage.retrieveMDEngine()
+	b.mdEngine = b.storage.cfg.mdEngine()
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

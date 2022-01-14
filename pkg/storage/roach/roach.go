@@ -48,43 +48,43 @@ func (e Config) tls() *tls.Config {
 
 // |||| ENGINE ||||
 
-// Engine opens connections and execute queries with a roach database.
+// engine opens connections and execute queries with a roach database.
 // implements the storage.MDEngine interface.
-type Engine struct {
+type engine struct {
 	cfg Config
 }
 
-func New(cfg Config) *Engine {
-	return &Engine{cfg}
+func New(cfg Config) *engine {
+	return &engine{cfg}
 }
 
 // NewAdapter opens a new connection with the data store and returns a storage.Adapter.
-func (e *Engine) NewAdapter() storage.Adapter {
+func (e *engine) NewAdapter() storage.Adapter {
 	return newAdapter(e.cfg)
 }
 
 // IsAdapter checks if the provided adapter is a roach adapter.
-func (e *Engine) IsAdapter(a storage.Adapter) bool {
+func (e *engine) IsAdapter(a storage.Adapter) bool {
 	_, ok := bindAdapter(a)
 	return ok
 }
 
 // NewRetrieve opens a new retrieveQuery query with the provided storage.Adapter.
-func (e *Engine) NewRetrieve(a storage.Adapter) storage.MDRetrieveQuery {
+func (e *engine) NewRetrieve(a storage.Adapter) storage.MDRetrieveQuery {
 	return newRetrieve(conn(a))
 }
 
 // NewCreate opens a new createQuery query with the provided storage.Adapter.
-func (e *Engine) NewCreate(a storage.Adapter) storage.MDCreateQuery {
+func (e *engine) NewCreate(a storage.Adapter) storage.MDCreateQuery {
 	return newCreate(conn(a))
 }
 
 // NewDelete opens a new deleteQuery with the provided storage.Adapter;
-func (e *Engine) NewDelete(a storage.Adapter) storage.MDDeleteQuery {
+func (e *engine) NewDelete(a storage.Adapter) storage.MDDeleteQuery {
 	return newDelete(conn(a))
 }
 
-// NewMigrate opens a new migrate with the provided storage.Adapter;
-func (e *Engine) NewMigrate(a storage.Adapter) storage.Migrate {
+// NewMigrate opens a new migrateQuery with the provided storage.Adapter;
+func (e *engine) NewMigrate(a storage.Adapter) storage.MigrateQuery {
 	return newMigrate(conn(a), e.cfg.Driver)
 }

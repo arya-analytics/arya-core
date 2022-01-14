@@ -22,7 +22,7 @@ const (
 type BaseEngine interface {
 	NewAdapter() Adapter
 	IsAdapter(a Adapter) bool
-	NewMigrate(a Adapter) Migrate
+	NewMigrate(a Adapter) MigrateQuery
 }
 
 // || META DATA ||
@@ -62,7 +62,7 @@ type MDDeleteQuery interface {
 
 // ||| MIGRATE |||
 
-type Migrate interface {
+type MigrateQuery interface {
 	Verify(ctx context.Context) error
 	Exec(ctx context.Context) error
 }

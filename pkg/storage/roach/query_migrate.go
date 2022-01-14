@@ -8,14 +8,14 @@ import (
 	"reflect"
 )
 
-type migrate struct {
+type migrateQuery struct {
 	db         *bun.DB
 	migrations *bunMigrate.Migrations
 	driver     Driver
 }
 
-func newMigrate(db *bun.DB, driver Driver) *migrate {
-	m := &migrate{
+func newMigrate(db *bun.DB, driver Driver) *migrateQuery {
+	m := &migrateQuery{
 		db:         db,
 		migrations: bunMigrate.NewMigrations(),
 		driver:     driver,
@@ -24,15 +24,15 @@ func newMigrate(db *bun.DB, driver Driver) *migrate {
 	return m
 }
 
-func (m *migrate) bunMigrator() *bunMigrate.Migrator {
+func (m *migrateQuery) bunMigrator() *bunMigrate.Migrator {
 	return bunMigrate.NewMigrator(m.db, m.migrations)
 }
 
-func (m *migrate) init(ctx context.Context) error {
+func (m *migrateQuery) init(ctx context.Context) error {
 	return m.bunMigrator().Init(ctx)
 }
 
-func (m *migrate) Exec(ctx context.Context) error {
+func (m *migrateQuery) Exec(ctx context.Context) error {
 	if err := m.init(ctx); err != nil {
 		return err
 	}
@@ -47,7 +47,7 @@ func (m *migrate) Exec(ctx context.Context) error {
 	return nil
 }
 
-func (m *migrate) Verify(ctx context.Context) (err error) {
+func (m *migrateQuery) Verify(ctx context.Context) (err error) {
 	for _, rm := range allModelTypes() {
 		_, err = m.db.NewSelect().Model(reflect.New(rm).Interface()).Count(ctx)
 	}

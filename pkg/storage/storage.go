@@ -1,11 +1,22 @@
 package storage
 
 import (
-	"context"
 	log "github.com/sirupsen/logrus"
 )
 
 type EngineConfig map[EngineRole]BaseEngine
+
+func (ec EngineConfig) retrieve(r EngineRole) BaseEngine {
+	return ec[r]
+}
+
+func (ec EngineConfig) mdEngine() MDEngine {
+	md, ok := ec.retrieve(EngineRoleMD).(MDEngine)
+	if !ok {
+		log.Fatalln("Could not bind meta data engine.")
+	}
+	return md
+}
 
 type Storage struct {
 	cfg    EngineConfig
@@ -19,8 +30,8 @@ func New(cfg EngineConfig) *Storage {
 	}
 }
 
-func (s *Storage) Migrate(ctx context.Context) error {
-	return s.retrieveMDEngine().NewMigrate(s.adapter(EngineRoleMD)).Exec(ctx)
+func (s *Storage) NewMigrate() *migrateQuery {
+	return newMigrate(s)
 }
 
 func (s *Storage) NewRetrieve() *retrieveQuery {
@@ -35,20 +46,9 @@ func (s *Storage) NewDelete() *deleteQuery {
 	return newDelete(s)
 }
 
-func (s *Storage) retrieveEngine(r EngineRole) BaseEngine {
-	return s.cfg[r]
-}
-
-func (s *Storage) retrieveMDEngine() MDEngine {
-	return s.retrieveEngine(EngineRoleMD).(MDEngine)
-}
-
-func (s *Storage) adapter(role EngineRole) (a Adapter) {
+func (s *Storage) adapter(r EngineRole) (a Adapter) {
 	var err error
-	switch role {
-	case EngineRoleMD:
-		a, err = s.pooler.Retrieve(s.retrieveMDEngine())
-	}
+	a, err = s.pooler.Retrieve(s.cfg.retrieve(r))
 	if err != nil {
 		log.Fatalln(err)
 	}
