@@ -6,12 +6,12 @@ import (
 )
 
 type baseQuery struct {
-	modelAdapter *storage.ModelAdapter
+	modelAdapter *storage.SingleModelAdapter
 }
 
 func (b *baseQuery) baseModel(m interface{}) interface{} {
-	b.modelAdapter = storage.NewModelAdapter(m, newRoachModelFromStorage(m))
-	return b.modelAdapter.DestModel()
+	b.modelAdapter = storage.NewSingleModelAdapter(m, newRoachModelFromStorage(m))
+	return b.modelAdapter.Dest()
 }
 
 func (b *baseQuery) baseAdaptToSource() {

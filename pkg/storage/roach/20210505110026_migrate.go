@@ -2,6 +2,7 @@ package roach
 
 import (
 	"context"
+	log "github.com/sirupsen/logrus"
 	"github.com/uptrace/bun"
 	bunMigrate "github.com/uptrace/bun/migrate"
 )
@@ -10,7 +11,7 @@ func migrateUpFunc(d Driver) bunMigrate.MigrationFunc {
 	return func(ctx context.Context, db *bun.DB) error {
 		if _, err := db.NewCreateTable().Model((*ChannelConfig)(nil)).Exec(
 			ctx); err != nil {
-			panic(err)
+			log.Fatalln(err)
 		}
 		return nil
 	}
