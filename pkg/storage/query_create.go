@@ -6,11 +6,15 @@ type createQuery struct {
 	baseQuery
 }
 
+// |||| CONSTRUCTOR ||||
+
 func newCreate(s *Storage) *createQuery {
 	c := &createQuery{}
 	c.baseInit(s)
 	return c
 }
+
+/// ||| INT
 
 func (c *createQuery) Model(model interface{}) *createQuery {
 	c.baseSetMDQuery(c.mdQuery().Model(model))

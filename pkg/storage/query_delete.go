@@ -12,6 +12,8 @@ func newDelete(s *Storage) *deleteQuery {
 	return d
 }
 
+// |||| INTERFACE ||||
+
 func (d *deleteQuery) Model(model interface{}) *deleteQuery {
 	d.setMDQuery(d.mdQuery().Model(model))
 	return d
@@ -26,7 +28,7 @@ func (d *deleteQuery) Exec(ctx context.Context) error {
 	return d.mdQuery().Exec(ctx)
 }
 
-// || META DATA QUERY BINDING ||
+// |||| QUERY BINDING ||||
 
 func (d *deleteQuery) mdQuery() MDDeleteQuery {
 	if d.baseMDQuery() == nil {

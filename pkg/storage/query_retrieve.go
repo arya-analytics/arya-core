@@ -6,11 +6,15 @@ type retrieveQuery struct {
 	baseQuery
 }
 
+// |||| CONSTRUCTOR ||||
+
 func newRetrieve(s *Storage) *retrieveQuery {
 	r := &retrieveQuery{}
 	r.baseInit(s)
 	return r
 }
+
+// |||| INTERFACE ||||
 
 func (r *retrieveQuery) WhereID(id interface{}) *retrieveQuery {
 	r.setMDQuery(r.mdQuery().WhereID(id))
@@ -26,7 +30,7 @@ func (r *retrieveQuery) Exec(ctx context.Context) error {
 	return r.mdQuery().Exec(ctx)
 }
 
-// || META DATA QUERY BINDING ||
+// |||| QUERY BINDING ||||
 
 func (r *retrieveQuery) mdQuery() MDRetrieveQuery {
 	if r.baseMDQuery() == nil {
