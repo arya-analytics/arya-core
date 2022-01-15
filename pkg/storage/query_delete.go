@@ -4,24 +4,12 @@ import "context"
 
 type deleteQuery struct {
 	baseQuery
-	_mdQuery MDDeleteQuery
 }
 
 func newDelete(s *Storage) *deleteQuery {
 	d := &deleteQuery{}
-	d.init(s)
+	d.baseInit(s)
 	return d
-}
-
-func (d *deleteQuery) mdQuery() MDDeleteQuery {
-	if d._mdQuery == nil {
-		d._mdQuery = d.mdEngine.NewDelete(d.storage.adapter(EngineRoleMD))
-	}
-	return d._mdQuery
-}
-
-func (d *deleteQuery) setMDQuery(q MDDeleteQuery) {
-	d._mdQuery = q
 }
 
 func (d *deleteQuery) Model(model interface{}) *deleteQuery {
@@ -36,4 +24,17 @@ func (d *deleteQuery) WhereID(id interface{}) *deleteQuery {
 
 func (d *deleteQuery) Exec(ctx context.Context) error {
 	return d.mdQuery().Exec(ctx)
+}
+
+// || META DATA QUERY BINDING ||
+
+func (d *deleteQuery) mdQuery() MDDeleteQuery {
+	if d.baseMDQuery() == nil {
+		d.setMDQuery(d.mdEngine.NewDelete(d.baseMDAdapter()))
+	}
+	return d.baseMDQuery().(MDDeleteQuery)
+}
+
+func (d *deleteQuery) setMDQuery(q MDDeleteQuery) {
+	d.baseSetMDQuery(q)
 }

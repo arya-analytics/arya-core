@@ -17,12 +17,11 @@ func newRetrieve(db *bun.DB) *retrieveQuery {
 }
 
 func (r *retrieveQuery) Model(m interface{}) storage.MDRetrieveQuery {
-	r.q = r.q.Model(r.model(m))
+	r.q = r.q.Model(r.baseModel(m))
 	return r
 }
 
 func (r *retrieveQuery) Where(query string, args ...interface{}) storage.MDRetrieveQuery {
-	// TODO: look into if this is actually necessary
 	r.q = r.q.Where(query, args...)
 	return r
 }
@@ -36,6 +35,6 @@ func (r *retrieveQuery) Exec(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	r.adaptToSource()
+	r.baseAdaptToSource()
 	return err
 }

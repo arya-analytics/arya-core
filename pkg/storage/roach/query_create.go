@@ -17,8 +17,8 @@ func newCreate(db *bun.DB) *createQuery {
 }
 
 func (c *createQuery) Model(m interface{}) storage.MDCreateQuery {
-	c.q = c.q.Model(c.model(m))
-	c.adaptToDest()
+	c.q = c.q.Model(c.baseModel(m))
+	c.baseAdaptToDest()
 	return c
 }
 

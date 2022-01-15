@@ -24,7 +24,7 @@ func newRoachModelFromStorage(m interface{}) interface{} {
 			return reflect.New(rm).Interface()
 		}
 	}
-	return fmt.Errorf("roach model could not be found")
+	return fmt.Errorf("roach baseModel could not be found")
 }
 
 type Node struct {

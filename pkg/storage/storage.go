@@ -4,6 +4,8 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// |||| ENGINE CONFIG ||||
+
 type EngineConfig map[EngineRole]BaseEngine
 
 func (ec EngineConfig) retrieve(r EngineRole) BaseEngine {
@@ -17,6 +19,8 @@ func (ec EngineConfig) mdEngine() MDEngine {
 	}
 	return md
 }
+
+// |||| STORAGE ||||
 
 type Storage struct {
 	cfg    EngineConfig

@@ -4,23 +4,21 @@ import "context"
 
 type migrateQuery struct {
 	baseQuery
-	_mdQuery MigrateQuery
 }
 
 func newMigrate(s *Storage) *migrateQuery {
 	m := &migrateQuery{}
-	m.init(s)
+	m.baseInit(s)
 	return m
 }
 
-func (m *migrateQuery) mdQuery() MigrateQuery {
-	if m._mdQuery == nil {
-		m._mdQuery = m.mdEngine.NewMigrate(m.storage.adapter(EngineRoleMD))
+func (m *migrateQuery) mdQuery() MDMigrateQuery {
+	if m.baseMDQuery() == nil {
+		m.baseSetMDQuery(m.mdEngine.NewMigrate(m.storage.adapter(EngineRoleMD)))
 	}
-	return m._mdQuery
+	return m.baseMDQuery().(MDMigrateQuery)
 }
 
 func (m *migrateQuery) Exec(ctx context.Context) error {
 	return m.mdQuery().Exec(ctx)
 }
-

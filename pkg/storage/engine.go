@@ -22,7 +22,6 @@ const (
 type BaseEngine interface {
 	NewAdapter() Adapter
 	IsAdapter(a Adapter) bool
-	NewMigrate(a Adapter) MigrateQuery
 }
 
 // || META DATA ||
@@ -32,6 +31,7 @@ type MDEngine interface {
 	NewRetrieve(a Adapter) MDRetrieveQuery
 	NewCreate(a Adapter) MDCreateQuery
 	NewDelete(a Adapter) MDDeleteQuery
+	NewMigrate(a Adapter) MDMigrateQuery
 }
 
 // |||| QUERY ||||
@@ -42,27 +42,30 @@ type BaseQuery interface {
 
 // || META DATA ||
 
-type MDRetrieveQuery interface {
+type MDBaseQuery interface {
 	BaseQuery
+}
+
+type MDRetrieveQuery interface {
+	MDBaseQuery
 	Model(model interface{}) MDRetrieveQuery
 	Where(query string, args ...interface{}) MDRetrieveQuery
 	WhereID(id interface{}) MDRetrieveQuery
 }
 
 type MDCreateQuery interface {
-	BaseQuery
+	MDBaseQuery
 	Model(model interface{}) MDCreateQuery
 }
 
 type MDDeleteQuery interface {
-	BaseQuery
+	MDBaseQuery
 	WhereID(id interface{}) MDDeleteQuery
 	Model(model interface{}) MDDeleteQuery
 }
 
-// ||| MIGRATE |||
-
-type MigrateQuery interface {
+type MDMigrateQuery interface {
+	MDBaseQuery
 	Verify(ctx context.Context) error
 	Exec(ctx context.Context) error
 }

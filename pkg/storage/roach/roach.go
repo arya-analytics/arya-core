@@ -85,6 +85,6 @@ func (e *engine) NewDelete(a storage.Adapter) storage.MDDeleteQuery {
 }
 
 // NewMigrate opens a new migrateQuery with the provided storage.Adapter;
-func (e *engine) NewMigrate(a storage.Adapter) storage.MigrateQuery {
+func (e *engine) NewMigrate(a storage.Adapter) storage.MDMigrateQuery {
 	return newMigrate(conn(a), e.cfg.Driver)
 }
