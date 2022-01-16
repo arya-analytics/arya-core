@@ -2,8 +2,21 @@ package storage
 
 import (
 	"github.com/google/uuid"
+	"reflect"
 	"time"
 )
+
+var _catalog = ModelCatalog{
+	reflect.TypeOf(Node{}),
+	reflect.TypeOf(Range{}),
+	reflect.TypeOf(RangeReplicaToNode{}),
+	reflect.TypeOf(ChannelConfig{}),
+	reflect.TypeOf(ChannelChunk{}),
+}
+
+func Catalog() ModelCatalog {
+	return _catalog
+}
 
 type Node struct {
 	ID              int

@@ -2,7 +2,7 @@ package roach
 
 import (
 	"fmt"
-	"github.com/google/uuid"
+	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/uptrace/bun"
 	"reflect"
 	"time"
@@ -10,20 +10,22 @@ import (
 
 type JSONB map[string]interface{}
 
-func allModelTypes() []reflect.Type {
-	return []reflect.Type{
-		reflect.TypeOf(Node{}),
-		reflect.TypeOf(Range{}),
-		reflect.TypeOf(RangeReplicaToNode{}),
-		reflect.TypeOf(ChannelConfig{}),
-		reflect.TypeOf(ChannelChunk{}),
-		reflect.TypeOf(GossipNode{}),
-		reflect.TypeOf(GossipLiveness{}),
-	}
+var _catalog = storage.ModelCatalog{
+	reflect.TypeOf(Node{}),
+	reflect.TypeOf(Range{}),
+	reflect.TypeOf(RangeReplicaToNode{}),
+	reflect.TypeOf(ChannelConfig{}),
+	reflect.TypeOf(ChannelChunk{}),
+	reflect.TypeOf(GossipNode{}),
+	reflect.TypeOf(GossipLiveness{}),
+}
+
+func catalog() storage.ModelCatalog {
+	return _catalog
 }
 
 func newRoachModelFromStorage(m interface{}) interface{} {
-	for _, rm := range allModelTypes() {
+	for _, rm := range catalog() {
 		rmName := rm.Name()
 		mName := reflect.TypeOf(m).Elem().Name()
 		if rmName == mName {
@@ -48,7 +50,8 @@ type Range struct {
 }
 
 type RangeReplicaToNode struct {
-	ID      uuid.UUID `bun:"type:uuid,default:gen_random_uuid()"`
+	ID int
+	//ID      uuid.UUID `bun:"type:uuid,default:gen_random_uuid()"`
 	RangeID int
 	Range   *Range `bun:"rel:belongs-to,join:range_id=id"`
 	NodeID  int

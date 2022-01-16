@@ -10,7 +10,11 @@ type baseQuery struct {
 }
 
 func (b *baseQuery) baseModel(m interface{}) interface{} {
-	b.modelAdapter = storage.NewSingleModelAdapter(m, newRoachModelFromStorage(m))
+	opts := &storage.ModelAdapterOpts{
+		Source: m,
+		Dest:   newRoachModelFromStorage(m),
+	}
+	b.modelAdapter = storage.NewSingleModelAdapter(opts)
 	return b.modelAdapter.Dest()
 }
 

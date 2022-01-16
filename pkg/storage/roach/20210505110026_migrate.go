@@ -49,18 +49,16 @@ func migrateUpFunc(d Driver) bunMigrate.MigrationFunc {
 			Exec(ctx); err != nil {
 			log.Fatalln(err)
 		}
-		if _, err := db.Exec(`ALTER TABLE range_replica_to_nodes ADD CONSTRAINT 
-									range_replica_to_nodes_fk_node_id FOREIGN KEY 
-									("node_id") REFERENCES "nodes" ("id") ON DELETE 
-									CASCADE`); err != nil {
-			log.Fatalln(err)
-		}
-		if _, err := db.Exec(`ALTER TABLE range_replica_to_nodes ADD CONSTRAINT 
-									range_replica_to_nodes FOREIGN KEY 
-									("range_id") REFERENCES "ranges" ("id") ON DELETE 
-									CASCADE`); err != nil {
-			log.Fatalln(err)
-		}
+		//if _, err := db.Exec(`ALTER TABLE range_replica_to_nodes ADD FOREIGN KEY
+		//							("node_id") REFERENCES "nodes" ("id") ON DELETE
+		//							CASCADE`); err != nil {
+		//	log.Fatalln(err)
+		//}
+		//if _, err := db.Exec(`ALTER TABLE range_replica_to_nodes ADD FOREIGN KEY
+		//							("range_id") REFERENCES "ranges" ("id") ON DELETE
+		//							CASCADE`); err != nil {
+		//	log.Fatalln(err)
+		//}
 		if _, err := db.NewCreateTable().
 			Model((*ChannelChunk)(nil)).
 			ForeignKey(`("channel_config_id") REFERENCES "channel_configs" ("id") 

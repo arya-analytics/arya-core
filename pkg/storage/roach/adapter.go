@@ -10,7 +10,6 @@ import (
 	"github.com/uptrace/bun/dialect/sqlitedialect"
 	"github.com/uptrace/bun/driver/pgdriver"
 	"github.com/uptrace/bun/driver/sqliteshim"
-	"github.com/uptrace/bun/extra/bundebug"
 )
 
 // || ADAPTER ||
@@ -63,7 +62,7 @@ func (a *adapter) open() {
 	case DriverSQLite:
 		a.db = sqlLiteConnect()
 	}
-	a.db.AddQueryHook(bundebug.NewQueryHook(bundebug.WithVerbose(true)))
+	//a.db.AddQueryHook(bundebug.NewQueryHook(bundebug.WithVerbose(true)))
 }
 
 // || CONNECTORS ||

@@ -7,14 +7,14 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-var _ = Describe("Model Adapter", func() {
+var _ = FDescribe("Model Adapter", func() {
 	Describe("SingleModelAdapter", func() {
 		Describe("Binding Values", func() {
 			var c *storage.ChannelConfig
 			var m *storage.AdaptedModel
 			BeforeEach(func() {
 				c = &storage.ChannelConfig{}
-				m = storage.NewAdaptedModel(c)
+				m = &storage.AdaptedModel{Model: c}
 			})
 			It("Should set the model values correctly", func() {
 				var id = 445
@@ -36,7 +36,7 @@ var _ = Describe("Model Adapter", func() {
 			It("Should map all values correctly", func() {
 				var id = 445
 				c := &storage.ChannelConfig{Name: "Hello", ID: id}
-				m := storage.NewAdaptedModel(c)
+				m := &storage.AdaptedModel{Model: c}
 				mv := m.MapVals()
 				Expect(mv).To(Equal(storage.ModelValues{"Name": "Hello", "ID": id}))
 			})
@@ -51,10 +51,17 @@ var _ = Describe("Model Adapter", func() {
 				dummyModel,
 			}
 			var sourceModels []*storage.ChannelConfig
-			ma := storage.NewModelAdapter(&sourceModels, &destModels)
+			maOpts := &storage.ModelAdapterOpts{
+				Source:        &sourceModels,
+				Dest:          &destModels,
+				CatalogSource: storage.Catalog(),
+				CatalogDest:   storage.Catalog(),
+			}
+			ma := storage.NewModelAdapter(maOpts)
 			if err := ma.ExchangeToSource(); err != nil {
 				log.Fatalln(err)
 			}
+			log.Info(sourceModels[0].Name)
 		})
 	})
 })
