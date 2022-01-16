@@ -37,6 +37,7 @@ type Range struct {
 	LeaseHolderNode   *Node
 	ReplicaNodes      []*Node
 }
+
 type RangeReplicaToNode struct {
 	ID      uuid.UUID
 	RangeID int

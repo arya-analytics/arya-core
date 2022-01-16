@@ -6,24 +6,18 @@ import (
 	"reflect"
 )
 
-const (
-	// destValueDepth is the amount of pointer dereferences needed to access the
-	// underlying struct
-	destValueDepth = 2
-)
-
 /// |||| CATALOG ||||
 
 type ModelCatalog []reflect.Type
 
 func (mc ModelCatalog) New(m interface{}) interface{} {
-	mName := modelT(m).Name()
+	mn := modelT(m).Name()
 	for _, cm := range mc {
-		if cm.Name() == mName {
+		if cm.Name() == mn {
 			return reflect.New(cm).Interface()
 		}
 	}
-	log.Fatalf("Model %s could not be found in catalog. This is an no-op.", mName)
+	log.Fatalf("model %s could not be found in catalog. This is an no-op.", mn)
 	return nil
 }
 
@@ -38,8 +32,6 @@ type ModelAdapterOpts struct {
 
 func (o *ModelAdapterOpts) Validate() error {
 	var err error
-	// Validation checks
-	// 1. Model and Source are pointers to a struct or a slice that can be set
 	err = validateModel(o.Source)
 	err = validateModel(o.Dest)
 	sMtk, dMtk := modelT(o.Source).Kind(), modelT(o.Dest).Kind()
@@ -50,7 +42,7 @@ func (o *ModelAdapterOpts) Validate() error {
 	return err
 }
 
-func (o *ModelAdapterOpts) single() bool {
+func (o *ModelAdapterOpts) Single() bool {
 	return modelT(o.Dest).Kind() == reflect.Struct
 }
 
@@ -67,7 +59,7 @@ func NewModelAdapter(opts *ModelAdapterOpts) ModelAdapter {
 	if err := opts.Validate(); err != nil {
 		log.Fatalln(err)
 	}
-	if opts.single() {
+	if opts.Single() {
 		return NewSingleModelAdapter(opts)
 	}
 	return &MultiModelAdapter{opts: opts}
@@ -88,11 +80,11 @@ func (ma *MultiModelAdapter) exchange(toSource bool) error {
 	if toSource {
 		exchangeTo = ma.opts.Dest
 		exchangeFrom = ma.opts.Source
-		catalog = ma.opts.CatalogDest
+		catalog = ma.opts.CatalogSource
 	} else {
 		exchangeTo = ma.opts.Source
 		exchangeFrom = ma.opts.Dest
-		catalog = ma.opts.CatalogSource
+		catalog = ma.opts.CatalogDest
 	}
 
 	destRv := modelV(exchangeTo)
@@ -101,17 +93,16 @@ func (ma *MultiModelAdapter) exchange(toSource bool) error {
 		destMv := destRv.Index(i).Interface()
 		var sourceMv interface{}
 		if i >= sourceRv.Len() {
-			log.Warn(destMv)
 			sourceMv = catalog.New(destMv)
 		} else {
 			sourceMv = sourceRv.Index(i).Interface()
 		}
 		opts := &ModelAdapterOpts{Source: sourceMv, Dest: destMv}
-		ma := NewSingleModelAdapter(opts)
-		if err := ma.ExchangeToSource(); err != nil {
+		sm := NewSingleModelAdapter(opts)
+		if err := sm.ExchangeToSource(); err != nil {
 			return err
 		}
-		sourceRv.Set(reflect.Append(sourceRv, reflect.ValueOf(ma.Source())))
+		sourceRv.Set(reflect.Append(sourceRv, reflect.ValueOf(sm.Source())))
 	}
 	return nil
 }
@@ -136,72 +127,125 @@ func (ma *MultiModelAdapter) Dest() interface{} {
 
 type SingleModelAdapter struct {
 	opts     *ModelAdapterOpts
-	sourceAm *AdaptedModel
-	destAm   *AdaptedModel
+	sourceAm *adaptedModel
+	destAm   *adaptedModel
 }
 
 func NewSingleModelAdapter(opts *ModelAdapterOpts) *SingleModelAdapter {
 	return &SingleModelAdapter{
 		opts:     opts,
-		sourceAm: &AdaptedModel{Model: opts.Source},
-		destAm:   &AdaptedModel{Model: opts.Dest},
+		sourceAm: &adaptedModel{model: opts.Source},
+		destAm:   &adaptedModel{model: opts.Dest},
 	}
 }
 
 func (ma *SingleModelAdapter) Source() interface{} {
-	return ma.sourceAm.Model
+	return ma.sourceAm.model
 }
 
 func (ma *SingleModelAdapter) Dest() interface{} {
-	return ma.destAm.Model
+	return ma.destAm.model
 }
 
 func (ma *SingleModelAdapter) ExchangeToSource() error {
-	return ma.sourceAm.BindVals(ma.destAm.MapVals())
+	return ma.sourceAm.BindVals(ma.destAm.MapVals(), ma.opts.CatalogSource)
 }
 
 func (ma *SingleModelAdapter) ExchangeToDest() error {
-	return ma.destAm.BindVals(ma.sourceAm.MapVals())
+	return ma.destAm.BindVals(ma.sourceAm.MapVals(), ma.opts.CatalogDest)
 }
 
 // |||| ADAPTED MODEL |||||
 
-type AdaptedModel struct {
-	Model interface{}
+type adaptedModel struct {
+	model interface{}
 }
 
-// BindVals binds a set of ModelValues to the AdaptedModel fields.
+// BindVals binds a set of ModelValues to the adaptedModel fields.
 // Returns an error for invalid / non-existent keys and invalid types.
-func (mw *AdaptedModel) BindVals(mv ModelValues) error {
-	dv := modelV(mw.Model)
+func (mw *adaptedModel) BindVals(mv ModelValues, ca ModelCatalog) error {
+	/* ORDER OF OPERATIONS
+	1. Get the adapter model value
+	2. For each value in the values to bind
+		1. get the corresponding field name
+		2. get the reflect.value from the model values
+		3. If the type of the value adn the type of hte field are the same
+		set the field to the value and call it a day
+			1. If it isn't
+				1. We need to check if the value is a struct or a slice
+				2. if it isn't, throw an error
+				3. if it is, attempt to adapt the model
+
+
+	*/
+	dv := modelV(mw.model)
 	for k, rv := range mv {
-		f := dv.FieldByName(k)
-		v := reflect.ValueOf(rv)
-		if !f.IsValid() {
-			return fmt.Errorf("invalid key %storage while binding to %v", k, dv.Type())
+		field := dv.FieldByName(k)
+		val := reflect.ValueOf(rv)
+		//if !val.IsValid() {
+		//	continue
+		//}
+		if !field.CanSet() {
+			continue
+			//return fmt.Errorf("unsettable key %s in vals while binding to %val ",
+			//	k, dv.Type())
 		}
-		if !f.CanSet() {
-			return fmt.Errorf("unsettable key %storage in vals while binding to %v ",
-				k, dv.Type())
-		}
-		vt, ft := v.Type(), f.Type()
+		vt, ft := val.Type(), field.Type()
 		if vt != ft {
-			return fmt.Errorf("(%s) invalid type %v for field '%s' with type %v- "+
-				"this is a no-op", dv.Type(), vt, k, ft)
+			valModelKind := modelT(val.Interface()).Kind()
+			if valModelKind == reflect.Slice {
+				valModelVal := modelV(val.Interface())
+				if valModelVal.Len() == 0 {
+					continue
+				}
+				o := &ModelAdapterOpts{
+					Source:      val.Interface(),
+					Dest:        field.Addr().Interface(),
+					CatalogDest: ca,
+				}
+				ma := NewModelAdapter(o)
+				if err := ma.ExchangeToDest(); err != nil {
+					log.Fatalln(err)
+				}
+				val = reflect.ValueOf(ma.Dest())
+			} else if valModelKind == reflect.Struct {
+				valModelVal := modelV(val.Interface())
+				if !valModelVal.IsValid() {
+					continue
+				}
+				source := val.Interface()
+				dest := reflect.New(field.Type().Elem()).Interface()
+				o := &ModelAdapterOpts{
+					Source: source,
+					Dest:   dest,
+				}
+				ma := NewModelAdapter(o)
+				if err := ma.ExchangeToDest(); err != nil {
+					log.Fatalln(err)
+				}
+				val = reflect.ValueOf(ma.Dest())
+			} else {
+				return fmt.Errorf("(%s) invalid type %v for field '%s' with type %v "+
+					"this is a no-op", dv.Type(), vt, k, ft)
+			}
 		}
-		f.Set(v)
+		field.Set(val)
 	}
 	return nil
 }
 
-// MapVals maps AdaptedModel fields to ModelValues.
-func (mw *AdaptedModel) MapVals() ModelValues {
+// MapVals maps adaptedModel fields to ModelValues.
+func (mw *adaptedModel) MapVals() ModelValues {
 	var mv = ModelValues{}
-	dv := modelV(mw.Model)
+	dv := modelV(mw.model)
 	for i := 0; i < dv.NumField(); i++ {
 		t := dv.Type().Field(i)
 		f := dv.Field(i)
-		mv[t.Name] = f.Interface()
+		if f.Type().Kind() == reflect.Slice {
+			mv[t.Name] = f.Addr().Interface()
+		} else {
+			mv[t.Name] = f.Interface()
+		}
 	}
 	return mv
 }

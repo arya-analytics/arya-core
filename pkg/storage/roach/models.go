@@ -20,12 +20,12 @@ var _catalog = storage.ModelCatalog{
 	reflect.TypeOf(GossipLiveness{}),
 }
 
-func catalog() storage.ModelCatalog {
+func Catalog() storage.ModelCatalog {
 	return _catalog
 }
 
 func newRoachModelFromStorage(m interface{}) interface{} {
-	for _, rm := range catalog() {
+	for _, rm := range Catalog() {
 		rmName := rm.Name()
 		mName := reflect.TypeOf(m).Elem().Name()
 		if rmName == mName {
