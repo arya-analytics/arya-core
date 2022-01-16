@@ -17,7 +17,7 @@ var _ = Describe("Model Adapter", func() {
 				m = storage.NewAdaptedModel(c)
 			})
 			It("Should set the model values correctly", func() {
-				var id int32 = 445
+				var id = 445
 				err := m.BindVals(storage.ModelValues{"Name": "Hello", "ID": id})
 				Expect(err).To(BeNil())
 				Expect(c.Name).To(Equal("Hello"))
@@ -34,7 +34,7 @@ var _ = Describe("Model Adapter", func() {
 		})
 		Describe("Mapping Values", func() {
 			It("Should map all values correctly", func() {
-				var id int32 = 445
+				var id = 445
 				c := &storage.ChannelConfig{Name: "Hello", ID: id}
 				m := storage.NewAdaptedModel(c)
 				mv := m.MapVals()

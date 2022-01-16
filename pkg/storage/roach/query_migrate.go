@@ -5,7 +5,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/uptrace/bun"
 	bunMigrate "github.com/uptrace/bun/migrate"
-	"reflect"
 )
 
 type migrateQuery struct {
@@ -48,9 +47,7 @@ func (m *migrateQuery) Exec(ctx context.Context) error {
 }
 
 func (m *migrateQuery) Verify(ctx context.Context) (err error) {
-	for _, rm := range allModelTypes() {
-		_, err = m.db.NewSelect().Model(reflect.New(rm).Interface()).Count(ctx)
-	}
+	_, err = m.db.NewSelect().Model((*ChannelConfig)(nil)).Count(ctx)
 	log.Warn(err)
 	return err
 }

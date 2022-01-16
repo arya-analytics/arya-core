@@ -154,8 +154,8 @@ func (mw *AdaptedModel) BindVals(mv ModelValues) error {
 		}
 		vt, ft := v.Type(), f.Type()
 		if vt != ft {
-			return fmt.Errorf("invalid type %v for field '%storage' with type %v- "+
-				"this is a no-op", vt, k, ft)
+			return fmt.Errorf("(%s) invalid type %v for field '%s' with type %v- "+
+				"this is a no-op", dv.Type(), vt, k, ft)
 		}
 		f.Set(v)
 	}

@@ -42,7 +42,7 @@ func (e Config) addr() string {
 
 func (e Config) tls() *tls.Config {
 	return &tls.Config{
-		InsecureSkipVerify: e.UseTLS,
+		InsecureSkipVerify: !e.UseTLS,
 	}
 }
 

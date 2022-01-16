@@ -10,6 +10,7 @@ import (
 	"github.com/uptrace/bun/dialect/sqlitedialect"
 	"github.com/uptrace/bun/driver/pgdriver"
 	"github.com/uptrace/bun/driver/sqliteshim"
+	"github.com/uptrace/bun/extra/bundebug"
 )
 
 // || ADAPTER ||
@@ -62,6 +63,7 @@ func (a *adapter) open() {
 	case DriverSQLite:
 		a.db = sqlLiteConnect()
 	}
+	a.db.AddQueryHook(bundebug.NewQueryHook(bundebug.WithVerbose(true)))
 }
 
 // || CONNECTORS ||
@@ -70,10 +72,11 @@ func pgConnect(cfg Config) *bun.DB {
 	db := sql.OpenDB(
 		pgdriver.NewConnector(
 			pgdriver.WithAddr(cfg.addr()),
+			pgdriver.WithInsecure(cfg.UseTLS),
+			//pgdriver.WithTLSConfig(&tls.Config{InsecureSkipVerify: true}),
 			pgdriver.WithUser(cfg.Username),
 			pgdriver.WithPassword(cfg.Password),
 			pgdriver.WithDatabase(cfg.Database),
-			pgdriver.WithTLSConfig(cfg.tls()),
 		),
 	)
 	return bun.NewDB(db, pgdialect.New())
