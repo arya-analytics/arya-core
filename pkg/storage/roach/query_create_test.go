@@ -11,17 +11,20 @@ var _ = Describe("Create", func() {
 	BeforeEach(migrate)
 	AfterEach(deleteDummyModel)
 	Describe("Create a new Channel Config", func() {
-		It("Should createQuery it without error", func() {
-			err := dummyEngine.NewCreate(dummyAdapter).Model(dummyModel).Exec(dummyCtx)
+		It("Should create it without error", func() {
+			err := dummyEngine.NewCreate(dummyAdapter).Model(dummyNode).Exec(dummyCtx)
+			err = dummyEngine.NewCreate(dummyAdapter).Model(dummyModel).Exec(dummyCtx)
 			Expect(err).To(BeNil())
 		})
 		It("Should be able to be re-queried after creation", func() {
-			if err := dummyEngine.NewCreate(dummyAdapter).Model(dummyModel).Exec(
-				dummyCtx); err != nil {
+			err := dummyEngine.NewCreate(dummyAdapter).Model(dummyNode).Exec(dummyCtx)
+			err = dummyEngine.NewCreate(dummyAdapter).Model(dummyModel).Exec(
+				dummyCtx)
+			if err != nil {
 				log.Fatalln(err)
 			}
 			m := &storage.ChannelConfig{}
-			err := dummyEngine.NewRetrieve(dummyAdapter).Model(m).WherePK(dummyModel.
+			err = dummyEngine.NewRetrieve(dummyAdapter).Model(m).WherePK(dummyModel.
 				ID).Exec(dummyCtx)
 			Expect(err).To(BeNil())
 			Expect(m.Name).To(Equal(dummyModel.Name))
