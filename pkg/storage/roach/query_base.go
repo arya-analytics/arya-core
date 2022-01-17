@@ -6,15 +6,15 @@ import (
 )
 
 type baseQuery struct {
-	modelAdapter *storage.SingleModelAdapter
+	modelAdapter storage.ModelAdapter
 }
 
 func (b *baseQuery) baseModel(m interface{}) interface{} {
-	opts := &storage.ModelAdapterOpts{
-		Source: m,
-		Dest:   newRoachModelFromStorage(m),
+	var err error
+	b.modelAdapter, err = storage.NewModelAdapter(m, Catalog().New(m))
+	if err != nil {
+		log.Fatalln(err)
 	}
-	b.modelAdapter = storage.NewSingleModelAdapter(opts)
 	return b.modelAdapter.Dest()
 }
 

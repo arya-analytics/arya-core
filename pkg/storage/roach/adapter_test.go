@@ -2,13 +2,11 @@ package roach_test
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/storage"
-	"github.com/arya-analytics/aryacore/pkg/storage/stub"
+	"github.com/arya-analytics/aryacore/pkg/storage/mock"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
-
-
 
 var _ = Describe("BaseEngine", func() {
 	Describe("Adapter", func() {
@@ -29,7 +27,7 @@ var _ = Describe("BaseEngine", func() {
 			})
 			Context("Adapter is the incorrect type", func() {
 				It("Should return false", func() {
-					e := &stub.MDEngine{}
+					e := &mock.MDEngine{}
 					ba := e.NewAdapter()
 					Expect(dummyEngine.IsAdapter(ba)).To(BeFalse())
 				})

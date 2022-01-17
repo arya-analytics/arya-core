@@ -1,7 +1,6 @@
 package roach
 
 import (
-	"fmt"
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/uptrace/bun"
 	"reflect"
@@ -22,17 +21,6 @@ var _catalog = storage.ModelCatalog{
 
 func Catalog() storage.ModelCatalog {
 	return _catalog
-}
-
-func newRoachModelFromStorage(m interface{}) interface{} {
-	for _, rm := range Catalog() {
-		rmName := rm.Name()
-		mName := reflect.TypeOf(m).Elem().Name()
-		if rmName == mName {
-			return reflect.New(rm).Interface()
-		}
-	}
-	return fmt.Errorf("roach baseModel could not be found")
 }
 
 type Node struct {

@@ -2,7 +2,7 @@ package storage_test
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/storage"
-	"github.com/arya-analytics/aryacore/pkg/storage/roach"
+	"github.com/arya-analytics/aryacore/pkg/storage/mock"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	log "github.com/sirupsen/logrus"
@@ -10,232 +10,381 @@ import (
 
 var _ = Describe("Model Adapter", func() {
 	Context("Single Model Adaptation", func() {
-		Context("Between two models of the same type", func() {
+		Context("Models of the same type", func() {
 			Context("No nested model", func() {
-				var source *storage.ChannelConfig
-				var dest *storage.ChannelConfig
+				var source *mock.ModelA
+				var dest *mock.ModelA
+				var refObj *mock.RefObj
 				BeforeEach(func() {
-					source = &storage.ChannelConfig{
-						ID:   435,
-						Name: "Cool Name",
+					refObj = &mock.RefObj{
+						ID: 220,
 					}
-					dest = &storage.ChannelConfig{}
+					source = &mock.ModelA{
+						ID:     435,
+						Name:   "Cool Name",
+						RefObj: refObj,
+					}
+					dest = &mock.ModelA{}
 				})
 				It("Should exchange to source", func() {
-					opts := &storage.ModelAdapterOpts{
-						Source:        dest,
-						Dest:          source,
-						CatalogSource: storage.Catalog(),
-						CatalogDest:   storage.Catalog(),
-					}
-					ma := storage.NewModelAdapter(opts)
-					err := ma.ExchangeToSource()
+					ma, err := storage.NewModelAdapter(dest, source)
+					err = ma.ExchangeToSource()
 					Expect(err).To(BeNil())
 					Expect(source.ID).To(Equal(435))
 					Expect(source.ID).To(Equal(dest.ID))
 					Expect(source.Name).To(Equal(dest.Name))
 				})
 				It("Should exchange to dest", func() {
-					opts := &storage.ModelAdapterOpts{
-						Source:        source,
-						Dest:          dest,
-						CatalogDest:   storage.Catalog(),
-						CatalogSource: storage.Catalog(),
-					}
-					ma := storage.NewModelAdapter(opts)
-					err := ma.ExchangeToDest()
+					ma, err := storage.NewModelAdapter(source, dest)
+					err = ma.ExchangeToDest()
 					Expect(err).To(BeNil())
 					Expect(source.ID).To(Equal(435))
 					Expect(source.ID).To(Equal(dest.ID))
 					Expect(source.Name).To(Equal(dest.Name))
 				})
-				It("Shouldn't create references between source and dest models", func() {
-					opts := &storage.ModelAdapterOpts{
-						Source:        source,
-						Dest:          dest,
-						CatalogSource: storage.Catalog(),
-						CatalogDest:   storage.Catalog(),
-					}
-					ma := storage.NewModelAdapter(opts)
-					if err := ma.ExchangeToDest(); err != nil {
+				It("Shouldn't maintain refs between source and dest models",
+					func() {
+						ma, err := storage.NewModelAdapter(source, dest)
+						err = ma.ExchangeToDest()
+						if err != nil {
+							log.Fatalln(err)
+						}
+						source.Name = "Hello"
+						Expect(dest.Name).To(Equal("Cool Name"))
+					})
+				It("Should maintain model internal refs", func() {
+					ma, err := storage.NewModelAdapter(source, dest)
+					err = ma.ExchangeToDest()
+					if err != nil {
 						log.Fatalln(err)
 					}
-					source.Name = "Hello"
-					Expect(dest.Name).To(Equal("Cool Name"))
+					refObj.ID = 9260
+					Expect(dest.RefObj.ID).To(Equal(9260))
 				})
 			})
 			Context("With nested model", func() {
-				var source *storage.ChannelConfig
-				var dest *storage.ChannelConfig
-				var node *storage.Node
+				var source *mock.ModelA
+				var dest *mock.ModelB
+				var innerModel *mock.ModelB
 				BeforeEach(func() {
-					node = &storage.Node{
+					innerModel = &mock.ModelB{
 						ID: 24,
 					}
-					source = &storage.ChannelConfig{
-						ID:   420,
-						Name: "Even Cooler Name",
-						Node: node,
+					source = &mock.ModelA{
+						ID:         420,
+						Name:       "Even Cooler Name",
+						InnerModel: innerModel,
 					}
-					dest = &storage.ChannelConfig{}
+					dest = &mock.ModelB{}
 				})
 				It("Should exchange to source", func() {
-					opts := &storage.ModelAdapterOpts{
-						Source: dest,
-						Dest:   source,
-					}
-					ma := storage.NewModelAdapter(opts)
-					err := ma.ExchangeToSource()
+					ma, err := storage.NewModelAdapter(dest, source)
+					err = ma.ExchangeToSource()
 					Expect(err).To(BeNil())
-					Expect(source.Node.ID).To(Equal(24))
-					Expect(dest.Node.ID).To(Equal(source.Node.ID))
+					Expect(source.InnerModel.ID).To(Equal(24))
+					Expect(dest.InnerModel.ID).To(Equal(source.InnerModel.ID))
 				})
 				It("Should exchange to dest", func() {
-					opts := &storage.ModelAdapterOpts{
-						Source: source,
-						Dest:   dest,
-					}
-					ma := storage.NewModelAdapter(opts)
-					err := ma.ExchangeToDest()
+					ma, err := storage.NewModelAdapter(source, dest)
+					err = ma.ExchangeToDest()
 					Expect(err).To(BeNil())
-					Expect(source.Node.ID).To(Equal(24))
-					Expect(dest.Node.ID).To(Equal(source.Node.ID))
+					Expect(source.InnerModel.ID).To(Equal(24))
+					Expect(dest.InnerModel.ID).To(Equal(source.InnerModel.ID))
 				})
-				It("Should maintain the reference to the node struct", func() {
-					opts := &storage.ModelAdapterOpts{
-						Source: source,
-						Dest:   dest,
-					}
-					ma := storage.NewModelAdapter(opts)
-					err := ma.ExchangeToDest()
+				It("Should break the reference to the inner model struct", func() {
+					ma, err := storage.NewModelAdapter(source, dest)
+					err = ma.ExchangeToDest()
 					Expect(err).To(BeNil())
-					node.ID = 45
-					Expect(dest.Node.ID).To(Equal(45))
+					innerModel.ID = 45
+					Expect(dest.InnerModel.ID).To(Equal(24))
 				})
 			})
 		})
-		Context("Between two models of different types", func() {
+		Context("Models of different types", func() {
 			Context("No nested model", func() {
-				var source *roach.ChannelConfig
-				var dest *storage.ChannelConfig
+				var source *mock.ModelA
+				var dest *mock.ModelB
 				BeforeEach(func() {
-					source = &roach.ChannelConfig{
+					source = &mock.ModelA{
 						ID:   453,
 						Name: "My Channel Config",
 					}
-					dest = &storage.ChannelConfig{}
+					dest = &mock.ModelB{}
 				})
 				It("Should exchange correctly", func() {
-					opts := &storage.ModelAdapterOpts{
-						Source:        source,
-						Dest:          dest,
-						CatalogSource: roach.Catalog(),
-						CatalogDest:   storage.Catalog(),
-					}
-					ma := storage.NewModelAdapter(opts)
-					err := ma.ExchangeToDest()
+					ma, err := storage.NewModelAdapter(source, dest)
+					err = ma.ExchangeToDest()
 					Expect(err).To(BeNil())
-					Expect(source.Node).To(BeNil())
+					Expect(source.InnerModel).To(BeNil())
 				})
 			})
 			Context("Nested model", func() {
-				var source *roach.ChannelConfig
-				var dest *storage.ChannelConfig
+				var source *mock.ModelB
+				var dest *mock.ModelA
+				var innerModel *mock.ModelA
 				BeforeEach(func() {
-					source = &roach.ChannelConfig{
-						ID:   453,
-						Name: "My Channel Config",
-						Node: &roach.Node{
-							ID: 96,
-						},
+					innerModel = &mock.ModelA{
+						ID: 96,
 					}
-					dest = &storage.ChannelConfig{}
+					source = &mock.ModelB{
+						ID:         453,
+						Name:       "My Channel Config",
+						InnerModel: innerModel,
+					}
+					dest = &mock.ModelA{}
 				})
 				It("Should break ref between old and new nested", func() {
-					opts := &storage.ModelAdapterOpts{
-						Source:        source,
-						Dest:          dest,
-						CatalogSource: roach.Catalog(),
-						CatalogDest:   storage.Catalog(),
-					}
-					ma := storage.NewModelAdapter(opts)
-					err := ma.ExchangeToDest()
+					ma, err := storage.NewModelAdapter(source, dest)
+					err = ma.ExchangeToDest()
 					Expect(err).To(BeNil())
-					Expect(source.Node.ID).To(Equal(96))
-					Expect(dest.Node.ID).To(Equal(source.Node.ID))
-					source.Node.ID = 45
-					Expect(dest.Node.ID).To(Equal(96))
+					Expect(source.InnerModel.ID).To(Equal(96))
+					Expect(dest.InnerModel.ID).To(Equal(source.InnerModel.ID))
+					source.InnerModel.ID = 45
+					Expect(dest.InnerModel.ID).To(Equal(96))
+					innerModel.ID = 32
+					Expect(source.InnerModel.ID).To(Equal(32))
 				})
 			})
 			Context("Multiple nested models", func() {
-				var source *roach.Range
-				var dest *storage.Range
+				var source *mock.ModelA
+				var dest *mock.ModelB
 				BeforeEach(func() {
-					source = &roach.Range{
+					source = &mock.ModelA{
 						ID: 420,
-						LeaseHolderNode: &roach.Node{
+						InnerModel: &mock.ModelB{
 							ID: 22,
 						},
-						ReplicaNodes: []*roach.Node{
-							&roach.Node{
+						ChainInnerModel: []*mock.ModelB{
+							&mock.ModelB{
 								ID: 1,
 							},
-							&roach.Node{
+							&mock.ModelB{
 								ID: 2,
 							},
 						},
 					}
-					dest = &storage.Range{
+					dest = &mock.ModelB{
 						ID: 1900,
 					}
 				})
 				It("Should exchange correctly", func() {
-					opts := &storage.ModelAdapterOpts{
-						Source:        source,
-						Dest:          dest,
-						CatalogSource: roach.Catalog(),
-						CatalogDest:   storage.Catalog(),
-					}
-					ma := storage.NewModelAdapter(opts)
-					err := ma.ExchangeToDest()
+					ma, err := storage.NewModelAdapter(source, dest)
+					err = ma.ExchangeToDest()
 					Expect(err).To(BeNil())
-					Expect(source.ReplicaNodes).To(HaveLen(2))
-					Expect(source.ReplicaNodes[0].ID).To(Equal(1))
-					Expect(dest.ReplicaNodes[0].ID).To(Equal(source.ReplicaNodes[0].ID))
+					Expect(source.ID).To(Equal(420))
+					Expect(source.ID).To(Equal(dest.ID))
+					Expect(source.ChainInnerModel).To(HaveLen(2))
+					Expect(source.ChainInnerModel[0].ID).To(Equal(1))
+					Expect(dest.ChainInnerModel[0].ID).To(Equal(source.
+						ChainInnerModel[0].ID))
+
 				})
 			})
 		})
 	})
-	Context("Multi model adaptation", func() {
-		Context("Models of the same type", func() {
-			var source []*roach.ChannelConfig
-			var dest []*storage.ChannelConfig
-			BeforeEach(func() {
-				source = []*roach.ChannelConfig{
-					&roach.ChannelConfig{
-						ID:   22,
-						Name: "Hello",
-					},
-					&roach.ChannelConfig{
-						ID:   24,
-						Name: "Hello 24",
-					},
-				}
-				dest = []*storage.ChannelConfig{}
+	Context("Chain Model Adaptation", func() {
+		Context("Models of different types", func() {
+			var source []*mock.ModelA
+			var dest []*mock.ModelB
+			var refObj *mock.RefObj
+			Context("No nested model", func() {
+				BeforeEach(func() {
+					refObj = &mock.RefObj{
+						ID: 672,
+					}
+					source = []*mock.ModelA{
+						&mock.ModelA{
+							ID:     22,
+							Name:   "Hello",
+							RefObj: refObj,
+						},
+						&mock.ModelA{
+							ID:     24,
+							Name:   "Hello 24",
+							RefObj: refObj,
+						},
+					}
+					dest = []*mock.ModelB{}
+				})
+				It("Should exchange correctly", func() {
+					ma, err := storage.NewModelAdapter(&source, &dest)
+					err = ma.ExchangeToDest()
+					Expect(err).To(BeNil())
+					Expect(dest).To(HaveLen(2))
+				})
+				It("Should maintain model internal refs", func() {
+					ma, err := storage.NewModelAdapter(&source, &dest)
+					err = ma.ExchangeToDest()
+					if err != nil {
+						log.Fatalln(err)
+					}
+					Expect(dest[0].RefObj.ID).To(Equal(source[0].RefObj.ID))
+					dest[0].RefObj.ID = 720
+					Expect(source[0].RefObj.ID).To(Equal(720))
+					Expect(source[1].RefObj.ID).To(Equal(720))
+				})
 			})
-			It("Should exchange correctly", func() {
-				opts := &storage.ModelAdapterOpts{
-					Source:        &source,
-					Dest:          &dest,
-					CatalogSource: roach.Catalog(),
-					CatalogDest:   storage.Catalog(),
-				}
-				ma := storage.NewModelAdapter(opts)
-				err := ma.ExchangeToDest()
-				Expect(err).To(BeNil())
-				Expect(dest).To(HaveLen(2))
+			Context("Pre-populated dest", func() {
+				BeforeEach(func() {
+					source = []*mock.ModelA{
+						&mock.ModelA{
+							ID:     22,
+							Name:   "Hello",
+							RefObj: refObj,
+						},
+						&mock.ModelA{
+							ID:     24,
+							Name:   "Hello 24",
+							RefObj: refObj,
+						},
+					}
+					dest = []*mock.ModelB{
+						&mock.ModelB{
+							ID:     25,
+							Name:   "Hello",
+							RefObj: refObj,
+						},
+						&mock.ModelB{
+							ID:     26,
+							Name:   "Hello 26",
+							RefObj: refObj,
+						},
+					}
+				})
+				It("Should override the values in dest", func() {
+					ma, err := storage.NewModelAdapter(&source, &dest)
+					err = ma.ExchangeToDest()
+					if err != nil {
+						log.Fatalln(err)
+					}
+					Expect(dest[0].ID).To(Equal(22))
+					Expect(dest[1].ID).To(Equal(24))
+				})
 			})
+			Context("Multiple nested models", func() {
+				var chainInnerModel []*mock.ModelB
+				Context("Common chain inner model", func() {
+					BeforeEach(func() {
+						refObj = &mock.RefObj{
+							ID: 915,
+						}
+						chainInnerModel = []*mock.ModelB{
+							&mock.ModelB{
+								ID: 12345,
+							},
+						}
+						source = []*mock.ModelA{}
+						dest = []*mock.ModelB{
+							&mock.ModelB{
+								ID:                    11,
+								CommonChainInnerModel: chainInnerModel,
+							},
+							&mock.ModelB{
+								ID:                    12,
+								CommonChainInnerModel: chainInnerModel,
+							},
+						}
+					})
+					It("Should exchange correctly", func() {
+						ma, err := storage.NewModelAdapter(&source, &dest)
+						err = ma.ExchangeToSource()
+						Expect(err).To(BeNil())
+					})
+				})
 
+			})
 		})
+	})
+	Context("Edge cases + errors", func() {
+		Describe("New Model Adapter", func() {
+			Context("Slice and struct mismatch", func() {
+				It("Should return an error", func() {
+					var source []*mock.ModelB
+					dest := &mock.ModelB{}
+					_, err := storage.NewModelAdapter(&source, dest)
+					Expect(err).ToNot(BeNil())
+				})
+			})
+			Context("Providing a non-struct or slice type", func() {
+				It("Should return an error", func() {
+					source := &mock.ModelB{}
+					dest := 1
+					_, err := storage.NewModelAdapter(source, &dest)
+					Expect(err).ToNot(BeNil())
+				})
+			})
+			Context("Providing a non-pointer value", func() {
+				It("Should return an error", func() {
+					source := mock.ModelB{}
+					dest := &mock.ModelA{}
+					_, err := storage.NewModelAdapter(source, dest)
+					Expect(err).ToNot(BeNil())
+				})
+			})
+			Context("Providing a double-pointer struct value", func() {
+				It("Should return an error", func() {
+					source := &mock.ModelB{}
+					dest := &mock.ModelA{}
+					_, err := storage.NewModelAdapter(&source, &dest)
+					Expect(err).ToNot(BeNil())
+				})
+			})
+			Context("Providing a double-pointer slice value", func() {
+				It("Should return an error", func() {
+					source := []*mock.ModelB{&mock.ModelB{Name: "Hello"}}
+					dest := &[]*mock.ModelA{}
+					_, err := storage.NewModelAdapter(&source, &dest)
+					Expect(err).ToNot(BeNil())
+				})
+			})
+		})
+		Describe("Exchanging values", func() {
+			Describe("Incompatible model types", func() {
+				Context("Top level incompatibility", func() {
+					It("Should return an error", func() {
+						source := &mock.ModelB{
+							ID:   22,
+							Name: "My Cool Model",
+						}
+						dest := &mock.ModelC{}
+						ma, err := storage.NewModelAdapter(source, dest)
+						Expect(err).To(BeNil())
+						err = ma.ExchangeToDest()
+						Expect(err).ToNot(BeNil())
+					})
+				})
+				Context("Nested model incompatibility", func() {
+					Describe("Without the incompatible field defined", func() {
+						It("Shouldn't return an error", func() {
+							source := &mock.ModelD{
+								ID: 22,
+							}
+							dest := &mock.ModelC{}
+							ma, err := storage.NewModelAdapter(source, dest)
+							Expect(err).To(BeNil())
+							err = ma.ExchangeToDest()
+							Expect(err).To(BeNil())
+						})
+					})
+					Describe("With the incompatible field defined", func() {
+						It("Should return an error", func() {
+							dest := &mock.ModelD{
+								ID: 2,
+								InnerModel: &mock.ModelB{
+									ID: 43,
+								},
+							}
+							source := &mock.ModelC{}
+							ma, err := storage.NewModelAdapter(source, dest)
+							Expect(err).To(BeNil())
+							err = ma.ExchangeToSource()
+							Expect(err).ToNot(BeNil())
+						})
+					})
+
+				})
+			})
+		})
+
 	})
 })
