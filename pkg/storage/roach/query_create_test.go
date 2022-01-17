@@ -21,7 +21,7 @@ var _ = Describe("Create", func() {
 				log.Fatalln(err)
 			}
 			m := &storage.ChannelConfig{}
-			err := dummyEngine.NewRetrieve(dummyAdapter).Model(m).WhereID(dummyModel.
+			err := dummyEngine.NewRetrieve(dummyAdapter).Model(m).WherePK(dummyModel.
 				ID).Exec(dummyCtx)
 			Expect(err).To(BeNil())
 			Expect(m.Name).To(Equal(dummyModel.Name))

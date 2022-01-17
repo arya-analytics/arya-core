@@ -44,7 +44,7 @@ func createDummyModel() {
 }
 
 func deleteDummyModel() {
-	if err := dummyEngine.NewDelete(dummyAdapter).Model(dummyModel).WhereID(
+	if err := dummyEngine.NewDelete(dummyAdapter).Model(dummyModel).WherePK(
 		dummyModel.ID).Exec(dummyCtx); err != nil {
 		log.Fatalln(err)
 	}

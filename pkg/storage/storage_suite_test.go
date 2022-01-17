@@ -30,7 +30,7 @@ func createDummyModel() {
 }
 
 func deleteDummyModel() {
-	if err := dummyStorage.NewDelete().Model(dummyModel).WhereID(dummyModel.ID).Exec(
+	if err := dummyStorage.NewDelete().Model(dummyModel).WherePK(dummyModel.ID).Exec(
 		dummyCtx); err != nil {
 		log.Fatalln(err)
 	}

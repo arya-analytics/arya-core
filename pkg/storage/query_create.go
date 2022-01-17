@@ -14,7 +14,7 @@ func newCreate(s *Storage) *createQuery {
 	return c
 }
 
-/// ||| INT
+/// |||| INTERFACE ||||
 
 func (c *createQuery) Model(model interface{}) *createQuery {
 	c.baseSetMDQuery(c.mdQuery().Model(model))
@@ -25,7 +25,7 @@ func (c *createQuery) Exec(ctx context.Context) error {
 	return c.mdQuery().Exec(ctx)
 }
 
-// || META DATA QUERY BINDING ||
+// |||| QUERY BINDING ||||
 
 func (c *createQuery) mdQuery() MDCreateQuery {
 	if c.baseMDQuery() == nil {

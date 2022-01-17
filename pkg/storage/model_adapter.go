@@ -11,10 +11,22 @@ import (
 type ModelCatalog []reflect.Type
 
 func (mc ModelCatalog) New(m interface{}) interface{} {
-	mn := modelT(m).Name()
+	mt := modelT(m)
+	mn := mt.Name()
+	c := isChainModel(m)
+	if c {
+		mn = mt.Elem().Elem().Name()
+	}
 	for _, cm := range mc {
 		if cm.Name() == mn {
-			return reflect.New(cm).Interface()
+			rv := reflect.New(cm)
+			if c {
+				newSlice := reflect.MakeSlice(reflect.SliceOf(rv.Type()), 0, 0)
+				r := reflect.New(newSlice.Type())
+				r.Elem().Set(newSlice)
+				return r.Interface()
+			}
+			return rv.Interface()
 		}
 	}
 	log.Fatalf("model %s could not be found in catalog. This is an no-op.", mn)
@@ -24,8 +36,10 @@ func (mc ModelCatalog) New(m interface{}) interface{} {
 // |||| BASE ADAPTER ||||
 
 type ModelAdapter interface {
-	Source() interface{}
-	Dest() interface{}
+	SourcePointer() interface{}
+	DestPointer() interface{}
+	DestValue() reflect.Value
+	SourceValue() reflect.Value
 	ExchangeToSource() error
 	ExchangeToDest() error
 }
@@ -44,7 +58,7 @@ func NewModelAdapter(source interface{}, dest interface{}) (ModelAdapter, error)
 		return nil, fmt.Errorf("models must be of the same type. Received %s and %s",
 			sMtk, dMtk)
 	}
-	if dMtk == reflect.Struct {
+	if !isChainModel(source) {
 		return newSingleModelAdapter(source, dest), nil
 	}
 	return &chainModelAdapter{source, dest}, nil
@@ -83,7 +97,7 @@ func (ma *chainModelAdapter) exchange(toSource bool) error {
 			return err
 		}
 		toModelSliceValue.Set(reflect.Append(toModelSliceValue,
-			reflect.ValueOf(sm.Dest())))
+			reflect.ValueOf(sm.DestPointer())))
 	}
 	return nil
 }
@@ -96,12 +110,20 @@ func (ma *chainModelAdapter) ExchangeToDest() error {
 	return ma.exchange(false)
 }
 
-func (ma *chainModelAdapter) Source() interface{} {
-	return reflect.ValueOf(ma.source).Elem().Interface()
+func (ma *chainModelAdapter) SourcePointer() interface{} {
+	return reflect.ValueOf(ma.source).Interface()
 }
 
-func (ma *chainModelAdapter) Dest() interface{} {
-	return reflect.ValueOf(ma.dest).Elem().Interface()
+func (ma *chainModelAdapter) DestPointer() interface{} {
+	return reflect.ValueOf(ma.dest).Interface()
+}
+
+func (ma *chainModelAdapter) DestValue() reflect.Value {
+	return reflect.ValueOf(ma.dest).Elem()
+}
+
+func (ma *chainModelAdapter) SourceValue() reflect.Value {
+	return reflect.ValueOf(ma.source).Elem()
 }
 
 // |||| MODEL ADAPTER ||||
@@ -118,12 +140,20 @@ func newSingleModelAdapter(source interface{}, dest interface{}) *singleModelAda
 	}
 }
 
-func (ma *singleModelAdapter) Source() interface{} {
+func (ma *singleModelAdapter) SourcePointer() interface{} {
 	return ma.sourceAm.model
 }
 
-func (ma *singleModelAdapter) Dest() interface{} {
+func (ma *singleModelAdapter) DestPointer() interface{} {
 	return ma.destAm.model
+}
+
+func (ma *singleModelAdapter) DestValue() reflect.Value {
+	return reflect.ValueOf(ma.destAm.model)
+}
+
+func (ma *singleModelAdapter) SourceValue() reflect.Value {
+	return reflect.ValueOf(ma.sourceAm.model)
 }
 
 func (ma *singleModelAdapter) ExchangeToSource() error {
@@ -212,7 +242,7 @@ func adaptSlice(slc reflect.Value, fld reflect.Value) (v reflect.Value, e error)
 	if err != nil {
 		return v, err
 	}
-	v = reflect.ValueOf(ma.Dest())
+	v = reflect.ValueOf(ma.DestValue().Interface())
 	return v, e
 }
 
@@ -224,7 +254,7 @@ func adaptStruct(sct reflect.Value, fld reflect.Value) (v reflect.Value, e error
 	if err != nil {
 		return v, err
 	}
-	v = reflect.ValueOf(ma.Dest())
+	v = ma.DestValue()
 	return v, e
 }
 
@@ -261,4 +291,8 @@ func validateModel(m interface{}) error {
 		return fmt.Errorf("cannot set attributes on model %s", mtv)
 	}
 	return nil
+}
+
+func isChainModel(m interface{}) bool {
+	return modelT(m).Kind() == reflect.Slice
 }

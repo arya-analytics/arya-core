@@ -19,8 +19,13 @@ func (d *deleteQuery) Model(model interface{}) *deleteQuery {
 	return d
 }
 
-func (d *deleteQuery) WhereID(id interface{}) *deleteQuery {
-	d.setMDQuery(d.mdQuery().WhereID(id))
+func (d *deleteQuery) WherePK(pk interface{}) *deleteQuery {
+	d.setMDQuery(d.mdQuery().WherePK(pk))
+	return d
+}
+
+func (d *deleteQuery) WherePKs(pks interface{}) *deleteQuery {
+	d.setMDQuery(d.mdQuery().WherePKs(pks))
 	return d
 }
 
