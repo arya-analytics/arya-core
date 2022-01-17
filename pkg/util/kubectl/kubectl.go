@@ -29,6 +29,6 @@ func SwitchContext(ctx string) error {
 	if err != nil {
 		return err
 	}
-	log.Trace("Switched to kubecontext %s", ctx)
+	log.Tracef("Switched to kubecontext %s", ctx)
 	return nil
 }

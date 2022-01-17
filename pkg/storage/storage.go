@@ -1,15 +1,47 @@
 package storage
 
-type EngineConfig map[EngineRole]Engine
+// |||| ENGINE CONFIG ||||
+
+type EngineConfig map[EngineRole]BaseEngine
+
+func (ec EngineConfig) retrieve(r EngineRole) BaseEngine {
+	return ec[r]
+}
+
+func (ec EngineConfig) mdEngine() MDEngine {
+	return ec.retrieve(EngineRoleMD).(MDEngine)
+}
+
+// |||| STORAGE ||||
 
 type Storage struct {
 	cfg    EngineConfig
-	pooler *Pooler
+	pooler *pooler
 }
 
-func NewStorage(cfg EngineConfig) *Storage {
+func New(cfg EngineConfig) *Storage {
 	return &Storage{
 		cfg:    cfg,
-		pooler: NewPooler(),
+		pooler: newPooler(),
 	}
+}
+
+func (s *Storage) NewMigrate() *migrateQuery {
+	return newMigrate(s)
+}
+
+func (s *Storage) NewRetrieve() *retrieveQuery {
+	return newRetrieve(s)
+}
+
+func (s *Storage) NewCreate() *createQuery {
+	return newCreate(s)
+}
+
+func (s *Storage) NewDelete() *deleteQuery {
+	return newDelete(s)
+}
+
+func (s *Storage) adapter(r EngineRole) (a Adapter) {
+	return s.pooler.Retrieve(s.cfg.retrieve(r))
 }

@@ -1,33 +1,32 @@
 package storage
 
-// NewPooler creates a new Pooler.
-func NewPooler() *Pooler {
-	return &Pooler{
+func UnsafeNewPooler() *pooler {
+	return newPooler()
+}
+
+func newPooler() *pooler {
+	return &pooler{
 		adapters: map[Adapter]bool{},
 	}
 }
 
 // || POOLER ||
 
-type Pooler struct {
+type pooler struct {
 	adapters map[Adapter]bool
 }
 
 // Retrieve retrieves an engine.Adapter based on the EngineType specified.
-func (p *Pooler) Retrieve(e Engine) (a Adapter, err error) {
+func (p *pooler) Retrieve(e BaseEngine) (a Adapter) {
 	a, ok := p.findAdapter(e)
 	if !ok {
-		var err error
-		a, err = p.newAdapter(e)
-		if err != nil {
-			return a, err
-		}
+		a = p.newAdapter(e)
 		p.addAdapter(a)
 	}
-	return a, nil
+	return a
 }
 
-func (p *Pooler) findAdapter(e Engine) (Adapter, bool) {
+func (p *pooler) findAdapter(e BaseEngine) (Adapter, bool) {
 	for a := range p.adapters {
 		if e.IsAdapter(a) {
 			return a, true
@@ -36,11 +35,10 @@ func (p *Pooler) findAdapter(e Engine) (Adapter, bool) {
 	return nil, false
 }
 
-func (p *Pooler) newAdapter(e Engine) (Adapter, error) {
-	a := e.NewAdapter()
-	return a, nil
+func (p *pooler) newAdapter(e BaseEngine) Adapter {
+	return e.NewAdapter()
 }
 
-func (p *Pooler) addAdapter(a Adapter) {
+func (p *pooler) addAdapter(a Adapter) {
 	p.adapters[a] = true
 }
