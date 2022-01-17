@@ -6,6 +6,8 @@ import (
 	"time"
 )
 
+// |||| CATALOG ||||
+
 var _catalog = storage.ModelCatalog{
 	Node{},
 	Range{},
@@ -19,6 +21,8 @@ var _catalog = storage.ModelCatalog{
 func catalog() storage.ModelCatalog {
 	return _catalog
 }
+
+// |||| DEFINITIONS ||||
 
 type Node struct {
 	bun.BaseModel `bun:"select:nodes_w_gossip,table:nodes"`

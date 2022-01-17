@@ -13,7 +13,8 @@ import (
 
 var (
 	dummyEngine = roach.New(roach.Config{
-		Driver: roach.DriverSQLite,
+		TransactionLogLevel: roach.TransactionLogLevelAll,
+		Driver:              roach.DriverSQLite,
 	})
 	dummyNode = &storage.Node{
 		ID: 1,

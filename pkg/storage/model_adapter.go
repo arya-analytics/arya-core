@@ -11,6 +11,10 @@ var modelValidator = validate.New([]validate.ValidateFunc{
 	validateSliceOrStruct,
 })
 
+// TODO: Move general functions to utilities
+// TODO: Figure out how to simplify type getting system
+// TODO: Document APIs
+
 /// |||| CATALOG ||||
 
 type ModelCatalog []interface{}
