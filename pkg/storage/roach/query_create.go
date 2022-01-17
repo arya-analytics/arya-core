@@ -23,11 +23,6 @@ func (c *createQuery) Model(m interface{}) storage.MDCreateQuery {
 	return c
 }
 
-func (c *createQuery) UpdateOnConflict() storage.MDCreateQuery {
-	c.q = c.q.On("CONFLICT (id) DO UPDATE")
-	return c
-}
-
 func (c *createQuery) Exec(ctx context.Context) error {
 	_, err := c.q.Exec(ctx)
 	return err
