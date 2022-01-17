@@ -76,7 +76,7 @@ type ErrorType int
 const (
 	// || ERROR CLASSES ||
 
-	ErrTypeUnknown = iota
+	ErrTypeUnknown ErrorType = iota
 	ErrTypeWarning
 	ErrTypeNoData
 	ErrTypeSQLNotComplete
