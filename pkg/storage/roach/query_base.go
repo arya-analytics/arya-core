@@ -7,6 +7,7 @@ import (
 
 type baseQuery struct {
 	modelAdapter storage.ModelAdapter
+	err          error
 }
 
 func (b *baseQuery) baseModel(m interface{}) interface{} {
@@ -28,4 +29,24 @@ func (b *baseQuery) baseAdaptToDest() {
 	if err := b.modelAdapter.ExchangeToDest(); err != nil {
 		log.Fatalln(err)
 	}
+}
+
+func (b *baseQuery) baseBindErr(e error) {
+	b.err = e
+}
+
+func (b *baseQuery) baseCheckErr() bool {
+	return b.err != nil
+}
+
+func (b *baseQuery) baseErr() error {
+	return b.err
+}
+
+func (b *baseQuery) baseHandleExecErr(e error) error {
+	if e != nil {
+		b.baseBindErr(e)
+		return e
+	}
+	return nil
 }

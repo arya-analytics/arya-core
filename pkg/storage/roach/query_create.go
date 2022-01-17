@@ -18,12 +18,16 @@ func newCreate(db *bun.DB) *createQuery {
 
 func (c *createQuery) Model(m interface{}) storage.MDCreateQuery {
 	rm := c.baseModel(m)
+	c.baseBindErr(createValidator.Exec(m))
 	c.baseAdaptToDest()
 	c.q = c.q.Model(rm)
 	return c
 }
 
 func (c *createQuery) Exec(ctx context.Context) error {
+	if c.baseCheckErr() {
+		return c.baseErr()
+	}
 	_, err := c.q.Exec(ctx)
-	return err
+	return c.baseHandleExecErr(err)
 }

@@ -28,5 +28,31 @@ var _ = Describe("Create", func() {
 			Expect(m.ID).To(Equal(dummyModel.ID))
 		})
 	})
-
+	Describe("Edge cases + errors", func() {
+		Context("No PK provided", func() {
+			Context("Single Model", func() {
+				It("Should return the correct error type", func() {
+					m := &storage.ChannelConfig{
+						Name: "Hello",
+					}
+					err := dummyEngine.NewCreate(dummyAdapter).Model(m).Exec(dummyCtx)
+					Expect(err).ToNot(BeNil())
+					Expect(err.(storage.Error).Type).To(Equal(storage.ErrTypeNoPK))
+				})
+			})
+			Context("Chain of models", func() {
+				It("Should return the correct error type", func() {
+					m := []*storage.ChannelConfig{
+						&storage.ChannelConfig{
+							ID: 12, Name: "Hello",
+						},
+						&storage.ChannelConfig{},
+					}
+					err := dummyEngine.NewCreate(dummyAdapter).Model(&m).Exec(dummyCtx)
+					Expect(err).ToNot(BeNil())
+					Expect(err.(storage.Error).Type).To(Equal(storage.ErrTypeNoPK))
+				})
+			})
+		})
+	})
 })
