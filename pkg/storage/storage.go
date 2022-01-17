@@ -1,9 +1,5 @@
 package storage
 
-import (
-	log "github.com/sirupsen/logrus"
-)
-
 // |||| ENGINE CONFIG ||||
 
 type EngineConfig map[EngineRole]BaseEngine
@@ -47,10 +43,5 @@ func (s *Storage) NewDelete() *deleteQuery {
 }
 
 func (s *Storage) adapter(r EngineRole) (a Adapter) {
-	var err error
-	a, err = s.pooler.Retrieve(s.cfg.retrieve(r))
-	if err != nil {
-		log.Fatalln(err)
-	}
-	return a
+	return s.pooler.Retrieve(s.cfg.retrieve(r))
 }
