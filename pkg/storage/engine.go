@@ -56,6 +56,7 @@ type MDRetrieveQuery interface {
 
 type MDCreateQuery interface {
 	MDBaseQuery
+	UpdateOnConflict() MDCreateQuery
 	Model(model interface{}) MDCreateQuery
 }
 

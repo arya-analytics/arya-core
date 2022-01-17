@@ -21,6 +21,11 @@ func (c *createQuery) Model(model interface{}) *createQuery {
 	return c
 }
 
+func (c *createQuery) UpdateOnConflict() *createQuery {
+	c.baseSetMDQuery(c.mdQuery().UpdateOnConflict())
+	return c
+}
+
 func (c *createQuery) Exec(ctx context.Context) error {
 	return c.mdQuery().Exec(ctx)
 }
