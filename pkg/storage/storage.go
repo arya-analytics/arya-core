@@ -20,13 +20,13 @@ func (ec EngineConfig) mdEngine() MDEngine {
 
 type Storage struct {
 	cfg    EngineConfig
-	pooler *Pooler
+	pooler *pooler
 }
 
 func New(cfg EngineConfig) *Storage {
 	return &Storage{
 		cfg:    cfg,
-		pooler: NewPooler(),
+		pooler: newPooler(),
 	}
 }
 

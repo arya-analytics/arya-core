@@ -7,8 +7,6 @@ import (
 	"time"
 )
 
-type JSONB map[string]interface{}
-
 var _catalog = storage.ModelCatalog{
 	reflect.TypeOf(Node{}),
 	reflect.TypeOf(Range{}),
@@ -19,7 +17,7 @@ var _catalog = storage.ModelCatalog{
 	reflect.TypeOf(GossipLiveness{}),
 }
 
-func Catalog() storage.ModelCatalog {
+func catalog() storage.ModelCatalog {
 	return _catalog
 }
 

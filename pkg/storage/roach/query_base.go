@@ -11,7 +11,7 @@ type baseQuery struct {
 
 func (b *baseQuery) baseModel(m interface{}) interface{} {
 	var err error
-	b.modelAdapter, err = storage.NewModelAdapter(m, Catalog().New(m))
+	b.modelAdapter, err = storage.NewModelAdapter(m, catalog().New(m))
 	if err != nil {
 		log.Fatalln(err)
 	}

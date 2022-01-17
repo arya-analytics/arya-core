@@ -45,12 +45,12 @@ func NewModelAdapter(source interface{}, dest interface{}) (ModelAdapter, error)
 			sMtk, dMtk)
 	}
 	if dMtk == reflect.Struct {
-		return NewSingleModelAdapter(source, dest), nil
+		return newSingleModelAdapter(source, dest), nil
 	}
 	return &chainModelAdapter{source, dest}, nil
 }
 
-type ModelValues map[string]interface{}
+type modelValues map[string]interface{}
 
 // |||| MULTI MODEL ADAPTER ||||
 
@@ -78,7 +78,7 @@ func (ma *chainModelAdapter) exchange(toSource bool) error {
 		} else {
 			toMv = toModelSliceValue.Index(i).Interface()
 		}
-		sm := NewSingleModelAdapter(fromMv, toMv)
+		sm := newSingleModelAdapter(fromMv, toMv)
 		if err := sm.ExchangeToDest(); err != nil {
 			return err
 		}
@@ -111,7 +111,7 @@ type singleModelAdapter struct {
 	destAm   *adaptedModel
 }
 
-func NewSingleModelAdapter(source interface{}, dest interface{}) *singleModelAdapter {
+func newSingleModelAdapter(source interface{}, dest interface{}) *singleModelAdapter {
 	return &singleModelAdapter{
 		sourceAm: &adaptedModel{model: source},
 		destAm:   &adaptedModel{model: dest},
@@ -140,9 +140,9 @@ type adaptedModel struct {
 	model interface{}
 }
 
-// bindVals binds a set of ModelValues to the adaptedModel fields.
+// bindVals binds a set of modelValues to the adaptedModel fields.
 // Returns an error for invalid / non-existent keys and invalid types.
-func (mw *adaptedModel) bindVals(mv ModelValues) error {
+func (mw *adaptedModel) bindVals(mv modelValues) error {
 	dv := modelV(mw.model)
 	for k, rv := range mv {
 		field := dv.FieldByName(k)
@@ -152,7 +152,7 @@ func (mw *adaptedModel) bindVals(mv ModelValues) error {
 		}
 		vt, ft := val.Type(), field.Type()
 		if vt != ft {
-			if val.Kind() == reflect.Pointer {
+			if val.Kind() == reflect.Ptr {
 				valModelKind := modelT(val.Interface()).Kind()
 				if valModelKind == reflect.Slice {
 					valModelVal := modelV(val.Interface())
@@ -190,9 +190,9 @@ func (mw *adaptedModel) bindVals(mv ModelValues) error {
 	return nil
 }
 
-// mapVals maps adaptedModel fields to ModelValues.
-func (mw *adaptedModel) mapVals() ModelValues {
-	var mv = ModelValues{}
+// mapVals maps adaptedModel fields to modelValues.
+func (mw *adaptedModel) mapVals() modelValues {
+	var mv = modelValues{}
 	dv := modelV(mw.model)
 	for i := 0; i < dv.NumField(); i++ {
 		t := dv.Type().Field(i)
@@ -229,7 +229,7 @@ func modelT(m interface{}) reflect.Type {
 // || VALIDATION ||
 func validateModel(m interface{}) error {
 	ctk := containerT(m).Kind()
-	if ctk != reflect.Pointer {
+	if ctk != reflect.Ptr {
 		return fmt.Errorf("model container must be a pointer. received kind %s",
 			containerT(m).Kind())
 	}
