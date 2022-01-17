@@ -140,7 +140,7 @@ func (a *AryaCluster) provisionVM(nodeName string) (VM, error) {
 	}
 	vm := NewVM(cfg)
 	if !vm.Exists() {
-		log.Infof("Launching new VM named %s ", nodeName)
+		log.Infof("Provisioning new VM named %s ", nodeName)
 		if err := vm.Provision(); err != nil {
 			return vm, err
 		}

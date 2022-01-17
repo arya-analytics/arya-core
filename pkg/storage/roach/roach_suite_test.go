@@ -13,12 +13,13 @@ import (
 
 var (
 	dummyEngine = roach.New(roach.Config{
-		//Host:     "192.168.64.11",
-		//Port:     26257,
-		//Username: "root",
-		//Database: "defaultdb",
-		//UseTLS:   false,
-		Driver: roach.DriverSQLite,
+		Host:     "192.168.64.11",
+		Port:     26257,
+		Username: "root",
+		Database: "defaultdb",
+		UseTLS:   false,
+		Driver:   roach.DriverPG,
+		//Driver: roach.DriverSQLite,
 	})
 	dummyModel = &storage.ChannelConfig{
 		ID:   432,
