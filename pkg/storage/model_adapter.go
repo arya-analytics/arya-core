@@ -152,34 +152,30 @@ func (mw *adaptedModel) bindVals(mv modelValues) error {
 		}
 		vt, ft := val.Type(), field.Type()
 		if vt != ft {
+			invalid := true
 			if val.Kind() == reflect.Ptr {
+				invalid = false
 				valModelKind := modelT(val.Interface()).Kind()
+				var err error
 				if valModelKind == reflect.Slice {
-					valModelVal := modelV(val.Interface())
-					if valModelVal.Len() == 0 {
+					if modelV(val.Interface()).Len() == 0 {
 						continue
 					}
-					ma, err := NewModelAdapter(val.Interface(), field.Addr().Interface())
-					err = ma.ExchangeToDest()
-					if err != nil {
-						return err
-					}
-					val = reflect.ValueOf(ma.Dest())
+					val, err = adaptSlice(val, field)
 				} else if valModelKind == reflect.Struct {
 					valModelVal := modelV(val.Interface())
 					if !valModelVal.IsValid() {
 						continue
 					}
-					source := val.Interface()
-					dest := reflect.New(field.Type().Elem()).Interface()
-					ma, err := NewModelAdapter(source, dest)
-					err = ma.ExchangeToDest()
-					if err != nil {
-						return err
-					}
-					val = reflect.ValueOf(ma.Dest())
+					val, err = adaptStruct(val, field)
+				} else {
+					invalid = true
 				}
-			} else {
+				if err != nil {
+					return err
+				}
+			}
+			if invalid {
 				return fmt.Errorf("(%s) invalid type %v for field '%s' with type %v "+
 					"this is a no-op", dv.Type(), vt, k, ft)
 
@@ -209,7 +205,30 @@ func (mw *adaptedModel) mapVals() modelValues {
 
 // |||| UTILITIES ||||
 
-// || TYPE AND VALUE GETTING ||
+// || ADAPTATION ||
+func adaptSlice(slc reflect.Value, fld reflect.Value) (v reflect.Value, e error) {
+	ma, err := NewModelAdapter(slc.Interface(), fld.Addr().Interface())
+	err = ma.ExchangeToDest()
+	if err != nil {
+		return v, err
+	}
+	v = reflect.ValueOf(ma.Dest())
+	return v, e
+}
+
+func adaptStruct(sct reflect.Value, fld reflect.Value) (v reflect.Value, e error) {
+	source := sct.Interface()
+	dest := reflect.New(fld.Type().Elem()).Interface()
+	ma, err := NewModelAdapter(source, dest)
+	err = ma.ExchangeToDest()
+	if err != nil {
+		return v, err
+	}
+	v = reflect.ValueOf(ma.Dest())
+	return v, e
+}
+
+// || TYPE AND VALUE ACCESS ||
 func containerT(m interface{}) reflect.Type {
 	return reflect.TypeOf(m)
 }

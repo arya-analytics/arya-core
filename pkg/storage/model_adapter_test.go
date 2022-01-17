@@ -341,16 +341,31 @@ var _ = Describe("Model Adapter", func() {
 		Describe("Exchanging values", func() {
 			Describe("Incompatible model types", func() {
 				Context("Top level incompatibility", func() {
-					It("Should return an error", func() {
-						source := &mock.ModelB{
-							ID:   22,
-							Name: "My Cool Model",
-						}
-						dest := &mock.ModelC{}
-						ma, err := storage.NewModelAdapter(source, dest)
-						Expect(err).To(BeNil())
-						err = ma.ExchangeToDest()
-						Expect(err).ToNot(BeNil())
+					Context("Non pointer value", func() {
+						It("Should return an error", func() {
+							source := &mock.ModelB{
+								ID:   22,
+								Name: "My Cool Model",
+							}
+							dest := &mock.ModelC{}
+							ma, err := storage.NewModelAdapter(source, dest)
+							Expect(err).To(BeNil())
+							err = ma.ExchangeToDest()
+							Expect(err).ToNot(BeNil())
+						})
+					})
+					Context("Pointer value", func() {
+						It("Should return an error", func() {
+							source := &mock.ModelE{
+								ID:                  45,
+								PointerIncompatible: &map[string]string{"one": "two"},
+							}
+							dest := &mock.ModelF{}
+							ma, err := storage.NewModelAdapter(source, dest)
+							Expect(err).To(BeNil())
+							err = ma.ExchangeToDest()
+							Expect(err).ToNot(BeNil())
+						})
 					})
 				})
 				Context("Nested model incompatibility", func() {
@@ -371,7 +386,7 @@ var _ = Describe("Model Adapter", func() {
 							It("Should return an error", func() {
 								dest := &mock.ModelD{
 									ID: 2,
-									IncompatibleModel: &mock.ModelB{
+									ModelIncompatible: &mock.ModelB{
 										ID: 43,
 									},
 								}
@@ -387,7 +402,7 @@ var _ = Describe("Model Adapter", func() {
 						It("Should return an error", func() {
 							dest := &mock.ModelD{
 								ID: 1,
-								ChainIncompatibleModel: []*mock.ModelB{
+								ChainModelIncompatible: []*mock.ModelB{
 									&mock.ModelB{
 										ID: 11,
 									},
