@@ -54,5 +54,21 @@ var _ = Describe("Create", func() {
 				})
 			})
 		})
+		Context("Unique Violation", func() {
+			It("Should return the correct error type", func() {
+				commonPk := 424242
+				mOne := &storage.ChannelConfig{
+					ID: commonPk,
+				}
+				err := dummyEngine.NewCreate(dummyAdapter).Model(mOne).Exec(dummyCtx)
+				Expect(err).To(BeNil())
+				mTwo := &storage.ChannelConfig{
+					ID: commonPk,
+				}
+				err = dummyEngine.NewCreate(dummyAdapter).Model(mTwo).Exec(dummyCtx)
+				Expect(err).ToNot(BeNil())
+				Expect(err.(storage.Error).Type).To(Equal(storage.ErrTypeUniqueViolation))
+			})
+		})
 	})
 })

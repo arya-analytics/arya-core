@@ -3,21 +3,30 @@ package roach
 import (
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/util/pg"
+	log "github.com/sirupsen/logrus"
 	"github.com/uptrace/bun/driver/pgdriver"
+	"strings"
 )
 
 // |||| BUN ERRORS ||||
 
-func parseBunErr(err error) error {
+func parseBunErr(err error) (oErr error) {
 	if err == nil {
-		return nil
+		return oErr
 	}
 	switch err.(type) {
 	case pgdriver.Error:
-		return parsePgDriverErr(err.(pgdriver.Error))
+		oErr = parsePgDriverErr(err.(pgdriver.Error))
 	default:
-		return parseSqlError(err.Error())
+		oErr = parseSqlError(err.Error())
 	}
+	se, ok := oErr.(storage.Error)
+	if ok {
+		if se.Type == storage.ErrTypeUnknown {
+			log.Errorf("Unknown error -> %s", err)
+		}
+	}
+	return oErr
 }
 
 // |||| PGDRIVER ERRORS ||||
@@ -44,15 +53,18 @@ func pgToStorageErrType(t pg.ErrorType) storage.ErrorType {
 // |||| SQL ERRORS |||
 
 var _sqlErrors = map[string]storage.ErrorType{
-	"sql: no rows in result set": storage.ErrTypeItemNotFound,
+	"sql: no rows in result set":                  storage.ErrTypeItemNotFound,
+	"constraint failed: UNIQUE constraint failed": storage.ErrTypeUniqueViolation,
+	"SQL logic error: no such table":              storage.ErrTypeMigration,
 }
 
 func sqlToStorageErr(sql string) storage.ErrorType {
-	ot, ok := _sqlErrors[sql]
-	if !ok {
-		return storage.ErrTypeUnknown
+	for k, v := range _sqlErrors {
+		if strings.Contains(sql, k) {
+			return v
+		}
 	}
-	return ot
+	return storage.ErrTypeUnknown
 }
 
 func parseSqlError(sql string) storage.Error {
