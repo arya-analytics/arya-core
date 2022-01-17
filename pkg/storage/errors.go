@@ -33,4 +33,5 @@ const (
 	ErrTypeInvalidField
 	ErrTypeIncompatibleModels
 	ErrTypeNoPK
+	ErrTypeMigration
 )
