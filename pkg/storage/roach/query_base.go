@@ -45,8 +45,9 @@ func (b *baseQuery) baseErr() error {
 
 func (b *baseQuery) baseHandleExecErr(e error) error {
 	if e != nil {
-		b.baseBindErr(e)
-		return e
+		pe := parseBunErr(e)
+		b.baseBindErr(pe)
+		return pe
 	}
 	return nil
 }

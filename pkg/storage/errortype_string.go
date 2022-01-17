@@ -8,18 +8,20 @@ func _() {
 	// An "invalid array index" compiler error signifies that the constant values have changed.
 	// Re-run the stringer command to generate them again.
 	var x [1]struct{}
-	_ = x[ErrTypeUniqueViolation-0]
-	_ = x[ErrTypeRelationshipViolation-1]
-	_ = x[ErrTypeNonPointer-2]
-	_ = x[ErrTypeNonStructOrSlice-3]
-	_ = x[ErrTypeInvalidField-4]
-	_ = x[ErrTypeIncompatibleModels-5]
-	_ = x[ErrTypeNoPK-6]
+	_ = x[ErrTypeUnknown-0]
+	_ = x[ErrTypeItemNotFound-1]
+	_ = x[ErrTypeUniqueViolation-2]
+	_ = x[ErrTypeRelationshipViolation-3]
+	_ = x[ErrTypeNonPointer-4]
+	_ = x[ErrTypeNonStructOrSlice-5]
+	_ = x[ErrTypeInvalidField-6]
+	_ = x[ErrTypeIncompatibleModels-7]
+	_ = x[ErrTypeNoPK-8]
 }
 
-const _ErrorType_name = "ErrTypeUniqueViolationErrTypeRelationshipViolationErrTypeNonPointerErrTypeNonStructOrSliceErrTypeInvalidFieldErrTypeIncompatibleModelsErrTypeNoPK"
+const _ErrorType_name = "ErrTypeUnknownErrTypeItemNotFoundErrTypeUniqueViolationErrTypeRelationshipViolationErrTypeNonPointerErrTypeNonStructOrSliceErrTypeInvalidFieldErrTypeIncompatibleModelsErrTypeNoPK"
 
-var _ErrorType_index = [...]uint8{0, 22, 50, 67, 90, 109, 134, 145}
+var _ErrorType_index = [...]uint8{0, 14, 33, 55, 83, 100, 123, 142, 167, 178}
 
 func (i ErrorType) String() string {
 	if i < 0 || i >= ErrorType(len(_ErrorType_index)-1) {

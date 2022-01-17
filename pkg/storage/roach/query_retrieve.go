@@ -37,7 +37,7 @@ func (r *retrieveQuery) WherePKs(pks interface{}) storage.MDRetrieveQuery {
 func (r *retrieveQuery) Exec(ctx context.Context) error {
 	err := r.q.Scan(ctx)
 	if err != nil {
-		return err
+		return r.baseHandleExecErr(err)
 	}
 	r.baseAdaptToSource()
 	return err

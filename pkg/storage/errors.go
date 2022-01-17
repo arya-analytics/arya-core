@@ -24,7 +24,9 @@ type ErrorType int
 
 //go:generate stringer -type=ErrorType
 const (
-	ErrTypeUniqueViolation ErrorType = iota
+	ErrTypeUnknown ErrorType = iota
+	ErrTypeItemNotFound
+	ErrTypeUniqueViolation
 	ErrTypeRelationshipViolation
 	ErrTypeNonPointer
 	ErrTypeNonStructOrSlice
