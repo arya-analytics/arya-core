@@ -354,24 +354,43 @@ var _ = Describe("Model Adapter", func() {
 					})
 				})
 				Context("Nested model incompatibility", func() {
-					Describe("Without the incompatible field defined", func() {
-						It("Shouldn't return an error", func() {
-							source := &mock.ModelD{
-								ID: 22,
-							}
-							dest := &mock.ModelC{}
-							ma, err := storage.NewModelAdapter(source, dest)
-							Expect(err).To(BeNil())
-							err = ma.ExchangeToDest()
-							Expect(err).To(BeNil())
+					Context("Single model", func() {
+						Describe("Without the incompatible field defined", func() {
+							It("Shouldn't return an error", func() {
+								source := &mock.ModelD{
+									ID: 22,
+								}
+								dest := &mock.ModelC{}
+								ma, err := storage.NewModelAdapter(source, dest)
+								Expect(err).To(BeNil())
+								err = ma.ExchangeToDest()
+								Expect(err).To(BeNil())
+							})
+						})
+						Describe("With the incompatible field defined", func() {
+							It("Should return an error", func() {
+								dest := &mock.ModelD{
+									ID: 2,
+									IncompatibleModel: &mock.ModelB{
+										ID: 43,
+									},
+								}
+								source := &mock.ModelC{}
+								ma, err := storage.NewModelAdapter(source, dest)
+								Expect(err).To(BeNil())
+								err = ma.ExchangeToSource()
+								Expect(err).ToNot(BeNil())
+							})
 						})
 					})
-					Describe("With the incompatible field defined", func() {
+					Context("Chained models", func() {
 						It("Should return an error", func() {
 							dest := &mock.ModelD{
-								ID: 2,
-								InnerModel: &mock.ModelB{
-									ID: 43,
+								ID: 1,
+								ChainIncompatibleModel: []*mock.ModelB{
+									&mock.ModelB{
+										ID: 11,
+									},
 								},
 							}
 							source := &mock.ModelC{}
@@ -381,7 +400,6 @@ var _ = Describe("Model Adapter", func() {
 							Expect(err).ToNot(BeNil())
 						})
 					})
-
 				})
 			})
 		})

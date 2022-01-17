@@ -23,13 +23,15 @@ type RefObj struct {
 }
 
 type ModelC struct {
-	ID         int
-	Name       int
-	InnerModel *ModelC
+	ID                     int
+	Name                   int
+	IncompatibleModel      *ModelC
+	ChainIncompatibleModel []*ModelC
 }
 
 type ModelD struct {
-	ID         int
-	Name       int
-	InnerModel *ModelB
+	ID                     int
+	Name                   int
+	IncompatibleModel      *ModelB
+	ChainIncompatibleModel []*ModelB
 }

@@ -13,11 +13,7 @@ func (ec EngineConfig) retrieve(r EngineRole) BaseEngine {
 }
 
 func (ec EngineConfig) mdEngine() MDEngine {
-	md, ok := ec.retrieve(EngineRoleMD).(MDEngine)
-	if !ok {
-		log.Fatalln("Could not bind meta data engine.")
-	}
-	return md
+	return ec.retrieve(EngineRoleMD).(MDEngine)
 }
 
 // |||| STORAGE ||||
