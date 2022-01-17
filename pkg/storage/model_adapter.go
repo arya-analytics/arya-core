@@ -1,25 +1,31 @@
 package storage
 
 import (
-	"fmt"
+	"github.com/arya-analytics/aryacore/pkg/util/validate"
 	log "github.com/sirupsen/logrus"
 	"reflect"
 )
 
+var modelValidator = validate.New([]validate.ValidateFunc{
+	validateContainerIsPointer,
+	validateSliceOrStruct,
+})
+
 /// |||| CATALOG ||||
 
-type ModelCatalog []reflect.Type
+type ModelCatalog []interface{}
 
 func (mc ModelCatalog) New(m interface{}) interface{} {
 	mt := modelT(m)
 	mn := mt.Name()
-	c := isChainModel(m)
+	c := IsChainModel(mt)
 	if c {
 		mn = mt.Elem().Elem().Name()
 	}
 	for _, cm := range mc {
-		if cm.Name() == mn {
-			rv := reflect.New(cm)
+		tcm := reflect.TypeOf(cm)
+		if tcm.Name() == mn {
+			rv := reflect.New(tcm)
 			if c {
 				newSlice := reflect.MakeSlice(reflect.SliceOf(rv.Type()), 0, 0)
 				r := reflect.New(newSlice.Type())
@@ -45,20 +51,17 @@ type ModelAdapter interface {
 }
 
 func NewModelAdapter(source interface{}, dest interface{}) (ModelAdapter, error) {
-	err := validateModel(source)
-	if err != nil {
+	if err := modelValidator.Exec(source); err != nil {
 		return nil, err
 	}
-	err = validateModel(dest)
-	if err != nil {
+	if err := modelValidator.Exec(dest); err != nil {
 		return nil, err
 	}
 	sMtk, dMtk := modelT(source).Kind(), modelT(dest).Kind()
 	if sMtk != dMtk {
-		return nil, fmt.Errorf("models must be of the same type. Received %s and %s",
-			sMtk, dMtk)
+		return nil, NewError(ErrTypeIncompatibleModels)
 	}
-	if !isChainModel(source) {
+	if !IsChainModel(modelT(source)) {
 		return newSingleModelAdapter(source, dest), nil
 	}
 	return &chainModelAdapter{source, dest}, nil
@@ -206,9 +209,7 @@ func (mw *adaptedModel) bindVals(mv modelValues) error {
 				}
 			}
 			if invalid {
-				return fmt.Errorf("(%s) invalid type %v for field '%s' with type %v "+
-					"this is a no-op", dv.Type(), vt, k, ft)
-
+				return NewError(ErrTypeInvalidField)
 			}
 		}
 		field.Set(val)
@@ -275,24 +276,6 @@ func modelT(m interface{}) reflect.Type {
 	return containerT(m).Elem()
 }
 
-// || VALIDATION ||
-func validateModel(m interface{}) error {
-	ctk := containerT(m).Kind()
-	if ctk != reflect.Ptr {
-		return fmt.Errorf("model container must be a pointer. received kind %s",
-			containerT(m).Kind())
-	}
-	mtk := modelT(m).Kind()
-	if mtk != reflect.Struct && mtk != reflect.Slice {
-		return fmt.Errorf("model must be a struct or slice. received kind %s", mtk)
-	}
-	mtv := modelV(m)
-	if !mtv.CanSet() {
-		return fmt.Errorf("cannot set attributes on model %s", mtv)
-	}
-	return nil
-}
-
-func isChainModel(m interface{}) bool {
-	return modelT(m).Kind() == reflect.Slice
+func IsChainModel(t reflect.Type) bool {
+	return t.Kind() == reflect.Slice
 }

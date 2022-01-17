@@ -303,6 +303,7 @@ var _ = Describe("Model Adapter", func() {
 					dest := &mock.ModelB{}
 					_, err := storage.NewModelAdapter(&source, dest)
 					Expect(err).ToNot(BeNil())
+					Expect(err.(storage.Error).Type).To(Equal(storage.ErrTypeIncompatibleModels))
 				})
 			})
 			Context("Providing a non-struct or slice type", func() {
@@ -311,6 +312,8 @@ var _ = Describe("Model Adapter", func() {
 					dest := 1
 					_, err := storage.NewModelAdapter(source, &dest)
 					Expect(err).ToNot(BeNil())
+					Expect(err.(storage.Error).Type).To(Equal(storage.
+						ErrTypeNonStructOrSlice))
 				})
 			})
 			Context("Providing a non-pointer value", func() {
@@ -319,6 +322,7 @@ var _ = Describe("Model Adapter", func() {
 					dest := &mock.ModelA{}
 					_, err := storage.NewModelAdapter(source, dest)
 					Expect(err).ToNot(BeNil())
+					Expect(err.(storage.Error).Type).To(Equal(storage.ErrTypeNonPointer))
 				})
 			})
 			Context("Providing a double-pointer struct value", func() {
@@ -327,6 +331,8 @@ var _ = Describe("Model Adapter", func() {
 					dest := &mock.ModelA{}
 					_, err := storage.NewModelAdapter(&source, &dest)
 					Expect(err).ToNot(BeNil())
+					Expect(err.(storage.Error).Type).To(Equal(storage.
+						ErrTypeNonStructOrSlice))
 				})
 			})
 			Context("Providing a double-pointer slice value", func() {
@@ -335,6 +341,8 @@ var _ = Describe("Model Adapter", func() {
 					dest := &[]*mock.ModelA{}
 					_, err := storage.NewModelAdapter(&source, &dest)
 					Expect(err).ToNot(BeNil())
+					Expect(err.(storage.Error).Type).To(Equal(storage.
+						ErrTypeNonStructOrSlice))
 				})
 			})
 		})
@@ -352,6 +360,7 @@ var _ = Describe("Model Adapter", func() {
 							Expect(err).To(BeNil())
 							err = ma.ExchangeToDest()
 							Expect(err).ToNot(BeNil())
+							Expect(err.(storage.Error).Type).To(Equal(storage.ErrTypeInvalidField))
 						})
 					})
 					Context("Pointer value", func() {
@@ -365,6 +374,8 @@ var _ = Describe("Model Adapter", func() {
 							Expect(err).To(BeNil())
 							err = ma.ExchangeToDest()
 							Expect(err).ToNot(BeNil())
+							Expect(err.(storage.Error).Type).To(Equal(storage.
+								ErrTypeInvalidField))
 						})
 					})
 				})
@@ -395,6 +406,7 @@ var _ = Describe("Model Adapter", func() {
 								Expect(err).To(BeNil())
 								err = ma.ExchangeToSource()
 								Expect(err).ToNot(BeNil())
+								Expect(err.(storage.Error).Type).To(Equal(storage.ErrTypeInvalidField))
 							})
 						})
 					})
@@ -413,6 +425,8 @@ var _ = Describe("Model Adapter", func() {
 							Expect(err).To(BeNil())
 							err = ma.ExchangeToSource()
 							Expect(err).ToNot(BeNil())
+							Expect(err.(storage.Error).Type).To(Equal(storage.
+								ErrTypeInvalidField))
 						})
 					})
 				})
