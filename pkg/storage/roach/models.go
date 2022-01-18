@@ -9,13 +9,13 @@ import (
 // |||| CATALOG ||||
 
 var _catalog = storage.ModelCatalog{
-	Node{},
-	Range{},
-	RangeReplicaToNode{},
-	ChannelConfig{},
-	ChannelChunk{},
-	GossipNode{},
-	GossipLiveness{},
+	&Node{},
+	&Range{},
+	&RangeReplicaToNode{},
+	&ChannelConfig{},
+	&ChannelChunk{},
+	&GossipNode{},
+	&GossipLiveness{},
 }
 
 func catalog() storage.ModelCatalog {

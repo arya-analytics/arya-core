@@ -10,104 +10,106 @@ type Reflect struct {
 	modelPtr interface{}
 }
 
-func NewReflect(modelPtr interface{}) (r *Reflect) {
-	r = &Reflect{
+func NewReflect(modelPtr interface{}) *Reflect {
+	return &Reflect{
 		modelPtr: modelPtr,
 	}
-	return r
 }
 
 func (r *Reflect) Validate() error {
-	return validator.Exec(r.modelPtr)
+	return validator.Exec(r)
 }
 
 func (r *Reflect) Pointer() interface{} {
 	return r.modelPtr
 }
 
-func (r *Reflect) IsChain() bool {
-	return r.Type().Kind() == reflect.Slice
-}
-
-func (r *Reflect) IsStruct() bool {
-	return r.Type().Kind() == reflect.Struct
-}
-
-func (r *Reflect) Name() string {
-	if r.IsChain() {
-		return r.Type().Elem().Elem().Name()
-	}
-	return r.Type().Name()
-}
-
-func (r *Reflect) containerType() reflect.Type {
-	return reflect.TypeOf(r.modelPtr)
-}
-
-func (r *Reflect) containerValue() reflect.Value {
-	return reflect.ValueOf(r.modelPtr)
-}
-
-// || CHAIN METHODS ||
-
-func (r *Reflect) ChainValue() reflect.Value {
-	if r.IsChain() {
-		return r.Value()
-	}
-	log.Fatalln("model is not a chain, cannot extract its value")
-	return reflect.Value{}
-}
-
-func (r *Reflect) ChainAppend(v reflect.Value) {
-	r.ChainValue().Set(reflect.Append(r.ChainValue(), v))
-}
-
-func (r *Reflect) ValueIndex(i int) reflect.Value {
-	return r.ChainValue().Index(i)
-}
-
 func (r *Reflect) Type() reflect.Type {
-	return r.containerType().Elem()
+	if r.IsChain() {
+		/* raw type is the slice
+		first elem is pointer to struct
+		second elem is struct */
+		return r.RawType().Elem().Elem()
+	}
+	/* raw type is pointer to struct
+	first elem is struct */
+	return r.RawType()
 }
 
 func (r *Reflect) Value() reflect.Value {
 	if r.IsChain() {
 		log.Fatalln("model is a chain, cannot extract a value")
 	}
-	return r.containerValue().Elem()
+	return r.PointerValue().Elem()
 }
 
-// || STRUCT METHODS ||
-
-func (r *Reflect) StructFieldByName(name string) reflect.Value {
-	return r.Value().FieldByName(name)
+func (r *Reflect) IsChain() bool {
+	return r.RawType().Kind() == reflect.Slice
 }
 
-func (r *Reflect) StructFieldByIndex(i int) reflect.Value {
-	return r.Value().Field(i)
-
+func (r *Reflect) IsStruct() bool {
+	return r.RawType().Kind() == reflect.Struct
 }
 
-func (r *Reflect) StructNumFields() int {
-	return r.Value().NumField()
+// || CHAIN METHODS ||
+
+func (r *Reflect) ChainValue() reflect.Value {
+	if r.IsChain() {
+		return r.RawValue()
+	}
+	log.Fatalln("model is not a chain, cannot extract its value")
+	return reflect.Value{}
+}
+
+func (r *Reflect) ChainAppend(v *Reflect) {
+	r.ChainValue().Set(reflect.Append(r.ChainValue(), v.PointerValue()))
+}
+
+func (r *Reflect) ChainValueByIndex(i int) *Reflect {
+	return NewReflect(r.ChainValue().Index(i).Interface())
 }
 
 // || CONSTRUCTOR ||
 
-func (r *Reflect) NewModel() *Reflect {
+func (r *Reflect) NewRaw() *Reflect {
 	if r.IsChain() {
-		return NewReflect(reflect.New(r.Type().Elem().Elem()).Interface())
+		return r.NewChain()
 	}
-	return NewReflect(r.Type())
+	return r.NewModel()
+}
+
+func (r *Reflect) NewModel() *Reflect {
+	return NewReflect(reflect.New(r.Type()).Interface())
 }
 
 func (r *Reflect) NewChain() *Reflect {
-	return NewReflect(reflect.MakeSlice(reflect.SliceOf(r.Type()), 0, 0))
+	ns := reflect.MakeSlice(reflect.SliceOf(r.NewModel().PointerType()), 0, 0)
+	p := reflect.New(ns.Type())
+	p.Elem().Set(ns)
+	return NewReflect(p.Interface())
+}
+
+// || INTERNAL TYPE + VALUE ACCESSORS ||
+
+func (r *Reflect) PointerType() reflect.Type {
+	return reflect.TypeOf(r.modelPtr)
+}
+
+func (r *Reflect) PointerValue() reflect.Value {
+	return reflect.ValueOf(r.modelPtr)
+}
+
+func (r *Reflect) RawType() reflect.Type {
+	return r.PointerType().Elem()
+}
+
+func (r *Reflect) RawValue() reflect.Value {
+	return r.PointerValue().Elem()
 }
 
 func validateSliceOrStruct(v interface{}) error {
 	r := v.(*Reflect)
-	if !r.IsStruct() && !r.IsStruct() {
+	if !r.IsStruct() && !r.IsChain() {
 		return NewError(ErrTypeNonStructOrSlice)
 	}
 	return nil
@@ -115,7 +117,7 @@ func validateSliceOrStruct(v interface{}) error {
 
 func validateContainerIsPointer(v interface{}) error {
 	r := v.(*Reflect)
-	if r.containerType().Kind() != reflect.Ptr {
+	if r.PointerType().Kind() != reflect.Ptr {
 		return NewError(ErrTypeNonPointer)
 	}
 	return nil

@@ -6,8 +6,6 @@ import (
 	"reflect"
 )
 
-// TODO: Move general functions to utilities
-// TODO: Figure out how to simplify type getting system
 // TODO: Document APIs
 
 /// |||| CATALOG ||||
@@ -18,44 +16,45 @@ func (mc ModelCatalog) New(modelPtr interface{}) interface{} {
 	refM := model.NewReflect(modelPtr)
 	for _, cm := range mc {
 		refCm := model.NewReflect(cm)
-		if refM.Name() == refCm.Name() {
+		if err := refCm.Validate(); err != nil {
+			log.Fatalln(err)
+		}
+		if refM.Type().Name() == refCm.Type().Name() {
 			if refM.IsChain() {
 				return refM.NewChain().Pointer()
 			}
 			return refM.NewModel().Pointer()
 		}
 	}
-	log.Fatalf("modelReflect %s could not be found in catalog. This is an no-op.", refM.Name())
+	log.Fatalf("model %s could not be found in catalog", refM.Type().Name())
 	return nil
 }
 
 // |||| BASE ADAPTER ||||
 
 type ModelAdapter interface {
-	SourcePointer() interface{}
-	DestPointer() interface{}
-	DestValue() reflect.Value
-	SourceValue() reflect.Value
+	Source() *model.Reflect
+	Dest() *model.Reflect
 	ExchangeToSource() error
 	ExchangeToDest() error
 }
 
 func NewModelAdapter(sourcePtr interface{}, destPtr interface{}) (ModelAdapter, error) {
-	refSource := model.NewReflect(sourcePtr)
-	if err := refSource.Validate(); err != nil {
+	log.Info("POINTERS ", sourcePtr, destPtr)
+	log.Info("POINTER TYPES ", reflect.TypeOf(sourcePtr), reflect.TypeOf(destPtr))
+	sourceRfl, destRfl := model.NewReflect(sourcePtr), model.NewReflect(destPtr)
+	err := sourceRfl.Validate()
+	err = destRfl.Validate()
+	if err != nil {
 		return nil, err
 	}
-	refDest := model.NewReflect(destPtr)
-	if err := refDest.Validate(); err != nil {
-		return nil, err
-	}
-	if refSource.Type().Kind() != refDest.Type().Kind() {
+	if sourceRfl.RawType().Kind() != destRfl.RawType().Kind() {
 		return nil, model.NewError(model.ErrTypeIncompatibleModels)
 	}
-	if refSource.IsChain() {
-		return newSingleModelAdapter(refSource, refDest), nil
+	if sourceRfl.IsStruct() {
+		return newSingleModelAdapter(sourceRfl, destRfl), nil
 	}
-	return &chainModelAdapter{refSource, refDest}, nil
+	return &chainModelAdapter{sourceRfl, destRfl}, nil
 }
 
 type modelValues map[string]interface{}
@@ -63,34 +62,33 @@ type modelValues map[string]interface{}
 // |||| MULTI MODEL ADAPTER ||||
 
 type chainModelAdapter struct {
-	source *model.Reflect
-	dest   *model.Reflect
+	sourceRfl *model.Reflect
+	destRfl   *model.Reflect
 }
 
 func (ma *chainModelAdapter) exchange(toSource bool) error {
 	var to *model.Reflect
 	var from *model.Reflect
 	if toSource {
-		to, from = ma.source, ma.dest
+		to, from = ma.sourceRfl, ma.destRfl
 	} else {
-		to, from = ma.dest, ma.source
+		to, from = ma.destRfl, ma.sourceRfl
 	}
 	for i := 0; i < from.ChainValue().Len(); i++ {
 		var toChainItem interface{}
 		if i >= to.ChainValue().Len() {
-			tc := to.NewModel()
-			toChainItem = tc.Pointer()
+			toChainItem = to.NewModel().Pointer()
 		} else {
-			toChainItem = to.ValueIndex(i)
+			toChainItem = to.ChainValueByIndex(i)
 		}
-		maX, err := NewModelAdapter(from.ValueIndex(i).Interface(), toChainItem)
+		maX, err := NewModelAdapter(from.ChainValueByIndex(i).Pointer(), toChainItem)
 		if err != nil {
 			return err
 		}
 		if err := maX.ExchangeToDest(); err != nil {
 			return err
 		}
-		to.ChainAppend(maX.DestValue())
+		to.ChainAppend(maX.Dest())
 	}
 	return nil
 }
@@ -103,20 +101,12 @@ func (ma *chainModelAdapter) ExchangeToDest() error {
 	return ma.exchange(false)
 }
 
-func (ma *chainModelAdapter) SourcePointer() interface{} {
-	return ma.source.Pointer()
+func (ma *chainModelAdapter) Source() *model.Reflect {
+	return ma.sourceRfl
 }
 
-func (ma *chainModelAdapter) DestPointer() interface{} {
-	return ma.source.Pointer()
-}
-
-func (ma *chainModelAdapter) DestValue() reflect.Value {
-	return ma.dest.Value()
-}
-
-func (ma *chainModelAdapter) SourceValue() reflect.Value {
-	return ma.source.Value()
+func (ma *chainModelAdapter) Dest() *model.Reflect {
+	return ma.destRfl
 }
 
 // |||| MODEL ADAPTER ||||
@@ -128,25 +118,17 @@ type singleModelAdapter struct {
 
 func newSingleModelAdapter(source *model.Reflect, dest *model.Reflect) *singleModelAdapter {
 	return &singleModelAdapter{
-		sourceAm: &adaptedModel{modelReflect: source},
-		destAm:   &adaptedModel{modelReflect: dest},
+		sourceAm: &adaptedModel{refl: source},
+		destAm:   &adaptedModel{refl: dest},
 	}
 }
 
-func (ma *singleModelAdapter) SourcePointer() interface{} {
-	return ma.sourceAm.modelReflect.Pointer()
+func (ma *singleModelAdapter) Source() *model.Reflect {
+	return ma.sourceAm.refl
 }
 
-func (ma *singleModelAdapter) DestPointer() interface{} {
-	return ma.destAm.modelReflect.Pointer()
-}
-
-func (ma *singleModelAdapter) DestValue() reflect.Value {
-	return ma.destAm.modelReflect.Value()
-}
-
-func (ma *singleModelAdapter) SourceValue() reflect.Value {
-	return ma.sourceAm.modelReflect.Value()
+func (ma *singleModelAdapter) Dest() *model.Reflect {
+	return ma.destAm.refl
 }
 
 func (ma *singleModelAdapter) ExchangeToSource() error {
@@ -160,34 +142,49 @@ func (ma *singleModelAdapter) ExchangeToDest() error {
 // |||| ADAPTED MODEL |||||
 
 type adaptedModel struct {
-	modelReflect *model.Reflect
+	refl *model.Reflect
 }
 
 // bindVals binds a set of modelValues to the adaptedModel fields.
 // Returns an error for invalid / non-existent keys and invalid types.
 func (mw *adaptedModel) bindVals(mv modelValues) error {
 	for k, rv := range mv {
-		field := mw.modelReflect.StructFieldByName(k)
+		field := mw.refl.Value().FieldByName(k)
 		val := reflect.ValueOf(rv)
+		valType := reflect.TypeOf(rv)
+		if field.Type().Kind() == reflect.Slice {
+			valType = valType.Elem()
+		}
 		if !field.CanSet() {
 			continue
 		}
-		vt, ft := val.Type(), field.Type()
-		if vt != ft {
-			// The first thing we do is check if it's a nested modelReflect we need to adapt
-			fieldRef := model.NewReflect(field.Interface())
+		log.Info(valType, field.Type())
+		if valType != field.Type() {
+			// The first thing we do is check if it's a nested refl we need to adapt
+			fieldPointer := field.Interface()
+			if field.Type().Kind() == reflect.Slice {
+				fieldPointer = field.Addr().Interface()
+			}
+			fieldRef := model.NewReflect(fieldPointer)
 			if err := fieldRef.Validate(); err != nil {
 				return NewError(ErrTypeInvalidField)
 			}
-			ma, err := NewModelAdapter(val, field)
+			if fieldRef.IsStruct() && val.IsNil() {
+				continue
+			}
+			ma, err := NewModelAdapter(rv, fieldRef.NewRaw().Pointer())
 			if err != nil {
 				return err
 			}
 			if err := ma.ExchangeToDest(); err != nil {
 				return err
 			}
-			val = ma.DestValue()
+			val = ma.Dest().RawValue()
 		}
+		if field.Type().Kind() == reflect.Slice {
+			val = val.Elem()
+		}
+		log.Warn(val)
 		field.Set(val)
 	}
 	return nil
@@ -196,10 +193,9 @@ func (mw *adaptedModel) bindVals(mv modelValues) error {
 // mapVals maps adaptedModel fields to modelValues.
 func (mw *adaptedModel) mapVals() modelValues {
 	var mv = modelValues{}
-	for i := 0; i < mw.modelReflect.StructNumFields(); i++ {
-		f := mw.modelReflect.StructFieldByIndex(i)
-		t := mw.modelReflect.Type().Field(i)
-		// Need to convert slices to addy because that's what NewModelAdapter expects.
+	for i := 0; i < mw.refl.Value().NumField(); i++ {
+		f := mw.refl.Value().Index(i)
+		t := mw.refl.Type().Field(i)
 		if f.Type().Kind() == reflect.Slice {
 			mv[t.Name] = f.Addr().Interface()
 		} else {

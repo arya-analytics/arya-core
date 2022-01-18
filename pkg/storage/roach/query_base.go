@@ -16,7 +16,7 @@ func (b *baseQuery) baseModel(m interface{}) interface{} {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	return b.modelAdapter.DestPointer()
+	return b.modelAdapter.Dest().Pointer()
 }
 
 func (b *baseQuery) baseAdaptToSource() {
