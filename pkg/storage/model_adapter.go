@@ -145,28 +145,19 @@ func (mw *adaptedModel) bindVals(mv modelValues) error {
 			continue
 		}
 		if v.Type() != fld.Type() {
-			fldRfl := model.NewReflect(fld.Interface())
-			if !fldRfl.IsPointer() {
-				fldRfl = fldRfl.NewPointer()
+			fldRfl, err := mw.newRfl(fld.Interface())
+			if err != nil {
+				return err
 			}
-			if err := fldRfl.Validate(); err != nil {
-				return NewError(ErrTypeInvalidField)
+			vRfl, err := mw.newRfl(rv)
+			if err != nil {
+				return err
 			}
-
-			vRfl := model.NewReflect(rv)
-			if !vRfl.IsPointer() {
-				vRfl = vRfl.NewPointer()
-			}
-			if err := vRfl.Validate(); err != nil {
-				return NewError(ErrTypeInvalidField)
-			}
-
 			vPtr := vRfl.Pointer()
 			fldPtr := fldRfl.Pointer()
 			if fldRfl.IsStruct() && fld.IsNil() {
 				fldPtr = fldRfl.NewModel().Pointer()
 			}
-
 			ma, err := NewModelAdapter(vPtr, fldPtr)
 			if err != nil {
 				return err
@@ -179,6 +170,17 @@ func (mw *adaptedModel) bindVals(mv modelValues) error {
 		fld.Set(v)
 	}
 	return nil
+}
+
+func (mw *adaptedModel) newRfl(v interface{}) (*model.Reflect, error) {
+	rfl := model.NewReflect(v)
+	if !rfl.IsPointer() {
+		rfl = rfl.NewPointer()
+	}
+	if err := rfl.Validate(); err != nil {
+		return nil, NewError(ErrTypeInvalidField)
+	}
+	return rfl, nil
 }
 
 // mapVals maps adaptedModel fields to modelValues.
