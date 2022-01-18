@@ -9,6 +9,7 @@ import (
 
 func migrateUpFunc(d Driver) bunMigrate.MigrationFunc {
 	return func(ctx context.Context, db *bun.DB) error {
+		db.RegisterModel((*RangeReplicaToNode)(nil))
 		if _, err := db.NewCreateTable().Model((*Node)(nil)).
 			Exec(ctx); err != nil {
 			log.Fatalln(err)
@@ -38,27 +39,19 @@ func migrateUpFunc(d Driver) bunMigrate.MigrationFunc {
 			log.Fatalln(err)
 		}
 		if _, err := db.NewCreateTable().
-			Model((*RangeReplicaToNode)(nil)).
-			Exec(ctx); err != nil {
-			log.Fatalln(err)
-		}
-		if _, err := db.NewCreateTable().
 			Model((*Range)(nil)).
 			ForeignKey(`("lease_holder_node_id") REFERENCES "nodes" (
 						"id") ON DELETE CASCADE`).
 			Exec(ctx); err != nil {
 			log.Fatalln(err)
 		}
-		//if _, err := db.Exec(`ALTER TABLE range_replica_to_nodes ADD FOREIGN KEY
-		//							("node_id") REFERENCES "nodes" ("id") ON DELETE
-		//							CASCADE`); err != nil {
-		//	log.Fatalln(err)
-		//}
-		//if _, err := db.Exec(`ALTER TABLE range_replica_to_nodes ADD FOREIGN KEY
-		//							("range_id") REFERENCES "ranges" ("id") ON DELETE
-		//							CASCADE`); err != nil {
-		//	log.Fatalln(err)
-		//}
+		if _, err := db.NewCreateTable().
+			Model((*RangeReplicaToNode)(nil)).
+			ForeignKey(`("node_id") REFERENCES "nodes" ("id") ON DELETE CASCADE`).
+			ForeignKey(`("range_id") REFERENCES "ranges" ("id") ON DELETE CASCADE`).
+			Exec(ctx); err != nil {
+			log.Fatalln(err)
+		}
 		if _, err := db.NewCreateTable().
 			Model((*ChannelChunk)(nil)).
 			ForeignKey(`("channel_config_id") REFERENCES "channel_configs" ("id") 

@@ -6,8 +6,6 @@ import (
 	"reflect"
 )
 
-// TODO: Document APIs
-
 /// |||| CATALOG ||||
 
 type ModelCatalog []interface{}
@@ -21,9 +19,9 @@ func (mc ModelCatalog) New(modelPtr interface{}) interface{} {
 		}
 		if refM.Type().Name() == refCm.Type().Name() {
 			if refM.IsChain() {
-				return refM.NewChain().Pointer()
+				return refCm.NewChain().Pointer()
 			}
-			return refM.NewModel().Pointer()
+			return refCm.NewModel().Pointer()
 		}
 	}
 	log.Fatalf("model %s could not be found in catalog", refM.Type().Name())
@@ -40,8 +38,6 @@ type ModelAdapter interface {
 }
 
 func NewModelAdapter(sourcePtr interface{}, destPtr interface{}) (ModelAdapter, error) {
-	//log.Info("POINTERS ", sourcePtr, destPtr)
-	//log.Info("POINTER TYPES ", reflect.TypeOf(sourcePtr), reflect.TypeOf(destPtr))
 	sourceRfl, destRfl := model.NewReflect(sourcePtr), model.NewReflect(destPtr)
 	if err := sourceRfl.Validate(); err != nil {
 		return nil, err
@@ -67,47 +63,32 @@ type chainModelAdapter struct {
 	destRfl   *model.Reflect
 }
 
-func (ma *chainModelAdapter) exchange(toSource bool) error {
-	var to *model.Reflect
-	var from *model.Reflect
-	if toSource {
-		to, from = ma.sourceRfl, ma.destRfl
-	} else {
-		to, from = ma.destRfl, ma.sourceRfl
-	}
-	var toAppend []*model.Reflect
+func (ma *chainModelAdapter) exchange(to *model.Reflect, from *model.Reflect) error {
 	for i := 0; i < from.ChainValue().Len(); i++ {
-		var toChainItem interface{}
-		ap := true
+		var rfl *model.Reflect
 		if i >= to.ChainValue().Len() {
-			toChainItem = to.NewModel().Pointer()
+			rfl = to.NewModel()
+			to.ChainAppend(rfl)
 		} else {
-			ap = false
-			toChainItem = to.ChainValueByIndex(i).Pointer()
+			rfl = to.ChainValueByIndex(i)
 		}
-		maX, err := NewModelAdapter(from.ChainValueByIndex(i).Pointer(), toChainItem)
+		maX, err := NewModelAdapter(from.ChainValueByIndex(i).Pointer(), rfl.Pointer())
 		if err != nil {
 			return err
 		}
 		if err := maX.ExchangeToDest(); err != nil {
 			return err
 		}
-		if ap {
-			toAppend = append(toAppend, maX.Dest())
-		}
-	}
-	for _, v := range toAppend {
-		to.ChainAppend(v)
 	}
 	return nil
 }
 
 func (ma *chainModelAdapter) ExchangeToSource() error {
-	return ma.exchange(true)
+	return ma.exchange(ma.sourceRfl, ma.destRfl)
 }
 
 func (ma *chainModelAdapter) ExchangeToDest() error {
-	return ma.exchange(false)
+	return ma.exchange(ma.destRfl, ma.sourceRfl)
 }
 
 func (ma *chainModelAdapter) Source() *model.Reflect {
@@ -157,65 +138,52 @@ type adaptedModel struct {
 // bindVals binds a set of modelValues to the adaptedModel fields.
 // Returns an error for invalid / non-existent keys and invalid types.
 func (mw *adaptedModel) bindVals(mv modelValues) error {
-	for key, rawVal := range mv {
-		field := mw.refl.Value().FieldByName(key)
-		val := reflect.ValueOf(rawVal)
-		if val.IsZero() || !field.IsValid() {
+	for key, rv := range mv {
+		fld := mw.refl.Value().FieldByName(key)
+		v := reflect.ValueOf(rv)
+		if v.IsZero() || !fld.IsValid() {
 			continue
 		}
-		if val.Type() != field.Type() {
-			var fieldRef *model.Reflect
-			if field.Type().Kind() == reflect.Ptr {
-				fieldRef = model.NewReflect(field.Interface())
-			} else {
-				fp := reflect.New(field.Type())
-				fp.Elem().Set(field)
-				fieldRef = model.NewReflect(fp.Interface())
+		if v.Type() != fld.Type() {
+			fldRfl := model.NewReflect(fld.Interface())
+			if !fldRfl.IsPointer() {
+				fldRfl = fldRfl.NewPointer()
 			}
-
-			if err := fieldRef.Validate(); err != nil {
-				return NewError(ErrTypeInvalidField)
-			}
-			// The first thing we do is check if it's a nested refl we need to adapt
-			var fieldPointer interface{}
-			rawPointer := rawVal
-			if fieldRef.IsChain() {
-				rp := reflect.New(val.Type())
-				rp.Elem().Set(val)
-				rawPointer = rp.Interface()
-				fieldPointer = fieldRef.Pointer()
-			} else if fieldRef.IsStruct() {
-				if field.IsNil() {
-					fieldPointer = fieldRef.NewModel().Pointer()
-				} else {
-					fieldPointer = field
-				}
-			} else {
+			if err := fldRfl.Validate(); err != nil {
 				return NewError(ErrTypeInvalidField)
 			}
 
-			rawRef := model.NewReflect(rawPointer)
-			if err := rawRef.Validate(); err != nil {
+			vRfl := model.NewReflect(rv)
+			if !vRfl.IsPointer() {
+				vRfl = vRfl.NewPointer()
+			}
+			if err := vRfl.Validate(); err != nil {
 				return NewError(ErrTypeInvalidField)
 			}
 
-			ma, err := NewModelAdapter(rawPointer, fieldPointer)
+			vPtr := vRfl.Pointer()
+			fldPtr := fldRfl.Pointer()
+			if fldRfl.IsStruct() && fld.IsNil() {
+				fldPtr = fldRfl.NewModel().Pointer()
+			}
+
+			ma, err := NewModelAdapter(vPtr, fldPtr)
 			if err != nil {
 				return err
 			}
 			if err := ma.ExchangeToDest(); err != nil {
 				return err
 			}
-			val = ma.Dest().ValueForSet()
+			v = ma.Dest().ValueForSet()
 		}
-		field.Set(val)
+		fld.Set(v)
 	}
 	return nil
 }
 
 // mapVals maps adaptedModel fields to modelValues.
 func (mw *adaptedModel) mapVals() modelValues {
-	var mv = modelValues{}
+	mv := modelValues{}
 	for i := 0; i < mw.refl.Value().NumField(); i++ {
 		f := mw.refl.Value().Field(i)
 		t := mw.refl.Type().Field(i)

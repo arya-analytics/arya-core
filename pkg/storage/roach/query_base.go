@@ -2,6 +2,7 @@ package roach
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/util/model"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -10,13 +11,13 @@ type baseQuery struct {
 	err          error
 }
 
-func (b *baseQuery) baseModel(m interface{}) interface{} {
+func (b *baseQuery) baseModel(m interface{}) *model.Reflect {
 	var err error
 	b.modelAdapter, err = storage.NewModelAdapter(m, catalog().New(m))
 	if err != nil {
 		log.Fatalln(err)
 	}
-	return b.modelAdapter.Dest().Pointer()
+	return b.modelAdapter.Dest()
 }
 
 func (b *baseQuery) baseAdaptToSource() {

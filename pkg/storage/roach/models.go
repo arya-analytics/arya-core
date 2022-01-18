@@ -51,7 +51,7 @@ type ChannelConfig struct {
 	ID     int `bun:",pk"`
 	Name   string
 	NodeID int
-	Node   *Node `bun:"rel:belongs-to,join:node_id=id"`
+	Node   *Node `bun:"rel:belongs-to,join:node_id=id,scanonly"`
 }
 
 type ChannelChunk struct {

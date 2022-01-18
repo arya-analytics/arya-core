@@ -18,9 +18,9 @@ func newCreate(db *bun.DB) *createQuery {
 
 func (c *createQuery) Model(m interface{}) storage.MDCreateQuery {
 	rm := c.baseModel(m)
-	c.baseBindErr(createValidator.Exec(m))
 	c.baseAdaptToDest()
-	c.q = c.q.Model(rm)
+	c.baseBindErr(createValidator.Exec(rm))
+	c.q = c.q.Model(rm.Pointer())
 	return c
 }
 

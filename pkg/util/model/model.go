@@ -2,7 +2,6 @@ package model
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/util/validate"
-	log "github.com/sirupsen/logrus"
 	"reflect"
 )
 
@@ -18,6 +17,10 @@ func NewReflect(modelPtr interface{}) *Reflect {
 
 func (r *Reflect) Validate() error {
 	return validator.Exec(r)
+}
+
+func (r *Reflect) IsPointer() bool {
+	return r.PointerType().Kind() == reflect.Ptr
 }
 
 func (r *Reflect) Pointer() interface{} {
@@ -38,7 +41,7 @@ func (r *Reflect) Type() reflect.Type {
 
 func (r *Reflect) Value() reflect.Value {
 	if r.IsChain() {
-		log.Fatalln("model is a chain, cannot extract a value")
+		panic("model is a chain, cannot get a struct value")
 	}
 	return r.PointerValue().Elem()
 }
@@ -57,8 +60,7 @@ func (r *Reflect) ChainValue() reflect.Value {
 	if r.IsChain() {
 		return r.RawValue()
 	}
-	log.Fatalln("model is not a chain, cannot extract its value")
-	return reflect.Value{}
+	panic("model is not a struct, cannot get a chain value")
 }
 
 func (r *Reflect) ChainAppend(v *Reflect) {
@@ -86,6 +88,12 @@ func (r *Reflect) NewChain() *Reflect {
 	ns := reflect.MakeSlice(reflect.SliceOf(r.NewModel().PointerType()), 0, 0)
 	p := reflect.New(ns.Type())
 	p.Elem().Set(ns)
+	return NewReflect(p.Interface())
+}
+
+func (r *Reflect) NewPointer() *Reflect {
+	p := reflect.New(r.PointerType())
+	p.Elem().Set(r.PointerValue())
 	return NewReflect(p.Interface())
 }
 

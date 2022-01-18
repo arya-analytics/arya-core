@@ -5,7 +5,6 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	log "github.com/sirupsen/logrus"
 	"reflect"
 )
 
@@ -162,16 +161,13 @@ var _ = Describe("Model", func() {
 			It("Should return an error when initializing with a nil pointer", func() {
 				refl := model.NewReflect((*mock.ModelA)(nil))
 				Expect(refl.Validate()).To(BeNil())
-				log.Info(refl.NewModel().Pointer())
 				Expect(refl.NewModel())
 			})
 			It("Should return an error when initializing with a nil pointer", func() {
 				var m []*mock.ModelA
 				refl := model.NewReflect(&m)
 				Expect(refl.Validate()).To(BeNil())
-				log.Info(refl.NewModel().Pointer())
 				Expect(refl.NewModel())
-				log.Info(refl.IsChain())
 			})
 		})
 	})

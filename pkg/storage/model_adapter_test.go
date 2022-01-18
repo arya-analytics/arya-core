@@ -9,7 +9,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-var _ = FDescribe("Model Adapter", func() {
+var _ = Describe("Model Adapter", func() {
 	Context("Single Model Adaptation", func() {
 		Context("Models of the same type", func() {
 			Context("No nested refl", func() {

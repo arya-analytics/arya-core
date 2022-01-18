@@ -17,7 +17,7 @@ func newRetrieve(db *bun.DB) *retrieveQuery {
 }
 
 func (r *retrieveQuery) Model(m interface{}) storage.MDRetrieveQuery {
-	r.q = r.q.Model(r.baseModel(m))
+	r.q = r.q.Model(r.baseModel(m).Pointer())
 	return r
 }
 
