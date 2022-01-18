@@ -1,11 +1,9 @@
-package storage
+package model
 
 import "fmt"
 
-// |||| ERROR TYPES ||||
-
 const (
-	errKey = "storage"
+	errKey = "model"
 )
 
 type Error struct {
@@ -24,11 +22,7 @@ type ErrorType int
 
 //go:generate stringer -type=ErrorType
 const (
-	ErrTypeUnknown ErrorType = iota
-	ErrTypeItemNotFound
-	ErrTypeUniqueViolation
-	ErrTypeRelationshipViolation
-	ErrTypeInvalidField
-	ErrTypeNoPK
-	ErrTypeMigration
+	ErrTypeNonPointer ErrorType = iota
+	ErrTypeNonStructOrSlice
+	ErrTypeIncompatibleModels
 )

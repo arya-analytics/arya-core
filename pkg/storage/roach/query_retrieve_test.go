@@ -6,10 +6,6 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-type BunSQLError interface {
-	Code() int
-}
-
 var _ = Describe("QueryRetrieve", func() {
 	BeforeEach(migrate)
 	Describe("Edge cases + errors", func() {

@@ -11,7 +11,7 @@ import (
 var _ = Describe("Model Adapter", func() {
 	Context("Single Model Adaptation", func() {
 		Context("Models of the same type", func() {
-			Context("No nested model", func() {
+			Context("No nested modelReflect", func() {
 				var source *mock.ModelA
 				var dest *mock.ModelA
 				var refObj *mock.RefObj
@@ -52,7 +52,7 @@ var _ = Describe("Model Adapter", func() {
 						source.Name = "Hello"
 						Expect(dest.Name).To(Equal("Cool Name"))
 					})
-				It("Should maintain model internal refs", func() {
+				It("Should maintain modelReflect internal refs", func() {
 					ma, err := storage.NewModelAdapter(source, dest)
 					err = ma.ExchangeToDest()
 					if err != nil {
@@ -62,7 +62,7 @@ var _ = Describe("Model Adapter", func() {
 					Expect(dest.RefObj.ID).To(Equal(9260))
 				})
 			})
-			Context("With nested model", func() {
+			Context("With nested modelReflect", func() {
 				var source *mock.ModelA
 				var dest *mock.ModelB
 				var innerModel *mock.ModelB
@@ -91,7 +91,7 @@ var _ = Describe("Model Adapter", func() {
 					Expect(source.InnerModel.ID).To(Equal(24))
 					Expect(dest.InnerModel.ID).To(Equal(source.InnerModel.ID))
 				})
-				It("Should break the reference to the inner model struct", func() {
+				It("Should break the reference to the inner modelReflect struct", func() {
 					ma, err := storage.NewModelAdapter(source, dest)
 					err = ma.ExchangeToDest()
 					Expect(err).To(BeNil())
@@ -101,7 +101,7 @@ var _ = Describe("Model Adapter", func() {
 			})
 		})
 		Context("Models of different types", func() {
-			Context("No nested model", func() {
+			Context("No nested modelReflect", func() {
 				var source *mock.ModelA
 				var dest *mock.ModelB
 				BeforeEach(func() {
@@ -118,7 +118,7 @@ var _ = Describe("Model Adapter", func() {
 					Expect(source.InnerModel).To(BeNil())
 				})
 			})
-			Context("Nested model", func() {
+			Context("Nested modelReflect", func() {
 				var source *mock.ModelB
 				var dest *mock.ModelA
 				var innerModel *mock.ModelA
@@ -187,7 +187,7 @@ var _ = Describe("Model Adapter", func() {
 			var source []*mock.ModelA
 			var dest []*mock.ModelB
 			var refObj *mock.RefObj
-			Context("No nested model", func() {
+			Context("No nested modelReflect", func() {
 				BeforeEach(func() {
 					refObj = &mock.RefObj{
 						ID: 672,
@@ -212,7 +212,7 @@ var _ = Describe("Model Adapter", func() {
 					Expect(err).To(BeNil())
 					Expect(dest).To(HaveLen(2))
 				})
-				It("Should maintain model internal refs", func() {
+				It("Should maintain modelReflect internal refs", func() {
 					ma, err := storage.NewModelAdapter(&source, &dest)
 					err = ma.ExchangeToDest()
 					if err != nil {
@@ -263,7 +263,7 @@ var _ = Describe("Model Adapter", func() {
 			})
 			Context("Multiple nested models", func() {
 				var chainInnerModel []*mock.ModelB
-				Context("Common chain inner model", func() {
+				Context("Common chain inner modelReflect", func() {
 					BeforeEach(func() {
 						refObj = &mock.RefObj{
 							ID: 915,
@@ -296,7 +296,7 @@ var _ = Describe("Model Adapter", func() {
 		})
 	})
 	Context("Edge cases + errors", func() {
-		Describe("New Model Adapter", func() {
+		Describe("NewModel Model Adapter", func() {
 			Context("Slice and struct mismatch", func() {
 				It("Should return an error", func() {
 					var source []*mock.ModelB
@@ -347,7 +347,7 @@ var _ = Describe("Model Adapter", func() {
 			})
 		})
 		Describe("Exchanging values", func() {
-			Describe("Incompatible model types", func() {
+			Describe("Incompatible modelReflect types", func() {
 				Context("Top level incompatibility", func() {
 					Context("Non pointer value", func() {
 						It("Should return an error", func() {
@@ -379,8 +379,8 @@ var _ = Describe("Model Adapter", func() {
 						})
 					})
 				})
-				Context("Nested model incompatibility", func() {
-					Context("Single model", func() {
+				Context("Nested modelReflect incompatibility", func() {
+					Context("Single modelReflect", func() {
 						Describe("Without the incompatible field defined", func() {
 							It("Shouldn't return an error", func() {
 								source := &mock.ModelD{
