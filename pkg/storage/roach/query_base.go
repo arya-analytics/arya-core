@@ -12,11 +12,7 @@ type baseQuery struct {
 }
 
 func (b *baseQuery) baseModel(m interface{}) *model.Reflect {
-	var err error
-	b.modelAdapter, err = storage.NewModelAdapter(m, catalog().New(m))
-	if err != nil {
-		log.Fatalln(err)
-	}
+	b.modelAdapter = storage.NewModelAdapter(m, catalog().New(m))
 	return b.modelAdapter.Dest()
 }
 

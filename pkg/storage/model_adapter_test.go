@@ -3,7 +3,6 @@ package storage_test
 import (
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/storage/mock"
-	"github.com/arya-analytics/aryacore/pkg/util/model"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	log "github.com/sirupsen/logrus"
@@ -28,17 +27,16 @@ var _ = Describe("Model Adapter", func() {
 					dest = &mock.ModelA{}
 				})
 				It("Should exchange to source", func() {
-					ma, err := storage.NewModelAdapter(dest, source)
-					Expect(err).To(BeNil())
-					err = ma.ExchangeToSource()
+					ma := storage.NewModelAdapter(dest, source)
+					err := ma.ExchangeToSource()
 					Expect(err).To(BeNil())
 					Expect(source.ID).To(Equal(435))
 					Expect(source.ID).To(Equal(dest.ID))
 					Expect(source.Name).To(Equal(dest.Name))
 				})
 				It("Should exchange to dest", func() {
-					ma, err := storage.NewModelAdapter(source, dest)
-					err = ma.ExchangeToDest()
+					ma := storage.NewModelAdapter(source, dest)
+					err := ma.ExchangeToDest()
 					Expect(err).To(BeNil())
 					Expect(source.ID).To(Equal(435))
 					Expect(source.ID).To(Equal(dest.ID))
@@ -46,8 +44,8 @@ var _ = Describe("Model Adapter", func() {
 				})
 				It("Shouldn't maintain refs between source and dest models",
 					func() {
-						ma, err := storage.NewModelAdapter(source, dest)
-						err = ma.ExchangeToDest()
+						ma := storage.NewModelAdapter(source, dest)
+						err := ma.ExchangeToDest()
 						if err != nil {
 							log.Fatalln(err)
 						}
@@ -55,8 +53,8 @@ var _ = Describe("Model Adapter", func() {
 						Expect(dest.Name).To(Equal("Cool Name"))
 					})
 				It("Should maintain refl internal refs", func() {
-					ma, err := storage.NewModelAdapter(source, dest)
-					err = ma.ExchangeToDest()
+					ma := storage.NewModelAdapter(source, dest)
+					err := ma.ExchangeToDest()
 					if err != nil {
 						log.Fatalln(err)
 					}
@@ -80,23 +78,22 @@ var _ = Describe("Model Adapter", func() {
 					dest = &mock.ModelB{}
 				})
 				It("Should exchange to source", func() {
-					log.SetReportCaller(true)
-					ma, err := storage.NewModelAdapter(dest, source)
-					err = ma.ExchangeToSource()
+					ma := storage.NewModelAdapter(dest, source)
+					err := ma.ExchangeToSource()
 					Expect(err).To(BeNil())
 					Expect(source.InnerModel.ID).To(Equal(24))
 					Expect(dest.InnerModel.ID).To(Equal(source.InnerModel.ID))
 				})
 				It("Should exchange to dest", func() {
-					ma, err := storage.NewModelAdapter(source, dest)
-					err = ma.ExchangeToDest()
+					ma := storage.NewModelAdapter(source, dest)
+					err := ma.ExchangeToDest()
 					Expect(err).To(BeNil())
 					Expect(source.InnerModel.ID).To(Equal(24))
 					Expect(dest.InnerModel.ID).To(Equal(source.InnerModel.ID))
 				})
 				It("Should break the reference to the inner refl struct", func() {
-					ma, err := storage.NewModelAdapter(source, dest)
-					err = ma.ExchangeToDest()
+					ma := storage.NewModelAdapter(source, dest)
+					err := ma.ExchangeToDest()
 					Expect(err).To(BeNil())
 					innerModel.ID = 45
 					Expect(dest.InnerModel.ID).To(Equal(24))
@@ -115,8 +112,8 @@ var _ = Describe("Model Adapter", func() {
 					dest = &mock.ModelB{}
 				})
 				It("Should exchange correctly", func() {
-					ma, err := storage.NewModelAdapter(source, dest)
-					err = ma.ExchangeToDest()
+					ma := storage.NewModelAdapter(source, dest)
+					err := ma.ExchangeToDest()
 					Expect(err).To(BeNil())
 					Expect(source.InnerModel).To(BeNil())
 				})
@@ -137,8 +134,8 @@ var _ = Describe("Model Adapter", func() {
 					dest = &mock.ModelA{}
 				})
 				It("Should break ref between old and new nested", func() {
-					ma, err := storage.NewModelAdapter(source, dest)
-					err = ma.ExchangeToDest()
+					ma := storage.NewModelAdapter(source, dest)
+					err := ma.ExchangeToDest()
 					Expect(err).To(BeNil())
 					Expect(source.InnerModel.ID).To(Equal(96))
 					Expect(dest.InnerModel.ID).To(Equal(source.InnerModel.ID))
@@ -171,8 +168,8 @@ var _ = Describe("Model Adapter", func() {
 					}
 				})
 				It("Should exchange correctly", func() {
-					ma, err := storage.NewModelAdapter(source, dest)
-					err = ma.ExchangeToDest()
+					ma := storage.NewModelAdapter(source, dest)
+					err := ma.ExchangeToDest()
 					Expect(err).To(BeNil())
 					Expect(source.ID).To(Equal(420))
 					Expect(source.ID).To(Equal(dest.ID))
@@ -210,14 +207,14 @@ var _ = Describe("Model Adapter", func() {
 					dest = []*mock.ModelB{}
 				})
 				It("Should exchange correctly", func() {
-					ma, err := storage.NewModelAdapter(&source, &dest)
-					err = ma.ExchangeToDest()
+					ma := storage.NewModelAdapter(&source, &dest)
+					err := ma.ExchangeToDest()
 					Expect(err).To(BeNil())
 					Expect(dest).To(HaveLen(2))
 				})
 				It("Should maintain refl internal refs", func() {
-					ma, err := storage.NewModelAdapter(&source, &dest)
-					err = ma.ExchangeToDest()
+					ma := storage.NewModelAdapter(&source, &dest)
+					err := ma.ExchangeToDest()
 					if err != nil {
 						log.Fatalln(err)
 					}
@@ -255,8 +252,8 @@ var _ = Describe("Model Adapter", func() {
 					}
 				})
 				It("Should override the values in dest", func() {
-					ma, err := storage.NewModelAdapter(&source, &dest)
-					err = ma.ExchangeToDest()
+					ma := storage.NewModelAdapter(&source, &dest)
+					err := ma.ExchangeToDest()
 					if err != nil {
 						log.Fatalln(err)
 					}
@@ -290,8 +287,8 @@ var _ = Describe("Model Adapter", func() {
 						}
 					})
 					It("Should exchange correctly", func() {
-						ma, err := storage.NewModelAdapter(&source, &dest)
-						err = ma.ExchangeToSource()
+						ma := storage.NewModelAdapter(&source, &dest)
+						err := ma.ExchangeToSource()
 						Expect(err).To(BeNil())
 					})
 				})
@@ -302,48 +299,48 @@ var _ = Describe("Model Adapter", func() {
 	Context("Edge cases + errors", func() {
 		Describe("NewModel Model Adapter", func() {
 			Context("Slice and struct mismatch", func() {
-				It("Should return an error", func() {
+				It("Should panic", func() {
 					var source []*mock.ModelB
 					dest := &mock.ModelB{}
-					_, err := storage.NewModelAdapter(&source, dest)
-					Expect(err).ToNot(BeNil())
-					Expect(err.(model.Error).Type).To(Equal(model.ErrTypeIncompatibleModels))
+					Expect(func() {
+						storage.NewModelAdapter(&source, dest)
+					}).To(Panic())
 				})
 			})
 			Context("Providing a non-struct or slice type", func() {
-				It("Should return an error", func() {
+				It("Should panic", func() {
 					source := &mock.ModelB{}
 					dest := 1
-					_, err := storage.NewModelAdapter(source, &dest)
-					Expect(err).ToNot(BeNil())
-					Expect(err.(model.Error).Type).To(Equal(model.ErrTypeNonStructOrSlice))
+					Expect(func() {
+						storage.NewModelAdapter(source, &dest)
+					}).To(Panic())
 				})
 			})
 			Context("Providing a non-pointer value", func() {
-				It("Should return an error", func() {
+				It("Should panic", func() {
 					source := mock.ModelB{}
 					dest := &mock.ModelA{}
-					_, err := storage.NewModelAdapter(source, dest)
-					Expect(err).ToNot(BeNil())
-					Expect(err.(model.Error).Type).To(Equal(model.ErrTypeNonPointer))
+					Expect(func() {
+						storage.NewModelAdapter(source, dest)
+					}).To(Panic())
 				})
 			})
 			Context("Providing a double-pointer struct value", func() {
-				It("Should return an error", func() {
+				It("Should panic", func() {
 					source := &mock.ModelB{}
 					dest := &mock.ModelA{}
-					_, err := storage.NewModelAdapter(&source, &dest)
-					Expect(err).ToNot(BeNil())
-					Expect(err.(model.Error).Type).To(Equal(model.ErrTypeNonStructOrSlice))
+					Expect(func() {
+						storage.NewModelAdapter(&source, &dest)
+					}).To(Panic())
 				})
 			})
 			Context("Providing a double-pointer slice value", func() {
 				It("Should return an error", func() {
 					source := []*mock.ModelB{&mock.ModelB{Name: "Hello"}}
 					dest := &[]*mock.ModelA{}
-					_, err := storage.NewModelAdapter(&source, &dest)
-					Expect(err).ToNot(BeNil())
-					Expect(err.(model.Error).Type).To(Equal(model.ErrTypeNonStructOrSlice))
+					Expect(func() {
+						storage.NewModelAdapter(&source, &dest)
+					}).To(Panic())
 				})
 			})
 		})
@@ -357,9 +354,8 @@ var _ = Describe("Model Adapter", func() {
 								Name: "My Cool Model",
 							}
 							dest := &mock.ModelC{}
-							ma, err := storage.NewModelAdapter(source, dest)
-							Expect(err).To(BeNil())
-							err = ma.ExchangeToDest()
+							ma := storage.NewModelAdapter(source, dest)
+							err := ma.ExchangeToDest()
 							Expect(err).ToNot(BeNil())
 							Expect(err.(storage.Error).Type).To(Equal(storage.ErrTypeInvalidField))
 						})
@@ -371,9 +367,8 @@ var _ = Describe("Model Adapter", func() {
 								PointerIncompatible: &map[string]string{"one": "two"},
 							}
 							dest := &mock.ModelF{}
-							ma, err := storage.NewModelAdapter(source, dest)
-							Expect(err).To(BeNil())
-							err = ma.ExchangeToDest()
+							ma := storage.NewModelAdapter(source, dest)
+							err := ma.ExchangeToDest()
 							Expect(err).ToNot(BeNil())
 							Expect(err.(storage.Error).Type).To(Equal(storage.
 								ErrTypeInvalidField))
@@ -388,9 +383,8 @@ var _ = Describe("Model Adapter", func() {
 									ID: 22,
 								}
 								dest := &mock.ModelC{}
-								ma, err := storage.NewModelAdapter(source, dest)
-								Expect(err).To(BeNil())
-								err = ma.ExchangeToDest()
+								ma := storage.NewModelAdapter(source, dest)
+								err := ma.ExchangeToDest()
 								Expect(err).To(BeNil())
 							})
 						})
@@ -404,9 +398,8 @@ var _ = Describe("Model Adapter", func() {
 									},
 								}
 								source := &mock.ModelC{}
-								ma, err := storage.NewModelAdapter(source, dest)
-								Expect(err).To(BeNil())
-								err = ma.ExchangeToSource()
+								ma := storage.NewModelAdapter(source, dest)
+								err := ma.ExchangeToSource()
 								Expect(err).ToNot(BeNil())
 								Expect(err.(storage.Error).Type).To(Equal(storage.ErrTypeInvalidField))
 							})
@@ -424,9 +417,8 @@ var _ = Describe("Model Adapter", func() {
 								},
 							}
 							source := &mock.ModelC{}
-							ma, err := storage.NewModelAdapter(source, dest)
-							Expect(err).To(BeNil())
-							err = ma.ExchangeToSource()
+							ma := storage.NewModelAdapter(source, dest)
+							err := ma.ExchangeToSource()
 							Expect(err).ToNot(BeNil())
 							Expect(err.(storage.Error).Type).To(Equal(storage.
 								ErrTypeInvalidField))

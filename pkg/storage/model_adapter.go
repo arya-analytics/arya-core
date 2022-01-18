@@ -15,7 +15,7 @@ func (mc ModelCatalog) New(modelPtr interface{}) interface{} {
 	for _, cm := range mc {
 		refCm := model.NewReflect(cm)
 		if err := refCm.Validate(); err != nil {
-			log.Fatalln(err)
+			panic(err)
 		}
 		if refM.Type().Name() == refCm.Type().Name() {
 			if refM.IsChain() {
@@ -37,21 +37,21 @@ type ModelAdapter interface {
 	ExchangeToDest() error
 }
 
-func NewModelAdapter(sourcePtr interface{}, destPtr interface{}) (ModelAdapter, error) {
+func NewModelAdapter(sourcePtr interface{}, destPtr interface{}) ModelAdapter {
 	sourceRfl, destRfl := model.NewReflect(sourcePtr), model.NewReflect(destPtr)
 	if err := sourceRfl.Validate(); err != nil {
-		return nil, err
+		panic(err)
 	}
 	if err := destRfl.Validate(); err != nil {
-		return nil, err
+		panic(err)
 	}
 	if sourceRfl.RawType().Kind() != destRfl.RawType().Kind() {
-		return nil, model.NewError(model.ErrTypeIncompatibleModels)
+		panic("model adapter received model and chain. source and dest must be equal")
 	}
 	if sourceRfl.IsStruct() {
-		return newSingleModelAdapter(sourceRfl, destRfl), nil
+		return newSingleModelAdapter(sourceRfl, destRfl)
 	}
-	return &chainModelAdapter{sourceRfl, destRfl}, nil
+	return &chainModelAdapter{sourceRfl, destRfl}
 }
 
 type modelValues map[string]interface{}
@@ -72,10 +72,7 @@ func (ma *chainModelAdapter) exchange(to *model.Reflect, from *model.Reflect) er
 		} else {
 			rfl = to.ChainValueByIndex(i)
 		}
-		maX, err := NewModelAdapter(from.ChainValueByIndex(i).Pointer(), rfl.Pointer())
-		if err != nil {
-			return err
-		}
+		maX := NewModelAdapter(from.ChainValueByIndex(i).Pointer(), rfl.Pointer())
 		if err := maX.ExchangeToDest(); err != nil {
 			return err
 		}
@@ -145,11 +142,11 @@ func (mw *adaptedModel) bindVals(mv modelValues) error {
 			continue
 		}
 		if v.Type() != fld.Type() {
-			fldRfl, err := mw.newRfl(fld.Interface())
+			fldRfl, err := mw.newValidatedRfl(fld.Interface())
 			if err != nil {
 				return err
 			}
-			vRfl, err := mw.newRfl(rv)
+			vRfl, err := mw.newValidatedRfl(rv)
 			if err != nil {
 				return err
 			}
@@ -158,10 +155,7 @@ func (mw *adaptedModel) bindVals(mv modelValues) error {
 			if fldRfl.IsStruct() && fld.IsNil() {
 				fldPtr = fldRfl.NewModel().Pointer()
 			}
-			ma, err := NewModelAdapter(vPtr, fldPtr)
-			if err != nil {
-				return err
-			}
+			ma := NewModelAdapter(vPtr, fldPtr)
 			if err := ma.ExchangeToDest(); err != nil {
 				return err
 			}
@@ -172,7 +166,7 @@ func (mw *adaptedModel) bindVals(mv modelValues) error {
 	return nil
 }
 
-func (mw *adaptedModel) newRfl(v interface{}) (*model.Reflect, error) {
+func (mw *adaptedModel) newValidatedRfl(v interface{}) (*model.Reflect, error) {
 	rfl := model.NewReflect(v)
 	if !rfl.IsPointer() {
 		rfl = rfl.NewPointer()
