@@ -107,6 +107,13 @@ func (r *Reflect) RawValue() reflect.Value {
 	return r.PointerValue().Elem()
 }
 
+func (r *Reflect) ValueForSet() reflect.Value {
+	if r.IsChain() {
+		return r.RawValue()
+	}
+	return r.PointerValue()
+}
+
 func validateSliceOrStruct(v interface{}) error {
 	r := v.(*Reflect)
 	if !r.IsStruct() && !r.IsChain() {

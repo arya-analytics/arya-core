@@ -40,12 +40,13 @@ type ModelAdapter interface {
 }
 
 func NewModelAdapter(sourcePtr interface{}, destPtr interface{}) (ModelAdapter, error) {
-	log.Info("POINTERS ", sourcePtr, destPtr)
-	log.Info("POINTER TYPES ", reflect.TypeOf(sourcePtr), reflect.TypeOf(destPtr))
+	//log.Info("POINTERS ", sourcePtr, destPtr)
+	//log.Info("POINTER TYPES ", reflect.TypeOf(sourcePtr), reflect.TypeOf(destPtr))
 	sourceRfl, destRfl := model.NewReflect(sourcePtr), model.NewReflect(destPtr)
-	err := sourceRfl.Validate()
-	err = destRfl.Validate()
-	if err != nil {
+	if err := sourceRfl.Validate(); err != nil {
+		return nil, err
+	}
+	if err := destRfl.Validate(); err != nil {
 		return nil, err
 	}
 	if sourceRfl.RawType().Kind() != destRfl.RawType().Kind() {
@@ -74,12 +75,15 @@ func (ma *chainModelAdapter) exchange(toSource bool) error {
 	} else {
 		to, from = ma.destRfl, ma.sourceRfl
 	}
+	var toAppend []*model.Reflect
 	for i := 0; i < from.ChainValue().Len(); i++ {
 		var toChainItem interface{}
+		ap := true
 		if i >= to.ChainValue().Len() {
 			toChainItem = to.NewModel().Pointer()
 		} else {
-			toChainItem = to.ChainValueByIndex(i)
+			ap = false
+			toChainItem = to.ChainValueByIndex(i).Pointer()
 		}
 		maX, err := NewModelAdapter(from.ChainValueByIndex(i).Pointer(), toChainItem)
 		if err != nil {
@@ -88,7 +92,12 @@ func (ma *chainModelAdapter) exchange(toSource bool) error {
 		if err := maX.ExchangeToDest(); err != nil {
 			return err
 		}
-		to.ChainAppend(maX.Dest())
+		if ap {
+			toAppend = append(toAppend, maX.Dest())
+		}
+	}
+	for _, v := range toAppend {
+		to.ChainAppend(v)
 	}
 	return nil
 }
@@ -148,43 +157,57 @@ type adaptedModel struct {
 // bindVals binds a set of modelValues to the adaptedModel fields.
 // Returns an error for invalid / non-existent keys and invalid types.
 func (mw *adaptedModel) bindVals(mv modelValues) error {
-	for k, rv := range mv {
-		field := mw.refl.Value().FieldByName(k)
-		val := reflect.ValueOf(rv)
-		valType := reflect.TypeOf(rv)
-		if field.Type().Kind() == reflect.Slice {
-			valType = valType.Elem()
-		}
-		if !field.CanSet() {
+	for key, rawVal := range mv {
+		field := mw.refl.Value().FieldByName(key)
+		val := reflect.ValueOf(rawVal)
+		if val.IsZero() || !field.IsValid() {
 			continue
 		}
-		log.Info(valType, field.Type())
-		if valType != field.Type() {
-			// The first thing we do is check if it's a nested refl we need to adapt
-			fieldPointer := field.Interface()
-			if field.Type().Kind() == reflect.Slice {
-				fieldPointer = field.Addr().Interface()
+		if val.Type() != field.Type() {
+			var fieldRef *model.Reflect
+			if field.Type().Kind() == reflect.Ptr {
+				fieldRef = model.NewReflect(field.Interface())
+			} else {
+				fp := reflect.New(field.Type())
+				fp.Elem().Set(field)
+				fieldRef = model.NewReflect(fp.Interface())
 			}
-			fieldRef := model.NewReflect(fieldPointer)
+
 			if err := fieldRef.Validate(); err != nil {
 				return NewError(ErrTypeInvalidField)
 			}
-			if fieldRef.IsStruct() && val.IsNil() {
-				continue
+			// The first thing we do is check if it's a nested refl we need to adapt
+			var fieldPointer interface{}
+			rawPointer := rawVal
+			if fieldRef.IsChain() {
+				rp := reflect.New(val.Type())
+				rp.Elem().Set(val)
+				rawPointer = rp.Interface()
+				fieldPointer = fieldRef.Pointer()
+			} else if fieldRef.IsStruct() {
+				if field.IsNil() {
+					fieldPointer = fieldRef.NewModel().Pointer()
+				} else {
+					fieldPointer = field
+				}
+			} else {
+				return NewError(ErrTypeInvalidField)
 			}
-			ma, err := NewModelAdapter(rv, fieldRef.NewRaw().Pointer())
+
+			rawRef := model.NewReflect(rawPointer)
+			if err := rawRef.Validate(); err != nil {
+				return NewError(ErrTypeInvalidField)
+			}
+
+			ma, err := NewModelAdapter(rawPointer, fieldPointer)
 			if err != nil {
 				return err
 			}
 			if err := ma.ExchangeToDest(); err != nil {
 				return err
 			}
-			val = ma.Dest().RawValue()
+			val = ma.Dest().ValueForSet()
 		}
-		if field.Type().Kind() == reflect.Slice {
-			val = val.Elem()
-		}
-		log.Warn(val)
 		field.Set(val)
 	}
 	return nil
@@ -194,13 +217,9 @@ func (mw *adaptedModel) bindVals(mv modelValues) error {
 func (mw *adaptedModel) mapVals() modelValues {
 	var mv = modelValues{}
 	for i := 0; i < mw.refl.Value().NumField(); i++ {
-		f := mw.refl.Value().Index(i)
+		f := mw.refl.Value().Field(i)
 		t := mw.refl.Type().Field(i)
-		if f.Type().Kind() == reflect.Slice {
-			mv[t.Name] = f.Addr().Interface()
-		} else {
-			mv[t.Name] = f.Interface()
-		}
+		mv[t.Name] = f.Interface()
 	}
 	return mv
 }

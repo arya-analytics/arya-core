@@ -26,7 +26,7 @@ func catalog() storage.ModelCatalog {
 
 type Node struct {
 	bun.BaseModel `bun:"select:nodes_w_gossip,table:nodes"`
-	ID            int
+	ID            int `bun:",pk"`
 	GossipNode
 	GossipLiveness
 }

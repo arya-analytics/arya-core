@@ -79,7 +79,7 @@ var _ = FDescribe("Model Adapter", func() {
 					}
 					dest = &mock.ModelB{}
 				})
-				FIt("Should exchange to source", func() {
+				It("Should exchange to source", func() {
 					log.SetReportCaller(true)
 					ma, err := storage.NewModelAdapter(dest, source)
 					err = ma.ExchangeToSource()
@@ -260,6 +260,7 @@ var _ = FDescribe("Model Adapter", func() {
 					if err != nil {
 						log.Fatalln(err)
 					}
+					Expect(dest).To(HaveLen(2))
 					Expect(dest[0].ID).To(Equal(22))
 					Expect(dest[1].ID).To(Equal(24))
 				})
@@ -398,7 +399,8 @@ var _ = FDescribe("Model Adapter", func() {
 								dest := &mock.ModelD{
 									ID: 2,
 									ModelIncompatible: &mock.ModelB{
-										ID: 43,
+										ID:   43,
+										Name: "Hello",
 									},
 								}
 								source := &mock.ModelC{}
@@ -416,7 +418,8 @@ var _ = FDescribe("Model Adapter", func() {
 								ID: 1,
 								ChainModelIncompatible: []*mock.ModelB{
 									&mock.ModelB{
-										ID: 11,
+										ID:   11,
+										Name: "String Name",
 									},
 								},
 							}
