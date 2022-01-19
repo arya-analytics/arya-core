@@ -25,13 +25,23 @@ type RefObj struct {
 type ModelC struct {
 	ID                     int
 	Name                   int
-	IncompatibleModel      *ModelC
-	ChainIncompatibleModel []*ModelC
+	ModelIncompatible      *ModelC
+	ChainModelIncompatible []*ModelC
 }
 
 type ModelD struct {
 	ID                     int
 	Name                   int
-	IncompatibleModel      *ModelB
-	ChainIncompatibleModel []*ModelB
+	ModelIncompatible      *ModelB
+	ChainModelIncompatible []*ModelB
+}
+
+type ModelE struct {
+	ID                  int
+	PointerIncompatible *map[string]string
+}
+
+type ModelF struct {
+	ID                  int
+	PointerIncompatible *map[int]int
 }

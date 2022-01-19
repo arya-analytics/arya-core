@@ -50,7 +50,8 @@ type MDRetrieveQuery interface {
 	MDBaseQuery
 	Model(model interface{}) MDRetrieveQuery
 	Where(query string, args ...interface{}) MDRetrieveQuery
-	WhereID(id interface{}) MDRetrieveQuery
+	WherePK(pk interface{}) MDRetrieveQuery
+	WherePKs(pks interface{}) MDRetrieveQuery
 }
 
 type MDCreateQuery interface {
@@ -60,7 +61,8 @@ type MDCreateQuery interface {
 
 type MDDeleteQuery interface {
 	MDBaseQuery
-	WhereID(id interface{}) MDDeleteQuery
+	WherePK(pk interface{}) MDDeleteQuery
+	WherePKs(pks interface{}) MDDeleteQuery
 	Model(model interface{}) MDDeleteQuery
 }
 

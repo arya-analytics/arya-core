@@ -13,16 +13,16 @@ import (
 
 var (
 	dummyEngine = roach.New(roach.Config{
-		//Host:     "192.168.64.11",
-		//Port:     26257,
-		//Username: "root",
-		//Database: "defaultdb",
-		//UseTLS:   false,
+		//TransactionLogLevel: roach.TransactionLogLevelAll,
 		Driver: roach.DriverSQLite,
 	})
+	dummyNode = &storage.Node{
+		ID: 1,
+	}
 	dummyModel = &storage.ChannelConfig{
-		ID:   432,
-		Name: "Cool Name",
+		ID:     432,
+		Name:   "Cool Name",
+		NodeID: dummyNode.ID,
 	}
 	dummyCtx     = context.Background()
 	dummyAdapter = dummyEngine.NewAdapter()
@@ -44,7 +44,7 @@ func createDummyModel() {
 }
 
 func deleteDummyModel() {
-	if err := dummyEngine.NewDelete(dummyAdapter).Model(dummyModel).WhereID(
+	if err := dummyEngine.NewDelete(dummyAdapter).Model(dummyModel).WherePK(
 		dummyModel.ID).Exec(dummyCtx); err != nil {
 		log.Fatalln(err)
 	}

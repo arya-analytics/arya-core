@@ -22,7 +22,7 @@ var Cmd = &cli.Command{
 // || LOCAL DEV CLUSTER CLI ||
 
 var clusterCmd = &cli.Command{
-	Name:  "Cluster",
+	Name:  "cluster",
 	Usage: "Provision and manage development clusters.",
 	Subcommands: []*cli.Command{
 		{
@@ -87,7 +87,7 @@ var clusterCmd = &cli.Command{
 			},
 		},
 		{
-			Name: "delete",
+			Name:  "delete",
 			Usage: "Delete an Arya development Cluster",
 			Flags: []cli.Flag{
 				&cli.StringFlag{
@@ -105,8 +105,6 @@ var clusterCmd = &cli.Command{
 }
 
 // || TOOLING CLI ||
-
-
 
 var toolingCmd = &cli.Command{
 	Name:  "tools",
@@ -165,7 +163,6 @@ var reloaderCmd = &cli.Command{
 			},
 		},
 	},
-
 }
 
 // || LOGIN CLI ||

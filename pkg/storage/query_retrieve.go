@@ -16,8 +16,13 @@ func newRetrieve(s *Storage) *retrieveQuery {
 
 // |||| INTERFACE ||||
 
-func (r *retrieveQuery) WhereID(id interface{}) *retrieveQuery {
-	r.setMDQuery(r.mdQuery().WhereID(id))
+func (r *retrieveQuery) WherePK(pk interface{}) *retrieveQuery {
+	r.setMDQuery(r.mdQuery().WherePK(pk))
+	return r
+}
+
+func (r *retrieveQuery) WherePKs(pks interface{}) *retrieveQuery {
+	r.setMDQuery(r.mdQuery().WherePKs(pks))
 	return r
 }
 

@@ -8,10 +8,23 @@ import (
 
 // |||| CONFIG ||||
 
+type TransactionLogLevel int
+
+const (
+	// TransactionLogLevelNone logs no queries
+	TransactionLogLevelNone TransactionLogLevel = iota
+	// TransactionLogLevelErr logs failed queries
+	TransactionLogLevelErr
+	// TransactionLogLevelAll logs all queries1
+	TransactionLogLevelAll
+)
+
 type Driver int
 
 const (
+	// DriverPG connects via the Postgres wire protocol.
 	DriverPG Driver = iota
+	// DriverSQLite which uses an in memory SQLite database
 	DriverSQLite
 )
 
@@ -30,10 +43,10 @@ type Config struct {
 	// Does not need to be specified if using DriverSQLite.
 	UseTLS bool
 	// Driver is the connection driver used for the roach data store.
-	// Current options are:
-	// DriverPG which connects via the Postgres wire protocol.
-	// DriverSQLite which uses an in memory SQLite database
+	// Options are:
 	Driver Driver
+	// TransactionLogLevel is the log level for executed SQL queries
+	TransactionLogLevel TransactionLogLevel
 }
 
 func (e Config) addr() string {

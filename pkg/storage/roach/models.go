@@ -3,27 +3,30 @@ package roach
 import (
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/uptrace/bun"
-	"reflect"
 	"time"
 )
 
+// |||| CATALOG ||||
+
 var _catalog = storage.ModelCatalog{
-	reflect.TypeOf(Node{}),
-	reflect.TypeOf(Range{}),
-	reflect.TypeOf(RangeReplicaToNode{}),
-	reflect.TypeOf(ChannelConfig{}),
-	reflect.TypeOf(ChannelChunk{}),
-	reflect.TypeOf(GossipNode{}),
-	reflect.TypeOf(GossipLiveness{}),
+	&Node{},
+	&Range{},
+	&RangeReplicaToNode{},
+	&ChannelConfig{},
+	&ChannelChunk{},
+	&GossipNode{},
+	&GossipLiveness{},
 }
 
 func catalog() storage.ModelCatalog {
 	return _catalog
 }
 
+// |||| DEFINITIONS ||||
+
 type Node struct {
 	bun.BaseModel `bun:"select:nodes_w_gossip,table:nodes"`
-	ID            int
+	ID            int `bun:",pk"`
 	GossipNode
 	GossipLiveness
 }
@@ -36,7 +39,7 @@ type Range struct {
 }
 
 type RangeReplicaToNode struct {
-	ID int
+	ID int `bun:",pk"`
 	//ID      uuid.UUID `bun:"type:uuid,default:gen_random_uuid()"`
 	RangeID int
 	Range   *Range `bun:"rel:belongs-to,join:range_id=id"`
@@ -48,7 +51,7 @@ type ChannelConfig struct {
 	ID     int `bun:",pk"`
 	Name   string
 	NodeID int
-	Node   *Node `bun:"rel:belongs-to,join:node_id=id"`
+	Node   *Node `bun:"rel:belongs-to,join:node_id=id,scanonly"`
 }
 
 type ChannelChunk struct {

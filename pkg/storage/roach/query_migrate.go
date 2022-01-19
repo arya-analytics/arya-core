@@ -8,6 +8,7 @@ import (
 )
 
 type migrateQuery struct {
+	baseQuery
 	db         *bun.DB
 	migrations *bunMigrate.Migrations
 	driver     Driver
@@ -33,11 +34,11 @@ func (m *migrateQuery) init(ctx context.Context) error {
 
 func (m *migrateQuery) Exec(ctx context.Context) error {
 	if err := m.init(ctx); err != nil {
-		return err
+		return m.baseHandleExecErr(err)
 	}
 	group, err := m.bunMigrator().Migrate(ctx)
 	if err != nil {
-		return err
+		return m.baseHandleExecErr(err)
 	}
 	if group.ID == 0 {
 		log.Info("No new migrations to run.")
@@ -48,6 +49,5 @@ func (m *migrateQuery) Exec(ctx context.Context) error {
 
 func (m *migrateQuery) Verify(ctx context.Context) (err error) {
 	_, err = m.db.NewSelect().Model((*ChannelConfig)(nil)).Count(ctx)
-	log.Warn(err)
-	return err
+	return m.baseHandleExecErr(err)
 }

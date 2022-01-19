@@ -10,7 +10,11 @@ import (
 	"github.com/uptrace/bun/dialect/sqlitedialect"
 	"github.com/uptrace/bun/driver/pgdriver"
 	"github.com/uptrace/bun/driver/sqliteshim"
+	"github.com/uptrace/bun/extra/bundebug"
 )
+
+// TODO: Fix TLS config
+// TODO: Test connection issues
 
 // || ADAPTER ||
 
@@ -55,19 +59,28 @@ func (a *adapter) close() error {
 	return a.db.Close()
 }
 
+func (a *adapter) setLogLevel() {
+	switch a.cfg.TransactionLogLevel {
+	case TransactionLogLevelAll:
+		a.db.AddQueryHook(bundebug.NewQueryHook(bundebug.WithVerbose(true)))
+	case TransactionLogLevelErr:
+		a.db.AddQueryHook(bundebug.NewQueryHook())
+	}
+}
+
 func (a *adapter) open() {
 	switch a.cfg.Driver {
 	case DriverPG:
-		a.db = pgConnect(a.cfg)
+		a.db = connectToPG(a.cfg)
 	case DriverSQLite:
-		a.db = sqlLiteConnect()
+		a.db = connectToSqlite()
 	}
-	//a.db.AddQueryHook(bundebug.NewQueryHook(bundebug.WithVerbose(true)))
+	a.setLogLevel()
 }
 
 // || CONNECTORS ||
 
-func pgConnect(cfg Config) *bun.DB {
+func connectToPG(cfg Config) *bun.DB {
 	db := sql.OpenDB(
 		pgdriver.NewConnector(
 			pgdriver.WithAddr(cfg.addr()),
@@ -81,7 +94,7 @@ func pgConnect(cfg Config) *bun.DB {
 	return bun.NewDB(db, pgdialect.New())
 }
 
-func sqlLiteConnect() *bun.DB {
+func connectToSqlite() *bun.DB {
 	db, err := sql.Open(sqliteshim.ShimName, "file::memory:?cache=shared")
 	if err != nil {
 		log.Fatalln(err)

@@ -11,22 +11,67 @@ var _ = Describe("Create", func() {
 	BeforeEach(migrate)
 	AfterEach(deleteDummyModel)
 	Describe("Create a new Channel Config", func() {
-		It("Should createQuery it without error", func() {
-			err := dummyEngine.NewCreate(dummyAdapter).Model(dummyModel).Exec(dummyCtx)
+		It("Should create it without error", func() {
+			err := dummyEngine.NewCreate(dummyAdapter).Model(dummyNode).Exec(dummyCtx)
+			err = dummyEngine.NewCreate(dummyAdapter).Model(dummyModel).Exec(dummyCtx)
 			Expect(err).To(BeNil())
 		})
 		It("Should be able to be re-queried after creation", func() {
-			if err := dummyEngine.NewCreate(dummyAdapter).Model(dummyModel).Exec(
-				dummyCtx); err != nil {
+			err := dummyEngine.NewCreate(dummyAdapter).Model(dummyNode).Exec(dummyCtx)
+			err = dummyEngine.NewCreate(dummyAdapter).Model(dummyModel).Exec(
+				dummyCtx)
+			if err != nil {
 				log.Fatalln(err)
 			}
 			m := &storage.ChannelConfig{}
-			err := dummyEngine.NewRetrieve(dummyAdapter).Model(m).WhereID(dummyModel.
+			err = dummyEngine.NewRetrieve(dummyAdapter).Model(m).WherePK(dummyModel.
 				ID).Exec(dummyCtx)
 			Expect(err).To(BeNil())
 			Expect(m.Name).To(Equal(dummyModel.Name))
 			Expect(m.ID).To(Equal(dummyModel.ID))
 		})
 	})
-
+	Describe("Edge cases + errors", func() {
+		Context("No PK provided", func() {
+			Context("Single Model", func() {
+				It("Should return the correct error type", func() {
+					m := &storage.ChannelConfig{
+						Name: "Hello",
+					}
+					err := dummyEngine.NewCreate(dummyAdapter).Model(m).Exec(dummyCtx)
+					Expect(err).ToNot(BeNil())
+					Expect(err.(storage.Error).Type).To(Equal(storage.ErrTypeNoPK))
+				})
+			})
+			Context("Chain of models", func() {
+				It("Should return the correct error type", func() {
+					m := []*storage.ChannelConfig{
+						&storage.ChannelConfig{
+							ID: 12, Name: "Hello",
+						},
+						&storage.ChannelConfig{},
+					}
+					err := dummyEngine.NewCreate(dummyAdapter).Model(&m).Exec(dummyCtx)
+					Expect(err).ToNot(BeNil())
+					Expect(err.(storage.Error).Type).To(Equal(storage.ErrTypeNoPK))
+				})
+			})
+		})
+		Context("Unique Violation", func() {
+			It("Should return the correct error type", func() {
+				commonPk := 424242
+				mOne := &storage.ChannelConfig{
+					ID: commonPk,
+				}
+				err := dummyEngine.NewCreate(dummyAdapter).Model(mOne).Exec(dummyCtx)
+				Expect(err).To(BeNil())
+				mTwo := &storage.ChannelConfig{
+					ID: commonPk,
+				}
+				err = dummyEngine.NewCreate(dummyAdapter).Model(mTwo).Exec(dummyCtx)
+				Expect(err).ToNot(BeNil())
+				Expect(err.(storage.Error).Type).To(Equal(storage.ErrTypeUniqueViolation))
+			})
+		})
+	})
 })
