@@ -50,6 +50,8 @@ func deleteDummyModel() {
 	}
 }
 
+var _ = BeforeSuite(migrate)
+
 func TestRoach(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Roach Suite")

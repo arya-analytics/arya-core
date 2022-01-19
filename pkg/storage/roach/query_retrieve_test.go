@@ -4,10 +4,50 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	log "github.com/sirupsen/logrus"
 )
 
 var _ = Describe("QueryRetrieve", func() {
-	BeforeEach(migrate)
+	BeforeEach(createDummyModel)
+	AfterEach(deleteDummyModel)
+	Describe("Retrieve an item", func() {
+		It("Should retrieve it without error", func() {
+			m := &storage.ChannelConfig{}
+			err := dummyEngine.NewRetrieve(dummyAdapter).Model(m).WherePK(dummyModel.
+				ID).Exec(dummyCtx)
+			Expect(err).To(BeNil())
+		})
+		It("Should retrieve the correct item", func() {
+			m := &storage.ChannelConfig{}
+			if err := dummyEngine.NewRetrieve(dummyAdapter).Model(m).WherePK(dummyModel.
+				ID).Exec(dummyCtx); err != nil {
+				log.Fatalln(err)
+			}
+			Expect(m.ID).To(Equal(dummyModel.ID))
+			Expect(m.Name).To(Equal(dummyModel.Name))
+		})
+	})
+	Describe("Retrieve multiple items", func() {
+		It("Should retrieve all the correct items", func() {
+			dummyModelTwo := &storage.ChannelConfig{
+				ID:   45,
+				Name: "CC 45",
+			}
+			if err := dummyEngine.NewCreate(dummyAdapter).Model(dummyModelTwo).Exec(
+				dummyCtx); err != nil {
+				log.Fatalln(err)
+			}
+
+			var models []*storage.ChannelConfig
+			err := dummyEngine.NewRetrieve(dummyAdapter).Model(&models).WherePKs(
+				[]int{dummyModelTwo.ID,
+					dummyModel.ID}).Exec(dummyCtx)
+			Expect(err).To(BeNil())
+			Expect(models).To(HaveLen(2))
+			Expect(models[0].Name).To(Equal(dummyModelTwo.Name))
+			Expect(models[1].ID).To(Equal(dummyModel.ID))
+		})
+	})
 	Describe("Edge cases + errors", func() {
 		Context("Retrieving an item that doesn't exist", func() {
 			It("Should return the correct error type", func() {

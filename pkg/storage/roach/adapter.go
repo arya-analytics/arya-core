@@ -80,17 +80,18 @@ func (a *adapter) open() {
 
 // || CONNECTORS ||
 
+func pgConfig(cfg Config) *pgdriver.Connector {
+	return pgdriver.NewConnector(
+		pgdriver.WithAddr(cfg.addr()),
+		pgdriver.WithInsecure(cfg.UseTLS),
+		//pgdriver.WithTLSConfig(&tls.Config{InsecureSkipVerify: true}),
+		pgdriver.WithUser(cfg.Username),
+		pgdriver.WithPassword(cfg.Password),
+		pgdriver.WithDatabase(cfg.Database))
+}
+
 func connectToPG(cfg Config) *bun.DB {
-	db := sql.OpenDB(
-		pgdriver.NewConnector(
-			pgdriver.WithAddr(cfg.addr()),
-			pgdriver.WithInsecure(cfg.UseTLS),
-			//pgdriver.WithTLSConfig(&tls.Config{InsecureSkipVerify: true}),
-			pgdriver.WithUser(cfg.Username),
-			pgdriver.WithPassword(cfg.Password),
-			pgdriver.WithDatabase(cfg.Database),
-		),
-	)
+	db := sql.OpenDB(pgConfig(cfg))
 	return bun.NewDB(db, pgdialect.New())
 }
 
