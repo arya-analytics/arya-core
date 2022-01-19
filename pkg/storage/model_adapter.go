@@ -1,8 +1,8 @@
 package storage
 
 import (
+	"fmt"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
-	log "github.com/sirupsen/logrus"
 	"reflect"
 )
 
@@ -24,8 +24,7 @@ func (mc ModelCatalog) New(modelPtr interface{}) interface{} {
 			return refCm.NewModel().Pointer()
 		}
 	}
-	log.Fatalf("model %s could not be found in catalog", refM.Type().Name())
-	return nil
+	panic(fmt.Sprintf("model %s could not be found in catalog", refM.Type().Name()))
 }
 
 // |||| BASE ADAPTER ||||
