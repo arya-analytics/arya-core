@@ -92,9 +92,14 @@ func (e *engine) NewCreate(a storage.Adapter) storage.MDCreateQuery {
 	return newCreate(conn(a))
 }
 
-// NewDelete opens a new deleteQuery with the provided storage.Adapter;
+// NewDelete opens a new deleteQuery with the provided storage.Adapter.
 func (e *engine) NewDelete(a storage.Adapter) storage.MDDeleteQuery {
 	return newDelete(conn(a))
+}
+
+// NewUpdate opens a new updateQuery with the provided storage.Adapter.
+func (e *engine) NewUpdate(a storage.Adapter) storage.MDUpdateQuery {
+	return newUpdate(conn(a))
 }
 
 // NewMigrate opens a new migrateQuery with the provided storage.Adapter;

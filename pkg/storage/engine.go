@@ -32,6 +32,7 @@ type MDEngine interface {
 	NewCreate(a Adapter) MDCreateQuery
 	NewDelete(a Adapter) MDDeleteQuery
 	NewMigrate(a Adapter) MDMigrateQuery
+	NewUpdate(a Adapter) MDUpdateQuery
 }
 
 // |||| QUERY ||||
@@ -57,6 +58,13 @@ type MDRetrieveQuery interface {
 type MDCreateQuery interface {
 	MDBaseQuery
 	Model(model interface{}) MDCreateQuery
+}
+
+type MDUpdateQuery interface {
+	MDBaseQuery
+	Model(model interface{}) MDUpdateQuery
+	Where(query string, args ...interface{}) MDUpdateQuery
+	WherePK(pk interface{}) MDUpdateQuery
 }
 
 type MDDeleteQuery interface {

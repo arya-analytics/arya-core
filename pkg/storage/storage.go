@@ -42,6 +42,10 @@ func (s *Storage) NewDelete() *deleteQuery {
 	return newDelete(s)
 }
 
+func (s *Storage) NewUpdate() *updateQuery {
+	return newUpdate(s)
+}
+
 func (s *Storage) adapter(r EngineRole) (a Adapter) {
 	return s.pooler.Retrieve(s.cfg.retrieve(r))
 }
