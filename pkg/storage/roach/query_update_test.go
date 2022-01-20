@@ -15,8 +15,9 @@ var _ = Describe("QueryUpdate", func() {
 		var um *storage.ChannelConfig
 		BeforeEach(func() {
 			um = &storage.ChannelConfig{
-				ID:   dummyModel.ID,
-				Name: "Cool New Named Name",
+				ID:     dummyModel.ID,
+				Name:   "Cool New Named Name",
+				NodeID: 1,
 			}
 			err = dummyEngine.NewUpdate(dummyAdapter).Model(um).WherePK(dummyModel.
 				ID).Exec(dummyCtx)

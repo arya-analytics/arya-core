@@ -31,8 +31,9 @@ var _ = Describe("QueryRetrieve", func() {
 	Describe("Retrieve multiple items", func() {
 		It("Should retrieve all the correct items", func() {
 			dummyModelTwo := &storage.ChannelConfig{
-				ID:   uuid.New(),
-				Name: "CC 45",
+				ID:     uuid.New(),
+				Name:   "CC 45",
+				NodeID: 1,
 			}
 			if err := dummyEngine.NewCreate(dummyAdapter).Model(dummyModelTwo).Exec(
 				dummyCtx); err != nil {

@@ -18,8 +18,9 @@ var (
 	dummyStorage = storage.New(dummyEngineCfg)
 	dummyCtx     = context.Background()
 	dummyModel   = &storage.ChannelConfig{
-		ID:   uuid.New(),
-		Name: "Cool Name",
+		ID:     uuid.New(),
+		Name:   "Cool Name",
+		NodeID: 1,
 	}
 )
 

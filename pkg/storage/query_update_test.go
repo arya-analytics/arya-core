@@ -14,8 +14,9 @@ var _ = Describe("QueryUpdate", func() {
 		var newDummyModel *storage.ChannelConfig
 		BeforeEach(func() {
 			newDummyModel = &storage.ChannelConfig{
-				ID:   dummyModel.ID,
-				Name: "New Name",
+				ID:     dummyModel.ID,
+				Name:   "New Name",
+				NodeID: 1,
 			}
 		})
 		It("Should update it without error", func() {

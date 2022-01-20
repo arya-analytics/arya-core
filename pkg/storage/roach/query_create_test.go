@@ -33,7 +33,8 @@ var _ = Describe("Create", func() {
 		})
 		It("Should be able to be re-queried after creation", func() {
 			m := &storage.ChannelConfig{
-				Name: "Channel Config",
+				Name:   "Channel Config",
+				NodeID: 1,
 			}
 			err := dummyEngine.NewRetrieve(dummyAdapter).Model(m).WherePK(dummyModel.
 				ID).Exec(dummyCtx)
@@ -70,12 +71,14 @@ var _ = Describe("Create", func() {
 			It("Should return the correct error type", func() {
 				commonPk := uuid.New()
 				mOne := &storage.ChannelConfig{
-					ID: commonPk,
+					ID:     commonPk,
+					NodeID: 1,
 				}
 				err := dummyEngine.NewCreate(dummyAdapter).Model(mOne).Exec(dummyCtx)
 				Expect(err).To(BeNil())
 				mTwo := &storage.ChannelConfig{
-					ID: commonPk,
+					ID:     commonPk,
+					NodeID: 1,
 				}
 				err = dummyEngine.NewCreate(dummyAdapter).Model(mTwo).Exec(dummyCtx)
 				Expect(err).ToNot(BeNil())

@@ -28,12 +28,14 @@ var _ = Describe("Create", func() {
 	Describe("Bulk create items", func() {
 		models := []*storage.ChannelConfig{
 			&storage.ChannelConfig{
-				ID:   uuid.New(),
-				Name: "Cool Name 1",
+				ID:     uuid.New(),
+				Name:   "Cool Name 1",
+				NodeID: 1,
 			},
 			&storage.ChannelConfig{
-				ID:   uuid.New(),
-				Name: "Cool Name 2",
+				ID:     uuid.New(),
+				Name:   "Cool Name 2",
+				NodeID: 1,
 			},
 		}
 		modelPks := []uuid.UUID{models[0].ID, models[1].ID}

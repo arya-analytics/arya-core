@@ -14,7 +14,12 @@ import (
 
 var (
 	dummyEngine = roach.New(roach.Config{
-		TransactionLogLevel: roach.TransactionLogLevelNone,
+		//Host:                "192.168.64.11",
+		//Port:                26257,
+		//Username:            "root",
+		//Password:            "",
+		//Database:            "defaultdb",
+		TransactionLogLevel: roach.TransactionLogLevelAll,
 		Driver:              roach.DriverSQLite,
 	})
 	dummyNode = &storage.Node{
