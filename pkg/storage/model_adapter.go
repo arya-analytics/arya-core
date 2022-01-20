@@ -66,10 +66,8 @@ func (ma *ModelAdapter) exchange(to *model.Reflect, from *model.Reflect) error {
 	var pErr error
 	from.ForEach(func(nRfl *model.Reflect, i int) {
 		fromAm := &adaptedModel{rfl: nRfl}
-		var toRfl *model.Reflect
-		if i == -1 {
-			toRfl = to
-		} else {
+		toRfl := to
+		if i != -1 {
 			if i >= to.ChainValue().Len() {
 				toRfl = to.NewModel()
 				to.ChainAppend(toRfl)
