@@ -17,8 +17,7 @@ func beforeInsertSetUUID(rfl *model.Reflect) *model.Reflect {
 			panic(fmt.Sprintf("Detected a model with a pk field not named %s", pkFieldName))
 		}
 		if fldT.Type == reflect.TypeOf(uuid.UUID{}) && fld.IsZero() {
-			newPK := uuid.New()
-			fld.Set(reflect.ValueOf(newPK))
+			fld.Set(reflect.ValueOf(uuid.New()))
 		}
 	})
 	return rfl
