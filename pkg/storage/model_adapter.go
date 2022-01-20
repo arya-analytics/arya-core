@@ -58,6 +58,10 @@ func (ma *ModelAdapter) ExchangeToSource() error {
 	return ma.exchange(ma.Source(), ma.Dest())
 }
 
+func (ma *ModelAdapter) ExchangeToDest() error {
+	return ma.exchange(ma.Dest(), ma.Source())
+}
+
 func (ma *ModelAdapter) exchange(to *model.Reflect, from *model.Reflect) error {
 	var pErr error
 	from.ForEach(func(nRfl *model.Reflect, i int) {
@@ -79,10 +83,6 @@ func (ma *ModelAdapter) exchange(to *model.Reflect, from *model.Reflect) error {
 		}
 	})
 	return pErr
-}
-
-func (ma *ModelAdapter) ExchangeToDest() error {
-	return ma.exchange(ma.Dest(), ma.Source())
 }
 
 // |||| ADAPTED MODEL |||||
