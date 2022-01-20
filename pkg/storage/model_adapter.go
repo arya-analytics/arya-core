@@ -67,23 +67,20 @@ func (ma *ModelAdapter) ExchangeToSource() error {
 func (ma *ModelAdapter) exchange(to *model.Reflect, from *model.Reflect) error {
 	var pErr error
 	from.ForEach(func(nRfl *model.Reflect, i int) {
-		fromAm := &adaptedModel{refl: nRfl}
-		var toAm *adaptedModel
+		fromAm := &adaptedModel{rfl: nRfl}
+		var toRfl *model.Reflect
 		if i == -1 {
-			toAm = &adaptedModel{refl: to}
+			toRfl = to
 		} else {
 			if i >= to.ChainValue().Len() {
-				newM := to.NewModel()
-				toAm = &adaptedModel{refl: newM}
-				to.ChainAppend(newM)
+				toRfl = to.NewModel()
+				to.ChainAppend(toRfl)
 			} else {
-				toAm = &adaptedModel{
-					refl: to.ChainValueByIndex(i),
-				}
+				toRfl = to.ChainValueByIndex(i)
 			}
 		}
-		err := toAm.bindVals(fromAm.mapVals())
-		if err != nil {
+		toAm := &adaptedModel{rfl: toRfl}
+		if err := toAm.bindVals(fromAm.mapVals()); err != nil {
 			pErr = err
 		}
 	})
@@ -97,14 +94,14 @@ func (ma *ModelAdapter) ExchangeToDest() error {
 // |||| ADAPTED MODEL |||||
 
 type adaptedModel struct {
-	refl *model.Reflect
+	rfl *model.Reflect
 }
 
 // bindVals binds a set of modelValues to the adaptedModel fields.
 // Returns an error for invalid / non-existent keys and invalid types.
 func (mw *adaptedModel) bindVals(mv modelValues) error {
 	for key, rv := range mv {
-		fld := mw.refl.Value().FieldByName(key)
+		fld := mw.rfl.Value().FieldByName(key)
 		v := reflect.ValueOf(rv)
 		if v.IsZero() || !fld.IsValid() {
 			continue
@@ -148,9 +145,9 @@ func (mw *adaptedModel) newValidatedRfl(v interface{}) (*model.Reflect, error) {
 // mapVals maps adaptedModel fields to modelValues.
 func (mw *adaptedModel) mapVals() modelValues {
 	mv := modelValues{}
-	for i := 0; i < mw.refl.Value().NumField(); i++ {
-		f := mw.refl.Value().Field(i)
-		t := mw.refl.Type().Field(i)
+	for i := 0; i < mw.rfl.Value().NumField(); i++ {
+		f := mw.rfl.Value().Field(i)
+		t := mw.rfl.Type().Field(i)
 		mv[t.Name] = f.Interface()
 	}
 	return mv
