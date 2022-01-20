@@ -7,7 +7,7 @@ import (
 )
 
 type baseQuery struct {
-	modelAdapter storage.ModelAdapter
+	modelAdapter *storage.ModelAdapter
 	err          error
 }
 

@@ -2,6 +2,7 @@ package roach_test
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	log "github.com/sirupsen/logrus"
@@ -37,7 +38,7 @@ var _ = Describe("QueryDelete", func() {
 		})
 		BeforeEach(func() {
 			dummyModelTwo = &storage.ChannelConfig{
-				ID:   961235125,
+				ID:   uuid.New(),
 				Name: "CC 45",
 			}
 			if err := dummyEngine.NewCreate(dummyAdapter).Model(dummyModelTwo).Exec(
@@ -45,7 +46,7 @@ var _ = Describe("QueryDelete", func() {
 				log.Fatalln(err)
 			}
 			models := []*storage.ChannelConfig{dummyModel, dummyModelTwo}
-			pks := []int{dummyModel.ID, dummyModelTwo.ID}
+			pks := []uuid.UUID{dummyModel.ID, dummyModelTwo.ID}
 			err = dummyEngine.NewDelete(dummyAdapter).Model(&models).WherePKs(pks).
 				Exec(dummyCtx)
 		})
@@ -55,7 +56,7 @@ var _ = Describe("QueryDelete", func() {
 		It("Should not be able to be-requeried after delete", func() {
 			var models []*storage.ChannelConfig
 			e := dummyEngine.NewRetrieve(dummyAdapter).Model(&models).WherePKs(
-				[]int{dummyModelTwo.ID,
+				[]uuid.UUID{dummyModelTwo.ID,
 					dummyModel.ID}).Exec(dummyCtx)
 			Expect(e).To(BeNil())
 			Expect(models).To(HaveLen(0))

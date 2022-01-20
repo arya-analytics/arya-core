@@ -2,6 +2,7 @@ package roach_test
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	log "github.com/sirupsen/logrus"
@@ -30,7 +31,7 @@ var _ = Describe("QueryRetrieve", func() {
 	Describe("Retrieve multiple items", func() {
 		It("Should retrieve all the correct items", func() {
 			dummyModelTwo := &storage.ChannelConfig{
-				ID:   45,
+				ID:   uuid.New(),
 				Name: "CC 45",
 			}
 			if err := dummyEngine.NewCreate(dummyAdapter).Model(dummyModelTwo).Exec(
@@ -40,12 +41,14 @@ var _ = Describe("QueryRetrieve", func() {
 
 			var models []*storage.ChannelConfig
 			err := dummyEngine.NewRetrieve(dummyAdapter).Model(&models).WherePKs(
-				[]int{dummyModelTwo.ID,
+				[]uuid.UUID{dummyModelTwo.ID,
 					dummyModel.ID}).Exec(dummyCtx)
 			Expect(err).To(BeNil())
 			Expect(models).To(HaveLen(2))
-			Expect(models[0].Name).To(Equal(dummyModelTwo.Name))
-			Expect(models[1].ID).To(Equal(dummyModel.ID))
+			Expect(models[0].Name == dummyModel.Name || models[0].
+				Name == dummyModelTwo.Name).To(BeTrue())
+			Expect(models[1].ID == dummyModelTwo.ID || models[1].ID == dummyModel.
+				ID).To(BeTrue())
 		})
 	})
 	Describe("Edge cases + errors", func() {

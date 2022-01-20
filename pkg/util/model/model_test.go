@@ -75,6 +75,14 @@ var _ = Describe("Model", func() {
 					Expect(newM.Type()).To(Equal(mBaseType))
 				})
 			})
+			Describe("For Each", func() {
+				It("Should provide the reflect itself", func() {
+					refl.ForEach(func(rfl *model.Reflect, i int) {
+						Expect(i).To(Equal(-1))
+						Expect(rfl).To(Equal(refl))
+					})
+				})
+			})
 		})
 		Context("Multiple Models", func() {
 			var m = []*mock.ModelA{
@@ -147,6 +155,13 @@ var _ = Describe("Model", func() {
 					Expect(newM.PointerType()).To(Equal(mType))
 					Expect(newM.RawType()).To(Equal(mBaseType))
 					Expect(newM.Type()).To(Equal(mSingleBaseType))
+				})
+			})
+			Describe("For Each", func() {
+				It("Should iterate through the chain", func() {
+					refl.ForEach(func(rfl *model.Reflect, i int) {
+						Expect(rfl).To(Equal(refl.ChainValueByIndex(i)))
+					})
 				})
 			})
 		})

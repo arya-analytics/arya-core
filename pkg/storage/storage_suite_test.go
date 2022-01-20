@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/storage/roach"
+	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	log "github.com/sirupsen/logrus"
@@ -17,7 +18,7 @@ var (
 	dummyStorage = storage.New(dummyEngineCfg)
 	dummyCtx     = context.Background()
 	dummyModel   = &storage.ChannelConfig{
-		ID:   432,
+		ID:   uuid.New(),
 		Name: "Cool Name",
 	}
 )

@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/storage/roach"
+	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	"testing"
 
@@ -13,14 +14,14 @@ import (
 
 var (
 	dummyEngine = roach.New(roach.Config{
-		//TransactionLogLevel: roach.TransactionLogLevelAll,
-		Driver: roach.DriverSQLite,
+		TransactionLogLevel: roach.TransactionLogLevelNone,
+		Driver:              roach.DriverSQLite,
 	})
 	dummyNode = &storage.Node{
 		ID: 1,
 	}
 	dummyModel = &storage.ChannelConfig{
-		ID:     432,
+		ID:     uuid.New(),
 		Name:   "Cool Name",
 		NodeID: dummyNode.ID,
 	}

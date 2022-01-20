@@ -60,7 +60,7 @@ func (r *Reflect) ChainValue() reflect.Value {
 	if r.IsChain() {
 		return r.RawValue()
 	}
-	panic("model is not a struct, cannot get a chain value")
+	panic("model is a struct, cannot get a chain value")
 }
 
 func (r *Reflect) ChainAppend(v *Reflect) {
@@ -69,6 +69,19 @@ func (r *Reflect) ChainAppend(v *Reflect) {
 
 func (r *Reflect) ChainValueByIndex(i int) *Reflect {
 	return NewReflect(r.ChainValue().Index(i).Interface())
+}
+
+type ForEachFunc func(rfl *Reflect, i int)
+
+func (r *Reflect) ForEach(fef ForEachFunc) {
+	if r.IsStruct() {
+		fef(r, -1)
+	} else {
+		for i := 0; i < r.ChainValue().Len(); i++ {
+			rfl := r.ChainValueByIndex(i)
+			fef(rfl, i)
+		}
+	}
 }
 
 // || CONSTRUCTOR ||

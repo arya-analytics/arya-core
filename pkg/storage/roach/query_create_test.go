@@ -2,29 +2,40 @@ package roach_test
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	log "github.com/sirupsen/logrus"
 )
 
 var _ = Describe("Create", func() {
 	BeforeEach(migrate)
+	BeforeEach(deleteDummyModel)
 	AfterEach(deleteDummyModel)
 	Describe("Create a new Channel Config", func() {
+		var errNode, errChan error
+		BeforeEach(func() {
+			errNode = dummyEngine.NewCreate(dummyAdapter).Model(dummyNode).Exec(
+				dummyCtx)
+			errChan = dummyEngine.NewCreate(dummyAdapter).Model(dummyModel).Exec(dummyCtx)
+		})
+		AfterEach(func() {
+			errNode = dummyEngine.NewDelete(dummyAdapter).Model(dummyNode).WherePK(
+				dummyNode.ID).
+				Exec(
+					dummyCtx)
+			errChan = dummyEngine.NewDelete(dummyAdapter).Model(dummyModel).WherePK(
+				dummyModel.ID,
+			).Exec(dummyCtx)
+		})
 		It("Should create it without error", func() {
-			err := dummyEngine.NewCreate(dummyAdapter).Model(dummyNode).Exec(dummyCtx)
-			err = dummyEngine.NewCreate(dummyAdapter).Model(dummyModel).Exec(dummyCtx)
-			Expect(err).To(BeNil())
+			Expect(errNode).To(BeNil())
+			Expect(errChan).To(BeNil())
 		})
 		It("Should be able to be re-queried after creation", func() {
-			err := dummyEngine.NewCreate(dummyAdapter).Model(dummyNode).Exec(dummyCtx)
-			err = dummyEngine.NewCreate(dummyAdapter).Model(dummyModel).Exec(
-				dummyCtx)
-			if err != nil {
-				log.Fatalln(err)
+			m := &storage.ChannelConfig{
+				Name: "Channel Config",
 			}
-			m := &storage.ChannelConfig{}
-			err = dummyEngine.NewRetrieve(dummyAdapter).Model(m).WherePK(dummyModel.
+			err := dummyEngine.NewRetrieve(dummyAdapter).Model(m).WherePK(dummyModel.
 				ID).Exec(dummyCtx)
 			Expect(err).To(BeNil())
 			Expect(m.Name).To(Equal(dummyModel.Name))
@@ -35,9 +46,7 @@ var _ = Describe("Create", func() {
 		Context("No PK provided", func() {
 			Context("Single Model", func() {
 				It("Should return the correct error type", func() {
-					m := &storage.ChannelConfig{
-						Name: "Hello",
-					}
+					m := &storage.Node{}
 					err := dummyEngine.NewCreate(dummyAdapter).Model(m).Exec(dummyCtx)
 					Expect(err).ToNot(BeNil())
 					Expect(err.(storage.Error).Type).To(Equal(storage.ErrTypeNoPK))
@@ -45,11 +54,11 @@ var _ = Describe("Create", func() {
 			})
 			Context("Chain of models", func() {
 				It("Should return the correct error type", func() {
-					m := []*storage.ChannelConfig{
-						&storage.ChannelConfig{
-							ID: 12, Name: "Hello",
+					m := []*storage.Node{
+						&storage.Node{
+							ID: 125,
 						},
-						&storage.ChannelConfig{},
+						&storage.Node{},
 					}
 					err := dummyEngine.NewCreate(dummyAdapter).Model(&m).Exec(dummyCtx)
 					Expect(err).ToNot(BeNil())
@@ -59,7 +68,7 @@ var _ = Describe("Create", func() {
 		})
 		Context("Unique Violation", func() {
 			It("Should return the correct error type", func() {
-				commonPk := 424242
+				commonPk := uuid.New()
 				mOne := &storage.ChannelConfig{
 					ID: commonPk,
 				}

@@ -303,7 +303,7 @@ var _ = Describe("Model Adapter", func() {
 				var source []*mock.ModelA
 				var dest []*mock.ModelB
 				var refObj *mock.RefObj
-				var ma storage.ModelAdapter
+				var ma *storage.ModelAdapter
 				BeforeEach(func() {
 					refObj = &mock.RefObj{
 						ID: 672,
@@ -338,7 +338,7 @@ var _ = Describe("Model Adapter", func() {
 				var source *mock.ModelA
 				var dest *mock.ModelB
 				var refObj *mock.RefObj
-				var ma storage.ModelAdapter
+				var ma *storage.ModelAdapter
 				BeforeEach(func() {
 					refObj = &mock.RefObj{
 						ID: 672,

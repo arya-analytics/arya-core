@@ -29,14 +29,16 @@ func (mc ModelCatalog) New(modelPtr interface{}) interface{} {
 
 // |||| BASE ADAPTER ||||
 
-type ModelAdapter interface {
-	Source() *model.Reflect
-	Dest() *model.Reflect
-	ExchangeToSource() error
-	ExchangeToDest() error
+type modelValues map[string]interface{}
+
+// |||| MODEL ADAPTER ||||
+
+type ModelAdapter struct {
+	sourceRfl *model.Reflect
+	destRfl   *model.Reflect
 }
 
-func NewModelAdapter(sourcePtr interface{}, destPtr interface{}) ModelAdapter {
+func NewModelAdapter(sourcePtr interface{}, destPtr interface{}) *ModelAdapter {
 	sourceRfl, destRfl := model.NewReflect(sourcePtr), model.NewReflect(destPtr)
 	if err := sourceRfl.Validate(); err != nil {
 		panic(err)
@@ -47,82 +49,49 @@ func NewModelAdapter(sourcePtr interface{}, destPtr interface{}) ModelAdapter {
 	if sourceRfl.RawType().Kind() != destRfl.RawType().Kind() {
 		panic("model adapter received model and chain. source and dest must be equal")
 	}
-	if sourceRfl.IsStruct() {
-		return newSingleModelAdapter(sourceRfl, destRfl)
-	}
-	return &chainModelAdapter{sourceRfl, destRfl}
+	return &ModelAdapter{sourceRfl, destRfl}
 }
 
-type modelValues map[string]interface{}
-
-// |||| MULTI MODEL ADAPTER ||||
-
-type chainModelAdapter struct {
-	sourceRfl *model.Reflect
-	destRfl   *model.Reflect
-}
-
-func (ma *chainModelAdapter) exchange(to *model.Reflect, from *model.Reflect) error {
-	for i := 0; i < from.ChainValue().Len(); i++ {
-		var rfl *model.Reflect
-		if i >= to.ChainValue().Len() {
-			rfl = to.NewModel()
-			to.ChainAppend(rfl)
-		} else {
-			rfl = to.ChainValueByIndex(i)
-		}
-		maX := NewModelAdapter(from.ChainValueByIndex(i).Pointer(), rfl.Pointer())
-		if err := maX.ExchangeToDest(); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (ma *chainModelAdapter) ExchangeToSource() error {
-	return ma.exchange(ma.sourceRfl, ma.destRfl)
-}
-
-func (ma *chainModelAdapter) ExchangeToDest() error {
-	return ma.exchange(ma.destRfl, ma.sourceRfl)
-}
-
-func (ma *chainModelAdapter) Source() *model.Reflect {
+func (ma *ModelAdapter) Source() *model.Reflect {
 	return ma.sourceRfl
 }
 
-func (ma *chainModelAdapter) Dest() *model.Reflect {
+func (ma *ModelAdapter) Dest() *model.Reflect {
 	return ma.destRfl
 }
 
-// |||| MODEL ADAPTER ||||
-
-type singleModelAdapter struct {
-	sourceAm *adaptedModel
-	destAm   *adaptedModel
+func (ma *ModelAdapter) ExchangeToSource() error {
+	return ma.exchange(ma.Source(), ma.Dest())
 }
 
-func newSingleModelAdapter(source *model.Reflect, dest *model.Reflect) *singleModelAdapter {
-	return &singleModelAdapter{
-		sourceAm: &adaptedModel{refl: source},
-		destAm:   &adaptedModel{refl: dest},
-	}
+func (ma *ModelAdapter) exchange(to *model.Reflect, from *model.Reflect) error {
+	var pErr error
+	from.ForEach(func(nRfl *model.Reflect, i int) {
+		fromAm := &adaptedModel{refl: nRfl}
+		var toAm *adaptedModel
+		if i == -1 {
+			toAm = &adaptedModel{refl: to}
+		} else {
+			if i >= to.ChainValue().Len() {
+				newM := to.NewModel()
+				toAm = &adaptedModel{refl: newM}
+				to.ChainAppend(newM)
+			} else {
+				toAm = &adaptedModel{
+					refl: to.ChainValueByIndex(i),
+				}
+			}
+		}
+		err := toAm.bindVals(fromAm.mapVals())
+		if err != nil {
+			pErr = err
+		}
+	})
+	return pErr
 }
 
-func (ma *singleModelAdapter) Source() *model.Reflect {
-	return ma.sourceAm.refl
-}
-
-func (ma *singleModelAdapter) Dest() *model.Reflect {
-	return ma.destAm.refl
-}
-
-func (ma *singleModelAdapter) ExchangeToSource() error {
-	return ma.sourceAm.bindVals(ma.destAm.mapVals())
-}
-
-func (ma *singleModelAdapter) ExchangeToDest() error {
-	return ma.destAm.bindVals(ma.sourceAm.mapVals())
+func (ma *ModelAdapter) ExchangeToDest() error {
+	return ma.exchange(ma.Dest(), ma.Source())
 }
 
 // |||| ADAPTED MODEL |||||
