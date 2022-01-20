@@ -6,8 +6,6 @@ import (
 	"reflect"
 )
 
-/// |||| CATALOG ||||
-
 type ModelCatalog []interface{}
 
 func (mc ModelCatalog) New(modelPtr interface{}) interface{} {
@@ -27,11 +25,7 @@ func (mc ModelCatalog) New(modelPtr interface{}) interface{} {
 	panic(fmt.Sprintf("model %s could not be found in catalog", refM.Type().Name()))
 }
 
-// |||| BASE ADAPTER ||||
-
 type modelValues map[string]interface{}
-
-// |||| MODEL ADAPTER ||||
 
 type ModelAdapter struct {
 	sourceRfl *model.Reflect
