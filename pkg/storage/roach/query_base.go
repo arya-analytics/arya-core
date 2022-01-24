@@ -7,7 +7,7 @@ import (
 )
 
 type baseQuery struct {
-	modelAdapter storage.ModelAdapter
+	modelAdapter *storage.ModelAdapter
 	err          error
 }
 
@@ -41,10 +41,7 @@ func (b *baseQuery) baseErr() error {
 }
 
 func (b *baseQuery) baseHandleExecErr(e error) error {
-	if e != nil {
-		pe := parseBunErr(e)
-		b.baseBindErr(pe)
-		return pe
-	}
-	return nil
+	pe := parseBunErr(e)
+	b.baseBindErr(pe)
+	return pe
 }

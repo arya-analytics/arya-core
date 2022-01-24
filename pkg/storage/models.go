@@ -27,23 +27,23 @@ type Range struct {
 
 type RangeReplicaToNode struct {
 	ID      uuid.UUID
-	RangeID int
+	RangeID uuid.UUID
 	Range   *Range
 	NodeID  int
 	Node    *Node
 }
 
 type ChannelConfig struct {
-	ID     int
+	ID     uuid.UUID
 	Name   string
 	NodeID int
 	Node   *Node
 }
 
 type ChannelChunk struct {
-	ID              int
-	RangeID         int
+	ID              uuid.UUID
+	RangeID         uuid.UUID
 	Range           *Range
-	ChannelConfigID int
-	ChannelConfig   *Range
+	ChannelConfigID uuid.UUID
+	ChannelConfig   *ChannelConfig
 }

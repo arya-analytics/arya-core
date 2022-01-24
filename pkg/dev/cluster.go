@@ -42,13 +42,13 @@ func ProvisionLocalDevCluster(numNodes int, name string, cores int, memory int,
 			LabelOrchestrator(nodeName)
 		}
 	}
-	log.Infof(" %s Successfully initialized Arya Cluster %s", emoji.Check, name)
+	log.Infof("%s  Successfully initialized Arya Cluster %s", emoji.Check, name)
 	return cluster, nil
 }
 
 // DeleteLocalDevCluster deletes a local development Cluster based on its Name.
 func DeleteLocalDevCluster(name string) error {
-	log.Infof("%s Deleting dev Cluster %s", emoji.Flame, name)
+	log.Infof("%s Deleting Arya Cluster %s", emoji.Flame, name)
 	cfg := AryaClusterConfig{Name: name}
 	c := NewAryaCluster(cfg)
 	c.Bind()

@@ -2,6 +2,7 @@ package storage_test
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	log "github.com/sirupsen/logrus"
@@ -27,15 +28,17 @@ var _ = Describe("Create", func() {
 	Describe("Bulk create items", func() {
 		models := []*storage.ChannelConfig{
 			&storage.ChannelConfig{
-				ID:   9621,
-				Name: "Cool Name 1",
+				ID:     uuid.New(),
+				Name:   "Cool Name 1",
+				NodeID: 1,
 			},
 			&storage.ChannelConfig{
-				ID:   9622,
-				Name: "Cool Name 2",
+				ID:     uuid.New(),
+				Name:   "Cool Name 2",
+				NodeID: 1,
 			},
 		}
-		modelPks := []int{models[0].ID, models[1].ID}
+		modelPks := []uuid.UUID{models[0].ID, models[1].ID}
 		AfterEach(func() {
 			if err := dummyStorage.NewDelete().Model(&models).WherePKs(modelPks).Exec(
 				dummyCtx); err != nil {
@@ -54,9 +57,7 @@ var _ = Describe("Create", func() {
 				dummyCtx)
 			Expect(err).To(BeNil())
 			Expect(m).To(HaveLen(2))
-			Expect(m[0].ID).To(Equal(9621))
-			Expect(m[1].ID).To(Equal(9622))
-
+			Expect(m[1].ID == models[1].ID || m[1].ID == models[0].ID).To(BeTrue())
 		})
 	})
 })

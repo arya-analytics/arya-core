@@ -20,6 +20,7 @@ func (c *createQuery) Model(m interface{}) storage.MDCreateQuery {
 	rm := c.baseModel(m)
 	c.baseAdaptToDest()
 	c.baseBindErr(createValidator.Exec(rm))
+	beforeInsertSetUUID(rm)
 	c.q = c.q.Model(rm.Pointer())
 	return c
 }

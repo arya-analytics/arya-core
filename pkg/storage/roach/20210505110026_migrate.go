@@ -29,7 +29,6 @@ func migrateUpFunc(d Driver) bunMigrate.MigrationFunc {
 									FROM nodes n`); err != nil {
 				log.Fatalln(err)
 			}
-
 		}
 		if _, err := db.NewCreateTable().
 			Model((*ChannelConfig)(nil)).

@@ -17,7 +17,7 @@ func newCreate(s *Storage) *createQuery {
 /// |||| INTERFACE ||||
 
 func (c *createQuery) Model(model interface{}) *createQuery {
-	c.baseSetMDQuery(c.mdQuery().Model(model))
+	c.setMDQuery(c.mdQuery().Model(model))
 	return c
 }
 
