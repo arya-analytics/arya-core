@@ -9,22 +9,22 @@ import (
 )
 
 var _ = Describe("QueryDelete", func() {
-	BeforeEach(createDummyModel)
+	BeforeEach(createMockModel)
 	Describe("Delete an item", func() {
 		It("Should delete without error", func() {
-			err := dummyEngine.NewDelete(dummyAdapter).Model(dummyModel).WherePK(
-				dummyModel.
+			err := mockEngine.NewDelete(mockADapter).Model(mockModel).WherePK(
+				mockModel.
 					ID).Exec(
-				dummyCtx)
+				mockCtx)
 			Expect(err).To(BeNil())
 		})
 		It("Should not be able to be re-queried after delete", func() {
-			if err := dummyEngine.NewDelete(dummyAdapter).Model(dummyModel).WherePK(
-				dummyModel.ID).Exec(dummyCtx); err != nil {
+			if err := mockEngine.NewDelete(mockADapter).Model(mockModel).WherePK(
+				mockModel.ID).Exec(mockCtx); err != nil {
 				log.Fatalln(err)
 			}
-			err := dummyEngine.NewRetrieve(dummyAdapter).Model(dummyModel).
-				WherePK(dummyModel.ID).Exec(dummyCtx)
+			err := mockEngine.NewRetrieve(mockADapter).Model(mockModel).
+				WherePK(mockModel.ID).Exec(mockCtx)
 			Expect(err).ToNot(BeNil())
 			Expect(err.(storage.Error).Type).To(Equal(storage.ErrTypeItemNotFound))
 		})
@@ -33,8 +33,8 @@ var _ = Describe("QueryDelete", func() {
 		var err error
 		var dummyModelTwo *storage.ChannelConfig
 		AfterEach(func() {
-			dummyEngine.NewDelete(dummyAdapter).Model(dummyModelTwo).WherePK(
-				dummyModelTwo.ID).Exec(dummyCtx)
+			mockEngine.NewDelete(mockADapter).Model(dummyModelTwo).WherePK(
+				dummyModelTwo.ID).Exec(mockCtx)
 		})
 		BeforeEach(func() {
 			dummyModelTwo = &storage.ChannelConfig{
@@ -42,23 +42,23 @@ var _ = Describe("QueryDelete", func() {
 				Name:   "CC 45",
 				NodeID: 1,
 			}
-			if err := dummyEngine.NewCreate(dummyAdapter).Model(dummyModelTwo).Exec(
-				dummyCtx); err != nil {
+			if err := mockEngine.NewCreate(mockADapter).Model(dummyModelTwo).Exec(
+				mockCtx); err != nil {
 				log.Fatalln(err)
 			}
-			models := []*storage.ChannelConfig{dummyModel, dummyModelTwo}
-			pks := []uuid.UUID{dummyModel.ID, dummyModelTwo.ID}
-			err = dummyEngine.NewDelete(dummyAdapter).Model(&models).WherePKs(pks).
-				Exec(dummyCtx)
+			models := []*storage.ChannelConfig{mockModel, dummyModelTwo}
+			pks := []uuid.UUID{mockModel.ID, dummyModelTwo.ID}
+			err = mockEngine.NewDelete(mockADapter).Model(&models).WherePKs(pks).
+				Exec(mockCtx)
 		})
 		It("Should delete them without error", func() {
 			Expect(err).To(BeNil())
 		})
 		It("Should not be able to be-requeried after delete", func() {
 			var models []*storage.ChannelConfig
-			e := dummyEngine.NewRetrieve(dummyAdapter).Model(&models).WherePKs(
+			e := mockEngine.NewRetrieve(mockADapter).Model(&models).WherePKs(
 				[]uuid.UUID{dummyModelTwo.ID,
-					dummyModel.ID}).Exec(dummyCtx)
+					mockModel.ID}).Exec(mockCtx)
 			Expect(e).To(BeNil())
 			Expect(models).To(HaveLen(0))
 		})

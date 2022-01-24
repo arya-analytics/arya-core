@@ -18,14 +18,14 @@ import (
 
 // || ADAPTER ||
 
-type adapter struct {
+type Adapter struct {
 	id  uuid.UUID
 	db  *bun.DB
 	cfg Config
 }
 
-func newAdapter(cfg Config) *adapter {
-	a := &adapter{
+func newAdapter(cfg Config) *Adapter {
+	a := &Adapter{
 		id:  uuid.New(),
 		cfg: cfg,
 	}
@@ -33,33 +33,33 @@ func newAdapter(cfg Config) *adapter {
 	return a
 }
 
-func bindAdapter(a storage.Adapter) (*adapter, bool) {
-	ra, ok := a.(*adapter)
+func bindAdapter(a storage.Adapter) (*Adapter, bool) {
+	ra, ok := a.(*Adapter)
 	return ra, ok
 }
 
 func conn(a storage.Adapter) *bun.DB {
 	ra, ok := bindAdapter(a)
 	if !ok {
-		log.Fatalln("Couldn't bind roach adapter.")
+		log.Fatalln("Couldn't bind roach Adapter.")
 	}
 	return ra.conn()
 }
 
 // ID implements the storage.Adapter interface.
-func (a *adapter) ID() uuid.UUID {
+func (a *Adapter) ID() uuid.UUID {
 	return a.id
 }
 
-func (a *adapter) conn() *bun.DB {
+func (a *Adapter) conn() *bun.DB {
 	return a.db
 }
 
-func (a *adapter) close() error {
+func (a *Adapter) close() error {
 	return a.db.Close()
 }
 
-func (a *adapter) setLogLevel() {
+func (a *Adapter) setLogLevel() {
 	switch a.cfg.TransactionLogLevel {
 	case TransactionLogLevelAll:
 		a.db.AddQueryHook(bundebug.NewQueryHook(bundebug.WithVerbose(true)))
@@ -68,7 +68,7 @@ func (a *adapter) setLogLevel() {
 	}
 }
 
-func (a *adapter) open() {
+func (a *Adapter) open() {
 	switch a.cfg.Driver {
 	case DriverPG:
 		a.db = connectToPG(a.cfg)
@@ -81,10 +81,12 @@ func (a *adapter) open() {
 // || CONNECTORS ||
 
 func pgConfig(cfg Config) *pgdriver.Connector {
+	if cfg.DSN != "" {
+		return pgdriver.NewConnector(pgdriver.WithDSN(cfg.DSN))
+	}
 	return pgdriver.NewConnector(
 		pgdriver.WithAddr(cfg.addr()),
 		pgdriver.WithInsecure(cfg.UseTLS),
-		//pgdriver.WithTLSConfig(&tls.Config{InsecureSkipVerify: true}),
 		pgdriver.WithUser(cfg.Username),
 		pgdriver.WithPassword(cfg.Password),
 		pgdriver.WithDatabase(cfg.Database))

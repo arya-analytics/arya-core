@@ -9,26 +9,19 @@ import (
 
 var _ = Describe("Create", func() {
 	BeforeEach(migrate)
-	BeforeEach(deleteDummyModel)
-	AfterEach(deleteDummyModel)
+	BeforeEach(deleteMockModel)
+	AfterEach(deleteMockModel)
 	Describe("Create a new Channel Config", func() {
-		var errNode, errChan error
+		var errChan error
 		BeforeEach(func() {
-			errNode = dummyEngine.NewCreate(dummyAdapter).Model(dummyNode).Exec(
-				dummyCtx)
-			errChan = dummyEngine.NewCreate(dummyAdapter).Model(dummyModel).Exec(dummyCtx)
+			errChan = mockEngine.NewCreate(mockADapter).Model(mockModel).Exec(mockCtx)
 		})
 		AfterEach(func() {
-			errNode = dummyEngine.NewDelete(dummyAdapter).Model(dummyNode).WherePK(
-				dummyNode.ID).
-				Exec(
-					dummyCtx)
-			errChan = dummyEngine.NewDelete(dummyAdapter).Model(dummyModel).WherePK(
-				dummyModel.ID,
-			).Exec(dummyCtx)
+			errChan = mockEngine.NewDelete(mockADapter).Model(mockModel).WherePK(
+				mockModel.ID,
+			).Exec(mockCtx)
 		})
 		It("Should create it without error", func() {
-			Expect(errNode).To(BeNil())
 			Expect(errChan).To(BeNil())
 		})
 		It("Should be able to be re-queried after creation", func() {
@@ -36,11 +29,11 @@ var _ = Describe("Create", func() {
 				Name:   "Channel Config",
 				NodeID: 1,
 			}
-			err := dummyEngine.NewRetrieve(dummyAdapter).Model(m).WherePK(dummyModel.
-				ID).Exec(dummyCtx)
+			err := mockEngine.NewRetrieve(mockADapter).Model(m).WherePK(mockModel.
+				ID).Exec(mockCtx)
 			Expect(err).To(BeNil())
-			Expect(m.Name).To(Equal(dummyModel.Name))
-			Expect(m.ID).To(Equal(dummyModel.ID))
+			Expect(m.Name).To(Equal(mockModel.Name))
+			Expect(m.ID).To(Equal(mockModel.ID))
 		})
 	})
 	Describe("Edge cases + errors", func() {
@@ -48,7 +41,7 @@ var _ = Describe("Create", func() {
 			Context("Single Model", func() {
 				It("Should return the correct error type", func() {
 					m := &storage.Node{}
-					err := dummyEngine.NewCreate(dummyAdapter).Model(m).Exec(dummyCtx)
+					err := mockEngine.NewCreate(mockADapter).Model(m).Exec(mockCtx)
 					Expect(err).ToNot(BeNil())
 					Expect(err.(storage.Error).Type).To(Equal(storage.ErrTypeNoPK))
 				})
@@ -61,7 +54,7 @@ var _ = Describe("Create", func() {
 						},
 						&storage.Node{},
 					}
-					err := dummyEngine.NewCreate(dummyAdapter).Model(&m).Exec(dummyCtx)
+					err := mockEngine.NewCreate(mockADapter).Model(&m).Exec(mockCtx)
 					Expect(err).ToNot(BeNil())
 					Expect(err.(storage.Error).Type).To(Equal(storage.ErrTypeNoPK))
 				})
@@ -72,15 +65,15 @@ var _ = Describe("Create", func() {
 				commonPk := uuid.New()
 				mOne := &storage.ChannelConfig{
 					ID:     commonPk,
-					NodeID: 1,
+					NodeID: mockNode.ID,
 				}
-				err := dummyEngine.NewCreate(dummyAdapter).Model(mOne).Exec(dummyCtx)
+				err := mockEngine.NewCreate(mockADapter).Model(mOne).Exec(mockCtx)
 				Expect(err).To(BeNil())
 				mTwo := &storage.ChannelConfig{
 					ID:     commonPk,
-					NodeID: 1,
+					NodeID: mockNode.ID,
 				}
-				err = dummyEngine.NewCreate(dummyAdapter).Model(mTwo).Exec(dummyCtx)
+				err = mockEngine.NewCreate(mockADapter).Model(mTwo).Exec(mockCtx)
 				Expect(err).ToNot(BeNil())
 				Expect(err.(storage.Error).Type).To(Equal(storage.ErrTypeUniqueViolation))
 			})

@@ -8,19 +8,19 @@ import (
 )
 
 var _ = Describe("QueryUpdate", func() {
-	BeforeEach(createDummyModel)
-	AfterEach(deleteDummyModel)
+	BeforeEach(createMockModel)
+	AfterEach(deleteMockModel)
 	Describe("Update an item", func() {
 		var err error
 		var um *storage.ChannelConfig
 		BeforeEach(func() {
 			um = &storage.ChannelConfig{
-				ID:     dummyModel.ID,
+				ID:     mockModel.ID,
 				Name:   "Cool New Named Name",
 				NodeID: 1,
 			}
-			err = dummyEngine.NewUpdate(dummyAdapter).Model(um).WherePK(dummyModel.
-				ID).Exec(dummyCtx)
+			err = mockEngine.NewUpdate(mockADapter).Model(um).WherePK(mockModel.
+				ID).Exec(mockCtx)
 			Expect(err).To(BeNil())
 		})
 		It("Should update it without error", func() {
@@ -28,8 +28,8 @@ var _ = Describe("QueryUpdate", func() {
 		})
 		It("Should reflect updates when retrieved", func() {
 			m := &storage.ChannelConfig{}
-			if err := dummyEngine.NewRetrieve(dummyAdapter).Model(m).WherePK(dummyModel.
-				ID).Exec(dummyCtx); err != nil {
+			if err := mockEngine.NewRetrieve(mockADapter).Model(m).WherePK(mockModel.
+				ID).Exec(mockCtx); err != nil {
 				log.Fatalln(err)
 			}
 			Expect(m.ID).To(Equal(um.ID))
