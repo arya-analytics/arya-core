@@ -28,10 +28,15 @@ type BaseEngine interface {
 
 type MDEngine interface {
 	BaseEngine
+	// NewRetrieve opens a new MDRetrieveQuery.
 	NewRetrieve(a Adapter) MDRetrieveQuery
+	// NewCreate opens a new MDCreateQuery.
 	NewCreate(a Adapter) MDCreateQuery
+	// NewDelete opens a new MDDeleteQuery.
 	NewDelete(a Adapter) MDDeleteQuery
+	// NewMigrate opens a new MDMigrateQuery.
 	NewMigrate(a Adapter) MDMigrateQuery
+	// NewUpdate opens a new MDUpdateQuery.
 	NewUpdate(a Adapter) MDUpdateQuery
 }
 
@@ -47,6 +52,7 @@ type MDBaseQuery interface {
 	BaseQuery
 }
 
+// MDRetrieveQuery is for retrieving items from metadata storage.
 type MDRetrieveQuery interface {
 	MDBaseQuery
 	Model(model interface{}) MDRetrieveQuery
@@ -55,11 +61,13 @@ type MDRetrieveQuery interface {
 	WherePKs(pks interface{}) MDRetrieveQuery
 }
 
+// MDCreateQuery is for creating items in metadata storage.
 type MDCreateQuery interface {
 	MDBaseQuery
 	Model(model interface{}) MDCreateQuery
 }
 
+// MDUpdateQuery is for updating items in metadata storage.
 type MDUpdateQuery interface {
 	MDBaseQuery
 	Model(model interface{}) MDUpdateQuery
@@ -67,6 +75,7 @@ type MDUpdateQuery interface {
 	WherePK(pk interface{}) MDUpdateQuery
 }
 
+// MDDeleteQuery is for deleting items in metadata storage.
 type MDDeleteQuery interface {
 	MDBaseQuery
 	WherePK(pk interface{}) MDDeleteQuery
@@ -74,6 +83,7 @@ type MDDeleteQuery interface {
 	Model(model interface{}) MDDeleteQuery
 }
 
+// MDMigrateQuery applies migration changes to metadata storage.
 type MDMigrateQuery interface {
 	MDBaseQuery
 	Verify(ctx context.Context) error
