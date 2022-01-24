@@ -40,6 +40,15 @@ type MDEngine interface {
 	NewUpdate(a Adapter) MDUpdateQuery
 }
 
+// || OBJECT ||
+
+type ObjectEngine interface {
+	BaseEngine
+	NewRetrieve(a Adapter) ObjectRetrieveQuery
+	NewCreate(a Adapter) ObjectCreateQuery
+	NewDelete(a Adapter) ObjectDeleteQuery
+}
+
 // |||| QUERY ||||
 
 type BaseQuery interface {
