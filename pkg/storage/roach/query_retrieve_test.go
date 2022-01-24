@@ -14,13 +14,13 @@ var _ = Describe("QueryRetrieve", func() {
 	Describe("Retrieve an item", func() {
 		It("Should retrieve it without error", func() {
 			m := &storage.ChannelConfig{}
-			err := mockEngine.NewRetrieve(mockADapter).Model(m).WherePK(mockModel.
+			err := mockEngine.NewRetrieve(mockAdapter).Model(m).WherePK(mockModel.
 				ID).Exec(mockCtx)
 			Expect(err).To(BeNil())
 		})
 		It("Should retrieve the correct item", func() {
 			m := &storage.ChannelConfig{}
-			if err := mockEngine.NewRetrieve(mockADapter).Model(m).WherePK(mockModel.
+			if err := mockEngine.NewRetrieve(mockAdapter).Model(m).WherePK(mockModel.
 				ID).Exec(mockCtx); err != nil {
 				log.Fatalln(err)
 			}
@@ -35,13 +35,13 @@ var _ = Describe("QueryRetrieve", func() {
 				Name:   "CC 45",
 				NodeID: 1,
 			}
-			if err := mockEngine.NewCreate(mockADapter).Model(dummyModelTwo).Exec(
+			if err := mockEngine.NewCreate(mockAdapter).Model(dummyModelTwo).Exec(
 				mockCtx); err != nil {
 				log.Fatalln(err)
 			}
 
 			var models []*storage.ChannelConfig
-			err := mockEngine.NewRetrieve(mockADapter).Model(&models).WherePKs(
+			err := mockEngine.NewRetrieve(mockAdapter).Model(&models).WherePKs(
 				[]uuid.UUID{dummyModelTwo.ID,
 					mockModel.ID}).Exec(mockCtx)
 			Expect(err).To(BeNil())
@@ -57,7 +57,7 @@ var _ = Describe("QueryRetrieve", func() {
 			It("Should return the correct error type", func() {
 				somePKThatDoesntExist := uuid.New()
 				m := &storage.ChannelConfig{}
-				err := mockEngine.NewRetrieve(mockADapter).
+				err := mockEngine.NewRetrieve(mockAdapter).
 					Model(m).
 					WherePK(somePKThatDoesntExist).
 					Exec(mockCtx)

@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	IDKey = "ID"
+	KeyPK = "ID"
 )
 
 type Reflect struct {
@@ -66,11 +66,24 @@ func (r *Reflect) ChainValue() reflect.Value {
 }
 
 func (r *Reflect) ChainAppend(v *Reflect) {
+	r.panicIfStruct()
 	r.ChainValue().Set(reflect.Append(r.ChainValue(), v.PointerValue()))
 }
 
 func (r *Reflect) ChainValueByIndex(i int) *Reflect {
 	return NewReflect(r.ChainValue().Index(i).Interface())
+}
+
+func (r *Reflect) ValueByPK(pk PK) (retRfl *Reflect, ok bool) {
+	r.ForEach(func(rfl *Reflect, i int) {
+		if rfl.PKField().String() == pk.String() {
+			retRfl = rfl
+		}
+	})
+	if retRfl == nil {
+		return retRfl, false
+	}
+	return retRfl, true
 }
 
 type ForEachFunc func(rfl *Reflect, i int)
@@ -112,11 +125,11 @@ func (r *Reflect) NewPointer() *Reflect {
 	return NewReflect(p.Interface())
 }
 
-// || ID ||
+// || PK ||
 
-func (r *Reflect) IDField() ID {
+func (r *Reflect) PKField() PK {
 	r.panicIfChain()
-	return ID{raw: r.Value().FieldByName(IDKey).Interface()}
+	return PK{raw: r.Value().FieldByName(KeyPK).Interface()}
 }
 
 // || INTERNAL TYPE + VALUE ACCESSORS ||
@@ -179,16 +192,32 @@ var validator = validate.New([]validate.ValidateFunc{
 	validateSliceOrStruct,
 })
 
-type ID struct {
+type PK struct {
 	raw interface{}
 }
 
-func (id ID) String() string {
-	switch id.raw.(type) {
+func NewPK(pk interface{}) PK {
+	return PK{raw: pk}
+}
+
+func (pk PK) String() string {
+	switch pk.raw.(type) {
 	case uuid.UUID:
-		return id.raw.(uuid.UUID).String()
+		return pk.raw.(uuid.UUID).String()
 	case int:
-		return strconv.Itoa(id.raw.(int))
+		return strconv.Itoa(pk.raw.(int))
 	}
-	panic("Could not convert ID to string")
+	panic("Could not convert PK to string")
+}
+
+func (pk PK) Equals(tPk PK) bool {
+	return pk.raw == tPk.raw
+}
+
+func (pk PK) Value() reflect.Value {
+	return reflect.ValueOf(pk.raw)
+}
+
+func (pk PK) IsZero() bool {
+	return pk.Value().IsZero()
 }

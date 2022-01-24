@@ -1,4 +1,4 @@
-package _case
+package caseconv
 
 import (
 	"regexp"

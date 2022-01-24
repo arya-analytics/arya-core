@@ -28,6 +28,10 @@ func (b *baseQuery) baseModelWrapper() *ModelWrapper {
 	return &ModelWrapper{rfl: b.modelAdapter.Dest()}
 }
 
+func (b *baseQuery) Bucket() string {
+	return b.baseModelWrapper().Bucket()
+}
+
 func (b *baseQuery) baseAdaptToSource() {
 	if err := b.modelAdapter.ExchangeToSource(); err != nil {
 		log.Fatalln(err)
@@ -38,6 +42,10 @@ func (b *baseQuery) baseAdaptToDest() {
 	if err := b.modelAdapter.ExchangeToDest(); err != nil {
 		log.Fatalln(err)
 	}
+}
+
+func (b *baseQuery) baseBindVals(dvc DataValueChain) {
+	b.baseModelWrapper().BindDataVals(dvc)
 }
 
 func (b *baseQuery) baseBindErr(e error) {

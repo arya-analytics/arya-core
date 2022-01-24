@@ -11,7 +11,7 @@ var _ = Describe("Migrator", func() {
 	Describe("Init Migrations", func() {
 		log.SetReportCaller(true)
 		It("Should create all of the tables correctly", func() {
-			err := mockEngine.NewMigrate(mockADapter).Verify(mockCtx)
+			err := mockEngine.NewMigrate(mockAdapter).Verify(mockCtx)
 			Expect(err).To(BeNil())
 		})
 	})

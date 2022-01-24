@@ -14,10 +14,10 @@ var _ = Describe("Create", func() {
 	Describe("Create a new Channel Config", func() {
 		var errChan error
 		BeforeEach(func() {
-			errChan = mockEngine.NewCreate(mockADapter).Model(mockModel).Exec(mockCtx)
+			errChan = mockEngine.NewCreate(mockAdapter).Model(mockModel).Exec(mockCtx)
 		})
 		AfterEach(func() {
-			errChan = mockEngine.NewDelete(mockADapter).Model(mockModel).WherePK(
+			errChan = mockEngine.NewDelete(mockAdapter).Model(mockModel).WherePK(
 				mockModel.ID,
 			).Exec(mockCtx)
 		})
@@ -29,7 +29,7 @@ var _ = Describe("Create", func() {
 				Name:   "Channel Config",
 				NodeID: 1,
 			}
-			err := mockEngine.NewRetrieve(mockADapter).Model(m).WherePK(mockModel.
+			err := mockEngine.NewRetrieve(mockAdapter).Model(m).WherePK(mockModel.
 				ID).Exec(mockCtx)
 			Expect(err).To(BeNil())
 			Expect(m.Name).To(Equal(mockModel.Name))
@@ -41,7 +41,7 @@ var _ = Describe("Create", func() {
 			Context("Single Model", func() {
 				It("Should return the correct error type", func() {
 					m := &storage.Node{}
-					err := mockEngine.NewCreate(mockADapter).Model(m).Exec(mockCtx)
+					err := mockEngine.NewCreate(mockAdapter).Model(m).Exec(mockCtx)
 					Expect(err).ToNot(BeNil())
 					Expect(err.(storage.Error).Type).To(Equal(storage.ErrTypeNoPK))
 				})
@@ -54,7 +54,7 @@ var _ = Describe("Create", func() {
 						},
 						&storage.Node{},
 					}
-					err := mockEngine.NewCreate(mockADapter).Model(&m).Exec(mockCtx)
+					err := mockEngine.NewCreate(mockAdapter).Model(&m).Exec(mockCtx)
 					Expect(err).ToNot(BeNil())
 					Expect(err.(storage.Error).Type).To(Equal(storage.ErrTypeNoPK))
 				})
@@ -67,13 +67,13 @@ var _ = Describe("Create", func() {
 					ID:     commonPk,
 					NodeID: mockNode.ID,
 				}
-				err := mockEngine.NewCreate(mockADapter).Model(mOne).Exec(mockCtx)
+				err := mockEngine.NewCreate(mockAdapter).Model(mOne).Exec(mockCtx)
 				Expect(err).To(BeNil())
 				mTwo := &storage.ChannelConfig{
 					ID:     commonPk,
 					NodeID: mockNode.ID,
 				}
-				err = mockEngine.NewCreate(mockADapter).Model(mTwo).Exec(mockCtx)
+				err = mockEngine.NewCreate(mockAdapter).Model(mTwo).Exec(mockCtx)
 				Expect(err).ToNot(BeNil())
 				Expect(err.(storage.Error).Type).To(Equal(storage.ErrTypeUniqueViolation))
 			})

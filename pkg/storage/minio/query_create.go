@@ -28,7 +28,7 @@ func (c *createQuery) Exec(ctx context.Context) error {
 		_, err := c.baseClient().PutObject(
 			ctx,
 			mw.Bucket(),
-			dv.ID,
+			dv.PK.String(),
 			dv.Data,
 			dv.Data.Size(),
 			minio.PutObjectOptions{},

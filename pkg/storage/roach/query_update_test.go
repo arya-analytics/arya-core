@@ -19,7 +19,7 @@ var _ = Describe("QueryUpdate", func() {
 				Name:   "Cool New Named Name",
 				NodeID: 1,
 			}
-			err = mockEngine.NewUpdate(mockADapter).Model(um).WherePK(mockModel.
+			err = mockEngine.NewUpdate(mockAdapter).Model(um).WherePK(mockModel.
 				ID).Exec(mockCtx)
 			Expect(err).To(BeNil())
 		})
@@ -28,7 +28,7 @@ var _ = Describe("QueryUpdate", func() {
 		})
 		It("Should reflect updates when retrieved", func() {
 			m := &storage.ChannelConfig{}
-			if err := mockEngine.NewRetrieve(mockADapter).Model(m).WherePK(mockModel.
+			if err := mockEngine.NewRetrieve(mockAdapter).Model(m).WherePK(mockModel.
 				ID).Exec(mockCtx); err != nil {
 				log.Fatalln(err)
 			}

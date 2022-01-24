@@ -8,33 +8,32 @@ import (
 )
 
 const (
-	idKey   = "ID"
 	dataKey = "Data"
 )
 
 type DataValue struct {
-	ID   string
+	PK   model.PK
 	Data storage.Object
 }
 
 type DataValueChain []*DataValue
 
-func (dvc DataValueChain) Retrieve(ID string) *DataValue {
+func (dvc DataValueChain) Retrieve(pk model.PK) *DataValue {
 	for _, dv := range dvc {
-		if dv.ID == ID {
+		if dv.PK.Equals(pk) {
 			return dv
 		}
 	}
 	return nil
 }
 
-func (dvc DataValueChain) Contains(ID string) (e bool) {
+func (dvc DataValueChain) Contains(pk model.PK) bool {
 	for _, dv := range dvc {
-		if dv.ID == ID {
-			e = true
+		if dv.PK.Equals(pk) {
+			return true
 		}
 	}
-	return e
+	return false
 }
 
 type ModelWrapper struct {
@@ -49,23 +48,32 @@ func (m *ModelWrapper) DataVals() DataValueChain {
 	var c DataValueChain
 	m.rfl.ForEach(func(rfl *model.Reflect, i int) {
 		val := rfl.Value()
-		id := rfl.IDField().String()
 		data := val.FieldByName(dataKey)
 		c = append(c, &DataValue{
-			ID:   id,
+			PK:   rfl.PKField(),
 			Data: data.Interface().(storage.Object),
 		})
 	})
 	return c
 }
 
-func (m *ModelWrapper) BindDataVals(dvc *DataValueChain) {
-	m.rfl.ForEach(func(rfl *model.Reflect, i int) {
-		val := rfl.Value()
-		id := rfl.IDField().String()
-		data := val.FieldByName(dataKey)
-		if dvc.Contains(id) {
-			data.Set(reflect.ValueOf(dvc.Retrieve(id).Data))
+func (m *ModelWrapper) BindDataVals(dvc DataValueChain) {
+	for _, dv := range dvc {
+		rfl, ok := m.rfl.ValueByPK(dv.PK)
+		if !ok {
+			if m.rfl.IsChain() {
+				newRfl := m.rfl.NewModel()
+				newRfl.Value().FieldByName(dataKey).Set(reflect.ValueOf(dv.Data))
+				m.rfl.ChainAppend(newRfl)
+			} else {
+				if !m.rfl.PKField().IsZero() {
+					panic("object store meta data mismatch")
+				}
+				m.rfl.Value().FieldByName(model.KeyPK).Set(dv.PK.Value())
+				m.rfl.Value().FieldByName(dataKey).Set(reflect.ValueOf(dv.Data))
+			}
+		} else {
+			rfl.Value().FieldByName(dataKey).Set(reflect.ValueOf(dv.Data))
 		}
-	})
+	}
 }

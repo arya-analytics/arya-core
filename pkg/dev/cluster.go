@@ -112,7 +112,7 @@ func (a *AryaCluster) Provision() error {
 }
 
 // provisionK3s provisions a K3s Cluster on a VM
-// Needs to receive a pod cidr ID (ex. 44 would result in the call Cidr(
+// Needs to receive a pod cidr PK (ex. 44 would result in the call Cidr(
 // 44) for the pod Cidr and Cidr(45) for the service Cidr).
 func (a *AryaCluster) provisionK3s(vm VM, podCidrID int) (*K3sCluster, error) {
 	log.Infof("Provisioning new K3s Cluster on VM %s", vm.Name())
@@ -247,7 +247,7 @@ const (
 )
 
 // Cidr is a utility for generating kubernetes resource IP ranges.
-// Generates an IPv4 address from a two digit unique ID (00-99).
+// Generates an IPv4 address from a two digit unique PK (00-99).
 func Cidr(ID int) string {
 	return baseCidrPrefix + strconv.Itoa(ID) + baseCidrSuffix
 }

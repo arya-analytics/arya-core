@@ -99,24 +99,31 @@ func (mw *adaptedModel) bindVals(mv modelValues) error {
 			continue
 		}
 		if v.Type() != fld.Type() {
-			fldRfl, err := mw.newValidatedRfl(fld.Interface())
-			if err != nil {
-				return err
+			if fld.Type().Kind() == reflect.Interface {
+				impl := v.Type().Implements(fld.Type())
+				if !impl {
+					panic("doesn't implement interface")
+				}
+			} else {
+				fldRfl, err := mw.newValidatedRfl(fld.Interface())
+				if err != nil {
+					return err
+				}
+				vRfl, err := mw.newValidatedRfl(rv)
+				if err != nil {
+					return err
+				}
+				vPtr := vRfl.Pointer()
+				fldPtr := fldRfl.Pointer()
+				if fldRfl.IsStruct() && fld.IsNil() {
+					fldPtr = fldRfl.NewModel().Pointer()
+				}
+				ma := NewModelAdapter(vPtr, fldPtr)
+				if err := ma.ExchangeToDest(); err != nil {
+					return err
+				}
+				v = ma.Dest().ValueForSet()
 			}
-			vRfl, err := mw.newValidatedRfl(rv)
-			if err != nil {
-				return err
-			}
-			vPtr := vRfl.Pointer()
-			fldPtr := fldRfl.Pointer()
-			if fldRfl.IsStruct() && fld.IsNil() {
-				fldPtr = fldRfl.NewModel().Pointer()
-			}
-			ma := NewModelAdapter(vPtr, fldPtr)
-			if err := ma.ExchangeToDest(); err != nil {
-				return err
-			}
-			v = ma.Dest().ValueForSet()
 		}
 		fld.Set(v)
 	}

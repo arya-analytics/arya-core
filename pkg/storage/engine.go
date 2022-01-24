@@ -111,3 +111,8 @@ type ObjectDeleteQuery interface {
 	Model(model interface{}) ObjectDeleteQuery
 	WherePK(pk interface{}) ObjectDeleteQuery
 }
+
+type ObjectMigrateQuery interface {
+	ObjectBaseQuery
+	Verify(ctx context.Context) error
+}

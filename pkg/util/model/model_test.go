@@ -36,7 +36,7 @@ var _ = Describe("Model", func() {
 				Expect(refl.IsStruct()).To(BeTrue())
 			})
 			It("Should return the correct struct field by name", func() {
-				Expect(refl.Value().FieldByName("ID").Interface()).To(Equal(22))
+				Expect(refl.Value().FieldByName("PK").Interface()).To(Equal(22))
 			})
 			It("Should return the correct struct field by index", func() {
 				Expect(refl.Value().Field(0).Interface()).To(Equal(22))

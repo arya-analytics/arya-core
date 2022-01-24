@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	pkFieldName = "ID"
+	pkFieldName = "PK"
 )
 
 func validatePK(v interface{}) (err error) {

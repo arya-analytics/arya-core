@@ -25,33 +25,33 @@ var (
 		NodeID: mockNode.ID,
 	}
 	mockCtx     = context.Background()
-	mockADapter *roach.Adapter
+	mockAdapter *roach.Adapter
 )
 
 func migrate() {
-	err := mockEngine.NewMigrate(mockADapter).Verify(mockCtx)
+	err := mockEngine.NewMigrate(mockAdapter).Verify(mockCtx)
 	if err != nil {
-		if err := mockEngine.NewMigrate(mockADapter).Exec(mockCtx); err != nil {
+		if err := mockEngine.NewMigrate(mockAdapter).Exec(mockCtx); err != nil {
 			log.Fatalln(err)
 		}
 	}
 }
 
 func createMockModel() {
-	if err := mockEngine.NewCreate(mockADapter).Model(mockModel).Exec(mockCtx); err != nil {
+	if err := mockEngine.NewCreate(mockAdapter).Model(mockModel).Exec(mockCtx); err != nil {
 		log.Fatalln(err)
 	}
 }
 
 func deleteMockModel() {
-	if err := mockEngine.NewDelete(mockADapter).Model(mockModel).WherePK(
+	if err := mockEngine.NewDelete(mockAdapter).Model(mockModel).WherePK(
 		mockModel.ID).Exec(mockCtx); err != nil {
 		log.Fatalln(err)
 	}
 }
 
 func createMockNode() {
-	if err := mockEngine.NewCreate(mockADapter).Model(mockNode).Exec(
+	if err := mockEngine.NewCreate(mockAdapter).Model(mockNode).Exec(
 		mockCtx); err != nil {
 		log.Fatalln(err)
 	}
@@ -64,7 +64,7 @@ func bootstrapEngine() {
 		log.Fatalln(err)
 	}
 	mockEngine = roach.New(roach.Config{DSN: mockDB.PGURL().String(), Driver: roach.DriverPG})
-	mockADapter = mockEngine.NewAdapter().(*roach.Adapter)
+	mockAdapter = mockEngine.NewAdapter().(*roach.Adapter)
 }
 
 var _ = BeforeSuite(func() {
