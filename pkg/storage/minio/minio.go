@@ -42,6 +42,10 @@ func (e *Engine) NewRetrieve(a storage.Adapter) storage.ObjectRetrieveQuery {
 	return newRetrieve(conn(a))
 }
 
+func (e *Engine) NewDelete(a storage.Adapter) storage.ObjectDeleteQuery {
+	return newDelete(conn(a))
+}
+
 func (e *Engine) NewMigrate(a storage.Adapter) storage.ObjectMigrateQuery {
 	return newMigrate(conn(a))
 }

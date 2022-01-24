@@ -3,14 +3,11 @@ package minio
 import (
 	"context"
 	"github.com/arya-analytics/aryacore/pkg/storage"
-	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/minio/minio-go/v7"
-	"reflect"
 )
 
 type retrieveQuery struct {
-	baseQuery
-	pks []model.PK
+	whereBaseQuery
 }
 
 func newRetrieve(client *minio.Client) *retrieveQuery {
@@ -19,21 +16,18 @@ func newRetrieve(client *minio.Client) *retrieveQuery {
 	return r
 }
 
-func (r *retrieveQuery) WherePK(pk interface{}) storage.ObjectRetrieveQuery {
-	r.pks = append(r.pks, model.NewPK(pk))
+func (r *retrieveQuery) Model(m interface{}) storage.ObjectRetrieveQuery {
+	r.baseModel(m)
 	return r
 }
 
 func (r *retrieveQuery) WherePKs(pks interface{}) storage.ObjectRetrieveQuery {
-	rfl := reflect.ValueOf(pks)
-	for i := 0; i < rfl.Len(); i++ {
-		r.WherePK(rfl.Index(i).Interface())
-	}
+	r.whereBasePKs(pks)
 	return r
 }
 
-func (r *retrieveQuery) Model(m interface{}) storage.ObjectRetrieveQuery {
-	r.baseModel(m)
+func (r *retrieveQuery) WherePK(pk interface{}) storage.ObjectRetrieveQuery {
+	r.whereBasePK(pk)
 	return r
 }
 
