@@ -25,7 +25,7 @@ var _ = Describe("Create", func() {
 			Expect(m.ID).To(Equal(dummyModel.ID))
 		})
 	})
-	Describe("Bulk create items", func() {
+	Describe("Object create items", func() {
 		models := []*storage.ChannelConfig{
 			&storage.ChannelConfig{
 				ID:     uuid.New(),

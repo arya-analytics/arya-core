@@ -2,7 +2,13 @@ package model
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/util/validate"
+	"github.com/google/uuid"
 	"reflect"
+	"strconv"
+)
+
+const (
+	IDKey = "ID"
 )
 
 type Reflect struct {
@@ -40,9 +46,7 @@ func (r *Reflect) Type() reflect.Type {
 }
 
 func (r *Reflect) Value() reflect.Value {
-	if r.IsChain() {
-		panic("model is a chain, cannot get a struct value")
-	}
+	r.panicIfChain()
 	return r.PointerValue().Elem()
 }
 
@@ -57,9 +61,7 @@ func (r *Reflect) IsStruct() bool {
 // || CHAIN METHODS ||
 
 func (r *Reflect) ChainValue() reflect.Value {
-	if r.IsChain() {
-		return r.RawValue()
-	}
+	r.panicIfStruct()
 	panic("model is a struct, cannot get a chain value")
 }
 
@@ -110,6 +112,13 @@ func (r *Reflect) NewPointer() *Reflect {
 	return NewReflect(p.Interface())
 }
 
+// || ID ||
+
+func (r *Reflect) IDField() ID {
+	r.panicIfChain()
+	return ID{raw: r.Value().FieldByName(IDKey).Interface()}
+}
+
 // || INTERNAL TYPE + VALUE ACCESSORS ||
 
 func (r *Reflect) PointerType() reflect.Type {
@@ -135,6 +144,20 @@ func (r *Reflect) ValueForSet() reflect.Value {
 	return r.PointerValue()
 }
 
+// || TYPE ASSERTIONS ||
+
+func (r *Reflect) panicIfChain() {
+	if r.IsChain() {
+		panic("model is a chain, cannot get a struct value")
+	}
+}
+
+func (r *Reflect) panicIfStruct() {
+	if r.IsStruct() {
+		panic("model is struct, cannot get a chain value")
+	}
+}
+
 func validateSliceOrStruct(v interface{}) error {
 	r := v.(*Reflect)
 	if !r.IsStruct() && !r.IsChain() {
@@ -155,3 +178,17 @@ var validator = validate.New([]validate.ValidateFunc{
 	validateContainerIsPointer,
 	validateSliceOrStruct,
 })
+
+type ID struct {
+	raw interface{}
+}
+
+func (id ID) String() string {
+	switch id.raw.(type) {
+	case uuid.UUID:
+		return id.raw.(uuid.UUID).String()
+	case int:
+		return strconv.Itoa(id.raw.(int))
+	}
+	panic("Could not convert ID to string")
+}

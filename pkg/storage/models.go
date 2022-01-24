@@ -46,4 +46,5 @@ type ChannelChunk struct {
 	Range           *Range
 	ChannelConfigID uuid.UUID
 	ChannelConfig   *ChannelConfig
+	Data            Object
 }
