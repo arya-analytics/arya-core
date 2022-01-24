@@ -33,3 +33,11 @@ func (e *Engine) IsAdapter(a storage.Adapter) bool {
 	_, ok := bindAdapter(a)
 	return ok
 }
+
+func (e *Engine) NewCreate(a storage.Adapter) storage.ObjectCreateQuery {
+	return newCreate(conn(a))
+}
+
+func (e *Engine) NewMigrate(a storage.Adapter) storage.ObjectMigrateQuery {
+	return newMigrate(conn(a))
+}

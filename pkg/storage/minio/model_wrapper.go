@@ -2,6 +2,7 @@ package minio
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/util/caseconv"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"reflect"
 )
@@ -41,7 +42,7 @@ type ModelWrapper struct {
 }
 
 func (m *ModelWrapper) Bucket() string {
-	return m.rfl.Type().Name()
+	return caseconv.PascalToKebab(m.rfl.Type().Name())
 }
 
 func (m *ModelWrapper) DataVals() DataValueChain {
@@ -52,7 +53,8 @@ func (m *ModelWrapper) DataVals() DataValueChain {
 		data := val.FieldByName(dataKey)
 		c = append(c, &DataValue{
 			ID:   id,
-			Data: data.Interface().(storage.Object)})
+			Data: data.Interface().(storage.Object),
+		})
 	})
 	return c
 }
@@ -63,7 +65,7 @@ func (m *ModelWrapper) BindDataVals(dvc *DataValueChain) {
 		id := rfl.IDField().String()
 		data := val.FieldByName(dataKey)
 		if dvc.Contains(id) {
-			data.Set(reflect.ValueOf(dvc.Retrieve(id)))
+			data.Set(reflect.ValueOf(dvc.Retrieve(id).Data))
 		}
 	})
 }
