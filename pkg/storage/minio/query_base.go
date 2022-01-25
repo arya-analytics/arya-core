@@ -2,6 +2,7 @@ package minio
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/util/validate"
 	"github.com/minio/minio-go/v7"
 	log "github.com/sirupsen/logrus"
 )
@@ -56,4 +57,23 @@ func (b *baseQuery) baseHandleExecErr(e error) error {
 	pe := parseMinioErr(e)
 	b.baseBindErr(pe)
 	return pe
+}
+
+func (b *baseQuery) baseValidateReq() error {
+	return baseQueryReqValidator.Exec(b)
+}
+
+// |||| VALIDATORS |||
+
+var baseQueryReqValidator = validate.New([]validate.Func{
+	validateModelProvided,
+})
+
+func validateModelProvided(v interface{}) error {
+	b := v.(*baseQuery)
+	if b.modelAdapter == nil {
+		return storage.Error{Type: storage.ErrTypeInvalidArgs,
+			Message: "no model provided to query"}
+	}
+	return nil
 }

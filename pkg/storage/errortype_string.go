@@ -15,11 +15,12 @@ func _() {
 	_ = x[ErrTypeInvalidField-4]
 	_ = x[ErrTypeNoPK-5]
 	_ = x[ErrTypeMigration-6]
+	_ = x[ErrTypeInvalidArgs-7]
 }
 
-const _ErrorType_name = "ErrTypeUnknownErrTypeItemNotFoundErrTypeUniqueViolationErrTypeRelationshipViolationErrTypeInvalidFieldErrTypeNoPKErrTypeMigration"
+const _ErrorType_name = "ErrTypeUnknownErrTypeItemNotFoundErrTypeUniqueViolationErrTypeRelationshipViolationErrTypeInvalidFieldErrTypeNoPKErrTypeMigrationErrTypeInvalidArgs"
 
-var _ErrorType_index = [...]uint8{0, 14, 33, 55, 83, 102, 113, 129}
+var _ErrorType_index = [...]uint8{0, 14, 33, 55, 83, 102, 113, 129, 147}
 
 func (i ErrorType) String() string {
 	if i < 0 || i >= ErrorType(len(_ErrorType_index)-1) {

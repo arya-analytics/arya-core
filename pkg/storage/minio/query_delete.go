@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/minio/minio-go/v7"
+	log "github.com/sirupsen/logrus"
 )
 
 type deleteQuery struct {
@@ -32,9 +33,10 @@ func (d *deleteQuery) Model(m interface{}) storage.ObjectDeleteQuery {
 }
 
 func (d *deleteQuery) Exec(ctx context.Context) error {
-	for _, pk := range d.pks {
+	for _, pk := range d.PKs {
 		if err := d.baseClient().RemoveObject(ctx, d.Bucket(), pk.String(),
 			minio.RemoveObjectOptions{}); err != nil {
+			log.Info(err)
 			return d.baseHandleExecErr(err)
 		}
 	}

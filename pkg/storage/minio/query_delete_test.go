@@ -52,8 +52,8 @@ var _ = Describe("QueryDelete", func() {
 				e := mockEngine.NewRetrieve(mockAdapter).Model(&models).WherePKs(
 					[]uuid.UUID{mockModelTwo.ID,
 						mockModel.ID}).Exec(mockCtx)
-				Expect(e).To(BeNil())
-				Expect(models).To(HaveLen(0))
+				Expect(e).ToNot(BeNil())
+				Expect(e.(storage.Error).Type).To(Equal(storage.ErrTypeItemNotFound))
 			})
 
 		})

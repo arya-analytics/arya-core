@@ -33,7 +33,8 @@ func parseBunErr(err error) (oErr error) {
 
 func parsePgDriverErr(err pgdriver.Error) error {
 	pgErr := pg.NewError(err.Field('C'))
-	return storage.NewError(pgToStorageErrType(pgErr.Type))
+	return storage.Error{Base: err, Type: pgToStorageErrType(pgErr.Type),
+		Message: err.Error()}
 }
 
 var _pgErrs = map[pg.ErrorType]storage.ErrorType{
@@ -67,6 +68,6 @@ func sqlToStorageErr(sql string) storage.ErrorType {
 	return storage.ErrTypeUnknown
 }
 
-func parseSqlError(sql string) storage.Error {
-	return storage.NewError(sqlToStorageErr(sql))
+func parseSqlError(sql string) error {
+	return storage.Error{Type: sqlToStorageErr(sql), Message: sql}
 }

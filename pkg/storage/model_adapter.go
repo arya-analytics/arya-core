@@ -150,7 +150,8 @@ func (mw *adaptedModel) newValidatedRfl(v interface{}) (*model.Reflect, error) {
 		rfl = rfl.NewPointer()
 	}
 	if err := rfl.Validate(); err != nil {
-		return nil, NewError(ErrTypeInvalidField)
+		return nil, Error{Base: err, Type: ErrTypeInvalidField,
+			Message: fmt.Sprintf("invalid field %v provided", rfl.Pointer())}
 	}
 	return rfl, nil
 }

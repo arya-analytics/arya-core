@@ -18,13 +18,13 @@ func validatePK(v interface{}) (err error) {
 		switch f.Kind() {
 		case reflect.Int:
 			if f.Interface() == 0 {
-				err = storage.NewError(storage.ErrTypeNoPK)
+				err = storage.Error{Type: storage.ErrTypeNoPK}
 			}
 		}
 	}
 	return err
 }
 
-var createValidator = validate.New([]validate.ValidateFunc{
+var createValidator = validate.New([]validate.Func{
 	validatePK,
 })

@@ -1,12 +1,12 @@
 package validate
 
-type ValidateFunc func(v interface{}) error
+type Func func(v interface{}) error
 
 type Validator struct {
-	validators []ValidateFunc
+	validators []Func
 }
 
-func New(v []ValidateFunc) *Validator {
+func New(v []Func) *Validator {
 	return &Validator{v}
 }
 

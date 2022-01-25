@@ -179,6 +179,10 @@ func (r *Reflect) panicIfStruct() {
 	}
 }
 
+// |||| VALIDATION ||||
+
+// || REFLECT ||
+
 func validateSliceOrStruct(v interface{}) error {
 	r := v.(*Reflect)
 	if !r.IsStruct() && !r.IsChain() {
@@ -195,10 +199,12 @@ func validateContainerIsPointer(v interface{}) error {
 	return nil
 }
 
-var validator = validate.New([]validate.ValidateFunc{
+var validator = validate.New([]validate.Func{
 	validateContainerIsPointer,
 	validateSliceOrStruct,
 })
+
+// ||| PK |||
 
 type PK struct {
 	raw interface{}
