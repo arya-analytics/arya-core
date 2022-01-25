@@ -31,17 +31,13 @@ func bindAdapter(a storage.Adapter) (*Adapter, bool) {
 func conn(a storage.Adapter) *minio.Client {
 	ma, ok := bindAdapter(a)
 	if !ok {
-		log.Fatalln("Couldn't bind minio Adapter.")
+		panic("couldn't bind minio adapter")
 	}
 	return ma.conn()
 }
 
 func (a *Adapter) ID() uuid.UUID {
 	return a.id
-}
-
-func (a *Adapter) close() error {
-	return nil
 }
 
 func (a *Adapter) conn() *minio.Client {
