@@ -21,6 +21,10 @@ func (e *MDEngine) IsAdapter(a storage.Adapter) bool {
 	return ok
 }
 
+func (e *MDEngine) InCatalog(m interface{}) bool {
+	return true
+}
+
 func (e *MDEngine) bindAdapter(a storage.Adapter) (*mdAdapter, bool) {
 	ma, ok := a.(*mdAdapter)
 	return ma, ok

@@ -2,7 +2,13 @@ package model
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/util/validate"
+	"github.com/google/uuid"
 	"reflect"
+	"strconv"
+)
+
+const (
+	KeyPK = "ID"
 )
 
 type Reflect struct {
@@ -40,9 +46,7 @@ func (r *Reflect) Type() reflect.Type {
 }
 
 func (r *Reflect) Value() reflect.Value {
-	if r.IsChain() {
-		panic("model is a chain, cannot get a struct value")
-	}
+	r.panicIfChain()
 	return r.PointerValue().Elem()
 }
 
@@ -57,18 +61,37 @@ func (r *Reflect) IsStruct() bool {
 // || CHAIN METHODS ||
 
 func (r *Reflect) ChainValue() reflect.Value {
-	if r.IsChain() {
-		return r.RawValue()
-	}
-	panic("model is a struct, cannot get a chain value")
+	r.panicIfStruct()
+	return r.RawValue()
 }
 
 func (r *Reflect) ChainAppend(v *Reflect) {
+	r.panicIfStruct()
 	r.ChainValue().Set(reflect.Append(r.ChainValue(), v.PointerValue()))
 }
 
 func (r *Reflect) ChainValueByIndex(i int) *Reflect {
 	return NewReflect(r.ChainValue().Index(i).Interface())
+}
+
+func (r *Reflect) ValueByPK(pk PK) (retRfl *Reflect, ok bool) {
+	r.ForEach(func(rfl *Reflect, i int) {
+		if rfl.PKField().String() == pk.String() {
+			retRfl = rfl
+		}
+	})
+	if retRfl == nil {
+		return retRfl, false
+	}
+	return retRfl, true
+}
+
+func (r *Reflect) PKs() []interface{} {
+	var pks []interface{}
+	r.ForEach(func(rfl *Reflect, i int) {
+		pks = append(pks, rfl.PKField().raw)
+	})
+	return pks
 }
 
 type ForEachFunc func(rfl *Reflect, i int)
@@ -110,6 +133,13 @@ func (r *Reflect) NewPointer() *Reflect {
 	return NewReflect(p.Interface())
 }
 
+// || PK ||
+
+func (r *Reflect) PKField() PK {
+	r.panicIfChain()
+	return PK{raw: r.Value().FieldByName(KeyPK).Interface()}
+}
+
 // || INTERNAL TYPE + VALUE ACCESSORS ||
 
 func (r *Reflect) PointerType() reflect.Type {
@@ -135,6 +165,24 @@ func (r *Reflect) ValueForSet() reflect.Value {
 	return r.PointerValue()
 }
 
+// || TYPE ASSERTIONS ||
+
+func (r *Reflect) panicIfChain() {
+	if r.IsChain() {
+		panic("model is a chain, cannot get a struct value")
+	}
+}
+
+func (r *Reflect) panicIfStruct() {
+	if r.IsStruct() {
+		panic("model is struct, cannot get a chain value")
+	}
+}
+
+// |||| VALIDATION ||||
+
+// || REFLECT ||
+
 func validateSliceOrStruct(v interface{}) error {
 	r := v.(*Reflect)
 	if !r.IsStruct() && !r.IsChain() {
@@ -151,7 +199,45 @@ func validateContainerIsPointer(v interface{}) error {
 	return nil
 }
 
-var validator = validate.New([]validate.ValidateFunc{
+var validator = validate.New([]validate.Func{
 	validateContainerIsPointer,
 	validateSliceOrStruct,
 })
+
+// ||| PK |||
+
+type PK struct {
+	raw interface{}
+}
+
+func NewPK(pk interface{}) PK {
+	return PK{raw: pk}
+}
+
+func (pk PK) String() string {
+	switch pk.raw.(type) {
+	case uuid.UUID:
+		return pk.raw.(uuid.UUID).String()
+	case int:
+		return strconv.Itoa(pk.raw.(int))
+	case int32:
+		return strconv.Itoa(int(pk.raw.(int32)))
+	case int64:
+		return strconv.Itoa(int(pk.raw.(int64)))
+	case string:
+		return pk.raw.(string)
+	}
+	panic("Could not convert PK to string")
+}
+
+func (pk PK) Equals(tPk PK) bool {
+	return pk.raw == tPk.raw
+}
+
+func (pk PK) Value() reflect.Value {
+	return reflect.ValueOf(pk.raw)
+}
+
+func (pk PK) IsZero() bool {
+	return pk.Value().IsZero()
+}

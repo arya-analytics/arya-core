@@ -9,15 +9,13 @@ const (
 )
 
 type Error struct {
-	Type ErrorType
+	Base    error
+	Type    ErrorType
+	Message string
 }
 
 func (e Error) Error() string {
-	return fmt.Sprintf("%s: %s", errKey, e.Type)
-}
-
-func NewError(t ErrorType) Error {
-	return Error{t}
+	return fmt.Sprintf("%s: %s - %s", errKey, e.Type, e.Message)
 }
 
 type ErrorType int
@@ -31,4 +29,5 @@ const (
 	ErrTypeInvalidField
 	ErrTypeNoPK
 	ErrTypeMigration
+	ErrTypeInvalidArgs
 )

@@ -25,6 +25,20 @@ func (mc ModelCatalog) New(modelPtr interface{}) interface{} {
 	panic(fmt.Sprintf("model %s could not be found in catalog", refM.Type().Name()))
 }
 
+func (mc ModelCatalog) InCatalog(modelPtr interface{}) bool {
+	refM := model.NewReflect(modelPtr)
+	for _, cm := range mc {
+		refCm := model.NewReflect(cm)
+		if err := refCm.Validate(); err != nil {
+			panic(err)
+		}
+		if refM.Type().Name() == refCm.Type().Name() {
+			return true
+		}
+	}
+	return false
+}
+
 type modelValues map[string]interface{}
 
 type ModelAdapter struct {
@@ -99,24 +113,31 @@ func (mw *adaptedModel) bindVals(mv modelValues) error {
 			continue
 		}
 		if v.Type() != fld.Type() {
-			fldRfl, err := mw.newValidatedRfl(fld.Interface())
-			if err != nil {
-				return err
+			if fld.Type().Kind() == reflect.Interface {
+				impl := v.Type().Implements(fld.Type())
+				if !impl {
+					panic("doesn't implement interface")
+				}
+			} else {
+				fldRfl, err := mw.newValidatedRfl(fld.Interface())
+				if err != nil {
+					return err
+				}
+				vRfl, err := mw.newValidatedRfl(rv)
+				if err != nil {
+					return err
+				}
+				vPtr := vRfl.Pointer()
+				fldPtr := fldRfl.Pointer()
+				if fldRfl.IsStruct() && fld.IsNil() {
+					fldPtr = fldRfl.NewModel().Pointer()
+				}
+				ma := NewModelAdapter(vPtr, fldPtr)
+				if err := ma.ExchangeToDest(); err != nil {
+					return err
+				}
+				v = ma.Dest().ValueForSet()
 			}
-			vRfl, err := mw.newValidatedRfl(rv)
-			if err != nil {
-				return err
-			}
-			vPtr := vRfl.Pointer()
-			fldPtr := fldRfl.Pointer()
-			if fldRfl.IsStruct() && fld.IsNil() {
-				fldPtr = fldRfl.NewModel().Pointer()
-			}
-			ma := NewModelAdapter(vPtr, fldPtr)
-			if err := ma.ExchangeToDest(); err != nil {
-				return err
-			}
-			v = ma.Dest().ValueForSet()
 		}
 		fld.Set(v)
 	}
@@ -129,7 +150,8 @@ func (mw *adaptedModel) newValidatedRfl(v interface{}) (*model.Reflect, error) {
 		rfl = rfl.NewPointer()
 	}
 	if err := rfl.Validate(); err != nil {
-		return nil, NewError(ErrTypeInvalidField)
+		return nil, Error{Base: err, Type: ErrTypeInvalidField,
+			Message: fmt.Sprintf("invalid field %v provided", rfl.Pointer())}
 	}
 	return rfl, nil
 }

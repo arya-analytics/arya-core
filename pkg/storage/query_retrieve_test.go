@@ -7,21 +7,47 @@ import (
 )
 
 var _ = Describe("retrieveQuery", func() {
-	BeforeEach(createDummyModel)
-	AfterEach(deleteDummyModel)
+
 	Describe("Standard usage", func() {
-		Describe("Retrieve a channel config", func() {
-			It("Should retrieve without error", func() {
-				m := &storage.ChannelConfig{}
-				err := dummyStorage.NewRetrieve().Model(m).WherePK(dummyModel.ID).Exec(dummyCtx)
-				Expect(err).To(BeNil())
+		Context("Meta Data Only", func() {
+			BeforeEach(createMockChannelCfg)
+			AfterEach(deleteMockChannelCfg)
+			Describe("Retrieve a channel config", func() {
+				It("Should retrieve without error", func() {
+					m := &storage.ChannelConfig{}
+					err := mockStorage.NewRetrieve().Model(m).WherePK(mockChannelCfg.ID).Exec(mockCtx)
+					Expect(err).To(BeNil())
+				})
+				It("Should retrieve the correct item", func() {
+					m := &storage.ChannelConfig{}
+					err := mockStorage.NewRetrieve().Model(m).WherePK(mockChannelCfg.ID).Exec(mockCtx)
+					Expect(err).To(BeNil())
+					Expect(m.ID).To(Equal(mockChannelCfg.ID))
+					Expect(m.Name).To(Equal(mockChannelCfg.Name))
+				})
 			})
-			It("Should retrieve the correct item", func() {
-				m := &storage.ChannelConfig{}
-				err := dummyStorage.NewRetrieve().Model(m).WherePK(dummyModel.ID).Exec(dummyCtx)
-				Expect(err).To(BeNil())
-				Expect(m.ID).To(Equal(dummyModel.ID))
-				Expect(m.Name).To(Equal(dummyModel.Name))
+		})
+		Context("Bulk Data + Meta Data", func() {
+			BeforeEach(createMockChannelChunk)
+			AfterEach(deleteMockChannelChunk)
+			Describe("Retrieve a channel chunk", func() {
+				var retrievedModel = &storage.ChannelChunk{}
+				var err error
+				BeforeEach(func() {
+					err = mockStorage.NewRetrieve().Model(retrievedModel).WherePK(
+						mockChannelChunk.ID).Exec(mockCtx)
+				})
+				It("Should retrieve it without error", func() {
+					Expect(err).To(BeNil())
+				})
+				It("Should retrieve the correct item", func() {
+					Expect(retrievedModel.ID).To(Equal(mockChannelChunk.ID))
+					Expect(retrievedModel.Data).ToNot(BeNil())
+					b := make([]byte, retrievedModel.Data.Size())
+					_, err = retrievedModel.Data.Read(b)
+					Expect(err.Error()).To(Equal("EOF"))
+					Expect(b).To(Equal(mockBytes))
+				})
 			})
 		})
 	})

@@ -55,10 +55,6 @@ func (a *Adapter) conn() *bun.DB {
 	return a.db
 }
 
-func (a *Adapter) close() error {
-	return a.db.Close()
-}
-
 func (a *Adapter) setLogLevel() {
 	switch a.cfg.TransactionLogLevel {
 	case TransactionLogLevelAll:

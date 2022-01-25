@@ -19,7 +19,7 @@ type Node struct {
 }
 
 type Range struct {
-	ID                int
+	ID                uuid.UUID
 	LeaseHolderNodeID int
 	LeaseHolderNode   *Node
 	ReplicaNodes      []*Node
@@ -46,4 +46,5 @@ type ChannelChunk struct {
 	Range           *Range
 	ChannelConfigID uuid.UUID
 	ChannelConfig   *ChannelConfig
+	Data            Object
 }

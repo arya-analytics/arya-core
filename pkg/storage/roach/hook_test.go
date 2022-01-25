@@ -17,14 +17,14 @@ var _ = Describe("Hook", func() {
 				Name:   "Auto-generated UUID",
 				NodeID: mockNode.ID,
 			}
-			err = mockEngine.NewCreate(mockADapter).Model(cc).Exec(mockCtx)
+			err = mockEngine.NewCreate(mockAdapter).Model(cc).Exec(mockCtx)
 		})
 		It("Should generate it without err", func() {
 			Expect(err).To(BeNil())
 		})
 		It("Should be able to be re-queried after creation", func() {
 			var retrievedCC = &storage.ChannelConfig{}
-			err := mockEngine.NewRetrieve(mockADapter).
+			err := mockEngine.NewRetrieve(mockAdapter).
 				Model(retrievedCC).
 				Where("NAME = ?", cc.Name).
 				Exec(mockCtx)

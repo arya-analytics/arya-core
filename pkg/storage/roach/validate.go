@@ -7,10 +7,6 @@ import (
 	"reflect"
 )
 
-const (
-	pkFieldName = "ID"
-)
-
 func validatePK(v interface{}) (err error) {
 	rfl := v.(*model.Reflect)
 	if rfl.IsChain() {
@@ -18,17 +14,17 @@ func validatePK(v interface{}) (err error) {
 			err = validatePK(rfl.ChainValueByIndex(i))
 		}
 	} else {
-		f := rfl.Value().FieldByName(pkFieldName)
+		f := rfl.Value().FieldByName(model.KeyPK)
 		switch f.Kind() {
 		case reflect.Int:
 			if f.Interface() == 0 {
-				err = storage.NewError(storage.ErrTypeNoPK)
+				err = storage.Error{Type: storage.ErrTypeNoPK}
 			}
 		}
 	}
 	return err
 }
 
-var createValidator = validate.New([]validate.ValidateFunc{
+var createValidator = validate.New([]validate.Func{
 	validatePK,
 })

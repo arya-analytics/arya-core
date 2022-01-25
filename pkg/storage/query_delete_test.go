@@ -7,20 +7,20 @@ import (
 )
 
 var _ = Describe("QueryDelete", func() {
-	BeforeEach(createDummyModel)
+	BeforeEach(createMockChannelCfg)
 	Describe("Delete a channel config", func() {
 		It("Should delete without error", func() {
-			err := dummyStorage.NewDelete().Model(dummyModel).WherePK(dummyModel.ID).
-				Exec(dummyCtx)
+			err := mockStorage.NewDelete().Model(mockChannelCfg).WherePK(mockChannelCfg.ID).
+				Exec(mockCtx)
 			Expect(err).To(BeNil())
 		})
 		It("Shouldn't throw an error when trying to retrieve after deletion", func() {
-			if err := dummyStorage.NewDelete().Model(dummyModel).WherePK(dummyModel.
-				ID).Exec(dummyCtx); err != nil {
+			if err := mockStorage.NewDelete().Model(mockChannelCfg).WherePK(mockChannelCfg.
+				ID).Exec(mockCtx); err != nil {
 				log.Fatalln(err)
 			}
-			err := dummyStorage.NewRetrieve().Model(dummyModel).WherePK(dummyModel.
-				ID).Exec(dummyCtx)
+			err := mockStorage.NewRetrieve().Model(mockChannelCfg).WherePK(mockChannelCfg.
+				ID).Exec(mockCtx)
 			Expect(err).ToNot(BeNil())
 		})
 	})

@@ -13,8 +13,8 @@ type EngineRole int
 
 const (
 	EngineRoleMD = iota
+	EngineRoleObject
 	EngineRoleCache
-	EngineRoleBulk
 )
 
 // |||| ENGINE ||||
@@ -22,6 +22,7 @@ const (
 type BaseEngine interface {
 	NewAdapter() Adapter
 	IsAdapter(a Adapter) bool
+	InCatalog(m interface{}) bool
 }
 
 // || META DATA ||
@@ -38,6 +39,16 @@ type MDEngine interface {
 	NewMigrate(a Adapter) MDMigrateQuery
 	// NewUpdate opens a new MDUpdateQuery.
 	NewUpdate(a Adapter) MDUpdateQuery
+}
+
+// || OBJECT ||
+
+type ObjectEngine interface {
+	BaseEngine
+	NewRetrieve(a Adapter) ObjectRetrieveQuery
+	NewCreate(a Adapter) ObjectCreateQuery
+	NewDelete(a Adapter) ObjectDeleteQuery
+	NewMigrate(a Adapter) ObjectMigrateQuery
 }
 
 // |||| QUERY ||||
@@ -87,5 +98,34 @@ type MDDeleteQuery interface {
 type MDMigrateQuery interface {
 	MDBaseQuery
 	Verify(ctx context.Context) error
-	Exec(ctx context.Context) error
+}
+
+// || BULK ||
+
+type ObjectBaseQuery interface {
+	BaseQuery
+}
+
+type ObjectCreateQuery interface {
+	ObjectBaseQuery
+	Model(model interface{}) ObjectCreateQuery
+}
+
+type ObjectRetrieveQuery interface {
+	ObjectBaseQuery
+	Model(model interface{}) ObjectRetrieveQuery
+	WherePK(pk interface{}) ObjectRetrieveQuery
+	WherePKs(pks interface{}) ObjectRetrieveQuery
+}
+
+type ObjectDeleteQuery interface {
+	ObjectBaseQuery
+	Model(model interface{}) ObjectDeleteQuery
+	WherePK(pk interface{}) ObjectDeleteQuery
+	WherePKs(pks interface{}) ObjectDeleteQuery
+}
+
+type ObjectMigrateQuery interface {
+	ObjectBaseQuery
+	Verify(ctx context.Context) error
 }

@@ -9,8 +9,8 @@ import (
 var _ = Describe("Errors", func() {
 	Context("Error string", func() {
 		It("Should return the correct string", func() {
-			err := storage.NewError(storage.ErrTypeInvalidField)
-			Expect(err.Error()).To(Equal("storage: ErrTypeInvalidField"))
+			err := storage.Error{Type: storage.ErrTypeUnknown, Message: "Unknown Error"}
+			Expect(err.Error()).To(Equal("storage: ErrTypeUnknown - Unknown Error"))
 		})
 	})
 })
