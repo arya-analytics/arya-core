@@ -64,6 +64,7 @@ func (m *ModelWrapper) BindDataVals(dvc DataValueChain) {
 			if m.rfl.IsChain() {
 				newRfl := m.rfl.NewModel()
 				newRfl.Value().FieldByName(dataKey).Set(reflect.ValueOf(dv.Data))
+				newRfl.Value().FieldByName(model.KeyPK).Set(dv.PK.Value())
 				m.rfl.ChainAppend(newRfl)
 			} else {
 				if !m.rfl.PKField().IsZero() {

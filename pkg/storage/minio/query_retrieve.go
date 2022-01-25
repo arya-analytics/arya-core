@@ -38,6 +38,10 @@ func (r *retrieveQuery) Exec(ctx context.Context) error {
 		if err != nil {
 			return r.baseHandleExecErr(err)
 		}
+		stat, err := obj.Stat()
+		if stat.Key == "" {
+			return storage.NewError(storage.ErrTypeItemNotFound)
+		}
 		dvc = append(dvc, &DataValue{PK: pk, Data: &Object{obj}})
 	}
 	r.baseBindVals(dvc)
