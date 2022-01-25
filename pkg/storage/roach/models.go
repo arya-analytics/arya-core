@@ -35,7 +35,7 @@ type Node struct {
 type Range struct {
 	ID                uuid.UUID `bun:"type:UUID,pk"`
 	LeaseHolderNodeID int
-	LeaseHolderNode   *Node   `bun:"rel:belongs-to,join:lease_holder_node_id=id"`
+	LeaseHolderNode   int
 	ReplicaNodes      []*Node `bun:"m2m:range_replica_to_nodes,join:Range=Node"`
 }
 
