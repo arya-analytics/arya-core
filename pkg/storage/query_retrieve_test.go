@@ -28,7 +28,27 @@ var _ = Describe("retrieveQuery", func() {
 			})
 		})
 		Context("Bulk Data + Meta Data", func() {
-
+			BeforeEach(createMockChannelChunk)
+			AfterEach(deleteMockChannelChunk)
+			Describe("Retrieve a channel chunk", func() {
+				var retrievedModel = &storage.ChannelChunk{}
+				var err error
+				BeforeEach(func() {
+					err = mockStorage.NewRetrieve().Model(retrievedModel).WherePK(
+						mockChannelChunk.ID).Exec(mockCtx)
+				})
+				It("Should retrieve it without error", func() {
+					Expect(err).To(BeNil())
+				})
+				It("Should retrieve the correct item", func() {
+					Expect(retrievedModel.ID).To(Equal(mockChannelChunk.ID))
+					Expect(retrievedModel.Data).ToNot(BeNil())
+					b := make([]byte, retrievedModel.Data.Size())
+					_, err = retrievedModel.Data.Read(b)
+					Expect(err.Error()).To(Equal("EOF"))
+					Expect(b).To(Equal(mockBytes))
+				})
+			})
 		})
 	})
 

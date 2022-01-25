@@ -33,7 +33,8 @@ var (
 		Name:   "Cool Name",
 		NodeID: 1,
 	}
-	mockNode = &storage.Node{
+	mockBytes = []byte("mock model bytes")
+	mockNode  = &storage.Node{
 		ID: 1,
 	}
 	mockRange = &storage.Range{
@@ -54,16 +55,17 @@ func bootstrapMockRoachEngine() storage.MDEngine {
 }
 
 func createMock(m interface{}) {
+	rfl := model.NewReflect(m)
 	if err := mockStorage.NewCreate().Model(m).Exec(mockCtx); err != nil {
-		log.Fatalln(err)
+		log.Fatalln(err, rfl.Type().Name())
 	}
 }
 
 func deleteMock(m interface{}) {
-	if err := mockStorage.NewDelete().Model(m).WherePK(model.NewReflect(m).PKField().
-		Value().Interface()).Exec(
-		mockCtx); err != nil {
-		log.Fatalln(err)
+	rfl := model.NewReflect(m)
+	if err := mockStorage.NewDelete().Model(m).WherePK(rfl.PKField().
+		Value().Interface()).Exec(mockCtx); err != nil {
+		log.Fatalln(err, rfl.Type().Name())
 	}
 }
 
@@ -87,8 +89,10 @@ func createMockChannelChunk() {
 	createMockChannelCfg()
 	createMockRange()
 	mockChannelChunk = &storage.ChannelChunk{
-		ID:   uuid.New(),
-		Data: mock.NewObject([]byte("mock model bytes")),
+		ID:              uuid.New(),
+		Data:            mock.NewObject(mockBytes),
+		RangeID:         mockRange.ID,
+		ChannelConfigID: mockChannelCfg.ID,
 	}
 	createMock(mockChannelChunk)
 }

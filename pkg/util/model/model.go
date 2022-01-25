@@ -86,6 +86,14 @@ func (r *Reflect) ValueByPK(pk PK) (retRfl *Reflect, ok bool) {
 	return retRfl, true
 }
 
+func (r *Reflect) PKs() interface{} {
+	var pks []interface{}
+	r.ForEach(func(rfl *Reflect, i int) {
+		pks = append(pks, rfl.PKField().raw)
+	})
+	return pks
+}
+
 type ForEachFunc func(rfl *Reflect, i int)
 
 func (r *Reflect) ForEach(fef ForEachFunc) {

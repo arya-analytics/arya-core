@@ -1,9 +1,13 @@
 package storage
 
-import "context"
+import (
+	"context"
+	"github.com/arya-analytics/aryacore/pkg/util/model"
+)
 
 type createQuery struct {
 	baseQuery
+	modelRfl *model.Reflect
 }
 
 // |||| CONSTRUCTOR ||||
@@ -16,16 +20,27 @@ func newCreate(s *Storage) *createQuery {
 
 /// |||| INTERFACE ||||
 
-func (c *createQuery) Model(model interface{}) *createQuery {
-	c.setMDQuery(c.mdQuery().Model(model))
+func (c *createQuery) Model(m interface{}) *createQuery {
+	c.modelRfl = model.NewReflect(m)
+	c.setMDQuery(c.mdQuery().Model(c.modelRfl.Pointer()))
 	return c
 }
 
 func (c *createQuery) Exec(ctx context.Context) error {
-	return c.mdQuery().Exec(ctx)
+	if err := c.mdQuery().Exec(ctx); err != nil {
+		return err
+	}
+	if c.objEngine.InCatalog(c.modelRfl.Pointer()) {
+		if err := c.objQuery().Model(c.modelRfl.Pointer()).Exec(ctx); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // |||| QUERY BINDING ||||
+
+// || META DATA ||
 
 func (c *createQuery) mdQuery() MDCreateQuery {
 	if c.baseMDQuery() == nil {
@@ -36,4 +51,17 @@ func (c *createQuery) mdQuery() MDCreateQuery {
 
 func (c *createQuery) setMDQuery(q MDCreateQuery) {
 	c.baseSetMDQuery(q)
+}
+
+// || OBJECT ||
+
+func (c *createQuery) objQuery() ObjectCreateQuery {
+	if c.baseObjQuery() == nil {
+		c.setObjQuery(c.objEngine.NewCreate(c.baseObjAdapter()))
+	}
+	return c.baseObjQuery().(ObjectCreateQuery)
+}
+
+func (c *createQuery) setObjQuery(q ObjectCreateQuery) {
+	c.baseSetObjQuery(q)
 }

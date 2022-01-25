@@ -67,7 +67,7 @@ func (r *retrieveQuery) setMDQuery(q MDRetrieveQuery) {
 // || OBJECT ||
 
 func (r *retrieveQuery) objQuery() ObjectRetrieveQuery {
-	if r.objQuery() == nil {
+	if r.baseObjQuery() == nil {
 		r.setObjQuery(r.objEngine.NewRetrieve(r.baseObjAdapter()))
 	}
 	return r.baseObjQuery().(ObjectRetrieveQuery)
