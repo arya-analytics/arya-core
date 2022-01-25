@@ -3,6 +3,7 @@ package storage_test
 import (
 	"context"
 	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/storage/minio"
 	"github.com/arya-analytics/aryacore/pkg/storage/roach"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
@@ -14,6 +15,13 @@ import (
 var (
 	dummyEngineCfg = storage.EngineConfig{
 		storage.EngineRoleMD: roach.New(roach.Config{Driver: roach.DriverSQLite}),
+		storage.EngineRoleObject: minio.New(
+			minio.Config{
+				Driver:    minio.DriverMinIO,
+				Endpoint:  "play.min.io",
+				AccessKey: "Q3AM3UQ867SPQQA43P2F",
+				SecretKey: "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG",
+			}),
 	}
 	dummyStorage = storage.New(dummyEngineCfg)
 	dummyCtx     = context.Background()

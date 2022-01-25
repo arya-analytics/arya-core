@@ -34,6 +34,10 @@ func (e *Engine) IsAdapter(a storage.Adapter) bool {
 	return ok
 }
 
+func (e *Engine) InCatalog(m interface{}) bool {
+	return catalog().InCatalog(m)
+}
+
 func (e *Engine) NewCreate(a storage.Adapter) storage.ObjectCreateQuery {
 	return newCreate(conn(a))
 }

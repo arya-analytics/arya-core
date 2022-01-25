@@ -22,6 +22,7 @@ const (
 type BaseEngine interface {
 	NewAdapter() Adapter
 	IsAdapter(a Adapter) bool
+	InCatalog(m interface{}) bool
 }
 
 // || META DATA ||
@@ -47,6 +48,7 @@ type ObjectEngine interface {
 	NewRetrieve(a Adapter) ObjectRetrieveQuery
 	NewCreate(a Adapter) ObjectCreateQuery
 	NewDelete(a Adapter) ObjectDeleteQuery
+	NewMigrate(a Adapter) ObjectMigrateQuery
 }
 
 // |||| QUERY ||||

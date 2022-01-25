@@ -12,6 +12,10 @@ func (ec EngineConfig) mdEngine() MDEngine {
 	return ec.retrieve(EngineRoleMD).(MDEngine)
 }
 
+func (ec EngineConfig) objEngine() ObjectEngine {
+	return ec.retrieve(EngineRoleObject).(ObjectEngine)
+}
+
 // |||| STORAGE ||||
 
 type Storage struct {

@@ -85,6 +85,10 @@ func (e *Engine) IsAdapter(a storage.Adapter) bool {
 	return ok
 }
 
+func (e *Engine) InCatalog(m interface{}) bool {
+	return catalog().InCatalog(m)
+}
+
 // NewRetrieve opens a new retrieveQuery query with the provided storage.Adapter.
 func (e *Engine) NewRetrieve(a storage.Adapter) storage.MDRetrieveQuery {
 	return newRetrieve(conn(a))

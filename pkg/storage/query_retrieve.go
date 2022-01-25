@@ -1,9 +1,13 @@
 package storage
 
-import "context"
+import (
+	"context"
+	"github.com/arya-analytics/aryacore/pkg/util/model"
+)
 
 type retrieveQuery struct {
 	baseQuery
+	modelRfl *model.Reflect
 }
 
 // |||| CONSTRUCTOR ||||
@@ -26,24 +30,49 @@ func (r *retrieveQuery) WherePKs(pks interface{}) *retrieveQuery {
 	return r
 }
 
-func (r *retrieveQuery) Model(model interface{}) *retrieveQuery {
-	r.setMDQuery(r.mdQuery().Model(model))
+func (r *retrieveQuery) Model(m interface{}) *retrieveQuery {
+	r.modelRfl = model.NewReflect(m)
+	r.setMDQuery(r.mdQuery().Model(r.modelRfl.Pointer()))
 	return r
 }
 
 func (r *retrieveQuery) Exec(ctx context.Context) error {
-	return r.mdQuery().Exec(ctx)
+	if err := r.mdQuery().Exec(ctx); err != nil {
+		return err
+	}
+	if r.objEngine.InCatalog(r.modelRfl.Pointer()) {
+		if err := r.objQuery().Model(r.modelRfl.Pointer()).WherePKs(r.modelRfl.PKs()).
+			Exec(ctx); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // |||| QUERY BINDING ||||
 
+// || META DATA ||
+
 func (r *retrieveQuery) mdQuery() MDRetrieveQuery {
 	if r.baseMDQuery() == nil {
-		r.setMDQuery(r.mdEngine.NewRetrieve(r.storage.adapter(EngineRoleMD)))
+		r.setMDQuery(r.mdEngine.NewRetrieve(r.baseMDAdapter()))
 	}
 	return r.baseMDQuery().(MDRetrieveQuery)
 }
 
 func (r *retrieveQuery) setMDQuery(q MDRetrieveQuery) {
 	r.baseSetMDQuery(q)
+}
+
+// || OBJECT ||
+
+func (r *retrieveQuery) objQuery() ObjectRetrieveQuery {
+	if r.objQuery() == nil {
+		r.setObjQuery(r.objEngine.NewRetrieve(r.baseObjAdapter()))
+	}
+	return r.baseObjQuery().(ObjectRetrieveQuery)
+}
+
+func (r *retrieveQuery) setObjQuery(q ObjectRetrieveQuery) {
+	r.baseSetObjQuery(q)
 }

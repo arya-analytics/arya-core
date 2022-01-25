@@ -25,6 +25,20 @@ func (mc ModelCatalog) New(modelPtr interface{}) interface{} {
 	panic(fmt.Sprintf("model %s could not be found in catalog", refM.Type().Name()))
 }
 
+func (mc ModelCatalog) InCatalog(modelPtr interface{}) bool {
+	refM := model.NewReflect(modelPtr)
+	for _, cm := range mc {
+		refCm := model.NewReflect(cm)
+		if err := refCm.Validate(); err != nil {
+			panic(err)
+		}
+		if refM.Type().Name() == refCm.Type().Name() {
+			return true
+		}
+	}
+	return false
+}
+
 type modelValues map[string]interface{}
 
 type ModelAdapter struct {
