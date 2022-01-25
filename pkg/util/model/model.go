@@ -62,7 +62,7 @@ func (r *Reflect) IsStruct() bool {
 
 func (r *Reflect) ChainValue() reflect.Value {
 	r.panicIfStruct()
-	panic("model is a struct, cannot get a chain value")
+	return r.RawValue()
 }
 
 func (r *Reflect) ChainAppend(v *Reflect) {

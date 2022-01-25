@@ -27,11 +27,11 @@ func (r *retrieveQuery) Where(query string, args ...interface{}) storage.MDRetri
 }
 
 func (r *retrieveQuery) WherePK(pk interface{}) storage.MDRetrieveQuery {
-	return r.Where("PK = ?", pk)
+	return r.Where("ID = ?", pk)
 }
 
 func (r *retrieveQuery) WherePKs(pks interface{}) storage.MDRetrieveQuery {
-	return r.Where("PK in (?)", bun.In(pks))
+	return r.Where("ID in (?)", bun.In(pks))
 }
 
 func (r *retrieveQuery) Exec(ctx context.Context) error {

@@ -113,12 +113,14 @@ type ObjectRetrieveQuery interface {
 	ObjectBaseQuery
 	Model(model interface{}) ObjectRetrieveQuery
 	WherePK(pk interface{}) ObjectRetrieveQuery
+	WherePKs(pks interface{}) ObjectRetrieveQuery
 }
 
 type ObjectDeleteQuery interface {
 	ObjectBaseQuery
 	Model(model interface{}) ObjectDeleteQuery
 	WherePK(pk interface{}) ObjectDeleteQuery
+	WherePKs(pks interface{}) ObjectDeleteQuery
 }
 
 type ObjectMigrateQuery interface {

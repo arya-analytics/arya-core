@@ -1,9 +1,9 @@
 package storage
 
 type baseQuery struct {
-	storage     *Storage
-	mdEngine    MDEngine
-	mdBaseQuery MDBaseQuery
+	storage      *Storage
+	mdEngine     MDEngine
+	_mdBaseQuery MDBaseQuery
 }
 
 func (b *baseQuery) baseInit(s *Storage) {
@@ -18,9 +18,13 @@ func (b *baseQuery) baseMDAdapter() Adapter {
 }
 
 func (b *baseQuery) baseMDQuery() MDBaseQuery {
-	return b.mdBaseQuery
+	return b._mdBaseQuery
 }
 
 func (b *baseQuery) baseSetMDQuery(q MDBaseQuery) {
-	b.mdBaseQuery = q
+	b._mdBaseQuery = q
+}
+
+func (b *baseQuery) baseObjectAdapter() Adapter {
+	return b.storage.adapter(EngineRoleObject)
 }

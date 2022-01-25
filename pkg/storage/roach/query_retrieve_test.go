@@ -9,47 +9,49 @@ import (
 )
 
 var _ = Describe("QueryRetrieve", func() {
-	BeforeEach(createMockModel)
-	AfterEach(deleteMockModel)
-	Describe("Retrieve an item", func() {
-		It("Should retrieve it without error", func() {
-			m := &storage.ChannelConfig{}
-			err := mockEngine.NewRetrieve(mockAdapter).Model(m).WherePK(mockModel.
-				ID).Exec(mockCtx)
-			Expect(err).To(BeNil())
+	Describe("Normal Operation", func() {
+		BeforeEach(createMockModel)
+		AfterEach(deleteMockModel)
+		Describe("Retrieve an item", func() {
+			It("Should retrieve it without error", func() {
+				m := &storage.ChannelConfig{}
+				err := mockEngine.NewRetrieve(mockAdapter).Model(m).WherePK(mockModel.
+					ID).Exec(mockCtx)
+				Expect(err).To(BeNil())
+			})
+			It("Should retrieve the correct item", func() {
+				m := &storage.ChannelConfig{}
+				if err := mockEngine.NewRetrieve(mockAdapter).Model(m).WherePK(mockModel.
+					ID).Exec(mockCtx); err != nil {
+					log.Fatalln(err)
+				}
+				Expect(m.ID).To(Equal(mockModel.ID))
+				Expect(m.Name).To(Equal(mockModel.Name))
+			})
 		})
-		It("Should retrieve the correct item", func() {
-			m := &storage.ChannelConfig{}
-			if err := mockEngine.NewRetrieve(mockAdapter).Model(m).WherePK(mockModel.
-				ID).Exec(mockCtx); err != nil {
-				log.Fatalln(err)
-			}
-			Expect(m.ID).To(Equal(mockModel.ID))
-			Expect(m.Name).To(Equal(mockModel.Name))
-		})
-	})
-	Describe("Retrieve multiple items", func() {
-		It("Should retrieve all the correct items", func() {
-			dummyModelTwo := &storage.ChannelConfig{
-				ID:     uuid.New(),
-				Name:   "CC 45",
-				NodeID: 1,
-			}
-			if err := mockEngine.NewCreate(mockAdapter).Model(dummyModelTwo).Exec(
-				mockCtx); err != nil {
-				log.Fatalln(err)
-			}
+		Describe("Retrieve multiple items", func() {
+			It("Should retrieve all the correct items", func() {
+				mockModelTwo := &storage.ChannelConfig{
+					ID:     uuid.New(),
+					Name:   "CC 45",
+					NodeID: 1,
+				}
+				if err := mockEngine.NewCreate(mockAdapter).Model(mockModelTwo).Exec(
+					mockCtx); err != nil {
+					log.Fatalln(err)
+				}
 
-			var models []*storage.ChannelConfig
-			err := mockEngine.NewRetrieve(mockAdapter).Model(&models).WherePKs(
-				[]uuid.UUID{dummyModelTwo.ID,
-					mockModel.ID}).Exec(mockCtx)
-			Expect(err).To(BeNil())
-			Expect(models).To(HaveLen(2))
-			Expect(models[0].Name == mockModel.Name || models[0].
-				Name == dummyModelTwo.Name).To(BeTrue())
-			Expect(models[1].ID == dummyModelTwo.ID || models[1].ID == mockModel.
-				ID).To(BeTrue())
+				var models []*storage.ChannelConfig
+				err := mockEngine.NewRetrieve(mockAdapter).Model(&models).WherePKs(
+					[]uuid.UUID{mockModelTwo.ID,
+						mockModel.ID}).Exec(mockCtx)
+				Expect(err).To(BeNil())
+				Expect(models).To(HaveLen(2))
+				Expect(models[0].Name == mockModel.Name || models[0].
+					Name == mockModelTwo.Name).To(BeTrue())
+				Expect(models[1].ID == mockModelTwo.ID || models[1].ID == mockModel.
+					ID).To(BeTrue())
+			})
 		})
 	})
 	Describe("Edge cases + errors", func() {

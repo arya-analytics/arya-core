@@ -17,11 +17,11 @@ func newDelete(db *bun.DB) *deleteQuery {
 }
 
 func (d *deleteQuery) WherePK(pks interface{}) storage.MDDeleteQuery {
-	return d.Where("PK = ?", pks)
+	return d.Where("ID = ?", pks)
 }
 
 func (d *deleteQuery) WherePKs(pks interface{}) storage.MDDeleteQuery {
-	return d.Where("PK in (?)", bun.In(pks))
+	return d.Where("ID in (?)", bun.In(pks))
 }
 
 func (d *deleteQuery) Where(query string, args ...interface{}) storage.MDDeleteQuery {
