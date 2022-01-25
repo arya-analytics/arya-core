@@ -2,18 +2,19 @@ package minio
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/util/errutil"
 	"github.com/arya-analytics/aryacore/pkg/util/validate"
 	"github.com/minio/minio-go/v7"
-	log "github.com/sirupsen/logrus"
 )
 
 type baseQuery struct {
 	_client      *minio.Client
 	modelAdapter *storage.ModelAdapter
-	err          error
+	catcher      *errutil.Catcher
 }
 
 func (b *baseQuery) baseInit(client *minio.Client) {
+	b.catcher = &errutil.Catcher{}
 	b._client = client
 }
 
@@ -34,33 +35,23 @@ func (b *baseQuery) Bucket() string {
 }
 
 func (b *baseQuery) baseAdaptToSource() {
-	if err := b.modelAdapter.ExchangeToSource(); err != nil {
-		log.Fatalln(err)
-	}
+	b.catcher.Exec(b.modelAdapter.ExchangeToSource)
 }
 
 func (b *baseQuery) baseAdaptToDest() {
-	if err := b.modelAdapter.ExchangeToDest(); err != nil {
-		log.Fatalln(err)
-	}
+	b.catcher.Exec(b.modelAdapter.ExchangeToDest)
 }
 
 func (b *baseQuery) baseBindVals(dvc DataValueChain) {
 	b.baseModelWrapper().BindDataVals(dvc)
 }
 
-func (b *baseQuery) baseBindErr(e error) {
-	b.err = e
+func (b *baseQuery) baseErr() error {
+	return parseMinioErr(b.catcher.Error())
 }
 
-func (b *baseQuery) baseHandleExecErr(e error) error {
-	pe := parseMinioErr(e)
-	b.baseBindErr(pe)
-	return pe
-}
-
-func (b *baseQuery) baseValidateReq() error {
-	return baseQueryReqValidator.Exec(b)
+func (b *baseQuery) baseValidateReq() {
+	b.catcher.Exec(func() error { return baseQueryReqValidator.Exec(b) })
 }
 
 // |||| VALIDATORS |||

@@ -19,8 +19,8 @@ var _ = Describe("Tooling", func() {
 				})
 			})
 			Describe("Uninstalling a tool", func() {
-				It("Should throw an error", func() {
-					err := tooling.Uninstall("ra012hjad");
+				It("Should throw an errutil", func() {
+					err := tooling.Uninstall("ra012hjad")
 					Expect(err).ToNot(BeNil())
 				})
 			})
@@ -52,14 +52,14 @@ var _ = Describe("Tooling", func() {
 				})
 			})
 			Describe("Installing a tool", func() {
-				It("Shouldn't throw an error", func() {
+				It("Shouldn't throw an errutil", func() {
 					err := tooling.Install(testTool)
 					Expect(err).To(BeNil())
 				})
 			})
 		})
 	})
-	Describe("InstallRequiredTools",func() {
+	Describe("InstallRequiredTools", func() {
 		It("Should install the required tools correctly", func() {
 			err := dev.InstallRequiredTools()
 			Expect(err).To(BeNil())
@@ -71,7 +71,7 @@ var _ = Describe("Tooling", func() {
 			Expect(err).To(BeNil())
 		})
 	})
-	Describe("RequiredToolsInstalled",func() {
+	Describe("RequiredToolsInstalled", func() {
 		It("Should return true if the required tools are installed", func() {
 			if err := dev.InstallRequiredTools(); err != nil {
 				log.Fatalln(err)

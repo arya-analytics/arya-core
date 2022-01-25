@@ -104,7 +104,7 @@ type adaptedModel struct {
 }
 
 // bindVals binds a set of modelValues to the adaptedModel fields.
-// Returns an error for invalid / non-existent keys and invalid types.
+// Returns an errutil for invalid / non-existent keys and invalid types.
 func (mw *adaptedModel) bindVals(mv modelValues) error {
 	for key, rv := range mv {
 		fld := mw.rfl.Value().FieldByName(key)

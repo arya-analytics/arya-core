@@ -127,7 +127,7 @@ var _ = Describe("Model", func() {
 			var mSingleBaseType = reflect.TypeOf(mock.ModelA{})
 			var mSingleType = reflect.TypeOf(&mock.ModelA{})
 			var refl = model.NewReflect(&m)
-			It("Should pass validation without error", func() {
+			It("Should pass validation without errutil", func() {
 				Expect(refl.Validate()).To(BeNil())
 			})
 			It("Should return the correct pointer interface", func() {
@@ -209,19 +209,19 @@ var _ = Describe("Model", func() {
 			})
 		})
 		Describe("Errors + edge cases", func() {
-			It("Should return an error when a non pointer is provided", func() {
+			It("Should return an errutil when a non pointer is provided", func() {
 				Expect(model.NewReflect(mock.ModelA{ID: 22}).Validate()).ToNot(BeNil())
 			})
-			It("Should return an error when a non struct is provided", func() {
+			It("Should return an errutil when a non struct is provided", func() {
 				i := 11
 				Expect(model.NewReflect(&i).Validate()).ToNot(BeNil())
 			})
-			It("Should return an error when initializing with a nil pointer", func() {
+			It("Should return an errutil when initializing with a nil pointer", func() {
 				refl := model.NewReflect((*mock.ModelA)(nil))
 				Expect(refl.Validate()).To(BeNil())
 				Expect(refl.NewModel())
 			})
-			It("Should return an error when initializing with a nil pointer", func() {
+			It("Should return an errutil when initializing with a nil pointer", func() {
 				var m []*mock.ModelA
 				refl := model.NewReflect(&m)
 				Expect(refl.Validate()).To(BeNil())

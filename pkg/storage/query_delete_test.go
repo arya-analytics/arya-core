@@ -9,12 +9,12 @@ import (
 var _ = Describe("QueryDelete", func() {
 	BeforeEach(createMockChannelCfg)
 	Describe("Delete a channel config", func() {
-		It("Should delete without error", func() {
+		It("Should delete without errutil", func() {
 			err := mockStorage.NewDelete().Model(mockChannelCfg).WherePK(mockChannelCfg.ID).
 				Exec(mockCtx)
 			Expect(err).To(BeNil())
 		})
-		It("Shouldn't throw an error when trying to retrieve after deletion", func() {
+		It("Shouldn't throw an errutil when trying to retrieve after deletion", func() {
 			if err := mockStorage.NewDelete().Model(mockChannelCfg).WherePK(mockChannelCfg.
 				ID).Exec(mockCtx); err != nil {
 				log.Fatalln(err)

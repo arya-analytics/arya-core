@@ -23,19 +23,18 @@ func (c *createQuery) Model(m interface{}) storage.ObjectCreateQuery {
 }
 
 func (c *createQuery) Exec(ctx context.Context) error {
-	mw := c.baseModelWrapper()
-	for _, dv := range mw.DataVals() {
-		_, err := c.baseClient().PutObject(
-			ctx,
-			mw.Bucket(),
-			dv.PK.String(),
-			dv.Data,
-			dv.Data.Size(),
-			minio.PutObjectOptions{},
-		)
-		if err != nil {
-			return c.baseHandleExecErr(err)
-		}
+	for _, dv := range c.baseModelWrapper().DataVals() {
+		c.catcher.Exec(func() error {
+			_, err := c.baseClient().PutObject(
+				ctx,
+				c.Bucket(),
+				dv.PK.String(),
+				dv.Data,
+				dv.Data.Size(),
+				minio.PutObjectOptions{},
+			)
+			return err
+		})
 	}
-	return nil
+	return c.baseErr()
 }

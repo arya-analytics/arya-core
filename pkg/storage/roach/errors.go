@@ -23,7 +23,7 @@ func parseBunErr(err error) (oErr error) {
 	se, ok := oErr.(storage.Error)
 	if ok {
 		if se.Type == storage.ErrTypeUnknown {
-			log.Errorf("Unknown error -> %s", err)
+			log.Errorf("Unknown errutil -> %s", err)
 		}
 	}
 	return oErr
@@ -56,7 +56,7 @@ func pgToStorageErrType(t pg.ErrorType) storage.ErrorType {
 var _sqlErrors = map[string]storage.ErrorType{
 	"sql: no rows in result set":                  storage.ErrTypeItemNotFound,
 	"constraint failed: UNIQUE constraint failed": storage.ErrTypeUniqueViolation,
-	"SQL logic error: no such table":              storage.ErrTypeMigration,
+	"SQL logic errutil: no such table":            storage.ErrTypeMigration,
 }
 
 func sqlToStorageErr(sql string) storage.ErrorType {

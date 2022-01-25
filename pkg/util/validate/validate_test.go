@@ -6,7 +6,7 @@ import (
 
 var _ = Describe("Validate", func() {
 	Describe("Internal Validation", func() {
-		It("Should throw an error if not provided a struct or a slice", func() {
+		It("Should throw an errutil if not provided a struct or a slice", func() {
 
 		})
 	})

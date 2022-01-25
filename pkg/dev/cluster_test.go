@@ -16,7 +16,7 @@ var _ = Describe("Cluster", func() {
 			c, cErr = provisionDummyAryaClusterIfNotExists()
 		})
 		Describe("Provisioning a new Cluster", func() {
-			It("Shouldn't encounter an error while provisioning the Cluster", func() {
+			It("Shouldn't encounter an errutil while provisioning the Cluster", func() {
 				Expect(cErr).To(BeNil())
 			})
 			It("Should provision the correct vms", func() {
