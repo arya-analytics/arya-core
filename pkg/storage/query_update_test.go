@@ -8,33 +8,33 @@ import (
 )
 
 var _ = Describe("QueryUpdate", func() {
-	BeforeEach(createDummyModel)
-	AfterEach(deleteDummyModel)
+	BeforeEach(createMockChannelCfg)
+	AfterEach(deleteMockChannelCfg)
 	Describe("Update an item", func() {
 		var newDummyModel *storage.ChannelConfig
 		BeforeEach(func() {
 			newDummyModel = &storage.ChannelConfig{
-				ID:     dummyModel.ID,
+				ID:     mockChannelCfg.ID,
 				Name:   "New Name",
 				NodeID: 1,
 			}
 		})
 		It("Should update it without error", func() {
-			err := dummyStorage.NewUpdate().Model(newDummyModel).WherePK(dummyModel.ID).Exec(
-				dummyCtx)
+			err := mockStorage.NewUpdate().Model(newDummyModel).WherePK(mockChannelCfg.ID).Exec(
+				mockCtx)
 			Expect(err).To(BeNil())
 		})
 		It("Should be able to be re-queried after update", func() {
-			if err := dummyStorage.NewUpdate().Model(newDummyModel).WherePK(dummyModel.ID).Exec(
-				dummyCtx); err != nil {
+			if err := mockStorage.NewUpdate().Model(newDummyModel).WherePK(mockChannelCfg.ID).Exec(
+				mockCtx); err != nil {
 				log.Fatalln(err)
 			}
 			m := &storage.ChannelConfig{}
-			if err := dummyStorage.NewRetrieve().Model(m).WherePK(dummyModel.ID).Exec(
-				dummyCtx); err != nil {
+			if err := mockStorage.NewRetrieve().Model(m).WherePK(mockChannelCfg.ID).Exec(
+				mockCtx); err != nil {
 				log.Fatalln(err)
 			}
-			Expect(m.ID).To(Equal(dummyModel.ID))
+			Expect(m.ID).To(Equal(mockChannelCfg.ID))
 			Expect(m.Name).To(Equal(newDummyModel.Name))
 		})
 	})

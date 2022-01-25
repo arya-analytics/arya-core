@@ -10,19 +10,19 @@ import (
 
 var _ = Describe("Create", func() {
 	Describe("Create a  new item", func() {
-		AfterEach(deleteDummyModel)
+		AfterEach(deleteMockChannelCfg)
 		It("Should create it without error", func() {
-			err := dummyStorage.NewCreate().Model(dummyModel).Exec(dummyCtx)
+			err := mockStorage.NewCreate().Model(mockChannelCfg).Exec(mockCtx)
 			Expect(err).To(BeNil())
 		})
 		It("Should be able to be re-queried after creation", func() {
-			err := dummyStorage.NewCreate().Model(dummyModel).Exec(dummyCtx)
+			err := mockStorage.NewCreate().Model(mockChannelCfg).Exec(mockCtx)
 			Expect(err).To(BeNil())
 			m := &storage.ChannelConfig{}
-			err = dummyStorage.NewRetrieve().Model(m).WherePK(dummyModel.ID).Exec(
-				dummyCtx)
+			err = mockStorage.NewRetrieve().Model(m).WherePK(mockChannelCfg.ID).Exec(
+				mockCtx)
 			Expect(err).To(BeNil())
-			Expect(m.ID).To(Equal(dummyModel.ID))
+			Expect(m.ID).To(Equal(mockChannelCfg.ID))
 		})
 	})
 	Describe("Object create items", func() {
@@ -40,21 +40,21 @@ var _ = Describe("Create", func() {
 		}
 		modelPks := []uuid.UUID{models[0].ID, models[1].ID}
 		AfterEach(func() {
-			if err := dummyStorage.NewDelete().Model(&models).WherePKs(modelPks).Exec(
-				dummyCtx); err != nil {
+			if err := mockStorage.NewDelete().Model(&models).WherePKs(modelPks).Exec(
+				mockCtx); err != nil {
 				log.Fatalln(err)
 			}
 		})
 		It("Should create without error", func() {
-			err := dummyStorage.NewCreate().Model(&models).Exec(dummyCtx)
+			err := mockStorage.NewCreate().Model(&models).Exec(mockCtx)
 			Expect(err).To(BeNil())
 		})
 		It("Should be able to be re-queried after creation", func() {
-			err := dummyStorage.NewCreate().Model(&models).Exec(dummyCtx)
+			err := mockStorage.NewCreate().Model(&models).Exec(mockCtx)
 			Expect(err).To(BeNil())
 			var m []*storage.ChannelConfig
-			err = dummyStorage.NewRetrieve().Model(&m).WherePKs(modelPks).Exec(
-				dummyCtx)
+			err = mockStorage.NewRetrieve().Model(&m).WherePKs(modelPks).Exec(
+				mockCtx)
 			Expect(err).To(BeNil())
 			Expect(m).To(HaveLen(2))
 			Expect(m[1].ID == models[1].ID || m[1].ID == models[0].ID).To(BeTrue())

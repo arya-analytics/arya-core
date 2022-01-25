@@ -9,7 +9,7 @@ import (
 )
 
 var _ = Describe("QueryRetrieve", func() {
-	Describe("Normal Operation", func() {
+	Describe("Standard Usage", func() {
 		BeforeEach(createMockModel)
 		AfterEach(deleteMockModel)
 		Describe("Retrieve an item", func() {

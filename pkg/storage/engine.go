@@ -13,8 +13,8 @@ type EngineRole int
 
 const (
 	EngineRoleMD = iota
-	EngineRoleCache
 	EngineRoleObject
+	EngineRoleCache
 )
 
 // |||| ENGINE ||||

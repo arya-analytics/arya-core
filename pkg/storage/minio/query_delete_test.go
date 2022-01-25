@@ -10,7 +10,7 @@ import (
 )
 
 var _ = Describe("QueryDelete", func() {
-	Describe("Normal Operation", func() {
+	Describe("Standard Usage", func() {
 		BeforeEach(createMockModel)
 		Describe("Delete an item", func() {
 			var err error

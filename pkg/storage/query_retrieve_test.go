@@ -7,22 +7,28 @@ import (
 )
 
 var _ = Describe("retrieveQuery", func() {
-	BeforeEach(createDummyModel)
-	AfterEach(deleteDummyModel)
+
 	Describe("Standard usage", func() {
-		Describe("Retrieve a channel config", func() {
-			It("Should retrieve without error", func() {
-				m := &storage.ChannelConfig{}
-				err := dummyStorage.NewRetrieve().Model(m).WherePK(dummyModel.ID).Exec(dummyCtx)
-				Expect(err).To(BeNil())
+		Context("Meta Data Only", func() {
+			BeforeEach(createMockChannelCfg)
+			AfterEach(deleteMockChannelCfg)
+			Describe("Retrieve a channel config", func() {
+				It("Should retrieve without error", func() {
+					m := &storage.ChannelConfig{}
+					err := mockStorage.NewRetrieve().Model(m).WherePK(mockChannelCfg.ID).Exec(mockCtx)
+					Expect(err).To(BeNil())
+				})
+				It("Should retrieve the correct item", func() {
+					m := &storage.ChannelConfig{}
+					err := mockStorage.NewRetrieve().Model(m).WherePK(mockChannelCfg.ID).Exec(mockCtx)
+					Expect(err).To(BeNil())
+					Expect(m.ID).To(Equal(mockChannelCfg.ID))
+					Expect(m.Name).To(Equal(mockChannelCfg.Name))
+				})
 			})
-			It("Should retrieve the correct item", func() {
-				m := &storage.ChannelConfig{}
-				err := dummyStorage.NewRetrieve().Model(m).WherePK(dummyModel.ID).Exec(dummyCtx)
-				Expect(err).To(BeNil())
-				Expect(m.ID).To(Equal(dummyModel.ID))
-				Expect(m.Name).To(Equal(dummyModel.Name))
-			})
+		})
+		Context("Bulk Data + Meta Data", func() {
+
 		})
 	})
 
