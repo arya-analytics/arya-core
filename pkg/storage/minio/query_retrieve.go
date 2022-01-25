@@ -40,9 +40,12 @@ func (r *retrieveQuery) Exec(ctx context.Context) error {
 		}
 		stat, err := obj.Stat()
 		if stat.Key == "" {
-			return storage.NewError(storage.ErrTypeItemNotFound)
+			if len(r.pks) == 1 {
+				return storage.NewError(storage.ErrTypeItemNotFound)
+			}
+		} else {
+			dvc = append(dvc, &DataValue{PK: pk, Data: &Object{obj}})
 		}
-		dvc = append(dvc, &DataValue{PK: pk, Data: &Object{obj}})
 	}
 	r.baseBindVals(dvc)
 	r.baseAdaptToSource()
