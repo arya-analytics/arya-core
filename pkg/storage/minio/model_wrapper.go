@@ -18,24 +18,6 @@ type DataValue struct {
 
 type DataValueChain []*DataValue
 
-func (dvc DataValueChain) Retrieve(pk model.PK) *DataValue {
-	for _, dv := range dvc {
-		if dv.PK.Equals(pk) {
-			return dv
-		}
-	}
-	return nil
-}
-
-func (dvc DataValueChain) Contains(pk model.PK) bool {
-	for _, dv := range dvc {
-		if dv.PK.Equals(pk) {
-			return true
-		}
-	}
-	return false
-}
-
 type ModelWrapper struct {
 	rfl *model.Reflect
 }
