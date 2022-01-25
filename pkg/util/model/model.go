@@ -86,7 +86,7 @@ func (r *Reflect) ValueByPK(pk PK) (retRfl *Reflect, ok bool) {
 	return retRfl, true
 }
 
-func (r *Reflect) PKs() interface{} {
+func (r *Reflect) PKs() []interface{} {
 	var pks []interface{}
 	r.ForEach(func(rfl *Reflect, i int) {
 		pks = append(pks, rfl.PKField().raw)
@@ -214,6 +214,12 @@ func (pk PK) String() string {
 		return pk.raw.(uuid.UUID).String()
 	case int:
 		return strconv.Itoa(pk.raw.(int))
+	case int32:
+		return strconv.Itoa(int(pk.raw.(int32)))
+	case int64:
+		return strconv.Itoa(int(pk.raw.(int64)))
+	case string:
+		return pk.raw.(string)
 	}
 	panic("Could not convert PK to string")
 }
