@@ -41,7 +41,7 @@ func bindAdapter(a storage.Adapter) (*Adapter, bool) {
 func conn(a storage.Adapter) *bun.DB {
 	ra, ok := bindAdapter(a)
 	if !ok {
-		log.Fatalln("Couldn't bind roach Adapter.")
+		panic("couldn't bind roach adapter.")
 	}
 	return ra.conn()
 }

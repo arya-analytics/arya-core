@@ -52,13 +52,13 @@ type Config struct {
 	TransactionLogLevel TransactionLogLevel
 }
 
-func (e Config) addr() string {
-	return fmt.Sprintf("%s:%v", e.Host, e.Port)
+func (c Config) addr() string {
+	return fmt.Sprintf("%s:%v", c.Host, c.Port)
 }
 
-func (e Config) tls() *tls.Config {
+func (c Config) tls() *tls.Config {
 	return &tls.Config{
-		InsecureSkipVerify: !e.UseTLS,
+		InsecureSkipVerify: !c.UseTLS,
 	}
 }
 
