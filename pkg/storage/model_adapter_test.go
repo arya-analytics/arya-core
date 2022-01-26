@@ -519,6 +519,24 @@ var _ = Describe("Model Adapter", func() {
 					})
 			})
 		})
+		Describe("Contains", func() {
+			Context("Catalog contains the model", func() {
+				It("Should return true", func() {
+					catalog := storage.ModelCatalog{
+						&storage.ChannelConfig{},
+					}
+					Expect(catalog.Contains(&storage.ChannelConfig{})).To(BeTrue())
+				})
+			})
+			Context("Catalog does not contain th model", func() {
+				It("Should return false", func() {
+					catalog := storage.ModelCatalog{
+						&storage.ChannelConfig{},
+					}
+					Expect(catalog.Contains(&storage.ChannelChunk{})).To(BeFalse())
+				})
+			})
+		})
 		Context("Edge cases + errors", func() {
 			It("Should panic when the catalog doesn't contain pointers", func() {
 				catalog := storage.ModelCatalog{
