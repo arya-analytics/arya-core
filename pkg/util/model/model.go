@@ -76,7 +76,7 @@ func (r *Reflect) ChainValueByIndex(i int) *Reflect {
 
 func (r *Reflect) ValueByPK(pk PK) (retRfl *Reflect, ok bool) {
 	r.ForEach(func(rfl *Reflect, i int) {
-		if rfl.PKField().String() == pk.String() {
+		if rfl.PKField().Equals(pk) {
 			retRfl = rfl
 		}
 	})

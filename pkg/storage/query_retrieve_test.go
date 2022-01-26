@@ -2,7 +2,6 @@ package storage_test
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/storage"
-	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -52,31 +51,6 @@ var _ = Describe("retrieveQuery", func() {
 						Expect(b).To(Equal(mockBytes))
 					})
 				})
-			})
-		})
-	})
-	Describe("Edge cases + errors", func() {
-		BeforeEach(createMockChannelCfg)
-		AfterEach(deleteMockChannelCfg)
-		Describe("Providing a struct to a multi-return query", func() {
-			It("Should return an invalid args error", func() {
-				newM := &storage.ChannelConfig{
-					ID:     uuid.New(),
-					Name:   "Random Name",
-					NodeID: mockNode.ID,
-				}
-				createMock(newM)
-				resM := &storage.ChannelConfig{}
-				err := mockStorage.NewRetrieve().Model(resM).WherePKs([]uuid.
-					UUID{mockChannelCfg.ID, newM.ID}).Exec(mockCtx)
-				Expect(err).ToNot(BeNil())
-				Expect(err.(storage.Error).Type).To(Equal(storage.ErrTypeInvalidArgs))
-			})
-		})
-		Describe("Providing no where statement to the query", func() {
-			It("Shouldn't return an error", func() {
-				err := mockStorage.NewRetrieve().Model(&storage.ChannelConfig{}).Exec(mockCtx)
-				Expect(err).To(BeNil())
 			})
 		})
 	})

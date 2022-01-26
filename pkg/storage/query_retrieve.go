@@ -3,13 +3,11 @@ package storage
 import (
 	"context"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
-	"github.com/arya-analytics/aryacore/pkg/util/validate"
 )
 
 type retrieveQuery struct {
 	baseQuery
 	modelRfl *model.Reflect
-	PKs      []model.PK
 }
 
 // |||| CONSTRUCTOR ||||
@@ -23,13 +21,11 @@ func newRetrieve(s *Storage) *retrieveQuery {
 // |||| INTERFACE ||||
 
 func (r *retrieveQuery) WherePK(pk interface{}) *retrieveQuery {
-	r.PKs = append(r.PKs, model.NewPK(pk))
 	r.setMDQuery(r.mdQuery().WherePK(pk))
 	return r
 }
 
 func (r *retrieveQuery) WherePKs(pks interface{}) *retrieveQuery {
-	r.PKs = model.NewMultiPK(pks)
 	r.setMDQuery(r.mdQuery().WherePKs(pks))
 	return r
 }
@@ -41,7 +37,6 @@ func (r *retrieveQuery) Model(m interface{}) *retrieveQuery {
 }
 
 func (r *retrieveQuery) Exec(ctx context.Context) error {
-	r.validateReq()
 	r.catcher.Exec(func() error {
 		err := r.mdQuery().Exec(ctx)
 		return err
@@ -81,26 +76,4 @@ func (r *retrieveQuery) objQuery() ObjectRetrieveQuery {
 
 func (r *retrieveQuery) setObjQuery(q ObjectRetrieveQuery) {
 	r.baseSetObjQuery(q)
-}
-
-// || VALIDATORS ||
-
-func (r *retrieveQuery) validateReq() {
-	r.catcher.Exec(func() error { return retrieveQueryReqValidator.Exec(r) })
-
-}
-
-// ||||| VALIDATORS ||||
-
-var retrieveQueryReqValidator = validate.New([]validate.Func{
-	validatePKModelMatch,
-})
-
-func validatePKModelMatch(v interface{}) error {
-	q := v.(*retrieveQuery)
-	if q.modelRfl.IsStruct() && len(q.PKs) > 1 {
-		return Error{Type: ErrTypeInvalidArgs,
-			Message: "a struct model was provided when querying multiple pks"}
-	}
-	return nil
 }
