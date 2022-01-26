@@ -68,7 +68,7 @@ func migrateUpFunc(d Driver) bunMigrate.MigrationFunc {
 			ForeignKey(`("channel_config_id") REFERENCES "channel_configs" ("id") 
 						ON DELETE CASCADE`).
 			Exec)
-		return nil
+		return c.Error()
 	}
 }
 
