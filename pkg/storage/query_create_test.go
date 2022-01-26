@@ -25,7 +25,7 @@ var _ = Describe("Create", func() {
 			Expect(m.ID).To(Equal(mockChannelCfg.ID))
 		})
 	})
-	Describe("Object create items", func() {
+	Describe("Create multiple items", func() {
 		models := []*storage.ChannelConfig{
 			&storage.ChannelConfig{
 				ID:     uuid.New(),

@@ -13,20 +13,20 @@ type whereBaseQuery struct {
 	PKs []model.PK
 }
 
-func (r *whereBaseQuery) whereBasePK(pk interface{}) {
-	r.PKs = append(r.PKs, model.NewPK(pk))
+func (w *whereBaseQuery) whereBasePK(pk interface{}) {
+	w.PKs = append(w.PKs, model.NewPK(pk))
 }
 
-func (r *whereBaseQuery) whereBasePKs(pks interface{}) {
+func (w *whereBaseQuery) whereBasePKs(pks interface{}) {
 	rfl := reflect.ValueOf(pks)
 	for i := 0; i < rfl.Len(); i++ {
-		r.whereBasePK(rfl.Index(i).Interface())
+		w.whereBasePK(rfl.Index(i).Interface())
 	}
 }
 
-func (r *whereBaseQuery) whereBaseValidateReq() {
-	r.baseValidateReq()
-	r.catcher.Exec(func() error { return whereBaseQueryReqValidator.Exec(r) })
+func (w *whereBaseQuery) whereBaseValidateReq() {
+	w.baseValidateReq()
+	w.catcher.Exec(func() error { return whereBaseQueryReqValidator.Exec(w) })
 }
 
 var whereBaseQueryReqValidator = validate.New([]validate.Func{

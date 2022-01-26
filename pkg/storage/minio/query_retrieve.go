@@ -35,13 +35,6 @@ func (r *retrieveQuery) WherePK(pk interface{}) storage.ObjectRetrieveQuery {
 	return r
 }
 
-func (r *retrieveQuery) appendToDVC(dv *DataValue) {
-	r.catcher.Exec(func() error {
-		r.dvc = append(r.dvc, dv)
-		return nil
-	})
-}
-
 func (r *retrieveQuery) Exec(ctx context.Context) error {
 	r.whereBaseValidateReq()
 	for _, pk := range r.PKs {
@@ -57,6 +50,13 @@ func (r *retrieveQuery) Exec(ctx context.Context) error {
 	r.baseBindVals(r.dvc)
 	r.baseAdaptToSource()
 	return r.baseErr()
+}
+
+func (r *retrieveQuery) appendToDVC(dv *DataValue) {
+	r.catcher.Exec(func() error {
+		r.dvc = append(r.dvc, dv)
+		return nil
+	})
 }
 
 func (r *retrieveQuery) validateRes(resObj *minio.Object) {
