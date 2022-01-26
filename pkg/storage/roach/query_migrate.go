@@ -35,11 +35,12 @@ func (m *migrateQuery) init(ctx context.Context) {
 
 func (m *migrateQuery) Exec(ctx context.Context) error {
 	m.init(ctx)
+	var group *bunMigrate.MigrationGroup
+	m.catcher.Exec(func() (err error) {
+		group, err = m.bunMigrator().Migrate(ctx)
+		return err
+	})
 	m.catcher.Exec(func() error {
-		group, err := m.bunMigrator().Migrate(ctx)
-		if err != nil {
-			return err
-		}
 		if group.ID == 0 {
 			log.Info("No new migrations to run.")
 		}
