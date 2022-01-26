@@ -35,7 +35,3 @@ func (c *createQuery) Exec(ctx context.Context) error {
 	})
 	return c.baseErr()
 }
-
-func (c *createQuery) validateReq(rm interface{}) {
-	c.catcher.Exec(func() error { return createReqValidator.Exec(rm) })
-}
