@@ -13,6 +13,7 @@ type updateQuery struct {
 
 func newUpdate(db *bun.DB) *updateQuery {
 	r := &updateQuery{q: db.NewUpdate()}
+	r.baseInit()
 	return r
 }
 
@@ -33,9 +34,9 @@ func (u *updateQuery) Where(query string, args ...interface{}) storage.MDUpdateQ
 }
 
 func (u *updateQuery) Exec(ctx context.Context) error {
-	_, err := u.q.Exec(ctx)
-	if err != nil {
-		return u.baseHandleExecErr(err)
-	}
-	return err
+	u.catcher.Exec(func() error {
+		_, err := u.q.Exec(ctx)
+		return err
+	})
+	return u.baseErr()
 }

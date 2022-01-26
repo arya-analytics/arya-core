@@ -13,6 +13,7 @@ type retrieveQuery struct {
 
 func newRetrieve(db *bun.DB) *retrieveQuery {
 	r := &retrieveQuery{q: db.NewSelect()}
+	r.baseInit()
 	return r
 }
 
@@ -35,10 +36,9 @@ func (r *retrieveQuery) WherePKs(pks interface{}) storage.MDRetrieveQuery {
 }
 
 func (r *retrieveQuery) Exec(ctx context.Context) error {
-	err := r.q.Scan(ctx)
-	if err != nil {
-		return r.baseHandleExecErr(err)
-	}
+	r.catcher.Exec(func() error {
+		return r.q.Scan(ctx)
+	})
 	r.baseAdaptToSource()
-	return err
+	return r.baseErr()
 }
