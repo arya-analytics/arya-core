@@ -17,13 +17,13 @@ func newMigrate(s *Storage) *migrateQuery {
 /// |||| INTERFACE ||||
 
 func (m *migrateQuery) Exec(ctx context.Context) error {
-	if err := m.mdQuery().Exec(ctx); err != nil {
-		return err
-	}
-	if err := m.objQuery().Exec(ctx); err != nil {
-		return err
-	}
-	return nil
+	m.catcher.Exec(func() error {
+		return m.mdQuery().Exec(ctx)
+	})
+	m.catcher.Exec(func() error {
+		return m.objQuery().Exec(ctx)
+	})
+	return m.baseErr()
 }
 
 // |||| QUERY BINDING ||||

@@ -37,16 +37,16 @@ func (r *retrieveQuery) Model(m interface{}) *retrieveQuery {
 }
 
 func (r *retrieveQuery) Exec(ctx context.Context) error {
-	if err := r.mdQuery().Exec(ctx); err != nil {
-		return err
-	}
+	r.catcher.Exec(func() error {
+		return r.mdQuery().Exec(ctx)
+	})
 	if r.objEngine.InCatalog(r.modelRfl.Pointer()) {
-		if err := r.objQuery().Model(r.modelRfl.Pointer()).WherePKs(r.modelRfl.PKs()).
-			Exec(ctx); err != nil {
-			return err
-		}
+		r.catcher.Exec(func() error {
+			return r.objQuery().Model(r.modelRfl.Pointer()).WherePKs(r.modelRfl.PKs()).
+				Exec(ctx)
+		})
 	}
-	return nil
+	return r.baseErr()
 }
 
 // |||| QUERY BINDING ||||

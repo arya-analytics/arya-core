@@ -27,15 +27,15 @@ func (c *createQuery) Model(m interface{}) *createQuery {
 }
 
 func (c *createQuery) Exec(ctx context.Context) error {
-	if err := c.mdQuery().Exec(ctx); err != nil {
-		return err
-	}
+	c.catcher.Exec(func() error {
+		return c.mdQuery().Exec(ctx)
+	})
 	if c.objEngine.InCatalog(c.modelRfl.Pointer()) {
-		if err := c.objQuery().Model(c.modelRfl.Pointer()).Exec(ctx); err != nil {
-			return err
-		}
+		c.catcher.Exec(func() error {
+			return c.objQuery().Model(c.modelRfl.Pointer()).Exec(ctx)
+		})
 	}
-	return nil
+	return c.baseErr()
 }
 
 // |||| QUERY BINDING ||||
