@@ -22,7 +22,7 @@ var _ = Describe("QueryCreate", func() {
 		err = mockEngine.NewDelete(mockAdapter).Model(mockCreate).WherePK(mockCreate.ID).Exec(
 			mockCtx)
 	})
-	It("Should create without error", func() {
+	It("Should create without errutil", func() {
 		Expect(err).To(BeNil())
 	})
 	It("Should be able to be re-queried after creation", func() {

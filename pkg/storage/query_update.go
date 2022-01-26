@@ -25,7 +25,10 @@ func (u *updateQuery) WherePK(pk interface{}) *updateQuery {
 }
 
 func (u *updateQuery) Exec(ctx context.Context) error {
-	return u.mdQuery().Exec(ctx)
+	u.catcher.Exec(func() error {
+		return u.mdQuery().Exec(ctx)
+	})
+	return u.baseErr()
 }
 
 // |||| QUERY BINDING ||||

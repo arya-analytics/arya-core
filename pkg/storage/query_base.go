@@ -1,17 +1,21 @@
 package storage
 
+import "github.com/arya-analytics/aryacore/pkg/util/errutil"
+
 type baseQuery struct {
 	storage       *Storage
 	mdEngine      MDEngine
 	_baseMDQuery  MDBaseQuery
 	objEngine     ObjectEngine
 	_baseObjQuery ObjectBaseQuery
+	catcher       *errutil.Catcher
 }
 
 func (b *baseQuery) baseInit(s *Storage) {
 	b.storage = s
 	b.mdEngine = b.storage.cfg.mdEngine()
 	b.objEngine = b.storage.cfg.objEngine()
+	b.catcher = &errutil.Catcher{}
 }
 
 // |||| QUERY BINDING ||||
@@ -42,4 +46,8 @@ func (b *baseQuery) baseObjQuery() ObjectBaseQuery {
 
 func (b *baseQuery) baseSetObjQuery(q ObjectBaseQuery) {
 	b._baseObjQuery = q
+}
+
+func (b *baseQuery) baseErr() error {
+	return b.catcher.Error()
 }

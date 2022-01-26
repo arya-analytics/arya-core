@@ -30,7 +30,10 @@ func (d *deleteQuery) WherePKs(pks interface{}) *deleteQuery {
 }
 
 func (d *deleteQuery) Exec(ctx context.Context) error {
-	return d.mdQuery().Exec(ctx)
+	d.catcher.Exec(func() error {
+		return d.mdQuery().Exec(ctx)
+	})
+	return d.baseErr()
 }
 
 // |||| QUERY BINDING ||||

@@ -11,10 +11,11 @@ import (
 
 type retrieveQuery struct {
 	whereBaseQuery
+	dvc DataValueChain
 }
 
 func newRetrieve(client *minio.Client) *retrieveQuery {
-	r := &retrieveQuery{}
+	r := &retrieveQuery{dvc: DataValueChain{}}
 	r.baseInit(client)
 	return r
 }
@@ -34,28 +35,34 @@ func (r *retrieveQuery) WherePK(pk interface{}) storage.ObjectRetrieveQuery {
 	return r
 }
 
-func (r *retrieveQuery) Exec(ctx context.Context) error {
-	if err := r.whereBaseValidateReq(); err != nil {
-		return r.baseHandleExecErr(err)
-	}
-	var dvc DataValueChain
-	for _, pk := range r.PKs {
-		resObj, err := r.baseClient().GetObject(ctx, r.Bucket(), pk.String(), minio.GetObjectOptions{})
-		if err != nil {
-			return r.baseHandleExecErr(err)
-		}
-		if vErr := r.validateRes(resObj); vErr != nil {
-			return r.baseHandleExecErr(vErr)
-		}
-		dvc = append(dvc, &DataValue{PK: pk, Data: &Object{resObj}})
-	}
-	r.baseBindVals(dvc)
-	r.baseAdaptToSource()
-	return nil
+func (r *retrieveQuery) appendToDVC(dv *DataValue) {
+	r.catcher.Exec(func() error {
+		r.dvc = append(r.dvc, dv)
+		return nil
+	})
 }
 
-func (r *retrieveQuery) validateRes(resObj *minio.Object) error {
-	return retrieveQueryResValidator.Exec(resObj)
+func (r *retrieveQuery) Exec(ctx context.Context) error {
+	r.whereBaseValidateReq()
+	for _, pk := range r.PKs {
+		var resObj *minio.Object
+		r.catcher.Exec(func() (err error) {
+			resObj, err = r.baseClient().GetObject(ctx, r.Bucket(), pk.String(),
+				minio.GetObjectOptions{})
+			return err
+		})
+		r.validateRes(resObj)
+		r.appendToDVC(&DataValue{PK: pk, Data: &Object{resObj}})
+	}
+	r.baseBindVals(r.dvc)
+	r.baseAdaptToSource()
+	return r.baseErr()
+}
+
+func (r *retrieveQuery) validateRes(resObj *minio.Object) {
+	r.catcher.Exec(func() error {
+		return retrieveQueryResValidator.Exec(resObj)
+	})
 
 }
 

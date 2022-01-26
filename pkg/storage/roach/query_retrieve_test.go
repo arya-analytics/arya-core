@@ -13,7 +13,7 @@ var _ = Describe("QueryRetrieve", func() {
 		BeforeEach(createMockModel)
 		AfterEach(deleteMockModel)
 		Describe("Retrieve an item", func() {
-			It("Should retrieve it without error", func() {
+			It("Should retrieve it without errutil", func() {
 				m := &storage.ChannelConfig{}
 				err := mockEngine.NewRetrieve(mockAdapter).Model(m).WherePK(mockModel.
 					ID).Exec(mockCtx)
@@ -56,7 +56,7 @@ var _ = Describe("QueryRetrieve", func() {
 	})
 	Describe("Edge cases + errors", func() {
 		Context("Retrieving an item that doesn't exist", func() {
-			It("Should return the correct error type", func() {
+			It("Should return the correct errutil type", func() {
 				somePKThatDoesntExist := uuid.New()
 				m := &storage.ChannelConfig{}
 				err := mockEngine.NewRetrieve(mockAdapter).

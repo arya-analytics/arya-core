@@ -10,7 +10,7 @@ var _ = Describe("QueryMigrate", func() {
 	BeforeEach(func() {
 		err = mockEngine.NewMigrate(mockAdapter).Exec(mockCtx)
 	})
-	It("Should migrate without error", func() {
+	It("Should migrate without errutil", func() {
 		Expect(err).To(BeNil())
 	})
 	It("Should execute all migrations successfully", func() {

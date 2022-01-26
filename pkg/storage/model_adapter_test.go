@@ -402,7 +402,7 @@ var _ = Describe("Model Adapter", func() {
 					})
 				})
 				Context("Providing a double-pointer slice value", func() {
-					It("Should return an error", func() {
+					It("Should return an errutil", func() {
 						source := []*mock.ModelB{&mock.ModelB{Name: "Hello"}}
 						dest := &[]*mock.ModelA{}
 						Expect(func() {
@@ -415,7 +415,7 @@ var _ = Describe("Model Adapter", func() {
 				Describe("Incompatible rfl types", func() {
 					Context("Top level incompatibility", func() {
 						Context("Non pointer value", func() {
-							It("Should return an error", func() {
+							It("Should return an errutil", func() {
 								source := &mock.ModelB{
 									ID:   22,
 									Name: "My Cool Model",
@@ -428,7 +428,7 @@ var _ = Describe("Model Adapter", func() {
 							})
 						})
 						Context("Pointer value", func() {
-							It("Should return an error", func() {
+							It("Should return an errutil", func() {
 								source := &mock.ModelE{
 									ID:                  45,
 									PointerIncompatible: &map[string]string{"one": "two"},
@@ -445,7 +445,7 @@ var _ = Describe("Model Adapter", func() {
 					Context("Nested rfl incompatibility", func() {
 						Context("Single rfl", func() {
 							Describe("Without the incompatible field defined", func() {
-								It("Shouldn't return an error", func() {
+								It("Shouldn't return an errutil", func() {
 									source := &mock.ModelD{
 										ID: 22,
 									}
@@ -456,7 +456,7 @@ var _ = Describe("Model Adapter", func() {
 								})
 							})
 							Describe("With the incompatible field defined", func() {
-								It("Should return an error", func() {
+								It("Should return an errutil", func() {
 									dest := &mock.ModelD{
 										ID: 2,
 										ModelIncompatible: &mock.ModelB{
@@ -473,7 +473,7 @@ var _ = Describe("Model Adapter", func() {
 							})
 						})
 						Context("Chained models", func() {
-							It("Should return an error", func() {
+							It("Should return an errutil", func() {
 								dest := &mock.ModelD{
 									ID: 1,
 									ChainModelIncompatible: []*mock.ModelB{

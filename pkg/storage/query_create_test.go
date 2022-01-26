@@ -11,7 +11,7 @@ import (
 var _ = Describe("Create", func() {
 	Describe("Create a  new item", func() {
 		AfterEach(deleteMockChannelCfg)
-		It("Should create it without error", func() {
+		It("Should create it without errutil", func() {
 			err := mockStorage.NewCreate().Model(mockChannelCfg).Exec(mockCtx)
 			Expect(err).To(BeNil())
 		})
@@ -45,7 +45,7 @@ var _ = Describe("Create", func() {
 				log.Fatalln(err)
 			}
 		})
-		It("Should create without error", func() {
+		It("Should create without errutil", func() {
 			err := mockStorage.NewCreate().Model(&models).Exec(mockCtx)
 			Expect(err).To(BeNil())
 		})

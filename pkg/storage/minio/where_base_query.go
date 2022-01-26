@@ -24,11 +24,9 @@ func (r *whereBaseQuery) whereBasePKs(pks interface{}) {
 	}
 }
 
-func (r *whereBaseQuery) whereBaseValidateReq() error {
-	if err := r.baseValidateReq(); err != nil {
-		return err
-	}
-	return whereBaseQueryReqValidator.Exec(r)
+func (r *whereBaseQuery) whereBaseValidateReq() {
+	r.baseValidateReq()
+	r.catcher.Exec(func() error { return whereBaseQueryReqValidator.Exec(r) })
 }
 
 var whereBaseQueryReqValidator = validate.New([]validate.Func{

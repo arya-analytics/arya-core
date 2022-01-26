@@ -34,19 +34,19 @@ var _ = Describe("Deployment", func() {
 
 	})
 	Describe("Creating a NewModel Deployment", func() {
-		It("Should create a new deployment without error", func() {
+		It("Should create a new deployment without errutil", func() {
 			_, err := dev.NewDeployment(dummyCfg)
 			Expect(err).To(BeNil())
 		})
 	})
 	Describe("Installing the Deployment", func() {
-		It("Should install the deployment without error", func() {
+		It("Should install the deployment without errutil", func() {
 			err := d.Install()
 			Expect(err).To(BeNil())
 		})
 	})
 	Describe("Re-deploying arya", func() {
-		It("Should redeploy arya without error", func() {
+		It("Should redeploy arya without errutil", func() {
 			err := d.RedeployArya()
 			Expect(err).To(BeNil())
 		})

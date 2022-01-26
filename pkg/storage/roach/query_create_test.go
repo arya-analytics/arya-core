@@ -21,7 +21,7 @@ var _ = Describe("Create", func() {
 				mockModel.ID,
 			).Exec(mockCtx)
 		})
-		It("Should create it without error", func() {
+		It("Should create it without errutil", func() {
 			Expect(errChan).To(BeNil())
 		})
 		It("Should be able to be re-queried after creation", func() {
@@ -37,31 +37,8 @@ var _ = Describe("Create", func() {
 		})
 	})
 	Describe("Edge cases + errors", func() {
-		Context("No PK provided", func() {
-			Context("Single Model", func() {
-				It("Should return the correct error type", func() {
-					m := &storage.Node{}
-					err := mockEngine.NewCreate(mockAdapter).Model(m).Exec(mockCtx)
-					Expect(err).ToNot(BeNil())
-					Expect(err.(storage.Error).Type).To(Equal(storage.ErrTypeNoPK))
-				})
-			})
-			Context("Chain of models", func() {
-				It("Should return the correct error type", func() {
-					m := []*storage.Node{
-						&storage.Node{
-							ID: 125,
-						},
-						&storage.Node{},
-					}
-					err := mockEngine.NewCreate(mockAdapter).Model(&m).Exec(mockCtx)
-					Expect(err).ToNot(BeNil())
-					Expect(err.(storage.Error).Type).To(Equal(storage.ErrTypeNoPK))
-				})
-			})
-		})
 		Context("Unique Violation", func() {
-			It("Should return the correct error type", func() {
+			It("Should return the correct errutil type", func() {
 				commonPk := uuid.New()
 				mOne := &storage.ChannelConfig{
 					ID:     commonPk,

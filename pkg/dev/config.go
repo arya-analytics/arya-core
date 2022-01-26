@@ -35,7 +35,7 @@ func AuthenticateCluster(c K3sCluster) {
 		log.Fatalln(err)
 	}
 
-	// Ok to skip error check as will get caught on next command
+	// Ok to skip errutil check as will get caught on next command
 	_ = kubectl.Exec("delete", "secret", authSecretName)
 
 	if err := kubectl.Exec(

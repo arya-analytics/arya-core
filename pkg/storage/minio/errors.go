@@ -6,6 +6,9 @@ import (
 )
 
 func parseMinioErr(err error) error {
+	if err == nil {
+		return nil
+	}
 	mErr := minio.ToErrorResponse(err)
 	return storage.Error{Base: err, Type: _minioErrors[mErr.Code],
 		Message: mErr.Error()}

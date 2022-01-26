@@ -18,7 +18,7 @@ var _ = Describe("VM", func() {
 				})
 			})
 			Context("When the VM already exists", func() {
-				It("Should throw an error", func() {
+				It("Should throw an errutil", func() {
 					existingVm := dev.NewVM(dev.VMConfig{Name: vmCfg.Name})
 					err := existingVm.Provision()
 					Expect(err).ToNot(BeNil())
@@ -69,7 +69,7 @@ var _ = Describe("VM", func() {
 				})
 			})
 			Context("When a VM doesn'tools exist", func() {
-				It("Should return an error", func() {
+				It("Should return an errutil", func() {
 					nonExistentVm := dev.NewVM(dev.VMConfig{Name: "doesnotexist"})
 					_, err := nonExistentVm.Info()
 					Expect(err).ToNot(BeNil())
@@ -85,7 +85,7 @@ var _ = Describe("VM", func() {
 				}
 				Expect(string(o[:])).To(Equal("/home/ubuntu\n"))
 			})
-			It("Should return the error output of a failed command", func() {
+			It("Should return the errutil output of a failed command", func() {
 				cmdString := "lsawdaw"
 				o, err := vm.Exec(cmdString)
 				Expect(err).ToNot(BeNil())

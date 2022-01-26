@@ -13,6 +13,7 @@ type deleteQuery struct {
 
 func newDelete(db *bun.DB) *deleteQuery {
 	r := &deleteQuery{q: db.NewDelete()}
+	r.baseInit()
 	return r
 }
 
@@ -35,6 +36,9 @@ func (d *deleteQuery) Model(m interface{}) storage.MDDeleteQuery {
 }
 
 func (d *deleteQuery) Exec(ctx context.Context) error {
-	_, err := d.q.Exec(ctx)
-	return err
+	d.catcher.Exec(func() error {
+		_, err := d.q.Exec(ctx)
+		return err
+	})
+	return d.baseErr()
 }

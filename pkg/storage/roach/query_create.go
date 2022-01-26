@@ -13,22 +13,25 @@ type createQuery struct {
 
 func newCreate(db *bun.DB) *createQuery {
 	r := &createQuery{q: db.NewInsert()}
+	r.baseInit()
 	return r
 }
 
 func (c *createQuery) Model(m interface{}) storage.MDCreateQuery {
 	rm := c.baseModel(m)
 	c.baseAdaptToDest()
-	c.baseBindErr(createValidator.Exec(rm))
-	beforeInsertSetUUID(rm)
-	c.q = c.q.Model(rm.Pointer())
+	c.catcher.Exec(func() error {
+		beforeInsertSetUUID(rm)
+		c.q = c.q.Model(rm.Pointer())
+		return nil
+	})
 	return c
 }
 
 func (c *createQuery) Exec(ctx context.Context) error {
-	if c.baseCheckErr() {
-		return c.baseErr()
-	}
-	_, err := c.q.Exec(ctx)
-	return c.baseHandleExecErr(err)
+	c.catcher.Exec(func() error {
+		_, err := c.q.Exec(ctx)
+		return err
+	})
+	return c.baseErr()
 }

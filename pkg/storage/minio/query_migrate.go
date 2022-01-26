@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/minio/minio-go/v7"
-	log "github.com/sirupsen/logrus"
 )
 
 type migrateQuery struct {
@@ -21,20 +20,21 @@ func newMigrate(client *minio.Client) *migrateQuery {
 func (m *migrateQuery) Exec(ctx context.Context) error {
 	for _, mod := range catalog() {
 		wrap := &ModelWrapper{rfl: model.NewReflect(mod)}
-		bucketExists, err := m.baseClient().BucketExists(ctx, wrap.Bucket())
-		if err != nil {
-			return m.baseHandleExecErr(err)
-		}
-		if !bucketExists {
-			if mErr := m.baseClient().MakeBucket(ctx, wrap.Bucket(),
-				minio.MakeBucketOptions{}); mErr != nil {
-				return m.baseHandleExecErr(mErr)
+		m.catcher.Exec(func() error {
+			bucketExists, err := m.baseClient().BucketExists(ctx, wrap.Bucket())
+			if err != nil {
+				return err
 			}
-		} else {
-			log.Warnf("Found bucket %s that already exists.", wrap.Bucket())
-		}
+			if !bucketExists {
+				if mErr := m.baseClient().MakeBucket(ctx, wrap.Bucket(),
+					minio.MakeBucketOptions{}); mErr != nil {
+					return mErr
+				}
+			}
+			return nil
+		})
 	}
-	return nil
+	return m.baseErr()
 }
 
 func (m *migrateQuery) Verify(ctx context.Context) error {
