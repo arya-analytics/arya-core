@@ -14,6 +14,7 @@ func parseBunErr(err error) (oErr error) {
 	if err == nil {
 		return oErr
 	}
+
 	switch err.(type) {
 	case pgdriver.Error:
 		oErr = parsePgDriverErr(err.(pgdriver.Error))
@@ -23,7 +24,7 @@ func parseBunErr(err error) (oErr error) {
 	se, ok := oErr.(storage.Error)
 	if ok {
 		if se.Type == storage.ErrTypeUnknown {
-			log.Errorf("Unknown errutil -> %s", err)
+			log.Errorf("Unknown err -> %s", err)
 		}
 	}
 	return oErr
@@ -57,6 +58,8 @@ var _sqlErrors = map[string]storage.ErrorType{
 	"sql: no rows in result set":                  storage.ErrTypeItemNotFound,
 	"constraint failed: UNIQUE constraint failed": storage.ErrTypeUniqueViolation,
 	"SQL logic errutil: no such table":            storage.ErrTypeMigration,
+	"bun: Update and Delete queries require at least one Where": storage.
+		ErrTypeInvalidArgs,
 }
 
 func sqlToStorageErr(sql string) storage.ErrorType {

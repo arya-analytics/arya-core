@@ -36,7 +36,7 @@ var _ = Describe("Minio Engine", func() {
 		})
 	})
 	Describe("Catalog", func() {
-		Describe("InCatalog", func() {
+		Describe("Contains", func() {
 			Context("Model in catalog", func() {
 				It("Should return true", func() {
 					Expect(mockEngine.InCatalog(&storage.ChannelChunk{})).To(BeTrue())

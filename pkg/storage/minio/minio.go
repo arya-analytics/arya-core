@@ -35,7 +35,7 @@ func (e *Engine) IsAdapter(a storage.Adapter) bool {
 }
 
 func (e *Engine) InCatalog(m interface{}) bool {
-	return catalog().InCatalog(m)
+	return catalog().Contains(m)
 }
 
 func (e *Engine) NewCreate(a storage.Adapter) storage.ObjectCreateQuery {

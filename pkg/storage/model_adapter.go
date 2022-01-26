@@ -6,40 +6,42 @@ import (
 	"reflect"
 )
 
+// |||| MODEL CATALOG ||||
+
 type ModelCatalog []interface{}
 
-func (mc ModelCatalog) New(modelPtr interface{}) interface{} {
-	refM := model.NewReflect(modelPtr)
-	for _, cm := range mc {
-		refCm := model.NewReflect(cm)
-		if err := refCm.Validate(); err != nil {
-			panic(err)
-		}
-		if refM.Type().Name() == refCm.Type().Name() {
-			if refM.IsChain() {
-				return refCm.NewChain().Pointer()
-			}
-			return refCm.NewModel().Pointer()
-		}
+func (mc ModelCatalog) New(sourcePtr interface{}) interface{} {
+	sourceRfl := model.NewReflect(sourcePtr)
+	destRfl, ok := mc.retrieveCM(sourceRfl)
+	if !ok {
+		panic(fmt.Sprintf("model %s could not be found in catalog", sourceRfl.Type().Name()))
 	}
-	panic(fmt.Sprintf("model %s could not be found in catalog", refM.Type().Name()))
+	if sourceRfl.IsChain() {
+		return destRfl.NewChain().Pointer()
+	}
+	return destRfl.NewModel().Pointer()
 }
 
-func (mc ModelCatalog) InCatalog(modelPtr interface{}) bool {
-	refM := model.NewReflect(modelPtr)
-	for _, cm := range mc {
-		refCm := model.NewReflect(cm)
-		if err := refCm.Validate(); err != nil {
-			panic(err)
-		}
-		if refM.Type().Name() == refCm.Type().Name() {
-			return true
-		}
-	}
-	return false
+func (mc ModelCatalog) Contains(sourcePtr interface{}) bool {
+	sourceRfl := model.NewReflect(sourcePtr)
+	_, ok := mc.retrieveCM(sourceRfl)
+	return ok
 }
 
-type modelValues map[string]interface{}
+func (mc ModelCatalog) retrieveCM(modelRfl *model.Reflect) (*model.Reflect, bool) {
+	for _, destOpt := range mc {
+		destOptRfl := model.NewReflect(destOpt)
+		if err := destOptRfl.Validate(); err != nil {
+			panic(err)
+		}
+		if modelRfl.Type().Name() == destOptRfl.Type().Name() {
+			return destOptRfl, true
+		}
+	}
+	return nil, false
+}
+
+// |||| MODEL ADAPTER ||||
 
 type ModelAdapter struct {
 	sourceRfl *model.Reflect
@@ -103,8 +105,10 @@ type adaptedModel struct {
 	rfl *model.Reflect
 }
 
+type modelValues map[string]interface{}
+
 // bindVals binds a set of modelValues to the adaptedModel fields.
-// Returns an errutil for invalid / non-existent keys and invalid types.
+// Returns an error for invalid / non-existent keys and invalid types.
 func (mw *adaptedModel) bindVals(mv modelValues) error {
 	for key, rv := range mv {
 		fld := mw.rfl.Value().FieldByName(key)

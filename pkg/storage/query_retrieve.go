@@ -38,7 +38,8 @@ func (r *retrieveQuery) Model(m interface{}) *retrieveQuery {
 
 func (r *retrieveQuery) Exec(ctx context.Context) error {
 	r.catcher.Exec(func() error {
-		return r.mdQuery().Exec(ctx)
+		err := r.mdQuery().Exec(ctx)
+		return err
 	})
 	if r.objEngine.InCatalog(r.modelRfl.Pointer()) {
 		r.catcher.Exec(func() error {
