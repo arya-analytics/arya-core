@@ -40,7 +40,7 @@ func (r *retrieveQuery) Exec(ctx context.Context) error {
 	for _, pk := range r.PKs {
 		var resObj *minio.Object
 		r.catcher.Exec(func() (err error) {
-			resObj, err = r.baseClient().GetObject(ctx, r.Bucket(), pk.String(),
+			resObj, err = r.baseClient().GetObject(ctx, r.baseBucket(), pk.String(),
 				minio.GetObjectOptions{})
 			return err
 		})

@@ -1,9 +1,11 @@
-package redists
+package redis
 
 import (
 	"fmt"
 	"github.com/arya-analytics/aryacore/pkg/storage"
 )
+
+// |||| CONFIG ||||
 
 type Driver int
 
@@ -15,8 +17,8 @@ type Config struct {
 	Host     string
 	Port     int
 	Driver   Driver
-	Database string
 	Password string
+	Database int
 }
 
 func (c Config) addr() string {
@@ -30,6 +32,8 @@ func (c Config) authString() *string {
 	}
 	return nil
 }
+
+// |||| ENGINE ||||
 
 type Engine struct {
 	cfg Config

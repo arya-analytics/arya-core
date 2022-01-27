@@ -30,7 +30,7 @@ func (b *baseQuery) baseModelWrapper() *ModelWrapper {
 	return &ModelWrapper{rfl: b.modelAdapter.Dest()}
 }
 
-func (b *baseQuery) Bucket() string {
+func (b *baseQuery) baseBucket() string {
 	return b.baseModelWrapper().Bucket()
 }
 

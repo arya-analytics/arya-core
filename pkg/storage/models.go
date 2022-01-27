@@ -19,32 +19,49 @@ type Node struct {
 }
 
 type Range struct {
-	ID                uuid.UUID
-	LeaseHolderNodeID int
+	ID uuid.UUID
+	// LeaseHolderNode
 	LeaseHolderNode   *Node
-	ReplicaNodes      []*Node
+	LeaseHolderNodeID int
+	// ReplicaNodes
+	ReplicaNodes []*Node
 }
 
 type RangeReplicaToNode struct {
-	ID      uuid.UUID
-	RangeID uuid.UUID
+	ID uuid.UUID
+	// Range
 	Range   *Range
-	NodeID  int
-	Node    *Node
+	RangeID uuid.UUID
+	// Node
+	Node   *Node
+	NodeID int
 }
 
 type ChannelConfig struct {
-	ID     uuid.UUID
-	Name   string
-	NodeID int
+	ID   uuid.UUID
+	Name string
+	// Node
 	Node   *Node
+	NodeID int
+	// Data
+	DataRate  float64
+	Retention time.Duration
 }
 
 type ChannelChunk struct {
-	ID              uuid.UUID
-	RangeID         uuid.UUID
-	Range           *Range
-	ChannelConfigID uuid.UUID
+	ID uuid.UUID
+	// Range
+	Range   *Range
+	RangeID uuid.UUID
+	// ChannelConfig
 	ChannelConfig   *ChannelConfig
-	Data            Object
+	ChannelConfigID uuid.UUID
+	// Data
+	Data Object
+}
+
+type ChannelSample struct {
+	Value           float32
+	Timestamp       time.Time
+	ChannelConfigID uuid.UUID
 }

@@ -14,7 +14,7 @@ type EngineRole int
 const (
 	EngineRoleMD = iota
 	EngineRoleObject
-	EngineRoleTSCache
+	EngineRoleCache
 )
 
 // |||| ENGINE ||||
@@ -100,7 +100,7 @@ type MDMigrateQuery interface {
 	Verify(ctx context.Context) error
 }
 
-// || BULK ||
+// || OBJECT ||
 
 type ObjectBaseQuery interface {
 	BaseQuery
@@ -128,4 +128,20 @@ type ObjectDeleteQuery interface {
 type ObjectMigrateQuery interface {
 	ObjectBaseQuery
 	Verify(ctx context.Context) error
+}
+
+// || TS CACHE ||
+
+type CacheBaseQuery interface {
+	BaseQuery
+}
+
+type CacheCreateQuery interface {
+	CacheBaseQuery
+	Model(model interface{}) CacheCreateQuery
+}
+
+type CacheRetrieveQuery interface {
+	CacheBaseQuery
+	Model(model interface{}) CacheRetrieveQuery
 }
