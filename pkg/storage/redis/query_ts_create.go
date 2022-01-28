@@ -10,13 +10,13 @@ import (
 type TSQueryVariant int
 
 const (
-	TSQueryVariantSeries TSQueryVariant = iota
+	TSQueryVariantSeries TSQueryVariant = iota + 1
 	TSQueryVariantSample
 )
 
 type tsCreateQuery struct {
+	tsBaseQuery
 	variant TSQueryVariant
-	baseQuery
 }
 
 func newTSCreate(client *timeseries.Client) *tsCreateQuery {
@@ -43,25 +43,33 @@ func (tsc *tsCreateQuery) Model(m interface{}) storage.CacheTSCreateQuery {
 
 func (tsc *tsCreateQuery) Exec(ctx context.Context) error {
 	log.SetReportCaller(true)
-	tsc.catcher.Exec(func() error {
-		wrapper := &TSModelWrapper{rfl: tsc.modelAdapter.Dest()}
-		switch tsc.variant {
-		case TSQueryVariantSample:
-			return tsc.baseClient().TSCreateSamples(ctx, wrapper.Samples()...).Err()
-		case TSQueryVariantSeries:
-			for _, in := range wrapper.SeriesNames() {
-				if err := tsc.baseClient().TSCreateSeries(ctx, in,
-					timeseries.CreateOptions{}).Err(); err != nil {
-					return err
-				}
-			}
-		default:
-			return storage.Error{
-				Type:    storage.ErrTypeInvalidArgs,
-				Message: "ts create queries require a variant selection",
-			}
+	switch tsc.variant {
+	case TSQueryVariantSample:
+		tsc.execSample(ctx)
+	case TSQueryVariantSeries:
+		tsc.execSeries(ctx)
+	default:
+		return storage.Error{
+			Type:    storage.ErrTypeInvalidArgs,
+			Message: "ts create queries require a variant selection",
 		}
-		return nil
-	})
+	}
 	return tsc.baseErr()
+}
+
+func (tsc *tsCreateQuery) execSample(ctx context.Context) {
+	w := tsc.tsBaseModelWrapper()
+	tsc.catcher.Exec(func() error {
+		return tsc.baseClient().TSCreateSamples(ctx, w.Samples()...).Err()
+	})
+}
+
+func (tsc *tsCreateQuery) execSeries(ctx context.Context) {
+	w := tsc.tsBaseModelWrapper()
+	for _, in := range w.SeriesNames() {
+		tsc.catcher.Exec(func() error {
+			return tsc.baseClient().TSCreateSeries(ctx, in,
+				timeseries.CreateOptions{}).Err()
+		})
+	}
 }

@@ -25,14 +25,6 @@ func (c Config) addr() string {
 	return fmt.Sprintf("%s:%v", c.Host, c.Port)
 }
 
-func (c Config) authString() *string {
-	if c.Password != "" {
-		authString := fmt.Sprintf("AUTH %s", c.Password)
-		return &authString
-	}
-	return nil
-}
-
 // |||| ENGINE ||||
 
 type Engine struct {
