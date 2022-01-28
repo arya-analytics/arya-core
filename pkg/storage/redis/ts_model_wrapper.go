@@ -45,7 +45,7 @@ func (m *tsModelWrapper) bindRes(key string, res interface{}) error {
 	if resVal.Len() == 0 {
 		return nil
 	}
-	if resVal.Index(0).Type().Kind() == reflect.Slice {
+	if resVal.Index(0).Elem().Type().Kind() == reflect.Slice {
 		for i := 0; i < resVal.Len(); i++ {
 			resItemVal := resVal.Index(i)
 			sample, err := timeseries.NewSampleFromRes(key, resItemVal.Interface())

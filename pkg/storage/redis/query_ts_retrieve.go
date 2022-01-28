@@ -67,23 +67,24 @@ func (tsr *tsRetrieveQuery) SeriesExists(ctx context.Context, pk interface{}) (b
 func (tsr *tsRetrieveQuery) Exec(ctx context.Context) error {
 	wrapper := &tsModelWrapper{rfl: tsr.modelAdapter.Dest()}
 	tsr.validateReq()
-	pk := tsr.PKs[0]
-	tsr.catcher.Exec(func() error {
-		var err error
-		var res interface{}
-		if tsr.allRange {
-			res, err = tsr.baseClient().TSGetAll(ctx, pk.String()).Result()
-		} else if !tsr.fromTS.IsZero() {
-			res, err = tsr.baseClient().TSGetRange(ctx, pk.String(), tsr.fromTS.UnixNano(),
-				tsr.toTS.UnixNano()).Result()
-		} else {
-			res, err = tsr.baseClient().TSGet(ctx, pk.String()).Result()
-		}
-		if err != nil {
-			return err
-		}
-		return wrapper.bindRes(pk.String(), res)
-	})
+	for _, pk := range tsr.PKs {
+		tsr.catcher.Exec(func() error {
+			var err error
+			var res interface{}
+			if tsr.allRange {
+				res, err = tsr.baseClient().TSGetAll(ctx, pk.String()).Result()
+			} else if !tsr.fromTS.IsZero() {
+				res, err = tsr.baseClient().TSGetRange(ctx, pk.String(), tsr.fromTS.UnixNano(),
+					tsr.toTS.UnixNano()).Result()
+			} else {
+				res, err = tsr.baseClient().TSGet(ctx, pk.String()).Result()
+			}
+			if err != nil {
+				return err
+			}
+			return wrapper.bindRes(pk.String(), res)
+		})
+	}
 	tsr.baseAdaptToSource()
 	return tsr.baseErr()
 }
