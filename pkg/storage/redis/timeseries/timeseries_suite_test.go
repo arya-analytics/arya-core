@@ -23,7 +23,7 @@ var (
 )
 
 func createMockTS() {
-	if err := mockClient.TSCreate(mockCtx, mockTSKey, timeseries.CreateOptions{
+	if err := mockClient.TSCreateSeries(mockCtx, mockTSKey, timeseries.CreateOptions{
 		Retention: 0,
 	}).Err(); err != nil {
 		log.Fatalln(err)

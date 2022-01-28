@@ -23,7 +23,7 @@ var _ = Describe("QueryUpdate", func() {
 				ID).Exec(mockCtx)
 			Expect(err).To(BeNil())
 		})
-		It("Should update it without errutil", func() {
+		It("Should update it without error", func() {
 			Expect(err).To(BeNil())
 		})
 		It("Should reflect updates when retrieved", func() {

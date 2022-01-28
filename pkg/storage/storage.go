@@ -50,6 +50,10 @@ func (s *Storage) NewUpdate() *updateQuery {
 	return newUpdate(s)
 }
 
+func (s *Storage) NewTSRetrieve() *tsRetrieveQuery {
+	return newTSRetrieve(s)
+}
+
 func (s *Storage) adapter(r EngineRole) (a Adapter) {
 	return s.pooler.Retrieve(s.cfg.retrieve(r))
 }

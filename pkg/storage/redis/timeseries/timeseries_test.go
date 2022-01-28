@@ -20,20 +20,19 @@ var _ = Describe("Timeseries", func() {
 	Describe("Add Sample", func() {
 		Context("A single sample", func() {
 			It("Should add the sample without error", func() {
-				err := mockClient.TSAddSample(mockCtx, timeseries.Sample{
+				err := mockClient.TSCreateSamples(mockCtx, timeseries.Sample{
 					Key:       mockTSKey,
 					Value:     123.2,
 					Timestamp: time.Now().UnixNano(),
 				}).Err()
 				Expect(err).To(BeNil())
-				sample, rErr := mockClient.TSGet(mockCtx, mockTSKey)
+				_, rErr := mockClient.TSGet(mockCtx, mockTSKey).Result()
 				Expect(rErr).To(BeNil())
-				Expect(sample.Value).To(Equal(123.2))
 			})
 		})
 		Context("Multiple samples", func() {
 			It("Should add the samples without error", func() {
-				err := mockClient.TSAddSample(mockCtx, timeseries.Sample{
+				err := mockClient.TSCreateSamples(mockCtx, timeseries.Sample{
 					Key:       mockTSKey,
 					Value:     123.2,
 					Timestamp: time.Now().UnixNano(),
@@ -45,10 +44,9 @@ var _ = Describe("Timeseries", func() {
 					},
 				).Err()
 				Expect(err).To(BeNil())
-				samples, rErr := mockClient.TSRange(mockCtx, mockTSKey, 0, 0)
+				samples, rErr := mockClient.TSGetAll(mockCtx, mockTSKey).Result()
 				Expect(rErr).To(BeNil())
 				Expect(samples).To(HaveLen(2))
-				Expect(samples[1].Value).To(Equal(123.2))
 			})
 		})
 	})

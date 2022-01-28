@@ -21,7 +21,7 @@ var _ = Describe("Create", func() {
 				mockModel.ID,
 			).Exec(mockCtx)
 		})
-		It("Should create it without errutil", func() {
+		It("Should create it without error", func() {
 			Expect(errChan).To(BeNil())
 		})
 		It("Should be able to be re-queried after creation", func() {

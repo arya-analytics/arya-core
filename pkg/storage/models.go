@@ -61,7 +61,7 @@ type ChannelChunk struct {
 }
 
 type ChannelSample struct {
-	Value           float32
-	Timestamp       time.Time
 	ChannelConfigID uuid.UUID
+	Value           float64
+	Timestamp       int64
 }

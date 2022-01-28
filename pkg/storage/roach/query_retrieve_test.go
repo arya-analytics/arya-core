@@ -13,7 +13,7 @@ var _ = Describe("QueryRetrieve", func() {
 		BeforeEach(createMockModel)
 		AfterEach(deleteMockModel)
 		Describe("Retrieve an item", func() {
-			It("Should retrieve it without errutil", func() {
+			It("Should retrieve it without error", func() {
 				m := &storage.ChannelConfig{}
 				err := mockEngine.NewRetrieve(mockAdapter).Model(m).WherePK(mockModel.
 					ID).Exec(mockCtx)

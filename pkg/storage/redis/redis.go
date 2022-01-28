@@ -46,3 +46,11 @@ func New(cfg Config) *Engine {
 func (e *Engine) NewAdapter() storage.Adapter {
 	return newAdapter(e.cfg)
 }
+
+func (e *Engine) NewTSRetrieve(a storage.Adapter) storage.CacheTSRetrieveQuery {
+	return newTSRetrieve(conn(a))
+}
+
+func (e *Engine) NewTSCreate(a storage.Adapter) storage.CacheTSCreateQuery {
+	return newTSCreate(conn(a))
+}

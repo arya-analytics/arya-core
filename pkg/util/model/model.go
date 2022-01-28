@@ -94,6 +94,10 @@ func (r *Reflect) PKs() []interface{} {
 	return pks
 }
 
+func (r *Reflect) Tags() StructTags {
+	return NewTags(r.Type())
+}
+
 type ForEachFunc func(rfl *Reflect, i int)
 
 func (r *Reflect) ForEach(fef ForEachFunc) {

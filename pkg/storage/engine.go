@@ -3,6 +3,7 @@ package storage
 import (
 	"context"
 	"github.com/google/uuid"
+	"time"
 )
 
 type Adapter interface {
@@ -49,6 +50,14 @@ type ObjectEngine interface {
 	NewCreate(a Adapter) ObjectCreateQuery
 	NewDelete(a Adapter) ObjectDeleteQuery
 	NewMigrate(a Adapter) ObjectMigrateQuery
+}
+
+// || CACHE ||
+
+type CacheEngine interface {
+	BaseEngine
+	NewTSRetrieve(a Adapter) CacheTSCreateQuery
+	NewTSCreate(a Adapter) CacheTSCreateQuery
 }
 
 // |||| QUERY ||||
@@ -141,7 +150,18 @@ type CacheCreateQuery interface {
 	Model(model interface{}) CacheCreateQuery
 }
 
-type CacheRetrieveQuery interface {
+type CacheTSRetrieveQuery interface {
 	CacheBaseQuery
-	Model(model interface{}) CacheRetrieveQuery
+	SeriesExists(ctx context.Context, pk interface{}) (bool, error)
+	Model(model interface{}) CacheTSRetrieveQuery
+	WherePK(pk interface{}) CacheTSRetrieveQuery
+	AllTimeRange() CacheTSRetrieveQuery
+	WhereTimeRange(fromTS time.Time, toTS time.Time) CacheTSRetrieveQuery
+}
+
+type CacheTSCreateQuery interface {
+	CacheBaseQuery
+	Model(model interface{}) CacheTSCreateQuery
+	Series() CacheTSCreateQuery
+	Sample() CacheTSCreateQuery
 }

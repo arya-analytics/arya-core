@@ -17,14 +17,14 @@ func catalog() storage.ModelCatalog {
 }
 
 type ChannelConfig struct {
-	ID        uuid.UUID
+	ID        uuid.UUID `cache:"role:tsKey"`
 	Name      string
 	DataRate  float64
 	Retention time.Duration
 }
 
 type ChannelSample struct {
-	Value           float32
-	Timestamp       time.Time
-	ChannelConfigID uuid.UUID
+	ChannelConfigID uuid.UUID `cache:"role:tsKey,"`
+	Value           float64   `cache:"role:tsValue,"`
+	Timestamp       int64     `cache:"role:tsStamp"`
 }

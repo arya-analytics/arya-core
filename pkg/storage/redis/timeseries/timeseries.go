@@ -8,16 +8,19 @@ import (
 	"strconv"
 )
 
+// |||| COMMANDS ||||
+
 type Command string
 
 const (
-	CMDCreate Command = "TS.CREATE"
-	CMDExists Command = "EXISTS"
-	CMDMAdd   Command = "TS.MADD"
-	CMDGet    Command = "TS.GET"
-	CMDRange  Command = "TS.RANGE"
-	CMDInfo   Command = "TS.INFO"
+	CMDCreateSeries  Command = "TS.CREATE"
+	CMDCreateSamples Command = "TS.MADD"
+	CMDGet           Command = "TS.GET"
+	CMDRange         Command = "TS.RANGE"
+	CMDInfo          Command = "TS.INFO"
 )
+
+// |||| SAMPLE ||||
 
 type Sample struct {
 	Key       string
@@ -25,14 +28,13 @@ type Sample struct {
 	Timestamp int64
 }
 
-func newSampleFromRes(key string, res interface{}) (Sample, error) {
+func NewSampleFromRes(key string, res interface{}) (Sample, error) {
 	resVal := reflect.ValueOf(res)
 	ts := resVal.Index(0).Interface().(int64)
 	val, err := strconv.ParseFloat(resVal.Index(1).Interface().(string), 64)
 	if err != nil {
 		return Sample{}, err
 	}
-
 	return Sample{
 		Key:       key,
 		Timestamp: ts,
@@ -47,6 +49,8 @@ func (s Sample) args() (args []interface{}) {
 		s.Value,
 	}
 }
+
+// |||| CLIENT ||||
 
 type Client struct {
 	*redis.Client
@@ -72,49 +76,36 @@ func (c *Client) exec(ctx context.Context, cmd Command, args ...interface{}) *re
 	return c.Do(ctx, args...)
 }
 
-func (c *Client) TSCreate(ctx context.Context, key string,
+func (c *Client) TSCreateSeries(ctx context.Context, key string,
 	opts CreateOptions) *redis.Cmd {
-	return c.exec(ctx, CMDCreate, opts.args(key)...)
+	return c.exec(ctx, CMDCreateSeries, opts.args(key)...)
 }
 
-func (c *Client) TSAddSample(ctx context.Context, samples ...Sample) *redis.Cmd {
+func (c *Client) TSCreateSamples(ctx context.Context, samples ...Sample) *redis.Cmd {
 	var sampleArgs []interface{}
 	for _, sample := range samples {
 		sampleArgs = append(sampleArgs, sample.args()...)
 	}
-	return c.exec(ctx, CMDMAdd, sampleArgs...)
+	return c.exec(ctx, CMDCreateSamples, sampleArgs...)
 }
 
-func (c *Client) TSGet(ctx context.Context, key string) (Sample, error) {
-	res, err := c.exec(ctx, CMDGet, key).Result()
-	if err != nil {
-		return Sample{}, err
-	}
-	return newSampleFromRes(key, res)
+func (c *Client) TSGet(ctx context.Context, key string) *redis.Cmd {
+	return c.exec(ctx, CMDGet, key)
 }
 
-func (c *Client) TSRange(ctx context.Context, key string, fromTS int,
-	toTS int) ([]Sample, error) {
+func (c *Client) TSGetAll(ctx context.Context, key string) *redis.Cmd {
+	return c.TSGetRange(ctx, key, 0, 0)
+}
+
+func (c *Client) TSGetRange(ctx context.Context, key string, fromTS int64,
+	toTS int64) *redis.Cmd {
 	fromTSArg := "-"
 	if fromTS != 0 {
-		fromTSArg = strconv.Itoa(fromTS)
+		fromTSArg = strconv.FormatInt(fromTS, 10)
 	}
 	toTSArg := "+"
 	if toTS != 0 {
-		toTSArg = strconv.Itoa(toTS)
+		toTSArg = strconv.FormatInt(toTS, 10)
 	}
-	res, err := c.exec(ctx, CMDRange, key, fromTSArg, toTSArg).Result()
-	if err != nil {
-		return nil, err
-	}
-	var samples []Sample
-	resV := reflect.ValueOf(res)
-	for i := 0; i < resV.Len(); i++ {
-		s, sErr := newSampleFromRes(key, resV.Index(i).Interface())
-		if sErr != nil {
-			return nil, sErr
-		}
-		samples = append(samples, s)
-	}
-	return samples, err
+	return c.exec(ctx, CMDRange, key, fromTSArg, toTSArg)
 }

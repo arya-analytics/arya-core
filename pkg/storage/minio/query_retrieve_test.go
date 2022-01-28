@@ -20,7 +20,7 @@ var _ = Describe("QueryRetrieve", func() {
 				err = mockEngine.NewRetrieve(mockAdapter).Model(retrievedModel).WherePK(mockModel.
 					ID).Exec(mockCtx)
 			})
-			It("Should retrieve it without errutil", func() {
+			It("Should retrieve it without error", func() {
 				Expect(err).To(BeNil())
 			})
 			It("Should retrieve the correct item", func() {
@@ -44,7 +44,7 @@ var _ = Describe("QueryRetrieve", func() {
 
 				var models []*storage.ChannelChunk
 				err := mockEngine.NewRetrieve(mockAdapter).Model(&models).WherePKs([]uuid.
-					UUID{mockModel.ID, mockModelTwo.ID}).Exec(mockCtx)
+				UUID{mockModel.ID, mockModelTwo.ID}).Exec(mockCtx)
 				Expect(err).To(BeNil())
 				Expect(models).To(HaveLen(2))
 				Expect(models[0].ID == mockModelTwo.ID || models[1].ID == mockModelTwo.ID).

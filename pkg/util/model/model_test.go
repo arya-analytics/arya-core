@@ -127,7 +127,7 @@ var _ = Describe("Model", func() {
 			var mSingleBaseType = reflect.TypeOf(mock.ModelA{})
 			var mSingleType = reflect.TypeOf(&mock.ModelA{})
 			var refl = model.NewReflect(&m)
-			It("Should pass validation without errutil", func() {
+			It("Should pass validation without error", func() {
 				Expect(refl.Validate()).To(BeNil())
 			})
 			It("Should return the correct pointer interface", func() {

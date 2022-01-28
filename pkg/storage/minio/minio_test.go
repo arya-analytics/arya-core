@@ -16,7 +16,7 @@ var _ = Describe("Minio Engine", func() {
 			a = mockEngine.NewAdapter()
 		})
 		Describe("New Adapter", func() {
-			It("Should create a new adapter without errutil", func() {
+			It("Should create a new adapter without error", func() {
 				Expect(reflect.TypeOf(a.ID())).To(Equal(reflect.TypeOf(uuid.New())))
 			})
 		})

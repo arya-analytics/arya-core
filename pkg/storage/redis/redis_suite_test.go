@@ -1,21 +1,38 @@
 package redis_test
 
 import (
+	"context"
+	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/storage/redis"
+	"github.com/google/uuid"
 	"testing"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
-var _ = BeforeSuite(func() {
-	mockEngine := redis.New(redis.Config{
-		Host:     "redis-13401.c278.us-east-1-4.ec2.cloud.redislabs.com",
-		Port:     13401,
-		Password: "6GNc75OA8q2IUAjymRqq16ZemK2OoBQ9",
+var (
+	mockEngine = redis.New(redis.Config{
+		Host:     "localhost",
+		Port:     6379,
+		Password: "",
+		Database: 0,
 	})
-	_ = mockEngine.NewAdapter()
-})
+	mockAdapter = mockEngine.NewAdapter()
+	mockCtx     = context.Background()
+	mockSeries  *storage.ChannelConfig
+)
+
+func createMockSeries() {
+	mockSeries = &storage.ChannelConfig{
+		Name: "SG_02",
+		ID:   uuid.New(),
+	}
+	err := mockEngine.NewTSCreate(mockAdapter).Series().Model(mockSeries).Exec(mockCtx)
+	if err != nil {
+		panic(err)
+	}
+}
 
 func TestRedists(t *testing.T) {
 	RegisterFailHandler(Fail)
