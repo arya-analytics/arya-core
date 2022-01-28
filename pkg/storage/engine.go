@@ -155,6 +155,7 @@ type CacheTSRetrieveQuery interface {
 	SeriesExists(ctx context.Context, pk interface{}) (bool, error)
 	Model(model interface{}) CacheTSRetrieveQuery
 	WherePK(pk interface{}) CacheTSRetrieveQuery
+	WherePKs(pks interface{}) CacheTSRetrieveQuery
 	AllTimeRange() CacheTSRetrieveQuery
 	WhereTimeRange(fromTS time.Time, toTS time.Time) CacheTSRetrieveQuery
 }
