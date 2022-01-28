@@ -39,6 +39,11 @@ func (e *Engine) NewAdapter() storage.Adapter {
 	return newAdapter(e.cfg)
 }
 
+func (e *Engine) IsAdapter(a storage.Adapter) bool {
+	_, ok := bindAdapter(a)
+	return ok
+}
+
 func (e *Engine) NewTSRetrieve(a storage.Adapter) storage.CacheTSRetrieveQuery {
 	return newTSRetrieve(conn(a))
 }

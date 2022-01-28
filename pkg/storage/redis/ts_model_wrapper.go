@@ -17,18 +17,18 @@ const (
 	structTagValRole   = "tsValue"
 )
 
-type TSModelWrapper struct {
+type tsModelWrapper struct {
 	rfl *model.Reflect
 }
 
-func (m *TSModelWrapper) Samples() (samples []timeseries.Sample) {
+func (m *tsModelWrapper) samples() (samples []timeseries.Sample) {
 	m.rfl.ForEach(func(rfl *model.Reflect, i int) {
 		samples = append(samples, m.newSampleFromRFL(rfl))
 	})
 	return samples
 }
 
-func (m *TSModelWrapper) SeriesNames() (names []string) {
+func (m *tsModelWrapper) seriesNames() (names []string) {
 	m.rfl.ForEach(func(rfl *model.Reflect, i int) {
 		fld := m.retrieveFieldByRole(rfl, structTagKeyRole).Interface()
 		pk := model.NewPK(fld)
@@ -37,7 +37,7 @@ func (m *TSModelWrapper) SeriesNames() (names []string) {
 	return names
 }
 
-func (m *TSModelWrapper) BindRes(key string, res interface{}) error {
+func (m *tsModelWrapper) bindRes(key string, res interface{}) error {
 	resVal := reflect.ValueOf(res)
 	if resVal.Type().Kind() != reflect.Slice {
 		panic("received unknown response from cache")
@@ -72,7 +72,7 @@ func (m *TSModelWrapper) BindRes(key string, res interface{}) error {
 	return nil
 }
 
-func (m *TSModelWrapper) newSampleFromRFL(rfl *model.Reflect) timeseries.Sample {
+func (m *tsModelWrapper) newSampleFromRFL(rfl *model.Reflect) timeseries.Sample {
 	sfn, kfn, vfn := m.fieldNames()
 	stamp := rfl.Value().FieldByName(sfn).Interface()
 	key := rfl.Value().FieldByName(kfn).Interface()
@@ -85,26 +85,26 @@ func (m *TSModelWrapper) newSampleFromRFL(rfl *model.Reflect) timeseries.Sample 
 	}
 }
 
-func (m *TSModelWrapper) appendSample(sample timeseries.Sample) {
+func (m *tsModelWrapper) appendSample(sample timeseries.Sample) {
 	newRfl := m.rfl.NewModel()
 	m.setFields(newRfl, sample)
 	m.rfl.ChainAppend(newRfl)
 }
 
-func (m *TSModelWrapper) fieldNames() (sfn string, kfn string, vfn string) {
+func (m *tsModelWrapper) fieldNames() (sfn string, kfn string, vfn string) {
 	sfn = m.retrieveFieldNameByRole(structTagStampRole)
 	kfn = m.retrieveFieldNameByRole(structTagKeyRole)
 	vfn = m.retrieveFieldNameByRole(structTagValRole)
 	return sfn, kfn, vfn
 }
 
-func (m *TSModelWrapper) retrieveFieldByRole(rfl *model.Reflect,
+func (m *tsModelWrapper) retrieveFieldByRole(rfl *model.Reflect,
 	role string) reflect.Value {
 	fldName := m.retrieveFieldNameByRole(role)
 	return rfl.Value().FieldByName(fldName)
 }
 
-func (m *TSModelWrapper) setFields(rfl *model.Reflect, sample timeseries.Sample) {
+func (m *tsModelWrapper) setFields(rfl *model.Reflect, sample timeseries.Sample) {
 	sfn, kfn, vfn := m.fieldNames()
 	kf := m.retrieveFieldByRole(rfl, structTagKeyRole)
 	rfl.Value().FieldByName(kfn).Set(convertKeyString(kf.Type(), sample.Key))
@@ -112,7 +112,7 @@ func (m *TSModelWrapper) setFields(rfl *model.Reflect, sample timeseries.Sample)
 	rfl.Value().FieldByName(vfn).Set(reflect.ValueOf(sample.Value))
 }
 
-func (m *TSModelWrapper) retrieveFieldNameByRole(role string) string {
+func (m *tsModelWrapper) retrieveFieldNameByRole(role string) string {
 	t, ok := m.rfl.Tags().Retrieve(structTagCacheCat, structTagRoleKey, role)
 	if !ok {
 		panic(fmt.Sprintf("couldn't retrieve role %s from model", role))

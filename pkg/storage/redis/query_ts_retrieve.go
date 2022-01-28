@@ -65,7 +65,7 @@ func (tsr *tsRetrieveQuery) SeriesExists(ctx context.Context, pk interface{}) (b
 }
 
 func (tsr *tsRetrieveQuery) Exec(ctx context.Context) error {
-	wrapper := &TSModelWrapper{rfl: tsr.modelAdapter.Dest()}
+	wrapper := &tsModelWrapper{rfl: tsr.modelAdapter.Dest()}
 	tsr.validateReq()
 	pk := tsr.PKs[0]
 	tsr.catcher.Exec(func() error {
@@ -82,7 +82,7 @@ func (tsr *tsRetrieveQuery) Exec(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		return wrapper.BindRes(pk.String(), res)
+		return wrapper.bindRes(pk.String(), res)
 	})
 	tsr.baseAdaptToSource()
 	return tsr.baseErr()

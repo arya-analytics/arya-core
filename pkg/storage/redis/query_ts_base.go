@@ -4,6 +4,6 @@ type tsBaseQuery struct {
 	baseQuery
 }
 
-func (tsb *tsBaseQuery) tsBaseModelWrapper() *TSModelWrapper {
-	return &TSModelWrapper{rfl: tsb.modelAdapter.Dest()}
+func (tsb *tsBaseQuery) tsBaseModelWrapper() *tsModelWrapper {
+	return &tsModelWrapper{rfl: tsb.modelAdapter.Dest()}
 }

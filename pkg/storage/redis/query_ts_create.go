@@ -60,13 +60,13 @@ func (tsc *tsCreateQuery) Exec(ctx context.Context) error {
 func (tsc *tsCreateQuery) execSample(ctx context.Context) {
 	w := tsc.tsBaseModelWrapper()
 	tsc.catcher.Exec(func() error {
-		return tsc.baseClient().TSCreateSamples(ctx, w.Samples()...).Err()
+		return tsc.baseClient().TSCreateSamples(ctx, w.samples()...).Err()
 	})
 }
 
 func (tsc *tsCreateQuery) execSeries(ctx context.Context) {
 	w := tsc.tsBaseModelWrapper()
-	for _, in := range w.SeriesNames() {
+	for _, in := range w.seriesNames() {
 		tsc.catcher.Exec(func() error {
 			return tsc.baseClient().TSCreateSeries(ctx, in,
 				timeseries.CreateOptions{}).Err()
