@@ -55,7 +55,7 @@ type ObjectEngine interface {
 
 type CacheEngine interface {
 	BaseEngine
-	NewTSRetrieve(a Adapter) CacheTSCreateQuery
+	NewTSRetrieve(a Adapter) CacheTSRetrieveQuery
 	NewTSCreate(a Adapter) CacheTSCreateQuery
 }
 

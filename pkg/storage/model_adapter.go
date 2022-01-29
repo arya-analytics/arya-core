@@ -12,7 +12,7 @@ type ModelCatalog []interface{}
 
 func (mc ModelCatalog) New(sourcePtr interface{}) interface{} {
 	sourceRfl := model.NewReflect(sourcePtr)
-	destRfl, ok := mc.retrieveCM(sourceRfl)
+	destRfl, ok := mc.retrieveCM(sourceRfl.Type())
 	if !ok {
 		panic(fmt.Sprintf("model %s could not be found in catalog", sourceRfl.Type().Name()))
 	}
@@ -22,19 +22,30 @@ func (mc ModelCatalog) New(sourcePtr interface{}) interface{} {
 	return destRfl.NewModel().Pointer()
 }
 
+func (mc ModelCatalog) NewFromType(t reflect.Type, chain bool) interface{} {
+	destRfl, ok := mc.retrieveCM(t)
+	if !ok {
+		panic(fmt.Sprintf("model %s could not be found in catalog", t.Name()))
+	}
+	if chain {
+		return destRfl.NewChain().Pointer()
+	}
+	return destRfl.NewModel().Pointer()
+}
+
 func (mc ModelCatalog) Contains(sourcePtr interface{}) bool {
 	sourceRfl := model.NewReflect(sourcePtr)
-	_, ok := mc.retrieveCM(sourceRfl)
+	_, ok := mc.retrieveCM(sourceRfl.Type())
 	return ok
 }
 
-func (mc ModelCatalog) retrieveCM(modelRfl *model.Reflect) (*model.Reflect, bool) {
+func (mc ModelCatalog) retrieveCM(t reflect.Type) (*model.Reflect, bool) {
 	for _, destOpt := range mc {
 		destOptRfl := model.NewReflect(destOpt)
 		if err := destOptRfl.Validate(); err != nil {
 			panic(err)
 		}
-		if modelRfl.Type().Name() == destOptRfl.Type().Name() {
+		if t.Name() == destOptRfl.Type().Name() {
 			return destOptRfl, true
 		}
 	}

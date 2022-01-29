@@ -5,6 +5,19 @@ import (
 	"time"
 )
 
+var _catalog = ModelCatalog{
+	&Node{},
+	&Range{},
+	&RangeReplicaToNode{},
+	&ChannelConfig{},
+	&ChannelChunk{},
+	&ChannelSample{},
+}
+
+func catalog() ModelCatalog {
+	return _catalog
+}
+
 type Node struct {
 	ID              int
 	Address         string

@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/storage/redis/timeseries"
-	log "github.com/sirupsen/logrus"
 )
 
 type TSQueryVariant int
@@ -42,7 +41,6 @@ func (tsc *tsCreateQuery) Model(m interface{}) storage.CacheTSCreateQuery {
 }
 
 func (tsc *tsCreateQuery) Exec(ctx context.Context) error {
-	log.SetReportCaller(true)
 	switch tsc.variant {
 	case TSQueryVariantSample:
 		tsc.execSample(ctx)
