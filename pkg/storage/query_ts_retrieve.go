@@ -3,13 +3,10 @@ package storage
 import (
 	"context"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
-	log "github.com/sirupsen/logrus"
-	"reflect"
 )
 
 type tsRetrieveQuery struct {
-	baseQuery
-	pks      []interface{}
+	tsBaseQuery
 	modelRfl *model.Reflect
 }
 
@@ -20,22 +17,19 @@ func newTSRetrieve(s *Storage) *tsRetrieveQuery {
 }
 
 func (tsr *tsRetrieveQuery) Model(m interface{}) *tsRetrieveQuery {
-	tsr.modelRfl = model.NewReflect(m)
+	tsr.tsBaseModel(m)
 	tsr.setCacheQuery(tsr.cacheQuery().Model(m))
 	return tsr
 }
 
 func (tsr *tsRetrieveQuery) WherePK(pk interface{}) *tsRetrieveQuery {
-	tsr.pks = append(tsr.pks, pk)
+	tsr.tsBaseWherePk(pk)
 	tsr.setCacheQuery(tsr.cacheQuery().WherePK(pk))
 	return tsr
 }
 
 func (tsr *tsRetrieveQuery) WherePKs(pks interface{}) *tsRetrieveQuery {
-	rv := reflect.ValueOf(pks)
-	for i := 0; i < rv.Len(); i++ {
-		tsr.pks = append(tsr.pks, rv.Index(i))
-	}
+	tsr.tsBaseWherePks(pks)
 	tsr.setCacheQuery(tsr.cacheQuery().WherePKs(pks))
 	return tsr
 }
@@ -57,31 +51,15 @@ func (tsr *tsRetrieveQuery) SeriesExists(ctx context.Context, pk interface{}) (b
 func (tsr *tsRetrieveQuery) Exec(ctx context.Context) error {
 	tsr.catcher.Exec(func() error {
 		err := tsr.cacheQuery().Exec(ctx)
-		se, ok := err.(Error)
-		if !ok {
-			panic(err)
-		}
-		if se.Type == ErrTypeItemNotFound {
-			log.Warn("Series not found in cache. Attempting to fix.")
-			r := newRetrieve(tsr.storage)
-			tag, ok := tsr.modelRfl.Tags().Retrieve("storage", "role", "index")
-			if !ok {
-				return err
+		if err != nil {
+			se := err.(Error)
+			if se.Type == ErrTypeItemNotFound {
+				if bErr := tsr.tsBaseCreateIndexes(ctx, tsr.pks); bErr != nil {
+					return bErr
+				}
+				// retry the transaction after we've created the indexes
+				return tsr.Exec(ctx)
 			}
-			fld, ok := tsr.modelRfl.Type().FieldByName(tag.FldName)
-			if !ok {
-				return err
-			}
-			sm := catalog().NewFromType(fld.Type.Elem(), true)
-			if sErr := r.Model(sm).WherePKs(tsr.pks).Exec(ctx); err != nil {
-				return sErr
-			}
-			if tscErr := newTSCreate(tsr.storage).Model(sm).Series().Exec(
-				ctx); tscErr != nil {
-				return tscErr
-			}
-			// retry the transaction after we've created the indexes
-			return tsr.Exec(ctx)
 		}
 		return err
 	})

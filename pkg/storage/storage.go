@@ -71,6 +71,10 @@ func (s *Storage) NewTSRetrieve() *tsRetrieveQuery {
 	return newTSRetrieve(s)
 }
 
+func (s *Storage) NewTSCreate() *tsCreateQuery {
+	return newTSCreate(s)
+}
+
 func (s *Storage) adapter(r EngineRole) (a Adapter) {
 	e, ok := s.cfg.retrieve(r)
 	if !ok {

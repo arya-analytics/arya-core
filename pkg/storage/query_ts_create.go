@@ -3,7 +3,7 @@ package storage
 import "context"
 
 type tsCreateQuery struct {
-	baseQuery
+	tsBaseQuery
 }
 
 func newTSCreate(s *Storage) *tsCreateQuery {
@@ -29,7 +29,18 @@ func (tsc *tsCreateQuery) Sample() *tsCreateQuery {
 
 func (tsc *tsCreateQuery) Exec(ctx context.Context) error {
 	tsc.catcher.Exec(func() error {
-		return tsc.cacheQuery().Exec(ctx)
+		err := tsc.cacheQuery().Exec(ctx)
+		if err != nil {
+			se := err.(Error)
+			if se.Type == ErrTypeItemNotFound {
+				if bErr := tsc.tsBaseCreateIndexes(ctx,
+					tsc.modelRfl.PKs()); bErr != nil {
+					return bErr
+				}
+				return tsc.Exec(ctx)
+			}
+		}
+		return err
 	})
 	return tsc.baseErr()
 }

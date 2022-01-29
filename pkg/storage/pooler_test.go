@@ -6,13 +6,9 @@ import (
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	log "github.com/sirupsen/logrus"
 )
 
 var _ = Describe("pooler", func() {
-	BeforeEach(func() {
-		log.SetReportCaller(true)
-	})
 	Describe("Retrieving a new adapter", func() {
 		It("Should retrieveQuery an adapter", func() {
 			p := storage.UnsafeNewPooler()

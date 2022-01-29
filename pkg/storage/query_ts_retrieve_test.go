@@ -7,6 +7,8 @@ import (
 )
 
 var _ = Describe("QueryTsRetrieve", func() {
+	BeforeEach(createMockChannelCfg)
+	AfterEach(deleteMockChannelCfg)
 	Describe("Standard usage", func() {
 		Describe("Retrieving a sample", func() {
 			It("Should create the index if it doesn't exist", func() {

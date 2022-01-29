@@ -35,4 +35,5 @@ func redisToStorageErrType(err error) storage.ErrorType {
 
 var _redisErrors = map[string]storage.ErrorType{
 	"ERR TSDB: the key does not exist": storage.ErrTypeItemNotFound,
+	"ERR TSDB: key already exists":     storage.ErrTypeUniqueViolation,
 }
