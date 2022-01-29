@@ -3,7 +3,6 @@ package storage
 import (
 	"context"
 	"github.com/google/uuid"
-	"time"
 )
 
 type Adapter interface {
@@ -157,7 +156,7 @@ type CacheTSRetrieveQuery interface {
 	WherePK(pk interface{}) CacheTSRetrieveQuery
 	WherePKs(pks interface{}) CacheTSRetrieveQuery
 	AllTimeRange() CacheTSRetrieveQuery
-	WhereTimeRange(fromTS time.Time, toTS time.Time) CacheTSRetrieveQuery
+	WhereTimeRange(fromTS int64, toTS int64) CacheTSRetrieveQuery
 }
 
 type CacheTSCreateQuery interface {

@@ -7,16 +7,16 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/storage/redis/timeseries"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/validate"
+	"github.com/go-redis/redis/v8"
 	"reflect"
-	"time"
 )
 
 type tsRetrieveQuery struct {
 	baseQuery
 	PKs      []model.PK
 	allRange bool
-	fromTS   time.Time
-	toTS     time.Time
+	fromTS   int64
+	toTS     int64
 }
 
 func newTSRetrieve(client *timeseries.Client) *tsRetrieveQuery {
@@ -48,7 +48,7 @@ func (tsr *tsRetrieveQuery) AllTimeRange() storage.CacheTSRetrieveQuery {
 	return tsr
 }
 
-func (tsr *tsRetrieveQuery) WhereTimeRange(fromTS time.Time, toTS time.Time) storage.CacheTSRetrieveQuery {
+func (tsr *tsRetrieveQuery) WhereTimeRange(fromTS int64, toTS int64) storage.CacheTSRetrieveQuery {
 	tsr.fromTS = fromTS
 	tsr.toTS = toTS
 	return tsr
@@ -69,16 +69,16 @@ func (tsr *tsRetrieveQuery) Exec(ctx context.Context) error {
 	tsr.validateReq()
 	for _, pk := range tsr.PKs {
 		tsr.catcher.Exec(func() error {
-			var err error
-			var res interface{}
+			pks := pk.String()
+			var cmd *redis.Cmd
 			if tsr.allRange {
-				res, err = tsr.baseClient().TSGetAll(ctx, pk.String()).Result()
-			} else if !tsr.fromTS.IsZero() {
-				res, err = tsr.baseClient().TSGetRange(ctx, pk.String(), tsr.fromTS.UnixNano(),
-					tsr.toTS.UnixNano()).Result()
+				cmd = tsr.baseClient().TSGetAll(ctx, pks)
+			} else if tsr.toTS != 0 {
+				cmd = tsr.baseClient().TSGetRange(ctx, pks, tsr.fromTS, tsr.toTS)
 			} else {
-				res, err = tsr.baseClient().TSGet(ctx, pk.String()).Result()
+				cmd = tsr.baseClient().TSGet(ctx, pk.String())
 			}
+			res, err := cmd.Result()
 			if err != nil {
 				return err
 			}

@@ -42,7 +42,7 @@ var _ = Describe("QueryTsCreate", func() {
 			})
 		})
 	})
-	Describe("Edge cases + error", func() {
+	Describe("Edge cases + errors", func() {
 		Describe("Not selecting a variant", func() {
 			It("Should return the correct storage error", func() {
 				err := mockEngine.NewTSCreate(mockAdapter).Model(mockSeries).Exec(mockCtx)
