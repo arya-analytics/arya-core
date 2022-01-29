@@ -74,6 +74,7 @@ type ChannelChunk struct {
 }
 
 type ChannelSample struct {
+	ChannelConfig   *ChannelConfig `storage:"role:index"`
 	ChannelConfigID uuid.UUID
 	Value           float64
 	Timestamp       int64

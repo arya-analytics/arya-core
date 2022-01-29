@@ -5,6 +5,7 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/storage/minio"
 	"github.com/arya-analytics/aryacore/pkg/storage/mock"
+	"github.com/arya-analytics/aryacore/pkg/storage/redis"
 	"github.com/arya-analytics/aryacore/pkg/storage/roach"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/cockroachdb/cockroach-go/v2/testserver"
@@ -25,6 +26,12 @@ var (
 				AccessKey: "Q3AM3UQ867SPQQA43P2F",
 				SecretKey: "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG",
 			}),
+		storage.EngineRoleCache: redis.New(redis.Config{
+			Host:     "localhost",
+			Port:     6379,
+			Password: "",
+			Database: 0,
+		}),
 	}
 	mockStorage    = storage.New(mockEngineCfg)
 	mockCtx        = context.Background()

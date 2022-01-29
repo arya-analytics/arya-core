@@ -44,6 +44,10 @@ func (e *Engine) IsAdapter(a storage.Adapter) bool {
 	return ok
 }
 
+func (e *Engine) InCatalog(m interface{}) bool {
+	return catalog().Contains(m)
+}
+
 func (e *Engine) NewTSRetrieve(a storage.Adapter) storage.CacheTSRetrieveQuery {
 	return newTSRetrieve(conn(a))
 }

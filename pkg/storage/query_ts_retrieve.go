@@ -72,11 +72,16 @@ func (tsr *tsRetrieveQuery) Exec(ctx context.Context) error {
 			if !ok {
 				return err
 			}
-			sm := catalog().NewFromType(fld.Type, true)
+			sm := catalog().NewFromType(fld.Type.Elem(), true)
 			if sErr := r.Model(sm).WherePKs(tsr.pks).Exec(ctx); err != nil {
 				return sErr
 			}
-			// TODO: Logic for creating new indexes
+			if tscErr := newTSCreate(tsr.storage).Model(sm).Series().Exec(
+				ctx); tscErr != nil {
+				return tscErr
+			}
+			// retry the transaction after we've created the indexes
+			return tsr.Exec(ctx)
 		}
 		return err
 	})
