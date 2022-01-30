@@ -70,8 +70,8 @@ func createMock(m interface{}) {
 
 func deleteMock(m interface{}) {
 	rfl := model.NewReflect(m)
-	if err := mockStorage.NewDelete().Model(m).WherePK(rfl.PKField().
-		Value().Interface()).Exec(mockCtx); err != nil {
+	if err := mockStorage.NewDelete().Model(m).WherePK(rfl.PK().Interface()).Exec(
+		mockCtx); err != nil {
 		log.Fatalln(err, rfl.Type().Name())
 	}
 }

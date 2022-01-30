@@ -35,7 +35,7 @@ func (tsb *tsBaseQuery) tsBaseCreateIndexes(ctx context.Context,
 	if !ok {
 		panic("couldn't get tag from model")
 	}
-	fld, ok := tsb.modelRfl.Type().FieldByName(tag.FldName)
+	fld, ok := tsb.modelRfl.Type().FieldByName(tag.Field.Name)
 	if !ok {
 		panic("couldn't get field")
 	}
@@ -47,9 +47,23 @@ func (tsb *tsBaseQuery) tsBaseCreateIndexes(ctx context.Context,
 	if smRfl.ChainValue().Len() != len(pks) {
 		panic("bad index length")
 	}
-	if tscErr := tsb.storage.NewTSCreate().Model(sm).Series().Exec(
-		ctx); tscErr != nil {
-		return tscErr
-	}
-	return nil
+	var cErr error
+	smRfl.ForEach(func(rfl *model.Reflect, i int) {
+		if cErr != nil {
+			return
+		}
+		exists, eErr := tsb.storage.NewTSRetrieve().SeriesExists(ctx, rfl.PK().Interface())
+		if eErr != nil {
+			cErr = eErr
+			return
+		}
+		if !exists {
+			if tscErr := tsb.storage.NewTSCreate().Model(rfl.Pointer()).Series().Exec(
+				ctx); tscErr != nil {
+				cErr = tscErr
+				return
+			}
+		}
+	})
+	return cErr
 }

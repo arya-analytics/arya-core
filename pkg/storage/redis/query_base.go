@@ -22,11 +22,11 @@ func (b *baseQuery) baseClient() *timeseries.Client {
 }
 
 func (b *baseQuery) baseAdaptToDest() {
-	b.catcher.Exec(b.modelAdapter.ExchangeToDest)
+	b.modelAdapter.ExchangeToDest()
 }
 
 func (b *baseQuery) baseAdaptToSource() {
-	b.catcher.Exec(b.modelAdapter.ExchangeToSource)
+	b.modelAdapter.ExchangeToSource()
 }
 
 func (b *baseQuery) baseModel(m interface{}) {

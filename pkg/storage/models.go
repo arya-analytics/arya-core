@@ -19,7 +19,7 @@ func catalog() ModelCatalog {
 }
 
 type Node struct {
-	ID              int
+	ID              int `model:"role:pk"`
 	Address         string
 	StartedAt       time.Time
 	IsLive          bool
@@ -32,7 +32,7 @@ type Node struct {
 }
 
 type Range struct {
-	ID uuid.UUID
+	ID uuid.UUID `model:"role:pk"`
 	// LeaseHolderNode
 	LeaseHolderNode   *Node
 	LeaseHolderNodeID int
@@ -41,7 +41,7 @@ type Range struct {
 }
 
 type RangeReplicaToNode struct {
-	ID uuid.UUID
+	ID uuid.UUID `model:"role:pk"`
 	// Range
 	Range   *Range
 	RangeID uuid.UUID
@@ -51,7 +51,7 @@ type RangeReplicaToNode struct {
 }
 
 type ChannelConfig struct {
-	ID   uuid.UUID
+	ID   uuid.UUID `model:"role:pk"`
 	Name string
 	// Node
 	Node   *Node
@@ -62,7 +62,7 @@ type ChannelConfig struct {
 }
 
 type ChannelChunk struct {
-	ID uuid.UUID
+	ID uuid.UUID `model:"role:pk"`
 	// Range
 	Range   *Range
 	RangeID uuid.UUID

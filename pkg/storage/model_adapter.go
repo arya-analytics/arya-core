@@ -19,7 +19,7 @@ func (mc ModelCatalog) New(sourcePtr interface{}) interface{} {
 	if sourceRfl.IsChain() {
 		return destRfl.NewChain().Pointer()
 	}
-	return destRfl.NewModel().Pointer()
+	return destRfl.NewStruct().Pointer()
 }
 
 func (mc ModelCatalog) NewFromType(t reflect.Type, chain bool) interface{} {
@@ -30,7 +30,7 @@ func (mc ModelCatalog) NewFromType(t reflect.Type, chain bool) interface{} {
 	if chain {
 		return destRfl.NewChain().Pointer()
 	}
-	return destRfl.NewModel().Pointer()
+	return destRfl.NewStruct().Pointer()
 }
 
 func (mc ModelCatalog) Contains(sourcePtr interface{}) bool {
@@ -42,9 +42,7 @@ func (mc ModelCatalog) Contains(sourcePtr interface{}) bool {
 func (mc ModelCatalog) retrieveCM(t reflect.Type) (*model.Reflect, bool) {
 	for _, destOpt := range mc {
 		destOptRfl := model.NewReflect(destOpt)
-		if err := destOptRfl.Validate(); err != nil {
-			panic(err)
-		}
+		destOptRfl.Validate()
 		if t.Name() == destOptRfl.Type().Name() {
 			return destOptRfl, true
 		}
@@ -61,12 +59,8 @@ type ModelAdapter struct {
 
 func NewModelAdapter(sourcePtr interface{}, destPtr interface{}) *ModelAdapter {
 	sourceRfl, destRfl := model.NewReflect(sourcePtr), model.NewReflect(destPtr)
-	if err := sourceRfl.Validate(); err != nil {
-		panic(err)
-	}
-	if err := destRfl.Validate(); err != nil {
-		panic(err)
-	}
+	sourceRfl.Validate()
+	destRfl.Validate()
 	if sourceRfl.RawType().Kind() != destRfl.RawType().Kind() {
 		panic("model adapter received model and chain. source and dest must be equal")
 	}
@@ -81,33 +75,29 @@ func (ma *ModelAdapter) Dest() *model.Reflect {
 	return ma.destRfl
 }
 
-func (ma *ModelAdapter) ExchangeToSource() error {
-	return ma.exchange(ma.Source(), ma.Dest())
+func (ma *ModelAdapter) ExchangeToSource() {
+	ma.exchange(ma.Source(), ma.Dest())
 }
 
-func (ma *ModelAdapter) ExchangeToDest() error {
-	return ma.exchange(ma.Dest(), ma.Source())
+func (ma *ModelAdapter) ExchangeToDest() {
+	ma.exchange(ma.Dest(), ma.Source())
 }
 
-func (ma *ModelAdapter) exchange(to *model.Reflect, from *model.Reflect) error {
-	var pErr error
+func (ma *ModelAdapter) exchange(to *model.Reflect, from *model.Reflect) {
 	from.ForEach(func(nRfl *model.Reflect, i int) {
 		fromAm := &adaptedModel{rfl: nRfl}
 		toRfl := to
 		if i != -1 {
 			if i >= to.ChainValue().Len() {
-				toRfl = to.NewModel()
+				toRfl = to.NewStruct()
 				to.ChainAppend(toRfl)
 			} else {
 				toRfl = to.ChainValueByIndex(i)
 			}
 		}
 		toAm := &adaptedModel{rfl: toRfl}
-		if err := toAm.bindVals(fromAm.mapVals()); err != nil {
-			pErr = err
-		}
+		toAm.bindVals(fromAm.mapVals())
 	})
-	return pErr
 }
 
 // |||| ADAPTED MODEL |||||
@@ -120,11 +110,11 @@ type modelValues map[string]interface{}
 
 // bindVals binds a set of modelValues to the adaptedModel fields.
 // Returns an error for invalid / non-existent keys and invalid types.
-func (mw *adaptedModel) bindVals(mv modelValues) error {
+func (mw *adaptedModel) bindVals(mv modelValues) {
 	for key, rv := range mv {
-		fld := mw.rfl.Value().FieldByName(key)
+		fld := mw.rfl.StructValue().FieldByName(key)
 		v := reflect.ValueOf(rv)
-		if v.IsZero() || !fld.IsValid() {
+		if !v.IsValid() || v.IsZero() || !fld.IsValid() {
 			continue
 		}
 		if v.Type() != fld.Type() {
@@ -134,48 +124,36 @@ func (mw *adaptedModel) bindVals(mv modelValues) error {
 					panic("doesn't implement interface")
 				}
 			} else {
-				fldRfl, err := mw.newValidatedRfl(fld.Interface())
-				if err != nil {
-					return err
-				}
-				vRfl, err := mw.newValidatedRfl(rv)
-				if err != nil {
-					return err
-				}
+				fldRfl := mw.newValidatedRfl(fld.Interface())
+				vRfl := mw.newValidatedRfl(rv)
 				vPtr := vRfl.Pointer()
 				fldPtr := fldRfl.Pointer()
 				if fldRfl.IsStruct() && fld.IsNil() {
-					fldPtr = fldRfl.NewModel().Pointer()
+					fldPtr = fldRfl.NewStruct().Pointer()
 				}
 				ma := NewModelAdapter(vPtr, fldPtr)
-				if err := ma.ExchangeToDest(); err != nil {
-					return err
-				}
+				ma.ExchangeToDest()
 				v = ma.Dest().ValueForSet()
 			}
 		}
 		fld.Set(v)
 	}
-	return nil
 }
 
-func (mw *adaptedModel) newValidatedRfl(v interface{}) (*model.Reflect, error) {
+func (mw *adaptedModel) newValidatedRfl(v interface{}) *model.Reflect {
 	rfl := model.NewReflect(v)
 	if !rfl.IsPointer() {
-		rfl = rfl.NewPointer()
+		rfl = rfl.ToNewPointer()
 	}
-	if err := rfl.Validate(); err != nil {
-		return nil, Error{Base: err, Type: ErrTypeInvalidField,
-			Message: fmt.Sprintf("invalid field %v provided", rfl.Pointer())}
-	}
-	return rfl, nil
+	rfl.Validate()
+	return rfl
 }
 
 // mapVals maps adaptedModel fields to modelValues.
 func (mw *adaptedModel) mapVals() modelValues {
 	mv := modelValues{}
-	for i := 0; i < mw.rfl.Value().NumField(); i++ {
-		f := mw.rfl.Value().Field(i)
+	for i := 0; i < mw.rfl.StructValue().NumField(); i++ {
+		f := mw.rfl.StructValue().Field(i)
 		t := mw.rfl.Type().Field(i)
 		mv[t.Name] = f.Interface()
 	}

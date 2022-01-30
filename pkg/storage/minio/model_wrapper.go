@@ -29,10 +29,10 @@ func (m *ModelWrapper) Bucket() string {
 func (m *ModelWrapper) DataVals() DataValueChain {
 	var c DataValueChain
 	m.rfl.ForEach(func(rfl *model.Reflect, i int) {
-		val := rfl.Value()
+		val := rfl.StructValue()
 		data := val.FieldByName(dataKey)
 		c = append(c, &DataValue{
-			PK:   rfl.PKField(),
+			PK:   rfl.PK(),
 			Data: data.Interface().(storage.Object),
 		})
 	})
@@ -44,19 +44,19 @@ func (m *ModelWrapper) BindDataVals(dvc DataValueChain) {
 		rfl, ok := m.rfl.ValueByPK(dv.PK)
 		if !ok {
 			if m.rfl.IsChain() {
-				newRfl := m.rfl.NewModel()
-				newRfl.Value().FieldByName(dataKey).Set(reflect.ValueOf(dv.Data))
-				newRfl.Value().FieldByName(model.KeyPK).Set(dv.PK.Value())
+				newRfl := m.rfl.NewStruct()
+				newRfl.StructValue().FieldByName(dataKey).Set(reflect.ValueOf(dv.Data))
+				newRfl.StructValue().FieldByName("ID").Set(dv.PK.Value())
 				m.rfl.ChainAppend(newRfl)
 			} else {
 				if !m.rfl.PKField().IsZero() {
 					panic("object store meta data mismatch")
 				}
-				m.rfl.Value().FieldByName(model.KeyPK).Set(dv.PK.Value())
-				m.rfl.Value().FieldByName(dataKey).Set(reflect.ValueOf(dv.Data))
+				m.rfl.StructValue().FieldByName("ID").Set(dv.PK.Value())
+				m.rfl.StructValue().FieldByName(dataKey).Set(reflect.ValueOf(dv.Data))
 			}
 		} else {
-			rfl.Value().FieldByName(dataKey).Set(reflect.ValueOf(dv.Data))
+			rfl.StructValue().FieldByName(dataKey).Set(reflect.ValueOf(dv.Data))
 		}
 	}
 }

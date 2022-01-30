@@ -1,7 +1,7 @@
 package mock
 
 type ModelA struct {
-	ID                    int
+	ID                    int `model:"role:pk"`
 	Name                  string
 	InnerModel            *ModelB
 	ChainInnerModel       []*ModelB
@@ -10,7 +10,7 @@ type ModelA struct {
 }
 
 type ModelB struct {
-	ID                    int
+	ID                    int `model:"role:pk"`
 	Name                  string
 	InnerModel            *ModelA
 	ChainInnerModel       []*ModelA
@@ -23,25 +23,25 @@ type RefObj struct {
 }
 
 type ModelC struct {
-	ID                     int
+	ID                     int `model:"role:pk"`
 	Name                   int
 	ModelIncompatible      *ModelC
 	ChainModelIncompatible []*ModelC
 }
 
 type ModelD struct {
-	ID                     int
+	ID                     int `model:"role:pk"`
 	Name                   int
 	ModelIncompatible      *ModelB
 	ChainModelIncompatible []*ModelB
 }
 
 type ModelE struct {
-	ID                  int
+	ID                  int `model:"role:pk"`
 	PointerIncompatible *map[string]string
 }
 
 type ModelF struct {
-	ID                  int
+	ID                  int `model:"role:pk"`
 	PointerIncompatible *map[int]int
 }

@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/arya-analytics/aryacore/pkg/util/errutil"
-	log "github.com/sirupsen/logrus"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/migrate"
 )
@@ -72,9 +71,7 @@ func migrateUpFunc(d Driver) migrate.MigrationFunc {
 		c.execMigration(db.NewCreateTable().Model((*Node)(nil)).Exec)
 
 		if d == DriverPG {
-
 			c.Exec(func() error {
-				log.Info(driverPGNodesViewSQL)
 				_, err := db.Exec(driverPGNodesViewSQL)
 				return err
 

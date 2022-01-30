@@ -74,10 +74,10 @@ func (m *tsModelWrapper) bindRes(key string, res interface{}) error {
 
 func (m *tsModelWrapper) newSampleFromRFL(rfl *model.Reflect) timeseries.Sample {
 	sfn, kfn, vfn := m.fieldNames()
-	stamp := rfl.Value().FieldByName(sfn).Interface()
-	key := rfl.Value().FieldByName(kfn).Interface()
+	stamp := rfl.StructValue().FieldByName(sfn).Interface()
+	key := rfl.StructValue().FieldByName(kfn).Interface()
 	pk := model.NewPK(key)
-	value := rfl.Value().FieldByName(vfn).Interface()
+	value := rfl.StructValue().FieldByName(vfn).Interface()
 	return timeseries.Sample{
 		Key:       pk.String(),
 		Timestamp: stamp.(int64),
@@ -86,7 +86,7 @@ func (m *tsModelWrapper) newSampleFromRFL(rfl *model.Reflect) timeseries.Sample 
 }
 
 func (m *tsModelWrapper) appendSample(sample timeseries.Sample) {
-	newRfl := m.rfl.NewModel()
+	newRfl := m.rfl.NewStruct()
 	m.setFields(newRfl, sample)
 	m.rfl.ChainAppend(newRfl)
 }
@@ -101,15 +101,15 @@ func (m *tsModelWrapper) fieldNames() (sfn string, kfn string, vfn string) {
 func (m *tsModelWrapper) retrieveFieldByRole(rfl *model.Reflect,
 	role string) reflect.Value {
 	fldName := m.retrieveFieldNameByRole(role)
-	return rfl.Value().FieldByName(fldName)
+	return rfl.StructValue().FieldByName(fldName)
 }
 
 func (m *tsModelWrapper) setFields(rfl *model.Reflect, sample timeseries.Sample) {
 	sfn, kfn, vfn := m.fieldNames()
 	kf := m.retrieveFieldByRole(rfl, structTagKeyRole)
-	rfl.Value().FieldByName(kfn).Set(convertKeyString(kf.Type(), sample.Key))
-	rfl.Value().FieldByName(sfn).Set(reflect.ValueOf(sample.Timestamp))
-	rfl.Value().FieldByName(vfn).Set(reflect.ValueOf(sample.Value))
+	rfl.StructValue().FieldByName(kfn).Set(convertKeyString(kf.Type(), sample.Key))
+	rfl.StructValue().FieldByName(sfn).Set(reflect.ValueOf(sample.Timestamp))
+	rfl.StructValue().FieldByName(vfn).Set(reflect.ValueOf(sample.Value))
 }
 
 func (m *tsModelWrapper) retrieveFieldNameByRole(role string) string {
@@ -117,7 +117,7 @@ func (m *tsModelWrapper) retrieveFieldNameByRole(role string) string {
 	if !ok {
 		panic(fmt.Sprintf("couldn't retrieve role %s from model", role))
 	}
-	return t.FldName
+	return t.Field.Name
 }
 
 func convertKeyString(t reflect.Type, keyString string) reflect.Value {

@@ -35,11 +35,11 @@ func (b *baseQuery) baseBucket() string {
 }
 
 func (b *baseQuery) baseAdaptToSource() {
-	b.catcher.Exec(b.modelAdapter.ExchangeToSource)
+	b.modelAdapter.ExchangeToSource()
 }
 
 func (b *baseQuery) baseAdaptToDest() {
-	b.catcher.Exec(b.modelAdapter.ExchangeToDest)
+	b.modelAdapter.ExchangeToDest()
 }
 
 func (b *baseQuery) baseBindVals(dvc DataValueChain) {
