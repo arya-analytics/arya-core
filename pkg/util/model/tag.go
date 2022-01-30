@@ -18,7 +18,7 @@ func (s StructTags) Retrieve(cat string, key string, value string) (StructTag, b
 
 type StructTag struct {
 	reflect.StructTag
-	FldName string
+	Field reflect.StructField
 }
 
 const (
@@ -65,7 +65,7 @@ func NewTags(t reflect.Type) (tags StructTags) {
 	}
 	for i := 0; i < t.NumField(); i++ {
 		fld := t.Field(i)
-		tags = append(tags, StructTag{StructTag: fld.Tag, FldName: fld.Name})
+		tags = append(tags, StructTag{StructTag: fld.Tag, Field: fld})
 	}
 	return tags
 }

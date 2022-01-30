@@ -33,7 +33,7 @@ var _ = Describe("Deployment", func() {
 		}
 
 	})
-	Describe("Creating a NewModel Deployment", func() {
+	Describe("Creating a NewStruct Deployment", func() {
 		It("Should create a new deployment without error", func() {
 			_, err := dev.NewDeployment(dummyCfg)
 			Expect(err).To(BeNil())

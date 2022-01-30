@@ -57,7 +57,7 @@ var clusterCmd = &cli.Command{
 					Name:    "cidrOffset",
 					Aliases: []string{"co"},
 					Value:   BaseAryaClusterCfg.CidrOffset,
-					Usage: "Value to offset Cluster node cidrs by (ex. " +
+					Usage: "StructValue to offset Cluster node cidrs by (ex. " +
 						"an offset of 10 would make the first nodes cidr 10.11.0.0/16)",
 				},
 				&cli.BoolFlag{
