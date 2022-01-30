@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/arya-analytics/aryacore/pkg/util/errutil"
+	log "github.com/sirupsen/logrus"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/migrate"
 )
@@ -13,8 +14,34 @@ const (
 	nodesGossip = "nodes_gossip"
 	// CRDB Internal Schema
 	crdbSchema         = "crdb_internal"
-	crdbGossipLiveness = crdbSchema + ".gossip_nodes"
-	crdbGossipNodes    = crdbSchema + ".gossip_liveness"
+	crdbGossipNodes    = crdbSchema + ".gossip_nodes"
+	crdbGossipLiveness = crdbSchema + ".gossip_liveness"
+)
+
+var (
+	/* If we're using DriverPG, we expect two CRDB internal tables that provide
+	information on node identity and status. This logic creates a view so that this
+	info can be accessed by the ORM. */
+	driverPGNodesViewSQL = fmt.Sprintf(`CREATE VIEW %s AS SELECT n.id,
+									gn.address, 
+									gn.is_live, 
+									gn.started_at, 
+									gv.epoch, 
+									gv.draining, 
+									gv.decommissioning, 
+									gv.membership, 
+									gv.updated_at 
+									FROM nodes n 
+									JOIN %s gn ON n.id =
+									gn.node_id LEFT JOIN %s gv ON gv.node_id=n.id`,
+		nodesGossip,
+		crdbGossipNodes,
+		crdbGossipLiveness)
+	/* If we're using DriverSQLite, CRDB internal tables aren't available,
+	so we just only map the view to the node table,
+	that way we don't need to change any ORM logic. */
+	driverSQLiteNodesViewSQL = fmt.Sprintf(`CREATE VIEW %s AS SELECT n.id
+									FROM nodes n`, nodesGossip)
 )
 
 // |||| CATCHER ||||
@@ -45,36 +72,17 @@ func migrateUpFunc(d Driver) migrate.MigrationFunc {
 		c.execMigration(db.NewCreateTable().Model((*Node)(nil)).Exec)
 
 		if d == DriverPG {
-			/* If we're using DriverPG, we expect two CRDB internal tables that provide
-			information on node identity and status. This logic creates a view so that this
-			info can be accessed by the ORM. */
+
 			c.Exec(func() error {
-				_, err := db.Exec(
-					fmt.Sprintf(`CREATE VIEW %s AS SELECT n.id,
-									gn.address, 
-									gn.is_live, 
-									gn.started_at, 
-									gv.epoch, 
-									gv.draining, 
-									gv.decommissioning, 
-									gv.membership, 
-									gv.updated_at 
-									FROM nodes n 
-									JOIN %s gn ON n.id =
-									gn.node_id LEFT JOIN %s gv ON gv.node_id=n.id`,
-						nodesGossip,
-						crdbGossipNodes,
-						crdbGossipLiveness))
+				log.Info(driverPGNodesViewSQL)
+				_, err := db.Exec(driverPGNodesViewSQL)
 				return err
 
 			})
 		} else if d == DriverSQLite {
-			/* If we're using SQLITE, CRDB internal tables aren't available,
-			so we just only map the view to the node table,
-			that way we don't need to change any ORM logic. */
+
 			c.Exec(func() error {
-				_, err := db.Exec(fmt.Sprintf(`CREATE VIEW %s AS SELECT n.id
-									FROM nodes n`, nodesGossip))
+				_, err := db.Exec(driverSQLiteNodesViewSQL)
 				return err
 			})
 		}

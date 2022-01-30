@@ -26,8 +26,7 @@ func catalog() storage.ModelCatalog {
 // |||| DEFINITIONS ||||
 
 type Node struct {
-	// Important that the select key matches nodesGossip specified in the migrations
-	// file.
+	// Select key MUST match nodesGossip table in migrations file.
 	bun.BaseModel `bun:"select:nodes_gossip,table:nodes"`
 	ID            int `bun:",pk"`
 	GossipNode

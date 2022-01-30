@@ -13,19 +13,16 @@ import (
 	"github.com/uptrace/bun/extra/bundebug"
 )
 
-// TODO: Fix TLS config
-// TODO: Test connection issues
-
 // || ADAPTER ||
 
-type Adapter struct {
+type adapter struct {
 	id  uuid.UUID
 	db  *bun.DB
 	cfg Config
 }
 
-func newAdapter(cfg Config) *Adapter {
-	a := &Adapter{
+func newAdapter(cfg Config) *adapter {
+	a := &adapter{
 		id:  uuid.New(),
 		cfg: cfg,
 	}
@@ -33,8 +30,8 @@ func newAdapter(cfg Config) *Adapter {
 	return a
 }
 
-func bindAdapter(a storage.Adapter) (*Adapter, bool) {
-	ra, ok := a.(*Adapter)
+func bindAdapter(a storage.Adapter) (*adapter, bool) {
+	ra, ok := a.(*adapter)
 	return ra, ok
 }
 
@@ -47,15 +44,15 @@ func conn(a storage.Adapter) *bun.DB {
 }
 
 // ID implements the storage.Adapter interface.
-func (a *Adapter) ID() uuid.UUID {
+func (a *adapter) ID() uuid.UUID {
 	return a.id
 }
 
-func (a *Adapter) conn() *bun.DB {
+func (a *adapter) conn() *bun.DB {
 	return a.db
 }
 
-func (a *Adapter) setLogLevel() {
+func (a *adapter) setLogLevel() {
 	switch a.cfg.TransactionLogLevel {
 	case TransactionLogLevelAll:
 		a.db.AddQueryHook(bundebug.NewQueryHook(bundebug.WithVerbose(true)))
@@ -64,7 +61,7 @@ func (a *Adapter) setLogLevel() {
 	}
 }
 
-func (a *Adapter) open() {
+func (a *adapter) open() {
 	switch a.cfg.Driver {
 	case DriverPG:
 		a.db = connectToPG(a.cfg)
