@@ -4,20 +4,14 @@ import "github.com/arya-analytics/aryacore/pkg/util/errutil"
 
 type baseQuery struct {
 	storage         *Storage
-	mdEngine        MDEngine
 	_baseMDQuery    MDBaseQuery
-	objEngine       ObjectEngine
 	_baseObjQuery   ObjectBaseQuery
-	cacheEngine     CacheEngine
 	_baseCacheQuery CacheBaseQuery
 	catcher         *errutil.Catcher
 }
 
 func (b *baseQuery) baseInit(s *Storage) {
 	b.storage = s
-	b.mdEngine = b.storage.cfg.mdEngine()
-	b.objEngine = b.storage.cfg.objEngine()
-	b.cacheEngine = b.storage.cfg.cacheEngine()
 	b.catcher = &errutil.Catcher{}
 }
 

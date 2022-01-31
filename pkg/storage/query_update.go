@@ -35,7 +35,7 @@ func (u *updateQuery) Exec(ctx context.Context) error {
 
 func (u *updateQuery) mdQuery() MDUpdateQuery {
 	if u.baseMDQuery() == nil {
-		u.setMDQuery(u.mdEngine.NewUpdate(u.baseMDAdapter()))
+		u.setMDQuery(u.storage.cfg.mdEngine().NewUpdate(u.baseMDAdapter()))
 	}
 	return u.baseMDQuery().(MDUpdateQuery)
 }

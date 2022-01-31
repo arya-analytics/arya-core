@@ -59,7 +59,7 @@ func (tsr *tsRetrieveQuery) Exec(ctx context.Context) error {
 
 func (tsr *tsRetrieveQuery) cacheQuery() CacheTSRetrieveQuery {
 	if tsr.baseCacheQuery() == nil {
-		tsr.setCacheQuery(tsr.cacheEngine.NewTSRetrieve(tsr.baseCacheAdapter()))
+		tsr.setCacheQuery(tsr.storage.cfg.cacheEngine().NewTSRetrieve(tsr.baseCacheAdapter()))
 	}
 	return tsr.baseCacheQuery().(CacheTSRetrieveQuery)
 }

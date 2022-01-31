@@ -4,33 +4,20 @@ package storage
 
 type EngineConfig map[EngineRole]BaseEngine
 
-func (ec EngineConfig) retrieve(r EngineRole) (BaseEngine, bool) {
-	e, ok := ec[r]
-	return e, ok
+func (ec EngineConfig) retrieve(r EngineRole) BaseEngine {
+	return ec[r]
 }
 
 func (ec EngineConfig) mdEngine() MDEngine {
-	e, ok := ec.retrieve(EngineRoleMD)
-	if !ok {
-		return nil
-	}
-	return e.(MDEngine)
+	return ec.retrieve(EngineRoleMD).(MDEngine)
 }
 
 func (ec EngineConfig) objEngine() ObjectEngine {
-	e, ok := ec.retrieve(EngineRoleObject)
-	if !ok {
-		return nil
-	}
-	return e.(ObjectEngine)
+	return ec.retrieve(EngineRoleObject).(ObjectEngine)
 }
 
 func (ec EngineConfig) cacheEngine() CacheEngine {
-	e, ok := ec.retrieve(EngineRoleCache)
-	if !ok {
-		return nil
-	}
-	return e.(CacheEngine)
+	return ec.retrieve(EngineRoleCache).(CacheEngine)
 }
 
 // |||| STORAGE ||||
@@ -76,9 +63,6 @@ func (s *Storage) NewTSCreate() *tsCreateQuery {
 }
 
 func (s *Storage) adapter(r EngineRole) (a Adapter) {
-	e, ok := s.cfg.retrieve(r)
-	if !ok {
-		panic("tried to retrieve a non-existent engine")
-	}
+	e := s.cfg.retrieve(r)
 	return s.pooler.Retrieve(e)
 }

@@ -41,7 +41,7 @@ func (r *retrieveQuery) Exec(ctx context.Context) error {
 		err := r.mdQuery().Exec(ctx)
 		return err
 	})
-	if r.objEngine.InCatalog(r.modelRfl.Pointer()) {
+	if r.storage.cfg.objEngine().InCatalog(r.modelRfl.Pointer()) {
 		r.catcher.Exec(func() error {
 			return r.objQuery().Model(r.modelRfl.Pointer()).WherePKs(r.modelRfl.PKChain().Interface()).
 				Exec(ctx)
@@ -56,7 +56,7 @@ func (r *retrieveQuery) Exec(ctx context.Context) error {
 
 func (r *retrieveQuery) mdQuery() MDRetrieveQuery {
 	if r.baseMDQuery() == nil {
-		r.setMDQuery(r.mdEngine.NewRetrieve(r.baseMDAdapter()))
+		r.setMDQuery(r.storage.cfg.mdEngine().NewRetrieve(r.baseMDAdapter()))
 	}
 	return r.baseMDQuery().(MDRetrieveQuery)
 }
@@ -69,7 +69,7 @@ func (r *retrieveQuery) setMDQuery(q MDRetrieveQuery) {
 
 func (r *retrieveQuery) objQuery() ObjectRetrieveQuery {
 	if r.baseObjQuery() == nil {
-		r.setObjQuery(r.objEngine.NewRetrieve(r.baseObjAdapter()))
+		r.setObjQuery(r.storage.cfg.objEngine().NewRetrieve(r.baseObjAdapter()))
 	}
 	return r.baseObjQuery().(ObjectRetrieveQuery)
 }

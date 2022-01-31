@@ -40,7 +40,7 @@ func (d *deleteQuery) Exec(ctx context.Context) error {
 
 func (d *deleteQuery) mdQuery() MDDeleteQuery {
 	if d.baseMDQuery() == nil {
-		d.setMDQuery(d.mdEngine.NewDelete(d.baseMDAdapter()))
+		d.setMDQuery(d.storage.cfg.mdEngine().NewDelete(d.baseMDAdapter()))
 	}
 	return d.baseMDQuery().(MDDeleteQuery)
 }

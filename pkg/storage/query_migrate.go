@@ -32,7 +32,7 @@ func (m *migrateQuery) Exec(ctx context.Context) error {
 
 func (m *migrateQuery) mdQuery() MDMigrateQuery {
 	if m.baseMDQuery() == nil {
-		m.baseSetMDQuery(m.mdEngine.NewMigrate(m.baseMDAdapter()))
+		m.baseSetMDQuery(m.storage.cfg.mdEngine().NewMigrate(m.baseMDAdapter()))
 	}
 	return m.baseMDQuery().(MDMigrateQuery)
 }
@@ -41,7 +41,7 @@ func (m *migrateQuery) mdQuery() MDMigrateQuery {
 
 func (m *migrateQuery) objQuery() ObjectMigrateQuery {
 	if m.baseObjQuery() == nil {
-		m.baseSetObjQuery(m.objEngine.NewMigrate(m.baseObjAdapter()))
+		m.baseSetObjQuery(m.storage.cfg.objEngine().NewMigrate(m.baseObjAdapter()))
 	}
 	return m.baseObjQuery().(ObjectMigrateQuery)
 }
