@@ -83,8 +83,7 @@ func (r *Reflect) StructValue() reflect.Value {
 func (r *Reflect) StructFieldByRole(role string) reflect.Value {
 	tag, ok := r.StructTagChain().Retrieve(tagCat, roleKey, role)
 	if !ok {
-		panic(fmt.Sprintf("model.Reflect."+
-			"StructFieldByRole - could not find field with role %s", role))
+		panic(fmt.Sprintf("could not find field with role %s", role))
 	}
 	return r.StructValue().FieldByIndex(tag.Field.Index)
 }
@@ -142,7 +141,7 @@ func (r *Reflect) ValueByPK(pk PK) (retRfl *Reflect, ok bool) {
 
 // || ITERATION UTILITIES ||
 
-const ifStructIndex = -1
+const structIndex = -1
 
 // ForEach iterates through each model struct in Reflect and calls the provided
 // function. The function receives the model Reflect as well as its index.
@@ -150,7 +149,7 @@ const ifStructIndex = -1
 // internally.
 func (r *Reflect) ForEach(fef func(rfl *Reflect, i int)) {
 	if r.IsStruct() {
-		fef(r, ifStructIndex)
+		fef(r, structIndex)
 	} else {
 		for i := 0; i < r.ChainValue().Len(); i++ {
 			rfl := r.ChainValueByIndex(i)
@@ -244,45 +243,35 @@ func (r *Reflect) RawValue() reflect.Value {
 	return r.PointerValue().Elem()
 }
 
-// ValueForSet is useful for getting the reflect.
-// Value required when setting on a model field.
-func (r *Reflect) ValueForSet() reflect.Value {
-	if r.IsChain() {
-		return r.RawValue()
-	}
-	return r.PointerValue()
-}
-
 // || TYPE ASSERTIONS ||
 
 func (r *Reflect) panicIfChain() {
 	if r.IsChain() {
-		panic("model is a chain, cannot get a struct value")
+		panic("model is chain, cannot get struct value")
 	}
 }
 
 func (r *Reflect) panicIfStruct() {
 	if r.IsStruct() {
-		panic("model is struct, cannot get a chain value")
+		panic("model is struct, cannot get chain value")
 	}
 }
 
 // || TAGS ||
 
-// StructTagChain returns a set of StructTagChain representing all struct tags on Reflect.Type.
+// StructTagChain returns a set of StructTagChain representing all struct tags
+// on Reflect.Type.
 func (r *Reflect) StructTagChain() StructTagChain {
 	return NewStructTagChain(r.Type())
 }
 
 // |||| VALIDATION ||||
 
-// || REFLECT ||
-
 func validateSliceOrStruct(v interface{}) error {
 	r := v.(*Reflect)
 	if !r.IsStruct() && !r.IsChain() {
-		return fmt.Errorf("model reflect validation failed. " +
-			"the provided model is not a pointer")
+		return fmt.Errorf("model validation failed, is %s must be struct or slice",
+			r.Type().Kind())
 	}
 	return nil
 }
@@ -290,8 +279,15 @@ func validateSliceOrStruct(v interface{}) error {
 func validateIsPointer(v interface{}) error {
 	r := v.(*Reflect)
 	if r.PointerType().Kind() != reflect.Ptr {
-		return fmt.Errorf("model reflect validation failed. " +
-			"the provided model is not a pointer")
+		return fmt.Errorf("model validation failed. model is not a pointer")
+	}
+	return nil
+}
+
+func validateNonZero(v interface{}) error {
+	r := v.(*Reflect)
+	if r.PointerValue().IsZero() {
+		return fmt.Errorf("model validation failed. model is nil")
 	}
 	return nil
 }
@@ -299,4 +295,5 @@ func validateIsPointer(v interface{}) error {
 var validator = validate.New([]validate.Func{
 	validateIsPointer,
 	validateSliceOrStruct,
+	validateNonZero,
 })
