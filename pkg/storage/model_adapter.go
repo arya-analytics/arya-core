@@ -22,17 +22,6 @@ func (mc ModelCatalog) New(sourcePtr interface{}) interface{} {
 	return destRfl.NewStruct().Pointer()
 }
 
-func (mc ModelCatalog) NewFromType(t reflect.Type, chain bool) interface{} {
-	destRfl, ok := mc.retrieveCM(t)
-	if !ok {
-		panic(fmt.Sprintf("model %s could not be found in catalog", t.Name()))
-	}
-	if chain {
-		return destRfl.NewChain().Pointer()
-	}
-	return destRfl.NewStruct().Pointer()
-}
-
 func (mc ModelCatalog) Contains(sourcePtr interface{}) bool {
 	_, ok := mc.retrieveCM(model.NewReflect(sourcePtr).Type())
 	return ok
