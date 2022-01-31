@@ -125,9 +125,6 @@ func (mw *adaptedModel) bindVals(mv modelValues) {
 			} else {
 				fldRfl := mw.newValidatedRfl(fld.Interface())
 				fldPtr := fldRfl.Pointer()
-				if fldRfl.IsStruct() && fld.IsNil() {
-					fldPtr = fldRfl.NewStruct().Pointer()
-				}
 				vPtr := mw.newValidatedRfl(rv).Pointer()
 				ma := NewModelAdapter(vPtr, fldPtr)
 				ma.ExchangeToDest()
@@ -150,6 +147,11 @@ func (mw *adaptedModel) newValidatedRfl(v interface{}) *model.Reflect {
 	// so we can manipulate its values. This is always necessary with slice fields.
 	if !rfl.IsPointer() {
 		rfl = rfl.ToNewPointer()
+	}
+	// If v is zero, that means it's a struct we can't assign values to,
+	// so we need to initialize a new empty struct with a non-zero value.
+	if rfl.PointerValue().IsZero() {
+		rfl = rfl.NewRaw()
 	}
 	rfl.Validate()
 	return rfl

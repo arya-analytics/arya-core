@@ -12,16 +12,16 @@ import (
 
 type WatcherConfig struct {
 	// Slice of absolute paths to track
-	Dirs       []string
+	Dirs []string
 	// Whether to do a recursive watch on those paths
-	Recursive  bool
+	Recursive bool
 	// List of directories to ignore
 	IgnoreDirs []string
 	// List of triggers to operate. fsnotify.Write
 	// would trigger the action on a file write.
-	Triggers   []fsnotify.Op
+	Triggers []fsnotify.Op
 	// Action to trigger when a file is modified
-	Action     func(event fsnotify.Event)
+	Action func(event fsnotify.Event)
 }
 
 type Watcher struct {

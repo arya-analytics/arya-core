@@ -45,7 +45,6 @@ func (d DockerImage) Build() error {
 	return d.command("build", d.cfg.BuildCtxPath, "-t", d.NameTag()).Run()
 }
 
-
 // Push pushes the docker image to the locally authenticated repository.
 func (d DockerImage) Push() error {
 	return d.command("push", d.NameTag()).Run()

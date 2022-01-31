@@ -37,7 +37,7 @@ var _ = Describe("Watcher", func() {
 			t := time.NewTicker(200 * time.Millisecond)
 			var tmpFiles []*os.File
 			defer func() {
-				for _, f:= range tmpFiles {
+				for _, f := range tmpFiles {
 					err := f.Close()
 					err = os.Remove(f.Name())
 					if err != nil {

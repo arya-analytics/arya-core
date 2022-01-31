@@ -12,13 +12,13 @@ type Tools []string
 
 // RequiredTools is a slice of the required tools for provisioning dev clusters.
 var RequiredTools = Tools{
-		"multipass",
-		"kubernetes-cli",
-		"krew",
-		"yq",
-		"helm",
-		"gh",
-	}
+	"multipass",
+	"kubernetes-cli",
+	"krew",
+	"yq",
+	"helm",
+	"gh",
+}
 
 // || REQUIRED TOOL INSTALLS ||
 

@@ -7,15 +7,22 @@ import (
 )
 
 var _ = Describe("QueryTsRetrieve", func() {
-	BeforeEach(createMockChannelCfg)
+	BeforeEach(createMockSeries)
 	AfterEach(deleteMockChannelCfg)
 	Describe("Standard usage", func() {
+		BeforeEach(func() { createMockSamples(4) })
 		Describe("Retrieving a sample", func() {
-			It("Should create the index if it doesn't exist", func() {
-				sample := &storage.ChannelSample{}
-				err := mockStorage.NewTSRetrieve().Model(sample).WherePK(
+			var sample = &storage.ChannelSample{}
+			var err error
+			BeforeEach(func() {
+				err = mockStorage.NewTSRetrieve().Model(sample).WherePK(
 					mockChannelCfg.ID).Exec(mockCtx)
+			})
+			It("Should retrieve the sample without error", func() {
 				Expect(err).To(BeNil())
+			})
+			It("Should retrieve the correct sample", func() {
+				Expect(sample.ChannelConfigID).To(Equal(mockChannelCfg.ID))
 			})
 		})
 	})

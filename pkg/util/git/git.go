@@ -19,7 +19,7 @@ func CurrentCommitHash() string {
 
 // Username returns the git username registered on the host machine.
 func Username() string {
-	cmd := exec.Command(gitCmd,"config", "user.email")
+	cmd := exec.Command(gitCmd, "config", "user.email")
 	o, err := cmd.Output()
 	if err != nil {
 		panic(err)

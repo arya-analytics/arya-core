@@ -15,6 +15,7 @@ func TestWatcher(t *testing.T) {
 }
 
 const tmpDirBasePath = "/tmp/"
+
 var tmpDir string
 
 var _ = BeforeSuite(func() {

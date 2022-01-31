@@ -14,6 +14,7 @@ import (
 	. "github.com/onsi/gomega"
 	log "github.com/sirupsen/logrus"
 	"testing"
+	"time"
 )
 
 var (
@@ -77,11 +78,38 @@ func deleteMock(m interface{}) {
 }
 
 func createMockChannelCfg() {
+	mockChannelCfg.ID = uuid.New()
 	createMock(mockChannelCfg)
 }
 
 func deleteMockChannelCfg() {
 	deleteMock(mockChannelCfg)
+}
+
+func createMockSeries() {
+	createMockChannelCfg()
+	if err := mockStorage.NewTSCreate().Series().Model(mockChannelCfg).Exec(
+		mockCtx); err != nil {
+		if (err.(storage.Error).Type) != storage.ErrTypeUniqueViolation {
+			log.Fatalln(err, mockChannelCfg)
+		}
+	}
+}
+
+func createMockSamples(qty int) {
+	createMockSeries()
+	var samples []*storage.ChannelSample
+	for i := 0; i < qty; i++ {
+		samples = append(samples,
+			&storage.ChannelSample{ChannelConfigID: mockChannelCfg.
+				ID, Value: 126.8,
+				Timestamp: time.Now().Add(1 * time.Second).UnixNano(),
+			})
+	}
+	if err := mockStorage.NewTSCreate().Sample().Model(&samples).Exec(
+		mockCtx); err != nil {
+		log.Fatalln(err)
+	}
 }
 
 func createMockRange() {
