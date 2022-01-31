@@ -34,6 +34,15 @@ var _ = Describe("Redis Engine", func() {
 				})
 			})
 		})
+		Context("Conn", func() {
+			Describe("Binding an invalid adapter", func() {
+				e := &mock.MDEngine{}
+				ba := e.NewAdapter()
+				Expect(func() {
+					mockEngine.NewTSCreate(ba)
+				}).To(Panic())
+			})
+		})
 	})
 	Describe("Catalog", func() {
 		Describe("Contains", func() {
