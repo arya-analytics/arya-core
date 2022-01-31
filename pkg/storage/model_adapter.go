@@ -108,8 +108,7 @@ func (mw *adaptedModel) bindVals(mv modelValues) {
 		}
 		if v.Type() != fld.Type() {
 			if fld.Type().Kind() == reflect.Interface {
-				impl := v.Type().Implements(fld.Type())
-				if !impl {
+				if impl := v.Type().Implements(fld.Type()); !impl {
 					panic("doesn't implement interface")
 				}
 			} else {
