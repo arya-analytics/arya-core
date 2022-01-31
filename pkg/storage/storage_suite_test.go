@@ -50,6 +50,7 @@ var (
 		LeaseHolderNodeID: mockNode.ID,
 	}
 	mockChannelChunk *storage.ChannelChunk
+	mockSamples      []*storage.ChannelSample
 )
 
 func bootstrapMockRoachEngine() storage.MDEngine {
@@ -98,15 +99,20 @@ func createMockSeries() {
 
 func createMockSamples(qty int) {
 	createMockSeries()
-	var samples []*storage.ChannelSample
+	mockSamples = []*storage.ChannelSample{}
 	for i := 0; i < qty; i++ {
-		samples = append(samples,
-			&storage.ChannelSample{ChannelConfigID: mockChannelCfg.
-				ID, Value: 126.8,
-				Timestamp: time.Now().Add(1 * time.Second).UnixNano(),
+		duration := 1 * time.Second
+		for j := 0; j < i; j++ {
+			duration += 1 * time.Second
+		}
+		mockSamples = append(mockSamples,
+			&storage.ChannelSample{
+				ChannelConfigID: mockChannelCfg.ID,
+				Value:           126.8,
+				Timestamp:       time.Now().Add(duration).UnixNano(),
 			})
 	}
-	if err := mockStorage.NewTSCreate().Sample().Model(&samples).Exec(
+	if err := mockStorage.NewTSCreate().Sample().Model(&mockSamples).Exec(
 		mockCtx); err != nil {
 		log.Fatalln(err)
 	}
