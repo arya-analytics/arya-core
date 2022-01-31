@@ -1,9 +1,5 @@
 package storage
 
-func UnsafeNewPooler() *pooler {
-	return newPooler()
-}
-
 func newPooler() *pooler {
 	return &pooler{
 		adapters: map[Adapter]bool{},
