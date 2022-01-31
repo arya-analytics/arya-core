@@ -2,12 +2,10 @@ package storage
 
 import (
 	"context"
-	"github.com/arya-analytics/aryacore/pkg/util/model"
 )
 
 type tsRetrieveQuery struct {
 	tsBaseQuery
-	modelRfl *model.Reflect
 }
 
 func newTSRetrieve(s *Storage) *tsRetrieveQuery {
@@ -50,18 +48,7 @@ func (tsr *tsRetrieveQuery) SeriesExists(ctx context.Context, pk interface{}) (b
 
 func (tsr *tsRetrieveQuery) Exec(ctx context.Context) error {
 	tsr.catcher.Exec(func() error {
-		err := tsr.cacheQuery().Exec(ctx)
-		if err != nil {
-			se := err.(Error)
-			if se.Type == ErrTypeItemNotFound {
-				if bErr := tsr.tsBaseCreateIndexes(ctx, tsr.pks); bErr != nil {
-					return bErr
-				}
-				// retry the transaction after we've created the indexes
-				return tsr.Exec(ctx)
-			}
-		}
-		return err
+		return tsr.cacheQuery().Exec(ctx)
 	})
 	return tsr.baseErr()
 }

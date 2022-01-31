@@ -34,8 +34,7 @@ func (mc ModelCatalog) NewFromType(t reflect.Type, chain bool) interface{} {
 }
 
 func (mc ModelCatalog) Contains(sourcePtr interface{}) bool {
-	sourceRfl := model.NewReflect(sourcePtr)
-	_, ok := mc.retrieveCM(sourceRfl.Type())
+	_, ok := mc.retrieveCM(model.NewReflect(sourcePtr).Type())
 	return ok
 }
 
@@ -62,7 +61,7 @@ func NewModelAdapter(sourcePtr interface{}, destPtr interface{}) *ModelAdapter {
 	sourceRfl.Validate()
 	destRfl.Validate()
 	if sourceRfl.RawType().Kind() != destRfl.RawType().Kind() {
-		panic("model adapter received model and chain. source and dest must be equal")
+		panic("model adapter received model and chain. source and dest have same kind.")
 	}
 	return &ModelAdapter{sourceRfl, destRfl}
 }
@@ -125,15 +124,20 @@ func (mw *adaptedModel) bindVals(mv modelValues) {
 				}
 			} else {
 				fldRfl := mw.newValidatedRfl(fld.Interface())
-				vRfl := mw.newValidatedRfl(rv)
-				vPtr := vRfl.Pointer()
 				fldPtr := fldRfl.Pointer()
 				if fldRfl.IsStruct() && fld.IsNil() {
 					fldPtr = fldRfl.NewStruct().Pointer()
 				}
+				vPtr := mw.newValidatedRfl(rv).Pointer()
 				ma := NewModelAdapter(vPtr, fldPtr)
 				ma.ExchangeToDest()
-				v = ma.Dest().ValueForSet()
+				// If our model is a chain (i.e a slice),
+				// we want to get the slice itself, not the pointer to the slice.
+				if ma.Dest().IsChain() {
+					v = ma.Dest().RawValue()
+				} else {
+					v = ma.Dest().PointerValue()
+				}
 			}
 		}
 		fld.Set(v)
@@ -142,6 +146,8 @@ func (mw *adaptedModel) bindVals(mv modelValues) {
 
 func (mw *adaptedModel) newValidatedRfl(v interface{}) *model.Reflect {
 	rfl := model.NewReflect(v)
+	// If v isn't a pointer, we need to create a pointer to it,
+	// so we can manipulate its values. This is always necessary with slice fields.
 	if !rfl.IsPointer() {
 		rfl = rfl.ToNewPointer()
 	}
@@ -153,9 +159,8 @@ func (mw *adaptedModel) newValidatedRfl(v interface{}) *model.Reflect {
 func (mw *adaptedModel) mapVals() modelValues {
 	mv := modelValues{}
 	for i := 0; i < mw.rfl.StructValue().NumField(); i++ {
-		f := mw.rfl.StructValue().Field(i)
-		t := mw.rfl.Type().Field(i)
-		mv[t.Name] = f.Interface()
+		fv, t := mw.rfl.StructValue().Field(i).Interface(), mw.rfl.Type().Field(i)
+		mv[t.Name] = fv
 	}
 	return mv
 }
