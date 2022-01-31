@@ -1,33 +1,33 @@
 package storage
 
-// |||| ENGINE CONFIG ||||
+// |||| CONFIG ||||
 
-type EngineConfig map[EngineRole]BaseEngine
+type Config map[EngineRole]BaseEngine
 
-func (ec EngineConfig) retrieve(r EngineRole) BaseEngine {
+func (ec Config) retrieve(r EngineRole) BaseEngine {
 	return ec[r]
 }
 
-func (ec EngineConfig) mdEngine() MDEngine {
+func (ec Config) mdEngine() MDEngine {
 	return ec.retrieve(EngineRoleMD).(MDEngine)
 }
 
-func (ec EngineConfig) objEngine() ObjectEngine {
+func (ec Config) objEngine() ObjectEngine {
 	return ec.retrieve(EngineRoleObject).(ObjectEngine)
 }
 
-func (ec EngineConfig) cacheEngine() CacheEngine {
+func (ec Config) cacheEngine() CacheEngine {
 	return ec.retrieve(EngineRoleCache).(CacheEngine)
 }
 
 // |||| STORAGE ||||
 
 type Storage struct {
-	cfg    EngineConfig
+	cfg    Config
 	pooler *pooler
 }
 
-func New(cfg EngineConfig) *Storage {
+func New(cfg Config) *Storage {
 	return &Storage{
 		cfg:    cfg,
 		pooler: newPooler(),

@@ -18,7 +18,7 @@ import (
 )
 
 var (
-	mockEngineCfg = storage.EngineConfig{
+	mockEngineCfg = storage.Config{
 		storage.EngineRoleMD: bootstrapMockRoachEngine(),
 		storage.EngineRoleObject: minio.New(
 			minio.Config{
