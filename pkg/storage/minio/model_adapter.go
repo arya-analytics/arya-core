@@ -11,12 +11,12 @@ const (
 	dataKey = "Data"
 )
 
-type DataValue struct {
+type dataValue struct {
 	PK   model.PK
 	Data storage.Object
 }
 
-type DataValueChain []*DataValue
+type dataValueChain []*dataValue
 
 type modelAdapter struct {
 	*storage.ModelAdapter
@@ -30,12 +30,12 @@ func (m *modelAdapter) Bucket() string {
 	return caseconv.PascalToKebab(m.Dest().Type().Name())
 }
 
-func (m *modelAdapter) DataVals() DataValueChain {
-	var c DataValueChain
+func (m *modelAdapter) DataVals() dataValueChain {
+	var c dataValueChain
 	m.Dest().ForEach(func(rfl *model.Reflect, i int) {
 		val := rfl.StructValue()
 		data := val.FieldByName(dataKey)
-		c = append(c, &DataValue{
+		c = append(c, &dataValue{
 			PK:   rfl.PK(),
 			Data: data.Interface().(storage.Object),
 		})
@@ -43,7 +43,7 @@ func (m *modelAdapter) DataVals() DataValueChain {
 	return c
 }
 
-func (m *modelAdapter) BindDataVals(dvc DataValueChain) {
+func (m *modelAdapter) BindDataVals(dvc dataValueChain) {
 	for _, dv := range dvc {
 		rfl, ok := m.Dest().ValueByPK(dv.PK)
 		if !ok {

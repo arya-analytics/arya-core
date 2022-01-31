@@ -39,7 +39,7 @@ func (b *baseQuery) baseAdaptToDest() {
 	b.modelAdapter.ExchangeToDest()
 }
 
-func (b *baseQuery) baseBindVals(dvc DataValueChain) {
+func (b *baseQuery) baseBindVals(dvc dataValueChain) {
 	b.modelAdapter.BindDataVals(dvc)
 }
 

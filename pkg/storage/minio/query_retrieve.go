@@ -11,11 +11,11 @@ import (
 
 type retrieveQuery struct {
 	whereBaseQuery
-	dvc DataValueChain
+	dvc dataValueChain
 }
 
 func newRetrieve(client *minio.Client) *retrieveQuery {
-	r := &retrieveQuery{dvc: DataValueChain{}}
+	r := &retrieveQuery{dvc: dataValueChain{}}
 	r.baseInit(client)
 	return r
 }
@@ -45,14 +45,14 @@ func (r *retrieveQuery) Exec(ctx context.Context) error {
 			return err
 		})
 		r.validateRes(resObj)
-		r.appendToDVC(&DataValue{PK: pk, Data: &Object{resObj}})
+		r.appendToDVC(&dataValue{PK: pk, Data: &object{resObj}})
 	}
 	r.baseBindVals(r.dvc)
 	r.baseAdaptToSource()
 	return r.baseErr()
 }
 
-func (r *retrieveQuery) appendToDVC(dv *DataValue) {
+func (r *retrieveQuery) appendToDVC(dv *dataValue) {
 	r.catcher.Exec(func() error {
 		r.dvc = append(r.dvc, dv)
 		return nil

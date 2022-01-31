@@ -6,14 +6,14 @@ import (
 )
 
 var _catalog = storage.ModelCatalog{
-	&ChannelChunk{},
+	&channelChunk{},
 }
 
 func catalog() storage.ModelCatalog {
 	return _catalog
 }
 
-type ChannelChunk struct {
+type channelChunk struct {
 	ID   uuid.UUID `model:"role:pk"`
 	Data storage.Object
 }
