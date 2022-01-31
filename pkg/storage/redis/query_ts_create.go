@@ -6,16 +6,16 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/storage/redis/timeseries"
 )
 
-type TSQueryVariant int
+type tsQueryVariant int
 
 const (
-	TSQueryVariantSeries TSQueryVariant = iota + 1
-	TSQueryVariantSample
+	tsQueryVariantSeries tsQueryVariant = iota + 1
+	tsQueryVariantSample
 )
 
 type tsCreateQuery struct {
 	baseQuery
-	variant TSQueryVariant
+	variant tsQueryVariant
 }
 
 func newTSCreate(client *timeseries.Client) *tsCreateQuery {
@@ -25,12 +25,12 @@ func newTSCreate(client *timeseries.Client) *tsCreateQuery {
 }
 
 func (tsc *tsCreateQuery) Series() storage.CacheTSCreateQuery {
-	tsc.variant = TSQueryVariantSeries
+	tsc.variant = tsQueryVariantSeries
 	return tsc
 }
 
 func (tsc *tsCreateQuery) Sample() storage.CacheTSCreateQuery {
-	tsc.variant = TSQueryVariantSample
+	tsc.variant = tsQueryVariantSample
 	return tsc
 }
 
@@ -42,9 +42,9 @@ func (tsc *tsCreateQuery) Model(m interface{}) storage.CacheTSCreateQuery {
 
 func (tsc *tsCreateQuery) Exec(ctx context.Context) error {
 	switch tsc.variant {
-	case TSQueryVariantSample:
+	case tsQueryVariantSample:
 		tsc.execSample(ctx)
-	case TSQueryVariantSeries:
+	case tsQueryVariantSeries:
 		tsc.execSeries(ctx)
 	default:
 		return storage.Error{
