@@ -1,8 +1,8 @@
 package mock
 
 type ModelA struct {
-	ID                    int `model:"role:pk"`
-	Name                  string
+	ID                    int    `model:"role:pk"`
+	Name                  string `model:"role:str" randomcat:"random:hello"`
 	InnerModel            *ModelB
 	ChainInnerModel       []*ModelB
 	CommonChainInnerModel []*ModelB
