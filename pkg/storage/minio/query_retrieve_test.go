@@ -20,7 +20,7 @@ var _ = Describe("QueryRetrieve", func() {
 				err = mockEngine.NewRetrieve(mockAdapter).Model(retrievedModel).WherePK(mockModel.
 					ID).Exec(mockCtx)
 			})
-			It("Should retrieve it without errutil", func() {
+			It("Should retrieve it without error", func() {
 				Expect(err).To(BeNil())
 			})
 			It("Should retrieve the correct item", func() {

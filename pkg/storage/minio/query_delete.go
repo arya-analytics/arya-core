@@ -34,7 +34,7 @@ func (d *deleteQuery) Model(m interface{}) storage.ObjectDeleteQuery {
 func (d *deleteQuery) Exec(ctx context.Context) error {
 	for _, pk := range d.PKs {
 		d.catcher.Exec(func() error {
-			return d.baseClient().RemoveObject(ctx, d.Bucket(),
+			return d.baseClient().RemoveObject(ctx, d.baseBucket(),
 				pk.String(),
 				minio.RemoveObjectOptions{})
 		})

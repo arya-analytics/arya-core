@@ -19,7 +19,7 @@ var _ = Describe("QueryUpdate", func() {
 				NodeID: 1,
 			}
 		})
-		It("Should update it without errutil", func() {
+		It("Should update it without error", func() {
 			err := mockStorage.NewUpdate().Model(newDummyModel).WherePK(mockChannelCfg.ID).Exec(
 				mockCtx)
 			Expect(err).To(BeNil())

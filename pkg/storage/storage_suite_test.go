@@ -5,6 +5,7 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/storage/minio"
 	"github.com/arya-analytics/aryacore/pkg/storage/mock"
+	"github.com/arya-analytics/aryacore/pkg/storage/redis"
 	"github.com/arya-analytics/aryacore/pkg/storage/roach"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/cockroachdb/cockroach-go/v2/testserver"
@@ -13,6 +14,7 @@ import (
 	. "github.com/onsi/gomega"
 	log "github.com/sirupsen/logrus"
 	"testing"
+	"time"
 )
 
 var (
@@ -25,6 +27,12 @@ var (
 				AccessKey: "Q3AM3UQ867SPQQA43P2F",
 				SecretKey: "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG",
 			}),
+		storage.EngineRoleCache: redis.New(redis.Config{
+			Host:     "localhost",
+			Port:     6379,
+			Password: "",
+			Database: 0,
+		}),
 	}
 	mockStorage    = storage.New(mockEngineCfg)
 	mockCtx        = context.Background()
@@ -42,6 +50,7 @@ var (
 		LeaseHolderNodeID: mockNode.ID,
 	}
 	mockChannelChunk *storage.ChannelChunk
+	mockSamples      []*storage.ChannelSample
 )
 
 func bootstrapMockRoachEngine() storage.MDEngine {
@@ -63,18 +72,50 @@ func createMock(m interface{}) {
 
 func deleteMock(m interface{}) {
 	rfl := model.NewReflect(m)
-	if err := mockStorage.NewDelete().Model(m).WherePK(rfl.PKField().
-		Value().Interface()).Exec(mockCtx); err != nil {
+	if err := mockStorage.NewDelete().Model(m).WherePK(rfl.PK().Interface()).Exec(
+		mockCtx); err != nil {
 		log.Fatalln(err, rfl.Type().Name())
 	}
 }
 
 func createMockChannelCfg() {
+	mockChannelCfg.ID = uuid.New()
 	createMock(mockChannelCfg)
 }
 
 func deleteMockChannelCfg() {
 	deleteMock(mockChannelCfg)
+}
+
+func createMockSeries() {
+	createMockChannelCfg()
+	if err := mockStorage.NewTSCreate().Series().Model(mockChannelCfg).Exec(
+		mockCtx); err != nil {
+		if (err.(storage.Error).Type) != storage.ErrTypeUniqueViolation {
+			log.Fatalln(err, mockChannelCfg)
+		}
+	}
+}
+
+func createMockSamples(qty int) {
+	createMockSeries()
+	mockSamples = []*storage.ChannelSample{}
+	for i := 0; i < qty; i++ {
+		duration := 1 * time.Second
+		for j := 0; j < i; j++ {
+			duration += 1 * time.Second
+		}
+		mockSamples = append(mockSamples,
+			&storage.ChannelSample{
+				ChannelConfigID: mockChannelCfg.ID,
+				Value:           126.8,
+				Timestamp:       time.Now().Add(duration).UnixNano(),
+			})
+	}
+	if err := mockStorage.NewTSCreate().Sample().Model(&mockSamples).Exec(
+		mockCtx); err != nil {
+		log.Fatalln(err)
+	}
 }
 
 func createMockRange() {

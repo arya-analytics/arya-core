@@ -25,7 +25,7 @@ var (
 		NodeID: mockNode.ID,
 	}
 	mockCtx     = context.Background()
-	mockAdapter *roach.Adapter
+	mockAdapter storage.Adapter
 )
 
 func migrate() {
@@ -64,7 +64,7 @@ func bootstrapEngine() {
 		log.Fatalln(err)
 	}
 	mockEngine = roach.New(roach.Config{DSN: mockDB.PGURL().String(), Driver: roach.DriverPG})
-	mockAdapter = mockEngine.NewAdapter().(*roach.Adapter)
+	mockAdapter = mockEngine.NewAdapter()
 }
 
 var _ = BeforeSuite(func() {

@@ -30,16 +30,16 @@ func (b *baseQuery) baseModelWrapper() *ModelWrapper {
 	return &ModelWrapper{rfl: b.modelAdapter.Dest()}
 }
 
-func (b *baseQuery) Bucket() string {
+func (b *baseQuery) baseBucket() string {
 	return b.baseModelWrapper().Bucket()
 }
 
 func (b *baseQuery) baseAdaptToSource() {
-	b.catcher.Exec(b.modelAdapter.ExchangeToSource)
+	b.modelAdapter.ExchangeToSource()
 }
 
 func (b *baseQuery) baseAdaptToDest() {
-	b.catcher.Exec(b.modelAdapter.ExchangeToDest)
+	b.modelAdapter.ExchangeToDest()
 }
 
 func (b *baseQuery) baseBindVals(dvc DataValueChain) {

@@ -5,8 +5,21 @@ import (
 	"time"
 )
 
+var _catalog = ModelCatalog{
+	&Node{},
+	&Range{},
+	&RangeReplicaToNode{},
+	&ChannelConfig{},
+	&ChannelChunk{},
+	&ChannelSample{},
+}
+
+func catalog() ModelCatalog {
+	return _catalog
+}
+
 type Node struct {
-	ID              int
+	ID              int `model:"role:pk"`
 	Address         string
 	StartedAt       time.Time
 	IsLive          bool
@@ -19,32 +32,50 @@ type Node struct {
 }
 
 type Range struct {
-	ID                uuid.UUID
-	LeaseHolderNodeID int
+	ID uuid.UUID `model:"role:pk"`
+	// LeaseHolderNode
 	LeaseHolderNode   *Node
-	ReplicaNodes      []*Node
+	LeaseHolderNodeID int
+	// ReplicaNodes
+	ReplicaNodes []*Node
 }
 
 type RangeReplicaToNode struct {
-	ID      uuid.UUID
-	RangeID uuid.UUID
+	ID uuid.UUID `model:"role:pk"`
+	// Range
 	Range   *Range
-	NodeID  int
-	Node    *Node
+	RangeID uuid.UUID
+	// Node
+	Node   *Node
+	NodeID int
 }
 
 type ChannelConfig struct {
-	ID     uuid.UUID
-	Name   string
-	NodeID int
+	ID   uuid.UUID `model:"role:pk"`
+	Name string
+	// Node
 	Node   *Node
+	NodeID int
+	// Data
+	DataRate  float64
+	Retention time.Duration
 }
 
 type ChannelChunk struct {
-	ID              uuid.UUID
-	RangeID         uuid.UUID
-	Range           *Range
-	ChannelConfigID uuid.UUID
+	ID uuid.UUID `model:"role:pk"`
+	// Range
+	Range   *Range
+	RangeID uuid.UUID
+	// ChannelConfig
 	ChannelConfig   *ChannelConfig
-	Data            Object
+	ChannelConfigID uuid.UUID
+	// Data
+	Data Object
+}
+
+type ChannelSample struct {
+	ChannelConfig   *ChannelConfig `model:"role:series"`
+	ChannelConfigID uuid.UUID
+	Value           float64
+	Timestamp       int64
 }

@@ -10,8 +10,8 @@ import (
 
 func beforeInsertSetUUID(rfl *model.Reflect) *model.Reflect {
 	rfl.ForEach(func(nRfl *model.Reflect, i int) {
-		fldT, _ := nRfl.Type().FieldByName(model.KeyPK)
-		fld := nRfl.Value().FieldByName(model.KeyPK)
+		fldT, _ := nRfl.Type().FieldByName("ID")
+		fld := nRfl.StructValue().FieldByName("ID")
 		if fldT.Type == reflect.TypeOf(uuid.UUID{}) && fld.IsZero() {
 			fld.Set(reflect.ValueOf(uuid.New()))
 		}

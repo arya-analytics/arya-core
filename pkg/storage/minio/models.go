@@ -14,6 +14,6 @@ func catalog() storage.ModelCatalog {
 }
 
 type ChannelChunk struct {
-	ID   uuid.UUID
+	ID   uuid.UUID `model:"role:pk"`
 	Data storage.Object
 }

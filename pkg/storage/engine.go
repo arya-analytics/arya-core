@@ -51,6 +51,14 @@ type ObjectEngine interface {
 	NewMigrate(a Adapter) ObjectMigrateQuery
 }
 
+// || CACHE ||
+
+type CacheEngine interface {
+	BaseEngine
+	NewTSRetrieve(a Adapter) CacheTSRetrieveQuery
+	NewTSCreate(a Adapter) CacheTSCreateQuery
+}
+
 // |||| QUERY ||||
 
 type BaseQuery interface {
@@ -100,7 +108,7 @@ type MDMigrateQuery interface {
 	Verify(ctx context.Context) error
 }
 
-// || BULK ||
+// || OBJECT ||
 
 type ObjectBaseQuery interface {
 	BaseQuery
@@ -128,4 +136,32 @@ type ObjectDeleteQuery interface {
 type ObjectMigrateQuery interface {
 	ObjectBaseQuery
 	Verify(ctx context.Context) error
+}
+
+// || TS CACHE ||
+
+type CacheBaseQuery interface {
+	BaseQuery
+}
+
+type CacheCreateQuery interface {
+	CacheBaseQuery
+	Model(model interface{}) CacheCreateQuery
+}
+
+type CacheTSRetrieveQuery interface {
+	CacheBaseQuery
+	SeriesExists(ctx context.Context, pk interface{}) (bool, error)
+	Model(model interface{}) CacheTSRetrieveQuery
+	WherePK(pk interface{}) CacheTSRetrieveQuery
+	WherePKs(pks interface{}) CacheTSRetrieveQuery
+	AllTimeRange() CacheTSRetrieveQuery
+	WhereTimeRange(fromTS int64, toTS int64) CacheTSRetrieveQuery
+}
+
+type CacheTSCreateQuery interface {
+	CacheBaseQuery
+	Model(model interface{}) CacheTSCreateQuery
+	Series() CacheTSCreateQuery
+	Sample() CacheTSCreateQuery
 }

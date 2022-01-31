@@ -27,7 +27,7 @@ func (c *createQuery) Exec(ctx context.Context) error {
 		c.catcher.Exec(func() error {
 			_, err := c.baseClient().PutObject(
 				ctx,
-				c.Bucket(),
+				c.baseBucket(),
 				dv.PK.String(),
 				dv.Data,
 				dv.Data.Size(),

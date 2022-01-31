@@ -3,18 +3,21 @@ package storage
 import "github.com/arya-analytics/aryacore/pkg/util/errutil"
 
 type baseQuery struct {
-	storage       *Storage
-	mdEngine      MDEngine
-	_baseMDQuery  MDBaseQuery
-	objEngine     ObjectEngine
-	_baseObjQuery ObjectBaseQuery
-	catcher       *errutil.Catcher
+	storage         *Storage
+	mdEngine        MDEngine
+	_baseMDQuery    MDBaseQuery
+	objEngine       ObjectEngine
+	_baseObjQuery   ObjectBaseQuery
+	cacheEngine     CacheEngine
+	_baseCacheQuery CacheBaseQuery
+	catcher         *errutil.Catcher
 }
 
 func (b *baseQuery) baseInit(s *Storage) {
 	b.storage = s
 	b.mdEngine = b.storage.cfg.mdEngine()
 	b.objEngine = b.storage.cfg.objEngine()
+	b.cacheEngine = b.storage.cfg.cacheEngine()
 	b.catcher = &errutil.Catcher{}
 }
 
@@ -47,6 +50,22 @@ func (b *baseQuery) baseObjQuery() ObjectBaseQuery {
 func (b *baseQuery) baseSetObjQuery(q ObjectBaseQuery) {
 	b._baseObjQuery = q
 }
+
+// || CACHE ||
+
+func (b *baseQuery) baseCacheAdapter() Adapter {
+	return b.storage.adapter(EngineRoleCache)
+}
+
+func (b *baseQuery) baseCacheQuery() CacheBaseQuery {
+	return b._baseCacheQuery
+}
+
+func (b *baseQuery) baseSetCacheQuery(q CacheBaseQuery) {
+	b._baseCacheQuery = q
+}
+
+// |||| EXCEPTION HANDLING  ||||
 
 func (b *baseQuery) baseErr() error {
 	return b.catcher.Error()

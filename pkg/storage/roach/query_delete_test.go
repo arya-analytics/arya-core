@@ -11,7 +11,7 @@ import (
 var _ = Describe("QueryDelete", func() {
 	BeforeEach(createMockModel)
 	Describe("Delete an item", func() {
-		It("Should delete without errutil", func() {
+		It("Should delete without error", func() {
 			err := mockEngine.NewDelete(mockAdapter).Model(mockModel).WherePK(
 				mockModel.
 					ID).Exec(
@@ -47,7 +47,7 @@ var _ = Describe("QueryDelete", func() {
 			err = mockEngine.NewDelete(mockAdapter).Model(&models).WherePKs(pks).
 				Exec(mockCtx)
 		})
-		It("Should delete them without errutil", func() {
+		It("Should delete them without error", func() {
 			Expect(err).To(BeNil())
 		})
 		It("Should not be able to re-queried after delete", func() {

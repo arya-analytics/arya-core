@@ -13,7 +13,7 @@ var _ = Describe("retrieveQuery", func() {
 			AfterEach(deleteMockChannelCfg)
 			Context("Single item", func() {
 				Describe("Retrieve a channel config", func() {
-					It("Should retrieve without errutil", func() {
+					It("Should retrieve without error", func() {
 						m := &storage.ChannelConfig{}
 						err := mockStorage.NewRetrieve().Model(m).WherePK(mockChannelCfg.ID).Exec(mockCtx)
 						Expect(err).To(BeNil())
@@ -39,7 +39,7 @@ var _ = Describe("retrieveQuery", func() {
 						err = mockStorage.NewRetrieve().Model(retrievedModel).WherePK(
 							mockChannelChunk.ID).Exec(mockCtx)
 					})
-					It("Should retrieve it without errutil", func() {
+					It("Should retrieve it without error", func() {
 						Expect(err).To(BeNil())
 					})
 					It("Should retrieve the correct item", func() {

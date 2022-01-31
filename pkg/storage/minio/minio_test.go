@@ -16,7 +16,7 @@ var _ = Describe("Minio Engine", func() {
 			a = mockEngine.NewAdapter()
 		})
 		Describe("New Adapter", func() {
-			It("Should create a new adapter without errutil", func() {
+			It("Should create a new adapter without error", func() {
 				Expect(reflect.TypeOf(a.ID())).To(Equal(reflect.TypeOf(uuid.New())))
 			})
 		})
@@ -32,6 +32,15 @@ var _ = Describe("Minio Engine", func() {
 					ba := e.NewAdapter()
 					Expect(mockEngine.IsAdapter(ba)).To(BeFalse())
 				})
+			})
+		})
+		Context("Conn", func() {
+			Describe("Binding an invalid adapter", func() {
+				e := &mock.MDEngine{}
+				ba := e.NewAdapter()
+				Expect(func() {
+					mockEngine.NewRetrieve(ba)
+				}).To(Panic())
 			})
 		})
 	})

@@ -11,7 +11,7 @@ var _ = Describe("QueryDelete", func() {
 	Describe("Standard Usage", func() {
 		BeforeEach(createMockChannelCfg)
 		Describe("Delete a channel config", func() {
-			It("Should delete without errutil", func() {
+			It("Should delete without error", func() {
 				err := mockStorage.NewDelete().Model(mockChannelCfg).WherePK(mockChannelCfg.ID).
 					Exec(mockCtx)
 				Expect(err).To(BeNil())
