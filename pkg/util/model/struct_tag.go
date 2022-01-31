@@ -41,7 +41,7 @@ func constructKVPair(key string, value string) string {
 	return key + kvPairSeparator + value
 }
 
-func (s StructTag) kvChain(cat string) (kvc []string, ok bool) {
+func (s StructTag) retrieveKVChain(cat string) (kvc []string, ok bool) {
 	valString, ok := s.Lookup(cat)
 	if !ok {
 		return kvc, false
@@ -51,22 +51,27 @@ func (s StructTag) kvChain(cat string) (kvc []string, ok bool) {
 }
 
 func (s StructTag) match(cat string, key string, value string) bool {
-	kvs, ok := s.kvChain(cat)
+	kvs, ok := s.retrieveKVChain(cat)
 	if !ok {
 		return false
 	}
-	for _, kv := range kvs {
-		if key != "" && value != "" {
-			cKv := constructKVPair(key, value)
-			return cKv == kv
-		} else if key != "" {
-			return strings.Contains(kv, key)
-		} else if value != "" {
-			return strings.Contains(kv, value)
-		}
+	var matcher func(kv string) bool
+	if key != "*" && value != "*" {
+		cKv := constructKVPair(key, value)
+		matcher = func(kv string) bool { return cKv == kv }
+	} else if key != "*" {
+		matcher = func(kv string) bool { return strings.Contains(kv, key) }
+	} else if value != "*" {
+		panic("StructTag.match - can't perform a tag match with value and no key.")
+	} else {
 		// If both our key and value are empty, then we're just looking
 		// up by category, so we return true.
 		return true
+	}
+	for _, kv := range kvs {
+		if matcher(kv) {
+			return true
+		}
 	}
 	return false
 }
