@@ -5,15 +5,26 @@ import (
 	"strings"
 )
 
-type StructTags []StructTag
+type StructTagChain []StructTag
 
-func (s StructTags) Retrieve(cat string, key string, value string) (StructTag, bool) {
+func (s StructTagChain) Retrieve(cat string, key string, value string) (StructTag, bool) {
 	for _, st := range s {
-		if st.Match(cat, key, value) {
+		if st.match(cat, key, value) {
 			return st, true
 		}
 	}
 	return StructTag{}, false
+}
+
+func NewStructTagChain(t reflect.Type) (tags StructTagChain) {
+	if t.Kind() != reflect.Struct {
+		panic("model.NewStructTagChain - received non-struct")
+	}
+	for i := 0; i < t.NumField(); i++ {
+		fld := t.Field(i)
+		tags = append(tags, StructTag{StructTag: fld.Tag, Field: fld})
+	}
+	return tags
 }
 
 type StructTag struct {
@@ -22,24 +33,25 @@ type StructTag struct {
 }
 
 const (
-	kvSeparator = ":"
+	kvPairSeparator  = ":"
+	kvChainSeparator = ","
 )
 
 func constructKVPair(key string, value string) string {
-	return key + kvSeparator + value
+	return key + kvPairSeparator + value
 }
 
-func (s StructTag) kvs(cat string) (kvs []string, ok bool) {
+func (s StructTag) kvChain(cat string) (kvc []string, ok bool) {
 	valString, ok := s.Lookup(cat)
 	if !ok {
-		return kvs, ok
+		return kvc, false
 	}
-	kvs = strings.Split(valString, ",")
-	return kvs, true
+	kvc = strings.Split(valString, kvChainSeparator)
+	return kvc, true
 }
 
-func (s StructTag) Match(cat string, key string, value string) bool {
-	kvs, ok := s.kvs(cat)
+func (s StructTag) match(cat string, key string, value string) bool {
+	kvs, ok := s.kvChain(cat)
 	if !ok {
 		return false
 	}
@@ -57,15 +69,4 @@ func (s StructTag) Match(cat string, key string, value string) bool {
 		return true
 	}
 	return false
-}
-
-func NewTags(t reflect.Type) (tags StructTags) {
-	if t.Kind() != reflect.Struct {
-		panic("received non-struct")
-	}
-	for i := 0; i < t.NumField(); i++ {
-		fld := t.Field(i)
-		tags = append(tags, StructTag{StructTag: fld.Tag, Field: fld})
-	}
-	return tags
 }

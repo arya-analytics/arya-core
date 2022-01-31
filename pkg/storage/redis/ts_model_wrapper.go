@@ -113,7 +113,7 @@ func (m *tsModelWrapper) setFields(rfl *model.Reflect, sample timeseries.Sample)
 }
 
 func (m *tsModelWrapper) retrieveFieldNameByRole(role string) string {
-	t, ok := m.rfl.Tags().Retrieve(structTagCacheCat, structTagRoleKey, role)
+	t, ok := m.rfl.StructTagChain().Retrieve(structTagCacheCat, structTagRoleKey, role)
 	if !ok {
 		panic(fmt.Sprintf("couldn't retrieve role %s from model", role))
 	}

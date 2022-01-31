@@ -34,7 +34,7 @@ func (tsc *tsCreateQuery) Exec(ctx context.Context) error {
 			se := err.(Error)
 			if se.Type == ErrTypeItemNotFound {
 				if bErr := tsc.tsBaseCreateIndexes(ctx,
-					tsc.modelRfl.PKs().Interface()); bErr != nil {
+					tsc.modelRfl.PKChain().Interface()); bErr != nil {
 					return bErr
 				}
 				return tsc.Exec(ctx)

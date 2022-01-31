@@ -3,15 +3,13 @@ package model
 import (
 	"fmt"
 	"github.com/arya-analytics/aryacore/pkg/util/validate"
-	"github.com/google/uuid"
 	"reflect"
-	"strconv"
 )
 
 const (
-	TagCat  = "model"
-	RoleKey = "role"
-	PKRole  = "pk"
+	tagCat  = "model"
+	roleKey = "role"
+	pkRole  = "pk"
 )
 
 type Reflect struct {
@@ -47,12 +45,12 @@ func (r *Reflect) Pointer() interface{} {
 // Type returns the 'model' type i.e. the actual type of the Model Struct.
 func (r *Reflect) Type() reflect.Type {
 	if r.IsChain() {
-		/* raw type is the slice
+		/* base type is the slice
 		first elem is pointer to struct
 		second elem is struct */
 		return r.RawType().Elem().Elem()
 	}
-	/* raw type is pointer to struct
+	/* base type is pointer to struct
 	first elem is struct */
 	return r.RawType()
 }
@@ -83,9 +81,10 @@ func (r *Reflect) StructValue() reflect.Value {
 // StructFieldByRole retrieves the field from the Reflect model struct by its role.
 // Panics if the field can't be found.
 func (r *Reflect) StructFieldByRole(role string) reflect.Value {
-	tag, ok := r.Tags().Retrieve(TagCat, RoleKey, role)
+	tag, ok := r.StructTagChain().Retrieve(tagCat, roleKey, role)
 	if !ok {
-		panic(fmt.Sprintf("Could not find field with role %s", role))
+		panic(fmt.Sprintf("model.Reflect."+
+			"StructFieldByRole - could not find field with role %s", role))
 	}
 	return r.StructValue().FieldByIndex(tag.Field.Index)
 }
@@ -145,15 +144,11 @@ func (r *Reflect) ValueByPK(pk PK) (retRfl *Reflect, ok bool) {
 
 const ifStructIndex = -1
 
-// ForEachFunc is called in Reflect.ForEach,
-// and provides the model reflection as well as its index.
-type ForEachFunc func(rfl *Reflect, i int)
-
 // ForEach iterates through each model struct in Reflect and calls the provided
-// ForEachFunc.
+// function. The function receives the model Reflect as well as its index.
 // NOTE: The index provided to the ForEachFunc is -1 if the Reflect contains a struct
 // internally.
-func (r *Reflect) ForEach(fef ForEachFunc) {
+func (r *Reflect) ForEach(fef func(rfl *Reflect, i int)) {
 	if r.IsStruct() {
 		fef(r, ifStructIndex)
 	} else {
@@ -203,7 +198,7 @@ func (r *Reflect) ToNewPointer() *Reflect {
 // PKField returns the primary key field of the model (ie assigned role:pk).
 // Panics if the field does not exist, or if the Reflect is a struct.
 func (r *Reflect) PKField() reflect.Value {
-	return r.StructFieldByRole(PKRole)
+	return r.StructFieldByRole(pkRole)
 }
 
 // PK returns new PK representing the primary key of the model.
@@ -212,11 +207,11 @@ func (r *Reflect) PK() PK {
 	return NewPK(r.PKField().Interface())
 }
 
-// PKs returns all PKS in the Reflect. If the Reflect contains a chain,
-// returns all PKs of the models in the chain. If Reflect contains a struct,
+// PKChain returns all PKS in the Reflect. If the Reflect contains a chain,
+// returns all PKChain of the models in the chain. If Reflect contains a struct,
 // returns a slice with length 1 containing the structs PK.
-func (r *Reflect) PKs() PKs {
-	var pks PKs
+func (r *Reflect) PKChain() PKChain {
+	var pks PKChain
 	r.ForEach(func(rfl *Reflect, i int) {
 		pks = append(pks, rfl.PK())
 	})
@@ -274,9 +269,9 @@ func (r *Reflect) panicIfStruct() {
 
 // || TAGS ||
 
-// Tags returns a set of StructTags representing all struct tags on Reflect.Type.
-func (r *Reflect) Tags() StructTags {
-	return NewTags(r.Type())
+// StructTagChain returns a set of StructTagChain representing all struct tags on Reflect.Type.
+func (r *Reflect) StructTagChain() StructTagChain {
+	return NewStructTagChain(r.Type())
 }
 
 // |||| VALIDATION ||||
@@ -305,54 +300,3 @@ var validator = validate.New([]validate.Func{
 	validateIsPointer,
 	validateSliceOrStruct,
 })
-
-// ||| PK |||
-
-type PKs []PK
-
-func (pks PKs) Interface() (pkis []interface{}) {
-	for _, pk := range pks {
-		pkis = append(pkis, pk.Interface())
-	}
-	return pkis
-}
-
-type PK struct {
-	raw interface{}
-}
-
-func NewPK(pk interface{}) PK {
-	return PK{raw: pk}
-}
-
-func (pk PK) String() string {
-	switch pk.raw.(type) {
-	case uuid.UUID:
-		return pk.raw.(uuid.UUID).String()
-	case int:
-		return strconv.Itoa(pk.raw.(int))
-	case int32:
-		return strconv.Itoa(int(pk.raw.(int32)))
-	case int64:
-		return strconv.Itoa(int(pk.raw.(int64)))
-	case string:
-		return pk.raw.(string)
-	}
-	panic("Could not convert PK to string")
-}
-
-func (pk PK) Interface() interface{} {
-	return pk.raw
-}
-
-func (pk PK) Equals(tPk PK) bool {
-	return pk.raw == tPk.raw
-}
-
-func (pk PK) Value() reflect.Value {
-	return reflect.ValueOf(pk.raw)
-}
-
-func (pk PK) IsZero() bool {
-	return pk.Value().IsZero()
-}

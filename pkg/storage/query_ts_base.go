@@ -31,7 +31,7 @@ func (tsb *tsBaseQuery) tsBaseWherePks(pks interface{}) {
 func (tsb *tsBaseQuery) tsBaseCreateIndexes(ctx context.Context,
 	pks []interface{}) error {
 	log.Warn("Series not found in cache. Attempting to fix.")
-	tag, ok := tsb.modelRfl.Tags().Retrieve("storage", "role", "index")
+	tag, ok := tsb.modelRfl.StructTagChain().Retrieve("storage", "role", "index")
 	if !ok {
 		panic("couldn't get tag from model")
 	}

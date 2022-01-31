@@ -43,7 +43,7 @@ func (r *retrieveQuery) Exec(ctx context.Context) error {
 	})
 	if r.objEngine.InCatalog(r.modelRfl.Pointer()) {
 		r.catcher.Exec(func() error {
-			return r.objQuery().Model(r.modelRfl.Pointer()).WherePKs(r.modelRfl.PKs().Interface()).
+			return r.objQuery().Model(r.modelRfl.Pointer()).WherePKs(r.modelRfl.PKChain().Interface()).
 				Exec(ctx)
 		})
 	}
