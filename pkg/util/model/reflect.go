@@ -23,8 +23,7 @@ func NewReflect(modelPtr interface{}) *Reflect {
 }
 
 func (r *Reflect) Validate() {
-	err := validator.Exec(r)
-	if err != nil {
+	if err := validator.Exec(r); err != nil {
 		panic(err)
 	}
 }
