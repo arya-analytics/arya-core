@@ -8,7 +8,7 @@ import (
 
 type baseQuery struct {
 	_client      *timeseries.Client
-	modelAdapter *storage.ModelAdapter
+	modelAdapter *modelAdapter
 	catcher      *errutil.Catcher
 }
 
@@ -30,7 +30,8 @@ func (b *baseQuery) baseAdaptToSource() {
 }
 
 func (b *baseQuery) baseModel(m interface{}) {
-	b.modelAdapter = storage.NewModelAdapter(m, catalog().New(m))
+	b.modelAdapter = newWrappedModelAdapter(storage.NewModelAdapter(m,
+		catalog().New(m)))
 }
 
 func (b *baseQuery) baseErr() error {

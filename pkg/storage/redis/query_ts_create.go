@@ -14,7 +14,7 @@ const (
 )
 
 type tsCreateQuery struct {
-	tsBaseQuery
+	baseQuery
 	variant TSQueryVariant
 }
 
@@ -56,15 +56,13 @@ func (tsc *tsCreateQuery) Exec(ctx context.Context) error {
 }
 
 func (tsc *tsCreateQuery) execSample(ctx context.Context) {
-	w := tsc.tsBaseModelWrapper()
 	tsc.catcher.Exec(func() error {
-		return tsc.baseClient().TSCreateSamples(ctx, w.samples()...).Err()
+		return tsc.baseClient().TSCreateSamples(ctx, tsc.modelAdapter.samples()...).Err()
 	})
 }
 
 func (tsc *tsCreateQuery) execSeries(ctx context.Context) {
-	w := tsc.tsBaseModelWrapper()
-	for _, in := range w.seriesNames() {
+	for _, in := range tsc.modelAdapter.seriesNames() {
 		tsc.catcher.Exec(func() error {
 			return tsc.baseClient().TSCreateSeries(ctx, in,
 				timeseries.CreateOptions{}).Err()
