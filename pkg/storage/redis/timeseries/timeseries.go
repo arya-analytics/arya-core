@@ -30,6 +30,9 @@ type Sample struct {
 
 func NewSampleFromRes(key string, res interface{}) (Sample, error) {
 	resVal := reflect.ValueOf(res)
+	if resVal.Kind() != reflect.Slice || resVal.Len() < 2 {
+		return Sample{}, fmt.Errorf("response invalid: %s", res)
+	}
 	ts := resVal.Index(0).Interface().(int64)
 	val, err := strconv.ParseFloat(resVal.Index(1).Interface().(string), 64)
 	if err != nil {

@@ -49,5 +49,22 @@ var _ = Describe("Timeseries", func() {
 				Expect(samples).To(HaveLen(2))
 			})
 		})
+		Describe("Create a Sample from response", func() {
+			It("Should create the sample correctly", func() {
+				cErr := mockClient.TSCreateSamples(mockCtx, timeseries.Sample{
+					Key:       mockTSKey,
+					Value:     123.2,
+					Timestamp: time.Now().UnixNano(),
+				}).Err()
+				Expect(cErr).To(BeNil())
+				res, rErr := mockClient.TSGet(mockCtx, mockTSKey).Result()
+				Expect(rErr).To(BeNil())
+				sample, err := timeseries.NewSampleFromRes(mockTSKey, res)
+				Expect(err).To(BeNil())
+				Expect(sample.Value).ToNot(BeZero())
+				Expect(sample.Timestamp).ToNot(BeZero())
+				Expect(sample.Key).To(Equal(mockTSKey))
+			})
+		})
 	})
 })
