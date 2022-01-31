@@ -12,7 +12,7 @@ import (
 var _catalog = storage.ModelCatalog{
 	&Node{},
 	&Range{},
-	&RangeReplicaToNode{},
+	&rangeReplicaToNode{},
 	&ChannelConfig{},
 	&ChannelChunk{},
 	&GossipNode{},
@@ -40,7 +40,7 @@ type Range struct {
 	ReplicaNodes      []*Node `bun:"m2m:range_replica_to_nodes,join:Range=Node"`
 }
 
-type RangeReplicaToNode struct {
+type rangeReplicaToNode struct {
 	ID      uuid.UUID `bun:"type:UUID,pk"`
 	RangeID uuid.UUID `bun:"type:UUID,"`
 	Range   *Range    `bun:"rel:belongs-to,join:range_id=id"`

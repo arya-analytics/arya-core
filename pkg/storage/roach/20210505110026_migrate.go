@@ -19,7 +19,7 @@ const (
 
 var (
 	/* If we're using DriverPG, we expect two CRDB internal tables that provide
-	information on node identity and status. This logic creates a view so that this
+	information on Node identity and status. This logic creates a view so that this
 	info can be accessed by the ORM. */
 	driverPGNodesViewSQL = fmt.Sprintf(`CREATE VIEW %s AS SELECT n.id,
 									gn.address, 
@@ -37,7 +37,7 @@ var (
 		crdbGossipNodes,
 		crdbGossipLiveness)
 	/* If we're using DriverSQLite, CRDB internal tables aren't available,
-	so we just only map the view to the node table,
+	so we just only map the view to the Node table,
 	that way we don't need to change any ORM logic. */
 	driverSQLiteNodesViewSQL = fmt.Sprintf(`CREATE VIEW %s AS SELECT n.id
 									FROM nodes n`, nodesGossip)
@@ -66,7 +66,7 @@ func migrateUpFunc(d Driver) migrate.MigrationFunc {
 		c := &migrateCatcher{Catcher: &errutil.Catcher{}, ctx: ctx}
 		// Binds the many-to-many relationship the bun ORM,
 		// so we can properly run queries against it.
-		db.RegisterModel((*RangeReplicaToNode)(nil))
+		db.RegisterModel((*rangeReplicaToNode)(nil))
 
 		c.execMigration(db.NewCreateTable().Model((*Node)(nil)).Exec)
 
@@ -95,7 +95,7 @@ func migrateUpFunc(d Driver) migrate.MigrationFunc {
 						"id") ON DELETE CASCADE`).
 			Exec)
 		c.execMigration(db.NewCreateTable().
-			Model((*RangeReplicaToNode)(nil)).
+			Model((*rangeReplicaToNode)(nil)).
 			ForeignKey(`("node_id") REFERENCES "nodes" ("id") ON DELETE CASCADE`).
 			ForeignKey(`("range_id") REFERENCES "ranges" ("id") ON DELETE CASCADE`).
 			Exec)

@@ -9,7 +9,7 @@ import (
 
 type baseQuery struct {
 	_client      *minio.Client
-	modelAdapter *storage.ModelAdapter
+	modelAdapter *modelAdapter
 	catcher      *errutil.Catcher
 }
 
@@ -23,15 +23,12 @@ func (b *baseQuery) baseClient() *minio.Client {
 }
 
 func (b *baseQuery) baseModel(m interface{}) {
-	b.modelAdapter = storage.NewModelAdapter(m, catalog().New(m))
-}
-
-func (b *baseQuery) baseModelWrapper() *ModelWrapper {
-	return &ModelWrapper{rfl: b.modelAdapter.Dest()}
+	b.modelAdapter = newWrappedModelAdapter(storage.NewModelAdapter(m,
+		catalog().New(m)))
 }
 
 func (b *baseQuery) baseBucket() string {
-	return b.baseModelWrapper().Bucket()
+	return b.modelAdapter.Bucket()
 }
 
 func (b *baseQuery) baseAdaptToSource() {
@@ -43,7 +40,7 @@ func (b *baseQuery) baseAdaptToDest() {
 }
 
 func (b *baseQuery) baseBindVals(dvc DataValueChain) {
-	b.baseModelWrapper().BindDataVals(dvc)
+	b.modelAdapter.BindDataVals(dvc)
 }
 
 func (b *baseQuery) baseErr() error {

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"reflect"
+	"strings"
 )
 
 // |||| MODEL CATALOG ||||
@@ -31,7 +32,7 @@ func (mc ModelCatalog) retrieveCM(t reflect.Type) (*model.Reflect, bool) {
 	for _, destOpt := range mc {
 		destOptRfl := model.NewReflect(destOpt)
 		destOptRfl.Validate()
-		if t.Name() == destOptRfl.Type().Name() {
+		if strings.ToLower(t.Name()) == strings.ToLower(destOptRfl.Type().Name()) {
 			return destOptRfl, true
 		}
 	}

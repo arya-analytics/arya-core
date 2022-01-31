@@ -3,7 +3,7 @@ package minio
 import (
 	"context"
 	"fmt"
-	"github.com/arya-analytics/aryacore/pkg/util/model"
+	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/minio/minio-go/v7"
 )
 
@@ -19,14 +19,14 @@ func newMigrate(client *minio.Client) *migrateQuery {
 
 func (m *migrateQuery) Exec(ctx context.Context) error {
 	for _, mod := range catalog() {
-		wrap := &ModelWrapper{rfl: model.NewReflect(mod)}
+		ma := newWrappedModelAdapter(storage.NewModelAdapter(mod, mod))
 		m.catcher.Exec(func() error {
-			bucketExists, err := m.baseClient().BucketExists(ctx, wrap.Bucket())
+			bucketExists, err := m.baseClient().BucketExists(ctx, ma.Bucket())
 			if err != nil {
 				return err
 			}
 			if !bucketExists {
-				if mErr := m.baseClient().MakeBucket(ctx, wrap.Bucket(),
+				if mErr := m.baseClient().MakeBucket(ctx, ma.Bucket(),
 					minio.MakeBucketOptions{}); mErr != nil {
 					return mErr
 				}
@@ -39,8 +39,8 @@ func (m *migrateQuery) Exec(ctx context.Context) error {
 
 func (m *migrateQuery) Verify(ctx context.Context) error {
 	for _, mod := range catalog() {
-		wrap := &ModelWrapper{rfl: model.NewReflect(mod)}
-		exists, err := m.baseClient().BucketExists(ctx, wrap.Bucket())
+		ma := newWrappedModelAdapter(storage.NewModelAdapter(mod, mod))
+		exists, err := m.baseClient().BucketExists(ctx, ma.Bucket())
 		if err != nil {
 			return err
 		}

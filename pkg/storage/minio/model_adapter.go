@@ -18,17 +18,21 @@ type DataValue struct {
 
 type DataValueChain []*DataValue
 
-type ModelWrapper struct {
-	rfl *model.Reflect
+type modelAdapter struct {
+	*storage.ModelAdapter
 }
 
-func (m *ModelWrapper) Bucket() string {
-	return caseconv.PascalToKebab(m.rfl.Type().Name())
+func newWrappedModelAdapter(sma *storage.ModelAdapter) *modelAdapter {
+	return &modelAdapter{sma}
 }
 
-func (m *ModelWrapper) DataVals() DataValueChain {
+func (m *modelAdapter) Bucket() string {
+	return caseconv.PascalToKebab(m.Dest().Type().Name())
+}
+
+func (m *modelAdapter) DataVals() DataValueChain {
 	var c DataValueChain
-	m.rfl.ForEach(func(rfl *model.Reflect, i int) {
+	m.Dest().ForEach(func(rfl *model.Reflect, i int) {
 		val := rfl.StructValue()
 		data := val.FieldByName(dataKey)
 		c = append(c, &DataValue{
@@ -39,21 +43,21 @@ func (m *ModelWrapper) DataVals() DataValueChain {
 	return c
 }
 
-func (m *ModelWrapper) BindDataVals(dvc DataValueChain) {
+func (m *modelAdapter) BindDataVals(dvc DataValueChain) {
 	for _, dv := range dvc {
-		rfl, ok := m.rfl.ValueByPK(dv.PK)
+		rfl, ok := m.Dest().ValueByPK(dv.PK)
 		if !ok {
-			if m.rfl.IsChain() {
-				newRfl := m.rfl.NewStruct()
+			if m.Dest().IsChain() {
+				newRfl := m.Dest().NewStruct()
 				newRfl.StructValue().FieldByName(dataKey).Set(reflect.ValueOf(dv.Data))
 				newRfl.StructValue().FieldByName("ID").Set(dv.PK.Value())
-				m.rfl.ChainAppend(newRfl)
+				m.Dest().ChainAppend(newRfl)
 			} else {
-				if !m.rfl.PKField().IsZero() {
+				if !m.Dest().PKField().IsZero() {
 					panic("object store meta data mismatch")
 				}
-				m.rfl.StructValue().FieldByName("ID").Set(dv.PK.Value())
-				m.rfl.StructValue().FieldByName(dataKey).Set(reflect.ValueOf(dv.Data))
+				m.Dest().StructValue().FieldByName("ID").Set(dv.PK.Value())
+				m.Dest().StructValue().FieldByName(dataKey).Set(reflect.ValueOf(dv.Data))
 			}
 		} else {
 			rfl.StructValue().FieldByName(dataKey).Set(reflect.ValueOf(dv.Data))
