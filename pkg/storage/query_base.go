@@ -19,6 +19,11 @@ func (b *baseQuery) baseInit(s *Storage) {
 
 // || META DATA ||
 
+func (b *baseQuery) baseMDEngine() MDEngine {
+	return b.storage.cfg.mdEngine()
+
+}
+
 func (b *baseQuery) baseMDAdapter() Adapter {
 	return b.storage.adapter(EngineRoleMD)
 }
@@ -33,6 +38,10 @@ func (b *baseQuery) baseSetMDQuery(q MDBaseQuery) {
 
 // || OBJECT ||
 
+func (b *baseQuery) baseObjEngine() ObjectEngine {
+	return b.storage.cfg.objEngine()
+}
+
 func (b *baseQuery) baseObjAdapter() Adapter {
 	return b.storage.adapter(EngineRoleObject)
 }
@@ -46,6 +55,10 @@ func (b *baseQuery) baseSetObjQuery(q ObjectBaseQuery) {
 }
 
 // || CACHE ||
+
+func (b *baseQuery) baseCacheEngine() CacheEngine {
+	return b.storage.cfg.cacheEngine()
+}
 
 func (b *baseQuery) baseCacheAdapter() Adapter {
 	return b.storage.adapter(EngineRoleCache)

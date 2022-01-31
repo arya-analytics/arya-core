@@ -44,7 +44,7 @@ func (c *createQuery) Exec(ctx context.Context) error {
 
 func (c *createQuery) mdQuery() MDCreateQuery {
 	if c.baseMDQuery() == nil {
-		c.setMDQuery(c.storage.cfg.mdEngine().NewCreate(c.baseMDAdapter()))
+		c.setMDQuery(c.baseMDEngine().NewCreate(c.baseMDAdapter()))
 	}
 	return c.baseMDQuery().(MDCreateQuery)
 }
@@ -57,7 +57,7 @@ func (c *createQuery) setMDQuery(q MDCreateQuery) {
 
 func (c *createQuery) objQuery() ObjectCreateQuery {
 	if c.baseObjQuery() == nil {
-		c.setObjQuery(c.storage.cfg.objEngine().NewCreate(c.baseObjAdapter()))
+		c.setObjQuery(c.baseObjEngine().NewCreate(c.baseObjAdapter()))
 	}
 	return c.baseObjQuery().(ObjectCreateQuery)
 }

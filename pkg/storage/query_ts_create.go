@@ -40,7 +40,7 @@ func (tsc *tsCreateQuery) Exec(ctx context.Context) error {
 
 func (tsc *tsCreateQuery) cacheQuery() CacheTSCreateQuery {
 	if tsc.baseCacheQuery() == nil {
-		tsc.setCacheQuery(tsc.storage.cfg.cacheEngine().NewTSCreate(tsc.baseCacheAdapter()))
+		tsc.setCacheQuery(tsc.baseCacheEngine().NewTSCreate(tsc.baseCacheAdapter()))
 	}
 	return tsc.baseCacheQuery().(CacheTSCreateQuery)
 }

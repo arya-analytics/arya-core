@@ -56,7 +56,7 @@ func (r *retrieveQuery) Exec(ctx context.Context) error {
 
 func (r *retrieveQuery) mdQuery() MDRetrieveQuery {
 	if r.baseMDQuery() == nil {
-		r.setMDQuery(r.storage.cfg.mdEngine().NewRetrieve(r.baseMDAdapter()))
+		r.setMDQuery(r.baseMDEngine().NewRetrieve(r.baseMDAdapter()))
 	}
 	return r.baseMDQuery().(MDRetrieveQuery)
 }
@@ -69,7 +69,7 @@ func (r *retrieveQuery) setMDQuery(q MDRetrieveQuery) {
 
 func (r *retrieveQuery) objQuery() ObjectRetrieveQuery {
 	if r.baseObjQuery() == nil {
-		r.setObjQuery(r.storage.cfg.objEngine().NewRetrieve(r.baseObjAdapter()))
+		r.setObjQuery(r.baseObjEngine().NewRetrieve(r.baseObjAdapter()))
 	}
 	return r.baseObjQuery().(ObjectRetrieveQuery)
 }
