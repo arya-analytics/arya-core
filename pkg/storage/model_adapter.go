@@ -7,39 +7,7 @@ import (
 	"strings"
 )
 
-// |||| MODEL CATALOG ||||
-
-type ModelCatalog []interface{}
-
-func (mc ModelCatalog) New(sourcePtr interface{}) interface{} {
-	sourceRfl := model.NewReflect(sourcePtr)
-	destRfl, ok := mc.retrieveCM(sourceRfl.Type())
-	if !ok {
-		panic(fmt.Sprintf("model %s could not be found in catalog", sourceRfl.Type().Name()))
-	}
-	if sourceRfl.IsChain() {
-		return destRfl.NewChain().Pointer()
-	}
-	return destRfl.NewStruct().Pointer()
-}
-
-func (mc ModelCatalog) Contains(sourcePtr interface{}) bool {
-	_, ok := mc.retrieveCM(model.NewReflect(sourcePtr).Type())
-	return ok
-}
-
-func (mc ModelCatalog) retrieveCM(t reflect.Type) (*model.Reflect, bool) {
-	for _, destOpt := range mc {
-		destOptRfl := model.NewReflect(destOpt)
-		destOptRfl.Validate()
-		if strings.ToLower(t.Name()) == strings.ToLower(destOptRfl.Type().Name()) {
-			return destOptRfl, true
-		}
-	}
-	return nil, false
-}
-
-// |||| MODEL ADAPTER ||||
+// |||| ADAPTER ||||
 
 type ModelAdapter struct {
 	sourceRfl *model.Reflect
@@ -47,13 +15,11 @@ type ModelAdapter struct {
 }
 
 func NewModelAdapter(sourcePtr interface{}, destPtr interface{}) *ModelAdapter {
-	sourceRfl, destRfl := model.NewReflect(sourcePtr), model.NewReflect(destPtr)
-	sourceRfl.Validate()
-	destRfl.Validate()
-	if sourceRfl.RawType().Kind() != destRfl.RawType().Kind() {
+	sRfl, dRfl := model.NewReflect(sourcePtr), model.NewReflect(destPtr)
+	if sRfl.RawType().Kind() != dRfl.RawType().Kind() {
 		panic("model adapter received model and chain. source and dest have same kind.")
 	}
-	return &ModelAdapter{sourceRfl, destRfl}
+	return &ModelAdapter{sRfl, dRfl}
 }
 
 func (ma *ModelAdapter) Source() *model.Reflect {
@@ -112,8 +78,7 @@ func (mw *adaptedModel) bindVals(mv modelValues) {
 					panic("doesn't implement interface")
 				}
 			} else {
-				fldRfl := mw.newValidatedRfl(fld.Interface())
-				fldPtr := fldRfl.Pointer()
+				fldPtr := mw.newValidatedRfl(fld.Interface()).Pointer()
 				vPtr := mw.newValidatedRfl(rv).Pointer()
 				ma := NewModelAdapter(vPtr, fldPtr)
 				ma.ExchangeToDest()
@@ -131,7 +96,7 @@ func (mw *adaptedModel) bindVals(mv modelValues) {
 }
 
 func (mw *adaptedModel) newValidatedRfl(v interface{}) *model.Reflect {
-	rfl := model.NewReflect(v)
+	rfl := model.UnsafeUnvalidatedNewReflect(v)
 	// If v isn't a pointer, we need to create a pointer to it,
 	// so we can manipulate its values. This is always necessary with slice fields.
 	if !rfl.IsPointer() {
@@ -154,4 +119,35 @@ func (mw *adaptedModel) mapVals() modelValues {
 		mv[t.Name] = fv
 	}
 	return mv
+}
+
+// |||| CATALOG ||||
+
+type ModelCatalog []interface{}
+
+func (mc ModelCatalog) New(sourcePtr interface{}) interface{} {
+	sourceRfl := model.NewReflect(sourcePtr)
+	destRfl, ok := mc.retrieveCM(sourceRfl.Type())
+	if !ok {
+		panic(fmt.Sprintf("model %s could not be found in catalog", sourceRfl.Type().Name()))
+	}
+	if sourceRfl.IsChain() {
+		return destRfl.NewChain().Pointer()
+	}
+	return destRfl.NewStruct().Pointer()
+}
+
+func (mc ModelCatalog) Contains(sourcePtr interface{}) bool {
+	_, ok := mc.retrieveCM(model.NewReflect(sourcePtr).Type())
+	return ok
+}
+
+func (mc ModelCatalog) retrieveCM(t reflect.Type) (*model.Reflect, bool) {
+	for _, opt := range mc {
+		optRfl := model.NewReflect(opt)
+		if strings.EqualFold(t.Name(), optRfl.Type().Name()) {
+			return optRfl, true
+		}
+	}
+	return nil, false
 }

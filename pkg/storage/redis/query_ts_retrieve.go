@@ -2,7 +2,6 @@ package redis
 
 import (
 	"context"
-	"fmt"
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/storage/redis/timeseries"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
@@ -99,7 +98,7 @@ func validatePKProvided(v interface{}) error {
 	if (len(q.PKChain)) == 0 {
 		return storage.Error{
 			Type:    storage.ErrTypeInvalidArgs,
-			Message: fmt.Sprintf("no PK provided to ts retrieve query"),
+			Message: "no PK provided to ts retrieve query",
 		}
 	}
 	return nil

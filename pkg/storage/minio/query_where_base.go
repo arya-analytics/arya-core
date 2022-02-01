@@ -1,7 +1,6 @@
 package minio
 
 import (
-	"fmt"
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/validate"
@@ -37,7 +36,7 @@ func validatePKProvided(v interface{}) error {
 	q := v.(*whereBaseQuery)
 	if (len(q.PKs)) == 0 {
 		return storage.Error{Type: storage.ErrTypeInvalidArgs,
-			Message: fmt.Sprintf("no PK provided to where query")}
+			Message: "no PK provided to where query"}
 	}
 	return nil
 }

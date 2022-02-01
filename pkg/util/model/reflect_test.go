@@ -15,16 +15,16 @@ var _ = Describe("Reflect", func() {
 			Expect(model.NewReflect(&mock.ModelA{}).IsPointer()).To(BeTrue())
 		})
 		It("Should return false when the model is a pointer", func() {
-			Expect(model.NewReflect(mock.ModelA{}).IsPointer()).To(BeFalse())
+			Expect(model.UnsafeUnvalidatedNewReflect(mock.ModelA{}).IsPointer()).To(BeFalse())
 		})
 	})
 	Describe("Pointer Creation", func() {
 		It("Should create a new pointer for a non-pointer model", func() {
-			Expect(model.NewReflect(mock.ModelA{}).ToNewPointer().IsPointer()).To(BeTrue())
+			Expect(model.UnsafeUnvalidatedNewReflect(mock.ModelA{}).ToNewPointer().IsPointer()).To(BeTrue())
 		})
 		It("Should create the pointer to the correct underlying value", func() {
 			var baseVal []*mock.ModelA
-			baseRfl := model.NewReflect(baseVal)
+			baseRfl := model.UnsafeUnvalidatedNewReflect(baseVal)
 			Expect(baseRfl.ToNewPointer().RawValue().Interface()).To(Equal(baseVal))
 		})
 	})
@@ -225,21 +225,27 @@ var _ = Describe("Reflect", func() {
 	})
 	Describe("Errors + edge cases", func() {
 		It("Should panic when a non pointer is provided", func() {
-			Expect(model.NewReflect(mock.ModelA{ID: 22}).Validate).To(Panic())
+			Expect(func() {
+				model.NewReflect(mock.ModelA{ID: 22})
+			}).To(Panic())
 		})
 		It("Should panic when a non struct is provided", func() {
 			i := 11
-			Expect(model.NewReflect(&i).Validate).To(Panic())
+			Expect(func() {
+				model.NewReflect(&i)
+			}).To(Panic())
 		})
 		Context("nil pointer", func() {
-			It("Should not panic when initializing with a nil struct", func() {
-				refl := model.NewReflect((*mock.ModelA)(nil))
-				Expect(refl.Validate).To(Panic())
+			It("Should panic when initializing with a nil struct", func() {
+				Expect(func() {
+					model.NewReflect((*mock.ModelA)(nil))
+				}).To(Panic())
 			})
 			It("Shouldn't panic when initializing with a nil chain", func() {
 				var m []*mock.ModelA
-				refl := model.NewReflect(&m)
-				Expect(refl.Validate).ToNot(Panic())
+				Expect(func() {
+					model.NewReflect(&m)
+				}).ToNot(Panic())
 			})
 		})
 	})

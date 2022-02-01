@@ -304,10 +304,12 @@ var _ = Describe("Model Adapter", func() {
 					ma.ExchangeToDest()
 				})
 				It("Should return the correct source", func() {
-					Expect(ma.Source().Type()).To(Equal(model.NewReflect(&mock.ModelA{}).Type()))
+					Expect(ma.Source().Type()).To(Equal(model.NewReflect(&mock.ModelA{}).
+						Type()))
 				})
 				It("Should return the correct dest", func() {
-					Expect(ma.Dest().Type()).To(Equal(model.NewReflect(&mock.ModelB{}).Type()))
+					Expect(ma.Dest().Type()).To(Equal(model.NewReflect(&mock.ModelB{}).
+						Type()))
 				})
 			})
 			Context("Single model", func() {
@@ -329,10 +331,12 @@ var _ = Describe("Model Adapter", func() {
 					ma.ExchangeToDest()
 				})
 				It("Should return the correct source", func() {
-					Expect(ma.Source().Type()).To(Equal(model.NewReflect(&mock.ModelA{}).Type()))
+					Expect(ma.Source().Type()).To(Equal(model.NewReflect(&mock.
+						ModelA{}).Type()))
 				})
 				It("Should return the correct dest", func() {
-					Expect(ma.Dest().Type()).To(Equal(model.NewReflect(&mock.ModelB{}).Type()))
+					Expect(ma.Dest().Type()).To(Equal(model.NewReflect(&mock.ModelB{}).
+						Type()))
 				})
 			})
 		})

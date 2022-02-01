@@ -17,6 +17,12 @@ type Reflect struct {
 }
 
 func NewReflect(modelPtr interface{}) *Reflect {
+	r := UnsafeUnvalidatedNewReflect(modelPtr)
+	r.Validate()
+	return r
+}
+
+func UnsafeUnvalidatedNewReflect(modelPtr interface{}) *Reflect {
 	return &Reflect{
 		modelPtr: modelPtr,
 	}
@@ -70,7 +76,7 @@ func (r *Reflect) IsStruct() bool {
 // Panics if the reflection contains a chain.
 //
 // This operation would panic:
-// 		rChain := model.NewReflect(&[]*ExampleModel{})
+// 		rChain := model.UnsafeUnvalidatedNewReflect(&[]*ExampleModel{})
 // 		rChain.StructValue()
 func (r *Reflect) StructValue() reflect.Value {
 	r.panicIfChain()
@@ -93,7 +99,7 @@ func (r *Reflect) StructFieldByRole(role string) reflect.Value {
 // Panics if the reflection contains a struct.
 //
 // This operation would panic:
-// 		rStruct := model.NewReflect(&ExampleStruct{})
+// 		rStruct := model.UnsafeUnvalidatedNewReflect(&ExampleStruct{})
 //		rStruct.ChainValue()
 func (r *Reflect) ChainValue() reflect.Value {
 	r.panicIfStruct()
@@ -106,8 +112,8 @@ func (r *Reflect) ChainValue() reflect.Value {
 // Provided Reflect v must contain a struct.
 //
 // This operation would panic:
-// 		rStruct := model.NewReflect(&ExampleStruct{})
-//		rStructToAdd := model.NewReflect(&ExampleStruct{})
+// 		rStruct := model.UnsafeUnvalidatedNewReflect(&ExampleStruct{})
+//		rStructToAdd := model.UnsafeUnvalidatedNewReflect(&ExampleStruct{})
 //		rStruct.ChainAppend(rStructToAdd)
 func (r *Reflect) ChainAppend(v *Reflect) {
 	r.panicIfStruct()
@@ -220,7 +226,7 @@ func (r *Reflect) PKChain() PKChain {
 
 // PointerType returns the reflect.Type of the pointer to the underlying model.
 // NOTE: the reflect.Kind might not be reflect.Ptr
-// if a pointer wasn't provided when calling NewReflect.
+// if a pointer wasn't provided when calling UnsafeUnvalidatedNewReflect.
 func (r *Reflect) PointerType() reflect.Type {
 	return reflect.TypeOf(r.modelPtr)
 }
