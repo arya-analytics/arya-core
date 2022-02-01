@@ -10,11 +10,11 @@ import (
 // |||| ADAPTER ||||
 
 type ModelAdapter struct {
-	sourceRfl *model.Reflect
-	destRfl   *model.Reflect
+	Source *model.Reflect
+	Dest   *model.Reflect
 }
 
-func NewModelAdapter(sourcePtr interface{}, destPtr interface{}) *ModelAdapter {
+func NewModelAdapter(sourcePtr, destPtr interface{}) *ModelAdapter {
 	sRfl, dRfl := model.NewReflect(sourcePtr), model.NewReflect(destPtr)
 	if sRfl.RawType().Kind() != dRfl.RawType().Kind() {
 		panic("model adapter received model and chain. source and dest have same kind.")
@@ -22,20 +22,12 @@ func NewModelAdapter(sourcePtr interface{}, destPtr interface{}) *ModelAdapter {
 	return &ModelAdapter{sRfl, dRfl}
 }
 
-func (ma *ModelAdapter) Source() *model.Reflect {
-	return ma.sourceRfl
-}
-
-func (ma *ModelAdapter) Dest() *model.Reflect {
-	return ma.destRfl
-}
-
 func (ma *ModelAdapter) ExchangeToSource() {
-	ma.exchange(ma.Source(), ma.Dest())
+	ma.exchange(ma.Source, ma.Dest)
 }
 
 func (ma *ModelAdapter) ExchangeToDest() {
-	ma.exchange(ma.Dest(), ma.Source())
+	ma.exchange(ma.Dest, ma.Source)
 }
 
 func (ma *ModelAdapter) exchange(to, from *model.Reflect) {
@@ -98,19 +90,17 @@ func bindToSource(sourceRfl, destRfl *model.Reflect) {
 	}
 }
 
-func adaptNestedModel(fld reflect.Value, modelValue reflect.Value) (rv reflect.Value) {
+func adaptNestedModel(fld, modelValue reflect.Value) reflect.Value {
 	fldPtr := newValidatedRfl(fld.Interface()).Pointer()
 	vPtr := newValidatedRfl(modelValue.Interface()).Pointer()
 	ma := NewModelAdapter(vPtr, fldPtr)
 	ma.ExchangeToDest()
 	// If our model is a chain (i.e a slice),
 	// we want to get the slice itself, not the pointer to the slice.
-	if ma.Dest().IsChain() {
-		rv = ma.Dest().RawValue()
-	} else {
-		rv = ma.Dest().PointerValue()
+	if ma.Dest.IsChain() {
+		return ma.Dest.RawValue()
 	}
-	return rv
+	return ma.Dest.PointerValue()
 }
 
 func newValidatedRfl(v interface{}) *model.Reflect {

@@ -17,7 +17,7 @@ func (b *baseQuery) baseInit() {
 
 func (b *baseQuery) baseModel(m interface{}) *model.Reflect {
 	b.modelAdapter = storage.NewModelAdapter(m, catalog().New(m))
-	return b.modelAdapter.Dest()
+	return b.modelAdapter.Dest
 }
 
 func (b *baseQuery) baseAdaptToSource() {

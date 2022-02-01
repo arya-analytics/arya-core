@@ -304,11 +304,11 @@ var _ = Describe("Model Adapter", func() {
 					ma.ExchangeToDest()
 				})
 				It("Should return the correct source", func() {
-					Expect(ma.Source().Type()).To(Equal(model.NewReflect(&mock.ModelA{}).
+					Expect(ma.Source.Type()).To(Equal(model.NewReflect(&mock.ModelA{}).
 						Type()))
 				})
 				It("Should return the correct dest", func() {
-					Expect(ma.Dest().Type()).To(Equal(model.NewReflect(&mock.ModelB{}).
+					Expect(ma.Dest.Type()).To(Equal(model.NewReflect(&mock.ModelB{}).
 						Type()))
 				})
 			})
@@ -331,11 +331,11 @@ var _ = Describe("Model Adapter", func() {
 					ma.ExchangeToDest()
 				})
 				It("Should return the correct source", func() {
-					Expect(ma.Source().Type()).To(Equal(model.NewReflect(&mock.
-						ModelA{}).Type()))
+					Expect(ma.Source.Type()).To(Equal(model.NewReflect(&mock.
+					ModelA{}).Type()))
 				})
 				It("Should return the correct dest", func() {
-					Expect(ma.Dest().Type()).To(Equal(model.NewReflect(&mock.ModelB{}).
+					Expect(ma.Dest.Type()).To(Equal(model.NewReflect(&mock.ModelB{}).
 						Type()))
 				})
 			})

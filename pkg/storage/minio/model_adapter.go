@@ -27,12 +27,12 @@ func newWrappedModelAdapter(sma *storage.ModelAdapter) *modelAdapter {
 }
 
 func (m *modelAdapter) Bucket() string {
-	return caseconv.PascalToKebab(m.Dest().Type().Name())
+	return caseconv.PascalToKebab(m.Dest.Type().Name())
 }
 
 func (m *modelAdapter) DataVals() dataValueChain {
 	var c dataValueChain
-	m.Dest().ForEach(func(rfl *model.Reflect, i int) {
+	m.Dest.ForEach(func(rfl *model.Reflect, i int) {
 		val := rfl.StructValue()
 		data := val.FieldByName(dataKey)
 		c = append(c, &dataValue{
@@ -45,19 +45,19 @@ func (m *modelAdapter) DataVals() dataValueChain {
 
 func (m *modelAdapter) BindDataVals(dvc dataValueChain) {
 	for _, dv := range dvc {
-		rfl, ok := m.Dest().ValueByPK(dv.PK)
+		rfl, ok := m.Dest.ValueByPK(dv.PK)
 		if !ok {
-			if m.Dest().IsChain() {
-				newRfl := m.Dest().NewStruct()
+			if m.Dest.IsChain() {
+				newRfl := m.Dest.NewStruct()
 				newRfl.StructValue().FieldByName(dataKey).Set(reflect.ValueOf(dv.Data))
 				newRfl.StructValue().FieldByName("ID").Set(dv.PK.Value())
-				m.Dest().ChainAppend(newRfl)
+				m.Dest.ChainAppend(newRfl)
 			} else {
-				if !m.Dest().PKField().IsZero() {
+				if !m.Dest.PKField().IsZero() {
 					panic("object store meta data mismatch")
 				}
-				m.Dest().StructValue().FieldByName("ID").Set(dv.PK.Value())
-				m.Dest().StructValue().FieldByName(dataKey).Set(reflect.ValueOf(dv.Data))
+				m.Dest.StructValue().FieldByName("ID").Set(dv.PK.Value())
+				m.Dest.StructValue().FieldByName(dataKey).Set(reflect.ValueOf(dv.Data))
 			}
 		} else {
 			rfl.StructValue().FieldByName(dataKey).Set(reflect.ValueOf(dv.Data))
