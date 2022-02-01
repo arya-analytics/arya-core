@@ -61,7 +61,7 @@ type adaptedModel struct {
 	rfl *model.Reflect
 }
 
-type modelValues map[string]interface{}
+// || BINDING ||
 
 // bindVals binds a set of modelValues to the adaptedModel fields.
 // Returns an error for invalid / non-existent keys and invalid types.
@@ -69,30 +69,34 @@ func (mw *adaptedModel) bindVals(mv modelValues) {
 	for key, rv := range mv {
 		fld := mw.rfl.StructValue().FieldByName(key)
 		v := reflect.ValueOf(rv)
-		if !v.IsValid() || v.IsZero() || !fld.IsValid() {
+		if !mw.validField(fld) || !mw.validValue(v) {
 			continue
 		}
 		if v.Type() != fld.Type() {
-			if fld.Type().Kind() == reflect.Interface {
-				if impl := v.Type().Implements(fld.Type()); !impl {
-					panic("doesn't implement interface")
-				}
-			} else {
-				fldPtr := mw.newValidatedRfl(fld.Interface()).Pointer()
-				vPtr := mw.newValidatedRfl(rv).Pointer()
-				ma := NewModelAdapter(vPtr, fldPtr)
-				ma.ExchangeToDest()
-				// If our model is a chain (i.e a slice),
-				// we want to get the slice itself, not the pointer to the slice.
-				if ma.Dest().IsChain() {
-					v = ma.Dest().RawValue()
-				} else {
-					v = ma.Dest().PointerValue()
-				}
+			if fld.Type().Kind() != reflect.Interface {
+				v = mw.adaptNested(fld, v)
+			} else if !v.Type().Implements(fld.Type()) {
+				panic("doesn't implement interface")
 			}
 		}
 		fld.Set(v)
 	}
+}
+
+func (mw *adaptedModel) adaptNested(fld reflect.Value,
+	modelValue reflect.Value) (rv reflect.Value) {
+	fldPtr := mw.newValidatedRfl(fld.Interface()).Pointer()
+	vPtr := mw.newValidatedRfl(modelValue.Interface()).Pointer()
+	ma := NewModelAdapter(vPtr, fldPtr)
+	ma.ExchangeToDest()
+	// If our model is a chain (i.e a slice),
+	// we want to get the slice itself, not the pointer to the slice.
+	if ma.Dest().IsChain() {
+		rv = ma.Dest().RawValue()
+	} else {
+		rv = ma.Dest().PointerValue()
+	}
+	return rv
 }
 
 func (mw *adaptedModel) newValidatedRfl(v interface{}) *model.Reflect {
@@ -110,6 +114,18 @@ func (mw *adaptedModel) newValidatedRfl(v interface{}) *model.Reflect {
 	rfl.Validate()
 	return rfl
 }
+
+func (mw *adaptedModel) validField(fld reflect.Value) bool {
+	return fld.IsValid()
+}
+
+func (mw *adaptedModel) validValue(val reflect.Value) bool {
+	return val.IsValid() && !val.IsZero()
+}
+
+// || MAPPING ||
+
+type modelValues map[string]interface{}
 
 // mapVals maps adaptedModel fields to modelValues.
 func (mw *adaptedModel) mapVals() modelValues {

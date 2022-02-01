@@ -125,19 +125,29 @@ var _ = Describe("Reflect", func() {
 		})
 	})
 	Context("Multiple Models", func() {
-		var m = []*mock.ModelA{
-			{
-				ID: 22,
-			},
-			{
-				ID: 43,
-			},
-		}
-		var mBaseType = reflect.TypeOf(m)
-		var mType = reflect.TypeOf(&m)
-		var mSingleBaseType = reflect.TypeOf(mock.ModelA{})
-		var mSingleType = reflect.TypeOf(&mock.ModelA{})
-		var rfl = model.NewReflect(&m)
+		var (
+			m               []*mock.ModelA
+			mBaseType       reflect.Type
+			mType           reflect.Type
+			mSingleBaseType reflect.Type
+			mSingleType     reflect.Type
+			rfl             *model.Reflect
+		)
+		BeforeEach(func() {
+			m = []*mock.ModelA{
+				{
+					ID: 22,
+				},
+				{
+					ID: 43,
+				},
+			}
+			mBaseType = reflect.TypeOf(m)
+			mType = reflect.TypeOf(&m)
+			mSingleBaseType = reflect.TypeOf(mock.ModelA{})
+			mSingleType = reflect.TypeOf(&mock.ModelA{})
+			rfl = model.NewReflect(&m)
+		})
 		It("Should pass validation without panicking", func() {
 			Expect(rfl.Validate).ToNot(Panic())
 		})
@@ -156,7 +166,11 @@ var _ = Describe("Reflect", func() {
 		It("Should return the correct model value by index", func() {
 			Expect(rfl.ChainValueByIndex(0).PointerType()).To(Equal(mSingleType))
 			Expect(rfl.ChainValueByIndex(0).Type()).To(Equal(mSingleBaseType))
-			Expect(rfl.ChainValueByIndex(0).Pointer()).To(Equal(m[0]))
+			Expect(rfl.ChainValueByIndexOrNew(0).Pointer()).To(Equal(m[0]))
+		})
+		It("Should create a new reflect if the index exceeds the chain value", func() {
+			Expect(rfl.ChainValueByIndexOrNew(rfl.ChainValue().Len()).Type()).To(
+				Equal(mSingleBaseType))
 		})
 		It("Should return a slice for the base value", func() {
 			Expect(rfl.RawValue().Interface()).To(Equal(m))

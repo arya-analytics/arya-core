@@ -126,6 +126,20 @@ func (r *Reflect) ChainValueByIndex(i int) *Reflect {
 	return NewReflect(r.ChainValue().Index(i).Interface())
 }
 
+// ChainValueByIndexOrNew retrieves Reflect from the model chain by index.
+// If the index requested exceeds the length of the chain value,
+// creates new Reflect and appends it to chain value before returning.
+func (r *Reflect) ChainValueByIndexOrNew(i int) *Reflect {
+	diff := i - r.ChainValue().Len()
+	if diff < 0 {
+		return r.ChainValueByIndex(i)
+	} else {
+		rfl := r.NewStruct()
+		r.ChainAppend(rfl)
+		return rfl
+	}
+}
+
 // || FINDING VALUES ||
 
 // ValueByPK retrieves Reflect by its pk value. If Reflect contains a chain, searches
@@ -146,7 +160,7 @@ func (r *Reflect) ValueByPK(pk PK) (retRfl *Reflect, ok bool) {
 
 // || ITERATION UTILITIES ||
 
-const structIndex = -1
+const forEachIfStructIndex = -1
 
 // ForEach iterates through each model struct in Reflect and calls the provided
 // function. The function receives the model Reflect as well as its index.
@@ -154,7 +168,7 @@ const structIndex = -1
 // internally.
 func (r *Reflect) ForEach(fef func(rfl *Reflect, i int)) {
 	if r.IsStruct() {
-		fef(r, structIndex)
+		fef(r, forEachIfStructIndex)
 	} else {
 		for i := 0; i < r.ChainValue().Len(); i++ {
 			rfl := r.ChainValueByIndex(i)
