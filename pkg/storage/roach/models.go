@@ -27,21 +27,21 @@ func catalog() storage.ModelCatalog {
 
 type Node struct {
 	// Select key MUST match nodesGossip table in migrations file.
-	bun.BaseModel `bun:"select:nodes_gossip,table:nodes"`
+	bun.BaseModel `bun:"select:nodes_gossip,table:nodes" model:"role:pk"`
 	ID            int `bun:",pk"`
 	GossipNode
 	GossipLiveness
 }
 
 type Range struct {
-	ID                uuid.UUID `bun:"type:UUID,pk"`
+	ID                uuid.UUID `bun:"type:UUID,pk" model:"role:pk,"`
 	LeaseHolderNodeID int
 	LeaseHolderNode   int
 	ReplicaNodes      []*Node `bun:"m2m:range_replica_to_nodes,join:Range=Node"`
 }
 
 type rangeReplicaToNode struct {
-	ID      uuid.UUID `bun:"type:UUID,pk"`
+	ID      uuid.UUID `bun:"type:UUID,pk" model:"role:pk,"`
 	RangeID uuid.UUID `bun:"type:UUID,"`
 	Range   *Range    `bun:"rel:belongs-to,join:range_id=id"`
 	NodeID  int
@@ -49,14 +49,14 @@ type rangeReplicaToNode struct {
 }
 
 type ChannelConfig struct {
-	ID     uuid.UUID `bun:"type:UUID,pk"`
+	ID     uuid.UUID `bun:"type:UUID,pk" model:"role:pk,"`
 	Name   string
 	NodeID int
 	Node   *Node `bun:"rel:belongs-to,join:node_id=id,scanonly"`
 }
 
 type ChannelChunk struct {
-	ID              uuid.UUID      `bun:"type:UUID,pk"`
+	ID              uuid.UUID      `bun:"type:UUID,pk" model:"role:pk,"`
 	RangeID         uuid.UUID      `bun:"type:UUID,"`
 	Range           *Range         `bun:"rel:belongs-to,join:range_id=id"`
 	ChannelConfigID uuid.UUID      `bun:"type:UUID,"`
