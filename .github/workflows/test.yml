@@ -10,7 +10,7 @@ jobs:
         ports:
           - 6379:6379
       minio:
-        image: quay.io/minio/minio
+        image: mosuka/minio:latest
         run: server --console-address ":9001" /data
         ports:
           - "9000:9000"
