@@ -42,6 +42,11 @@ package storage
 // If an unexpected error is encountered,
 // will return a storage.Error with an ErrTypeUnknown. Error.Base
 // can be used to access the original error.
+//
+// Implementing a new Engine
+//
+// If you're working on modifying or implementing a new Engine,
+// see Engine and its sub-interfaces.
 type Storage struct {
 	cfg    Config
 	pooler *pooler

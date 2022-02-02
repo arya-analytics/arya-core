@@ -6,6 +6,7 @@ import (
 	"github.com/uptrace/bun"
 )
 
+// createQuery implements storage.MDCreateQuery.
 type createQuery struct {
 	baseQuery
 	q *bun.InsertQuery
@@ -17,6 +18,7 @@ func newCreate(db *bun.DB) *createQuery {
 	return r
 }
 
+// Model implements storage.MDCreateQuery.
 func (c *createQuery) Model(m interface{}) storage.MDCreateQuery {
 	rm := c.baseModel(m)
 	c.baseAdaptToDest()
@@ -28,6 +30,7 @@ func (c *createQuery) Model(m interface{}) storage.MDCreateQuery {
 	return c
 }
 
+// Exec implements storage.MDCreateQuery.
 func (c *createQuery) Exec(ctx context.Context) error {
 	c.catcher.Exec(func() error {
 		_, err := c.q.Exec(ctx)

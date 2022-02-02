@@ -71,6 +71,7 @@ require (
 	github.com/huandu/xstrings v1.3.2 // indirect
 	github.com/imdario/mergo v0.3.12 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
+	github.com/jgautheron/goconst v1.5.1 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jmoiron/sqlx v1.3.1 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
