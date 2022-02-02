@@ -6,7 +6,7 @@ import (
 
 // RetrieveQuery retrieves a model or set of models depending on the parameters passed.
 // RetrieveQuery requires that WherePK or WherePKs is called,
-//and will panic upon RetrieveQuery.Exec if it is not.
+// and will panic upon RetrieveQuery.Exec if it is not.
 //
 // RetrieveQuery should not be instantiated directly,
 // and should instead be opened using Storage.NewRetrieve().
