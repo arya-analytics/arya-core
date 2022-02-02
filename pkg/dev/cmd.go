@@ -16,6 +16,7 @@ var Cmd = &cli.Command{
 		toolingCmd,
 		reloaderCmd,
 		loginCmd,
+		dockerCmd,
 	},
 }
 
@@ -172,5 +173,21 @@ var loginCmd = &cli.Command{
 	Usage: "Login to Github and register credentials in config",
 	Action: func(c *cli.Context) error {
 		return Login(c.Args().Get(0))
+	},
+}
+
+// || DOCKER CLI ||
+
+var dockerCmd = &cli.Command{
+	Name:  "docker",
+	Usage: "Operate development docker containers",
+	Subcommands: []*cli.Command{
+		{
+			Name:  "start",
+			Usage: "Starts the docker dev environment",
+			Action: func(c *cli.Context) error {
+				return StartDockerCompose()
+			},
+		},
 	},
 }
