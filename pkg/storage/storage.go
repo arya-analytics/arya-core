@@ -1,3 +1,12 @@
+// Package storage provides an interface for interacting with a set of data stores.
+// The package relies on a set of dependency injected storage engines to read
+// and write data to.
+//
+// Storage engines can fulfill one of three roles:
+//		EngineRoleMD
+//
+//
+//
 package storage
 
 // |||| STORAGE ||||
@@ -49,27 +58,14 @@ func (s *Storage) NewTSCreate() *TSCreateQuery {
 	return newTSCreate(s)
 }
 
-func (s *Storage) adapter(r EngineRole) (a Adapter) {
-	e := s.cfg.retrieve(r)
+func (s *Storage) adapter(e BaseEngine) (a Adapter) {
 	return s.pooler.retrieve(e)
 }
 
 // |||| CONFIG ||||
 
-type Config map[EngineRole]BaseEngine
-
-func (ec Config) retrieve(r EngineRole) BaseEngine {
-	return ec[r]
-}
-
-func (ec Config) mdEngine() MDEngine {
-	return ec.retrieve(EngineRoleMD).(MDEngine)
-}
-
-func (ec Config) objEngine() ObjectEngine {
-	return ec.retrieve(EngineRoleObject).(ObjectEngine)
-}
-
-func (ec Config) cacheEngine() CacheEngine {
-	return ec.retrieve(EngineRoleCache).(CacheEngine)
+type Config struct {
+	MDEngine     MDEngine
+	ObjectEngine ObjectEngine
+	CacheEngine  CacheEngine
 }

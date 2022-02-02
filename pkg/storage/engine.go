@@ -9,14 +9,6 @@ type Adapter interface {
 	ID() uuid.UUID
 }
 
-type EngineRole int
-
-const (
-	EngineRoleMD = iota
-	EngineRoleObject
-	EngineRoleCache
-)
-
 // |||| ENGINE ||||
 
 type BaseEngine interface {

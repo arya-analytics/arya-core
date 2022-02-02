@@ -30,12 +30,12 @@ func (b *baseQuery) baseBindModel(m interface{}) {
 // || META DATA ||
 
 func (b *baseQuery) baseMDEngine() MDEngine {
-	return b.storage.cfg.mdEngine()
+	return b.storage.cfg.MDEngine
 
 }
 
 func (b *baseQuery) baseMDAdapter() Adapter {
-	return b.storage.adapter(EngineRoleMD)
+	return b.storage.adapter(b.baseMDEngine())
 }
 
 func (b *baseQuery) baseMDQuery() MDBaseQuery {
@@ -49,11 +49,11 @@ func (b *baseQuery) baseSetMDQuery(q MDBaseQuery) {
 // || OBJECT ||
 
 func (b *baseQuery) baseObjEngine() ObjectEngine {
-	return b.storage.cfg.objEngine()
+	return b.storage.cfg.ObjectEngine
 }
 
 func (b *baseQuery) baseObjAdapter() Adapter {
-	return b.storage.adapter(EngineRoleObject)
+	return b.storage.adapter(b.baseObjEngine())
 }
 
 func (b *baseQuery) baseObjQuery() ObjectBaseQuery {
@@ -67,11 +67,11 @@ func (b *baseQuery) baseSetObjQuery(q ObjectBaseQuery) {
 // || CACHE ||
 
 func (b *baseQuery) baseCacheEngine() CacheEngine {
-	return b.storage.cfg.cacheEngine()
+	return b.storage.cfg.CacheEngine
 }
 
 func (b *baseQuery) baseCacheAdapter() Adapter {
-	return b.storage.adapter(EngineRoleCache)
+	return b.storage.adapter(b.baseCacheEngine())
 }
 
 func (b *baseQuery) baseCacheQuery() CacheBaseQuery {
