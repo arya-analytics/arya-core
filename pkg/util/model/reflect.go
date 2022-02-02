@@ -12,78 +12,93 @@ const (
 	pkRole  = "pk"
 )
 
+// Reflect wraps a model object and provides utilities for accessing and manipulating
+// its values. A model object is either a pointer to a struct or pointer to a slice of
+// structs.  Reflect is optimal for use cases involving working with arbitrary struct
+// types. It shouldn't be used in cases where only one struct type is involved.
+// Instantiate Reflect by calling NewReflect.
+// Avoid calling UnsafeNewReflect or instantiating Reflect directly,
+// as this bypasses validation checks we execute for runtime security purposes.
 type Reflect struct {
-	modelPtr interface{}
+	modelObj interface{}
 }
 
+// NewReflect initializes, validates and returns a new model Reflect.
+// Expects a pointer to a struct or a pointer to a slice of structs.
+// Will panic if it does not receive these.
 func NewReflect(modelPtr interface{}) *Reflect {
-	r := UnsafeUnvalidatedNewReflect(modelPtr)
+	r := UnsafeNewReflect(modelPtr)
 	r.Validate()
 	return r
 }
 
-func UnsafeUnvalidatedNewReflect(modelPtr interface{}) *Reflect {
-	return &Reflect{
-		modelPtr: modelPtr,
-	}
+// UnsafeNewReflect initializes and returns an unvalidated model
+// Reflect. If you don't have a good reason to do this, don't.
+// The main reason for bypassing validation is to construct a pointer from a
+// provided value - see Reflect.ToNewPointer.
+func UnsafeNewReflect(modelPtr interface{}) *Reflect {
+	return &Reflect{modelObj: modelPtr}
 }
 
+// Validate runs validation checks against the Reflect.
+// Checks that the model object is either a model or a chain.
+// Panics if it isn't either of those.
 func (r *Reflect) Validate() {
 	if err := validator.Exec(r); err != nil {
 		panic(err)
 	}
 }
 
-// IsPointer returns true if the value provided to Reflect is a pointer to an
-// underlying model.
+// IsPointer returns true if the model object is a pointer to an
+// object.
 func (r *Reflect) IsPointer() bool {
 	return r.PointerType().Kind() == reflect.Ptr
 }
 
-// Pointer returns the pointer to the underlying model in Reflect.
+// Pointer returns the pointer to the Reflect model object.
 func (r *Reflect) Pointer() interface{} {
-	return r.modelPtr
+	return r.modelObj
 }
 
 // || TYPE CHECKING ||
 
-// Type returns the 'model' type i.e. the actual type of the Model Struct.
+// Type returns the model object's type i.e. the actual type of the model struct.
 func (r *Reflect) Type() reflect.Type {
 	if r.IsChain() {
-		/* base type is the slice
+		/* raw type is the slice
 		first elem is pointer to struct
 		second elem is struct */
 		return r.RawType().Elem().Elem()
 	}
-	/* base type is pointer to struct
+	/* raw type is pointer to struct
 	first elem is struct */
 	return r.RawType()
 }
 
-// IsChain Returns true if the reflection contains a chain of model structs.
+// IsChain Returns true if the model object's type is chain.
 func (r *Reflect) IsChain() bool {
 	return r.RawType().Kind() == reflect.Slice
 }
 
-// IsStruct Returns true if the reflection contains a single model struct.
+// IsStruct Returns true if the model object's type is a single struct.
 func (r *Reflect) IsStruct() bool {
 	return r.RawType().Kind() == reflect.Struct
 }
 
 // || STRUCT METHODS ||
 
-// StructValue returns the value of the Reflect model struct.
-// Panics if the reflection contains a chain.
+// StructValue returns the value of the model object.
+// Panics if the model object is a chain.
 //
 // This operation would panic:
-// 		rChain := model.UnsafeUnvalidatedNewReflect(&[]*ExampleModel{})
+// 		rChain := model.NewReflect(&[]*ExampleModel{})
 // 		rChain.StructValue()
 func (r *Reflect) StructValue() reflect.Value {
 	r.panicIfChain()
 	return r.PointerValue().Elem()
 }
 
-// StructFieldByRole retrieves the field from the Reflect model struct by its role.
+// StructFieldByRole retrieves the field from the model object by its role.
 // Panics if the field can't be found.
 func (r *Reflect) StructFieldByRole(role string) reflect.Value {
 	tag, ok := r.StructTagChain().Retrieve(tagCat, roleKey, role)
@@ -95,38 +110,39 @@ func (r *Reflect) StructFieldByRole(role string) reflect.Value {
 
 // || CHAIN METHODS ||
 
-// ChainValue returns the value of the Reflect model chain.
-// Panics if the reflection contains a struct.
+// ChainValue returns the value of the value of the model object.
+// Panics if the model object is a struct.
 //
 // This operation would panic:
-// 		rStruct := model.UnsafeUnvalidatedNewReflect(&ExampleStruct{})
+// 		rStruct := model.UnsafeNewReflect(&ExampleStruct{})
 //		rStruct.ChainValue()
 func (r *Reflect) ChainValue() reflect.Value {
 	r.panicIfStruct()
 	return r.RawValue()
 }
 
-// ChainAppend appends another Reflect to the model chain.
-// Panics if the reflection is a struct.
+// ChainAppend appends another Reflect to the model object.
+// Panics if the model object is a struct.
 //
-// Provided Reflect v must contain a struct.
+// Panics if Reflect to append rta is a chain.
 //
 // This operation would panic:
-// 		rStruct := model.UnsafeUnvalidatedNewReflect(&ExampleStruct{})
-//		rStructToAdd := model.UnsafeUnvalidatedNewReflect(&ExampleStruct{})
+// 		rStruct := model.UnsafeNewReflect(&ExampleStruct{})
+//		rStructToAdd := model.UnsafeNewReflect(&ExampleStruct{})
 //		rStruct.ChainAppend(rStructToAdd)
-func (r *Reflect) ChainAppend(v *Reflect) {
+func (r *Reflect) ChainAppend(rta *Reflect) {
+	rta.panicIfStruct()
 	r.panicIfStruct()
-	r.ChainValue().Set(reflect.Append(r.ChainValue(), v.PointerValue()))
+	r.ChainValue().Set(reflect.Append(r.ChainValue(), rta.PointerValue()))
 }
 
-// ChainValueByIndex retrieves Reflect from the model chain by index.
-// Panics if the reflection is a struct.
+// ChainValueByIndex retrieves Reflect from the model objet by index.
+// Panics if the model object is a struct.
 func (r *Reflect) ChainValueByIndex(i int) *Reflect {
 	return NewReflect(r.ChainValue().Index(i).Interface())
 }
 
-// ChainValueByIndexOrNew retrieves Reflect from the model chain by index.
+// ChainValueByIndexOrNew retrieves Reflect from the model object by index.
 // If the index requested exceeds the length of the chain value,
 // creates new Reflect and appends it to chain value before returning.
 func (r *Reflect) ChainValueByIndexOrNew(i int) *Reflect {
@@ -142,9 +158,9 @@ func (r *Reflect) ChainValueByIndexOrNew(i int) *Reflect {
 
 // || FINDING VALUES ||
 
-// ValueByPK retrieves Reflect by its pk value. If Reflect contains a chain, searches
-// the chain for the PK, and returns ok=false if it can't be found.
-// If Reflect contains a struct, returns the struct if the PK matches. If not,
+// ValueByPK retrieves Reflect by its pk value. If Reflect model object is chain,
+// searches the chain for the PK, and returns ok=false if it can't be found.
+// If Reflect model object is struct, returns the struct if the PK matches. If it isn't,
 // returns ok=false.
 func (r *Reflect) ValueByPK(pk PK) (retRfl *Reflect, ok bool) {
 	r.ForEach(func(rfl *Reflect, i int) {
@@ -162,10 +178,9 @@ func (r *Reflect) ValueByPK(pk PK) (retRfl *Reflect, ok bool) {
 
 const forEachIfStructIndex = -1
 
-// ForEach iterates through each model struct in Reflect and calls the provided
+// ForEach iterates through the model object in Reflect and calls the provided
 // function. The function receives the model Reflect as well as its index.
-// NOTE: The index provided to the ForEachFunc is -1 if the Reflect contains a struct
-// internally.
+// NOTE: The index provided to the ForEachFunc is -1 if the Reflect model object is struct.
 func (r *Reflect) ForEach(fef func(rfl *Reflect, i int)) {
 	if r.IsStruct() {
 		fef(r, forEachIfStructIndex)
@@ -179,7 +194,7 @@ func (r *Reflect) ForEach(fef func(rfl *Reflect, i int)) {
 
 // || CONSTRUCTOR ||
 
-// NewRaw creates new Reflect with the same RawType as source Reflect.
+// NewRaw creates new Reflect with the same RawType as the model object.
 func (r *Reflect) NewRaw() *Reflect {
 	if r.IsChain() {
 		return r.NewChain()
@@ -187,12 +202,12 @@ func (r *Reflect) NewRaw() *Reflect {
 	return r.NewStruct()
 }
 
-// NewStruct creates new Reflect with an internal struct.
+// NewStruct creates new Reflect with a struct model object.
 func (r *Reflect) NewStruct() *Reflect {
 	return NewReflect(reflect.New(r.Type()).Interface())
 }
 
-// NewChain creates new Reflect with an internal chain.
+// NewChain creates new Reflect with an chain model object.
 func (r *Reflect) NewChain() *Reflect {
 	ns := reflect.MakeSlice(reflect.SliceOf(r.NewStruct().PointerType()), 0, 0)
 	p := reflect.New(ns.Type())
@@ -200,11 +215,12 @@ func (r *Reflect) NewChain() *Reflect {
 	return NewReflect(p.Interface())
 }
 
-// ToNewPointer takes the Reflect, creates a pointer to it,
-// and creates new Reflect to the pointer.
-// Very useful for turning a struct or chain into a pointer to a struct or chain.
+// ToNewPointer takes the Reflect model object, creates a pointer to it,
+// and creates new Reflect to the created pointer.
+// Very useful for turning a struct or slice into a pointer to a struct or slice.
 // It's important to validate that the reflection is not a pointer before calling this
 // method, as to avoid creating pointers to pointers.
+// Call this method with caution.
 func (r *Reflect) ToNewPointer() *Reflect {
 	p := reflect.New(r.PointerType())
 	p.Elem().Set(r.PointerValue())
@@ -213,21 +229,22 @@ func (r *Reflect) ToNewPointer() *Reflect {
 
 // || PK ||
 
-// PKField returns the primary key field of the model (ie assigned role:pk).
-// Panics if the field does not exist, or if the Reflect is a struct.
+// PKField returns the primary key field of the model object (ie assigned role:pk).
+// Panics if the field does not exist, or if the Reflect model object is a chain.
 func (r *Reflect) PKField() reflect.Value {
 	return r.StructFieldByRole(pkRole)
 }
 
 // PK returns new PK representing the primary key of the model.
-// Panics if the field does not exist, or if the Reflect is a struct.
+// Panics if the field does not exist, or if the Reflect model object is a chain.
 func (r *Reflect) PK() PK {
 	return NewPK(r.PKField().Interface())
 }
 
-// PKChain returns all PKS in the Reflect. If the Reflect contains a chain,
-// returns all PKChain of the models in the chain. If Reflect contains a struct,
-// returns a slice with length 1 containing the structs PK.
+// PKChain returns all PKS in the Reflect model object.
+// If the Reflect model object is a chain, returns all PK of the models in the chain.
+// If Reflect model object is a struct, returns a PKChain ith length 1 containing the
+// structs PK.
 func (r *Reflect) PKChain() PKChain {
 	var pks PKChain
 	r.ForEach(func(rfl *Reflect, i int) {
@@ -238,28 +255,34 @@ func (r *Reflect) PKChain() PKChain {
 
 // || TYPE + VALUE ACCESSORS ||
 
-// PointerType returns the reflect.Type of the pointer to the underlying model.
+// PointerType returns the type of the pointer to the model object.
 // NOTE: the reflect.Kind might not be reflect.Ptr
-// if a pointer wasn't provided when calling UnsafeUnvalidatedNewReflect.
+// if a pointer wasn't provided when calling UnsafeNewReflect.
 func (r *Reflect) PointerType() reflect.Type {
-	return reflect.TypeOf(r.modelPtr)
+	return reflect.TypeOf(r.modelObj)
 }
 
-// PointerValue returns the reflect.Value of the pointer to the underlying model.
+// PointerValue returns the reflect.Value of the pointer to the model object.
 func (r *Reflect) PointerValue() reflect.Value {
-	return reflect.ValueOf(r.modelPtr)
+	return reflect.ValueOf(r.modelObj)
 }
 
-// RawType returns the unparsed type of the model (
-// or model chain) contained within the Reflect.
+// RawType returns the unparsed type of the model object.
 func (r *Reflect) RawType() reflect.Type {
 	return r.PointerType().Elem()
 }
 
-// RawValue returns the unparsed value of the model (
-// or model chain) contained within the Reflect.
+// RawValue returns the unparsed value of the model object.
 func (r *Reflect) RawValue() reflect.Value {
 	return r.PointerValue().Elem()
+}
+
+// || TAGS ||
+
+// StructTagChain returns a StructTagChain representing all struct tags
+// on the model objects type (i.e. Reflect.Type).
+func (r *Reflect) StructTagChain() StructTagChain {
+	return NewStructTagChain(r.Type())
 }
 
 // || TYPE ASSERTIONS ||
@@ -274,14 +297,6 @@ func (r *Reflect) panicIfStruct() {
 	if r.IsStruct() {
 		panic("model is struct, cannot get chain value")
 	}
-}
-
-// || TAGS ||
-
-// StructTagChain returns a set of StructTagChain representing all struct tags
-// on Reflect.Type.
-func (r *Reflect) StructTagChain() StructTagChain {
-	return NewStructTagChain(r.Type())
 }
 
 // |||| VALIDATION ||||

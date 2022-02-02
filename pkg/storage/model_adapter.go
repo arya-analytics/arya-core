@@ -104,7 +104,7 @@ func adaptNestedModel(fld, modelValue reflect.Value) reflect.Value {
 }
 
 func newValidatedRfl(v interface{}) *model.Reflect {
-	rfl := model.UnsafeUnvalidatedNewReflect(v)
+	rfl := model.UnsafeNewReflect(v)
 	// If v isn't a pointer, we need to create a pointer to it,
 	// so we can manipulate its values. This is always necessary with slice fields.
 	if !rfl.IsPointer() {

@@ -11,8 +11,11 @@ import (
 func beforeInsertSetUUID(rfl *model.Reflect) *model.Reflect {
 	rfl.ForEach(func(nRfl *model.Reflect, i int) {
 		pkf := nRfl.StructFieldByRole("pk")
-		if pkf.Type() == reflect.TypeOf(uuid.UUID{}) && pkf.IsZero() {
-			pkf.Set(reflect.ValueOf(uuid.New()))
+		if pkf.IsZero() {
+			switch pkf.Interface().(type) {
+			case uuid.UUID:
+				pkf.Set(reflect.ValueOf(uuid.New()))
+			}
 		}
 	})
 	return rfl

@@ -15,16 +15,16 @@ var _ = Describe("Reflect", func() {
 			Expect(model.NewReflect(&mock.ModelA{}).IsPointer()).To(BeTrue())
 		})
 		It("Should return false when the model is a pointer", func() {
-			Expect(model.UnsafeUnvalidatedNewReflect(mock.ModelA{}).IsPointer()).To(BeFalse())
+			Expect(model.UnsafeNewReflect(mock.ModelA{}).IsPointer()).To(BeFalse())
 		})
 	})
 	Describe("Pointer Creation", func() {
 		It("Should create a new pointer for a non-pointer model", func() {
-			Expect(model.UnsafeUnvalidatedNewReflect(mock.ModelA{}).ToNewPointer().IsPointer()).To(BeTrue())
+			Expect(model.UnsafeNewReflect(mock.ModelA{}).ToNewPointer().IsPointer()).To(BeTrue())
 		})
 		It("Should create the pointer to the correct underlying value", func() {
 			var baseVal []*mock.ModelA
-			baseRfl := model.UnsafeUnvalidatedNewReflect(baseVal)
+			baseRfl := model.UnsafeNewReflect(baseVal)
 			Expect(baseRfl.ToNewPointer().RawValue().Interface()).To(Equal(baseVal))
 		})
 	})
@@ -68,11 +68,11 @@ var _ = Describe("Reflect", func() {
 		It("Should return the correct struct field by index", func() {
 			Expect(rfl.StructValue().Field(0).Interface()).To(Equal(22))
 		})
-		It("Should return the same item for the base value as for the value",
+		It("Should return the same item for the raw value as for the value",
 			func() {
 				Expect(rfl.RawValue()).To(Equal(rfl.StructValue()))
 			})
-		It("Should return the same type for the base type as for the type", func() {
+		It("Should return the same type for the raw type as for the type", func() {
 			Expect(rfl.RawType()).To(Equal(rfl.Type()))
 		})
 		It("Should return the correct pointer type", func() {
@@ -113,7 +113,7 @@ var _ = Describe("Reflect", func() {
 		Describe("PKS", func() {
 			It("Should return the correct PK", func() {
 				Expect(rfl.PKChain()).To(HaveLen(1))
-				Expect(rfl.PKChain()[0].Interface()).To(Equal(m.ID))
+				Expect(rfl.PKChain()[0].Raw()).To(Equal(m.ID))
 			})
 		})
 		Describe("Accessing ChainValue", func() {
@@ -172,7 +172,7 @@ var _ = Describe("Reflect", func() {
 			Expect(rfl.ChainValueByIndexOrNew(rfl.ChainValue().Len()).Type()).To(
 				Equal(mSingleBaseType))
 		})
-		It("Should return a slice for the base value", func() {
+		It("Should return a slice for the raw value", func() {
 			Expect(rfl.RawValue().Interface()).To(Equal(m))
 			Expect(rfl.RawType()).To(Equal(mBaseType))
 		})
