@@ -19,45 +19,36 @@ type Node struct {
 }
 
 type Range struct {
-	ID uuid.UUID `model:"role:pk"`
-	// LeaseHolderNode
+	ID                uuid.UUID `model:"role:pk"`
 	LeaseHolderNode   *Node
 	LeaseHolderNodeID int
-	// ReplicaNodes
-	ReplicaNodes []*Node
+	ReplicaNodes      []*Node
 }
 
 type RangeReplicaToNode struct {
-	ID uuid.UUID `model:"role:pk"`
-	// Range
+	ID      uuid.UUID `model:"role:pk"`
 	Range   *Range
 	RangeID uuid.UUID
-	// Node
-	Node   *Node
-	NodeID int
+	Node    *Node
+	NodeID  int
 }
 
 type ChannelConfig struct {
-	ID   uuid.UUID `model:"role:pk"`
-	Name string
-	// Node
-	Node   *Node
-	NodeID int
-	// Data
+	ID        uuid.UUID `model:"role:pk"`
+	Name      string
+	Node      *Node
+	NodeID    int
 	DataRate  float64
 	Retention time.Duration
 }
 
 type ChannelChunk struct {
-	ID uuid.UUID `model:"role:pk"`
-	// Range
-	Range   *Range
-	RangeID uuid.UUID
-	// ChannelConfig
+	ID              uuid.UUID `model:"role:pk"`
+	Range           *Range
+	RangeID         uuid.UUID
 	ChannelConfig   *ChannelConfig
 	ChannelConfigID uuid.UUID
-	// Data
-	Data Object
+	Data            Object
 }
 
 type ChannelSample struct {
