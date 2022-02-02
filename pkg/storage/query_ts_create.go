@@ -13,6 +13,7 @@ func newTSCreate(s *Storage) *TSCreateQuery {
 }
 
 func (tsc *TSCreateQuery) Model(m interface{}) *TSCreateQuery {
+	tsc.baseBindModel(m)
 	tsc.setCacheQuery(tsc.cacheQuery().Model(m))
 	return tsc
 }
@@ -28,9 +29,7 @@ func (tsc *TSCreateQuery) Sample() *TSCreateQuery {
 }
 
 func (tsc *TSCreateQuery) Exec(ctx context.Context) error {
-	tsc.catcher.Exec(func() error {
-		return tsc.cacheQuery().Exec(ctx)
-	})
+	tsc.baseExec(func() error { return tsc.cacheQuery().Exec(ctx) })
 	return tsc.baseErr()
 }
 

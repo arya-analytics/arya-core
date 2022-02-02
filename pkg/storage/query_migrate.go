@@ -17,10 +17,10 @@ func newMigrate(s *Storage) *MigrateQuery {
 /// |||| INTERFACE ||||
 
 func (m *MigrateQuery) Exec(ctx context.Context) error {
-	m.catcher.Exec(func() error {
+	m.baseExec(func() error {
 		return m.mdQuery().Exec(ctx)
 	})
-	m.catcher.Exec(func() error {
+	m.baseExec(func() error {
 		return m.objQuery().Exec(ctx)
 	})
 	return m.baseErr()

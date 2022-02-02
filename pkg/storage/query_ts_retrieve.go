@@ -15,7 +15,7 @@ func newTSRetrieve(s *Storage) *TSRetrieveQuery {
 }
 
 func (tsr *TSRetrieveQuery) Model(m interface{}) *TSRetrieveQuery {
-	tsr.tsBaseModel(m)
+	tsr.baseBindModel(m)
 	tsr.setCacheQuery(tsr.cacheQuery().Model(m))
 	return tsr
 }
@@ -42,14 +42,17 @@ func (tsr *TSRetrieveQuery) WhereTimeRange(fromTS int64, toTS int64) *TSRetrieve
 	return tsr
 }
 
-func (tsr *TSRetrieveQuery) SeriesExists(ctx context.Context, pk interface{}) (bool, error) {
-	return tsr.cacheQuery().SeriesExists(ctx, pk)
+func (tsr *TSRetrieveQuery) SeriesExists(ctx context.Context,
+	pk interface{}) (exists bool, err error) {
+	tsr.baseExec(func() error {
+		exists, err = tsr.cacheQuery().SeriesExists(ctx, pk)
+		return err
+	})
+	return exists, tsr.baseErr()
 }
 
 func (tsr *TSRetrieveQuery) Exec(ctx context.Context) error {
-	tsr.catcher.Exec(func() error {
-		return tsr.cacheQuery().Exec(ctx)
-	})
+	tsr.baseExec(func() error { return tsr.cacheQuery().Exec(ctx) })
 	return tsr.baseErr()
 }
 

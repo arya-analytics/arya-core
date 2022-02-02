@@ -44,9 +44,9 @@ func (d *DeleteQuery) WherePKs(pks interface{}) *DeleteQuery {
 
 // Exec executes the query with the provided context. Returns a storage.Error.
 func (d *DeleteQuery) Exec(ctx context.Context) error {
-	d.catcher.Exec(func() error { return d.mdQuery().Exec(ctx) })
+	d.baseExec(func() error { return d.mdQuery().Exec(ctx) })
 	if d.baseObjEngine().InCatalog(d.modelRfl.Pointer()) {
-		d.catcher.Exec(func() error {
+		d.baseExec(func() error {
 			return d.objQuery().Model(d.modelRfl.Pointer()).WherePKs(d.modelRfl.
 				PKChain().Raw(),
 			).Exec(ctx)

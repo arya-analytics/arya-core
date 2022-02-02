@@ -5,13 +5,8 @@ import (
 )
 
 type tsBaseQuery struct {
-	pks      model.PKChain
-	modelRfl *model.Reflect
+	pks model.PKChain
 	baseQuery
-}
-
-func (tsb *tsBaseQuery) tsBaseModel(m interface{}) {
-	tsb.modelRfl = model.NewReflect(m)
 }
 
 func (tsb *tsBaseQuery) tsBaseWherePk(pk interface{}) {
