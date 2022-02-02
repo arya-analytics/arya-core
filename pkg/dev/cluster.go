@@ -186,10 +186,7 @@ func (a *AryaCluster) Exists() bool {
 		return true
 	}
 	a.Bind()
-	if len(a.Nodes()) > 0 {
-		return true
-	}
-	return false
+	return len(a.Nodes()) > 0
 }
 
 // Delete Deletes an existing Cluster and purges all of its data.

@@ -10,7 +10,6 @@ const (
 	dockerComposeRelPath = "./deploy/docker/docker-compose.yaml"
 	dockerBaseCmd        = "docker"
 	nameTagSeparator     = ":"
-	nameTagFormat        = "Name:tag"
 )
 
 type ImageCfg struct {
