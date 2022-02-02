@@ -18,6 +18,6 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v2
         with:
-          args: --timeout=5m
+          args: --timeout=5m -E godot
     env:
       GITHUB_TOKEN: ${{ secrets.GOLANGCI_LINT_TOKEN }}
