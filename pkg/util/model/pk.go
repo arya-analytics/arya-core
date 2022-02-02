@@ -1,3 +1,16 @@
+// Package model holds utilities for manipulating models.
+//
+// What are models? They are arbitrary slices or structs.
+// Their most notable attribute however,
+// is that they are used as arguments to APIs that need to work with arbitrary struct
+// and struct slice types.
+//
+// A prime example is the Arya Core storage layer,
+// which uses models and this package to save and query arbitrary data types to/from
+// storage services.
+//
+// The core functionality of this package involves wrapping model structs of slices
+// using Reflect and NewReflect.
 package model
 
 import (
