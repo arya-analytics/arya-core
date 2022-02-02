@@ -1,5 +1,7 @@
-<p align="center">
-    <img src="docs/media/icon-full-title-white.png" width="70%"/>
+<p align="center" style="margin-top: 30px">
+    <a href="https://aryaanalytics.com/">
+        <img src="docs/media/icon-full-title-white.png" width="70%"/>
+    </a>
 </p>
 
 # Arya Core
