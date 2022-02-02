@@ -27,8 +27,8 @@ const allMatchIndicator = "*"
 
 // Match returns true if the provided arguments match the category, key,
 // and/or value of the StructTag. If you want to search by arbitrary value,
-// pass a "*" to key. If you want to search by arbitrary key,
-//pass a "*" to key arg. NOTE: "*" will not search all categories.
+// pass a "*" to key arg. NOTE: "*" will not search all categories,
+// and "*" will also not search all values.
 func (s StructTag) Match(cat string, key string, value string) bool {
 	kvs, ok := s.RetrieveKVChain(cat)
 	if !ok {
@@ -41,7 +41,7 @@ func (s StructTag) Match(cat string, key string, value string) bool {
 	} else if key != allMatchIndicator {
 		matcher = func(kv string) bool { return strings.Contains(kv, key) }
 	} else if value != allMatchIndicator {
-		matcher = func(kv string) bool { return strings.Contains(kv, value) }
+		panic("cannot search struct tag by arbitrary value")
 	} else {
 		// If both our key and value are empty, then we're just looking
 		// up by category, so we return true.

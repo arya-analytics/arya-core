@@ -131,7 +131,7 @@ func (r *Reflect) ChainValue() reflect.Value {
 //		rStructToAdd := model.UnsafeNewReflect(&ExampleStruct{})
 //		rStruct.ChainAppend(rStructToAdd)
 func (r *Reflect) ChainAppend(rta *Reflect) {
-	rta.panicIfStruct()
+	rta.panicIfChain()
 	r.panicIfStruct()
 	r.ChainValue().Set(reflect.Append(r.ChainValue(), rta.PointerValue()))
 }
