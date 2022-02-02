@@ -2,32 +2,32 @@ package storage
 
 import "context"
 
-type tsCreateQuery struct {
+type TSCreateQuery struct {
 	tsBaseQuery
 }
 
-func newTSCreate(s *Storage) *tsCreateQuery {
-	tsc := &tsCreateQuery{}
+func newTSCreate(s *Storage) *TSCreateQuery {
+	tsc := &TSCreateQuery{}
 	tsc.baseInit(s)
 	return tsc
 }
 
-func (tsc *tsCreateQuery) Model(m interface{}) *tsCreateQuery {
+func (tsc *TSCreateQuery) Model(m interface{}) *TSCreateQuery {
 	tsc.setCacheQuery(tsc.cacheQuery().Model(m))
 	return tsc
 }
 
-func (tsc *tsCreateQuery) Series() *tsCreateQuery {
+func (tsc *TSCreateQuery) Series() *TSCreateQuery {
 	tsc.setCacheQuery(tsc.cacheQuery().Series())
 	return tsc
 }
 
-func (tsc *tsCreateQuery) Sample() *tsCreateQuery {
+func (tsc *TSCreateQuery) Sample() *TSCreateQuery {
 	tsc.setCacheQuery(tsc.cacheQuery().Sample())
 	return tsc
 }
 
-func (tsc *tsCreateQuery) Exec(ctx context.Context) error {
+func (tsc *TSCreateQuery) Exec(ctx context.Context) error {
 	tsc.catcher.Exec(func() error {
 		return tsc.cacheQuery().Exec(ctx)
 	})
@@ -38,13 +38,13 @@ func (tsc *tsCreateQuery) Exec(ctx context.Context) error {
 
 // || CACHE ||
 
-func (tsc *tsCreateQuery) cacheQuery() CacheTSCreateQuery {
+func (tsc *TSCreateQuery) cacheQuery() CacheTSCreateQuery {
 	if tsc.baseCacheQuery() == nil {
 		tsc.setCacheQuery(tsc.baseCacheEngine().NewTSCreate(tsc.baseCacheAdapter()))
 	}
 	return tsc.baseCacheQuery().(CacheTSCreateQuery)
 }
 
-func (tsc *tsCreateQuery) setCacheQuery(q CacheTSCreateQuery) {
+func (tsc *TSCreateQuery) setCacheQuery(q CacheTSCreateQuery) {
 	tsc.baseSetCacheQuery(q)
 }

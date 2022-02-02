@@ -6,7 +6,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("retrieveQuery", func() {
+var _ = Describe("RetrieveQuery", func() {
 	Describe("Standard usage", func() {
 		Context("Meta Data Only", func() {
 			BeforeEach(createMockChannelCfg)

@@ -2,21 +2,21 @@ package storage
 
 import "context"
 
-type migrateQuery struct {
+type MigrateQuery struct {
 	baseQuery
 }
 
 // |||| CONSTRUCTOR ||||
 
-func newMigrate(s *Storage) *migrateQuery {
-	m := &migrateQuery{}
+func newMigrate(s *Storage) *MigrateQuery {
+	m := &MigrateQuery{}
 	m.baseInit(s)
 	return m
 }
 
 /// |||| INTERFACE ||||
 
-func (m *migrateQuery) Exec(ctx context.Context) error {
+func (m *MigrateQuery) Exec(ctx context.Context) error {
 	m.catcher.Exec(func() error {
 		return m.mdQuery().Exec(ctx)
 	})
@@ -30,7 +30,7 @@ func (m *migrateQuery) Exec(ctx context.Context) error {
 
 // || META DATA ||
 
-func (m *migrateQuery) mdQuery() MDMigrateQuery {
+func (m *MigrateQuery) mdQuery() MDMigrateQuery {
 	if m.baseMDQuery() == nil {
 		m.baseSetMDQuery(m.storage.cfg.mdEngine().NewMigrate(m.baseMDAdapter()))
 	}
@@ -39,7 +39,7 @@ func (m *migrateQuery) mdQuery() MDMigrateQuery {
 
 // || OBJECT ||
 
-func (m *migrateQuery) objQuery() ObjectMigrateQuery {
+func (m *MigrateQuery) objQuery() ObjectMigrateQuery {
 	if m.baseObjQuery() == nil {
 		m.baseSetObjQuery(m.storage.cfg.objEngine().NewMigrate(m.baseObjAdapter()))
 	}

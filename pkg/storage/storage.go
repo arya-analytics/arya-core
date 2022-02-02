@@ -34,31 +34,31 @@ func New(cfg Config) *Storage {
 	}
 }
 
-func (s *Storage) NewMigrate() *migrateQuery {
+func (s *Storage) NewMigrate() *MigrateQuery {
 	return newMigrate(s)
 }
 
-func (s *Storage) NewRetrieve() *retrieveQuery {
+func (s *Storage) NewRetrieve() *RetrieveQuery {
 	return newRetrieve(s)
 }
 
-func (s *Storage) NewCreate() *createQuery {
+func (s *Storage) NewCreate() *CreateQuery {
 	return newCreate(s)
 }
 
-func (s *Storage) NewDelete() *deleteQuery {
+func (s *Storage) NewDelete() *DeleteQuery {
 	return newDelete(s)
 }
 
-func (s *Storage) NewUpdate() *updateQuery {
+func (s *Storage) NewUpdate() *UpdateQuery {
 	return newUpdate(s)
 }
 
-func (s *Storage) NewTSRetrieve() *tsRetrieveQuery {
+func (s *Storage) NewTSRetrieve() *TSRetrieveQuery {
 	return newTSRetrieve(s)
 }
 
-func (s *Storage) NewTSCreate() *tsCreateQuery {
+func (s *Storage) NewTSCreate() *TSCreateQuery {
 	return newTSCreate(s)
 }
 
