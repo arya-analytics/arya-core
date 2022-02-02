@@ -11,7 +11,7 @@ type Adapter interface {
 
 // |||| ENGINE ||||
 
-type BaseEngine interface {
+type Engine interface {
 	NewAdapter() Adapter
 	IsAdapter(a Adapter) bool
 	InCatalog(m interface{}) bool
@@ -20,7 +20,7 @@ type BaseEngine interface {
 // || META DATA ||
 
 type MDEngine interface {
-	BaseEngine
+	Engine
 	// NewRetrieve opens a new MDRetrieveQuery.
 	NewRetrieve(a Adapter) MDRetrieveQuery
 	// NewCreate opens a new MDCreateQuery.
@@ -36,7 +36,7 @@ type MDEngine interface {
 // || OBJECT ||
 
 type ObjectEngine interface {
-	BaseEngine
+	Engine
 	NewRetrieve(a Adapter) ObjectRetrieveQuery
 	NewCreate(a Adapter) ObjectCreateQuery
 	NewDelete(a Adapter) ObjectDeleteQuery
@@ -46,21 +46,21 @@ type ObjectEngine interface {
 // || CACHE ||
 
 type CacheEngine interface {
-	BaseEngine
+	Engine
 	NewTSRetrieve(a Adapter) CacheTSRetrieveQuery
 	NewTSCreate(a Adapter) CacheTSCreateQuery
 }
 
 // |||| QUERY ||||
 
-type BaseQuery interface {
+type Query interface {
 	Exec(ctx context.Context) error
 }
 
 // || META DATA ||
 
 type MDBaseQuery interface {
-	BaseQuery
+	Query
 }
 
 // MDRetrieveQuery is for retrieving items from metadata storage.
@@ -103,7 +103,7 @@ type MDMigrateQuery interface {
 // || OBJECT ||
 
 type ObjectBaseQuery interface {
-	BaseQuery
+	Query
 }
 
 type ObjectCreateQuery interface {
@@ -133,7 +133,7 @@ type ObjectMigrateQuery interface {
 // || TS CACHE ||
 
 type CacheBaseQuery interface {
-	BaseQuery
+	Query
 }
 
 type CacheCreateQuery interface {
