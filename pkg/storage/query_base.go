@@ -1,6 +1,9 @@
 package storage
 
-import "github.com/arya-analytics/aryacore/pkg/util/errutil"
+import (
+	"github.com/arya-analytics/aryacore/pkg/util/errutil"
+	"github.com/arya-analytics/aryacore/pkg/util/model"
+)
 
 type baseQuery struct {
 	storage         *Storage
@@ -8,11 +11,18 @@ type baseQuery struct {
 	_baseObjQuery   ObjectBaseQuery
 	_baseCacheQuery CacheBaseQuery
 	catcher         *errutil.Catcher
+	modelRfl        *model.Reflect
 }
 
 func (b *baseQuery) baseInit(s *Storage) {
 	b.storage = s
 	b.catcher = &errutil.Catcher{}
+}
+
+// |||| MODEL UTILITIES ||||
+
+func (b *baseQuery) baseBindModel(m interface{}) {
+	b.modelRfl = model.NewReflect(m)
 }
 
 // |||| QUERY BINDING ||||
