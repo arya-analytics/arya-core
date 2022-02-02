@@ -6,6 +6,8 @@ import (
 	"github.com/minio/minio-go/v7"
 )
 
+var removeObjectOpts = minio.RemoveObjectOptions{}
+
 type deleteQuery struct {
 	whereBaseQuery
 }
@@ -32,11 +34,14 @@ func (d *deleteQuery) Model(m interface{}) storage.ObjectDeleteQuery {
 }
 
 func (d *deleteQuery) Exec(ctx context.Context) error {
-	for _, pk := range d.PKs {
-		d.catcher.Exec(func() error {
-			return d.baseClient().RemoveObject(ctx, d.baseBucket(),
+	for _, pk := range d.pkChain {
+		d.baseExec(func() error {
+			return d.baseClient().RemoveObject(
+				ctx,
+				d.baseBucket(),
 				pk.String(),
-				minio.RemoveObjectOptions{})
+				removeObjectOpts,
+			)
 		})
 	}
 	return d.baseErr()

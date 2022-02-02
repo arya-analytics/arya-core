@@ -6,6 +6,8 @@ import (
 	"github.com/minio/minio-go/v7"
 )
 
+var putObjectOpts = minio.PutObjectOptions{}
+
 type createQuery struct {
 	baseQuery
 }
@@ -31,7 +33,7 @@ func (c *createQuery) Exec(ctx context.Context) error {
 				dv.PK.String(),
 				dv.Data,
 				dv.Data.Size(),
-				minio.PutObjectOptions{},
+				putObjectOpts,
 			)
 			return err
 		})

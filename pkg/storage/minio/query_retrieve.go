@@ -7,7 +7,7 @@ import (
 	"github.com/minio/minio-go/v7"
 )
 
-// |||| QUERY ||||
+var getObjectOpts = minio.GetObjectOptions{}
 
 type retrieveQuery struct {
 	whereBaseQuery
@@ -37,11 +37,15 @@ func (r *retrieveQuery) WherePK(pk interface{}) storage.ObjectRetrieveQuery {
 
 func (r *retrieveQuery) Exec(ctx context.Context) error {
 	r.whereBaseValidateReq()
-	for _, pk := range r.PKs {
+	for _, pk := range r.pkChain {
 		var resObj *minio.Object
-		r.catcher.Exec(func() (err error) {
-			resObj, err = r.baseClient().GetObject(ctx, r.baseBucket(), pk.String(),
-				minio.GetObjectOptions{})
+		r.baseExec(func() (err error) {
+			resObj, err = r.baseClient().GetObject(
+				ctx,
+				r.baseBucket(),
+				pk.String(),
+				getObjectOpts,
+			)
 			return err
 		})
 		r.validateRes(resObj)
@@ -53,14 +57,14 @@ func (r *retrieveQuery) Exec(ctx context.Context) error {
 }
 
 func (r *retrieveQuery) appendToDVC(dv *dataValue) {
-	r.catcher.Exec(func() error {
+	r.baseExec(func() error {
 		r.dvc = append(r.dvc, dv)
 		return nil
 	})
 }
 
 func (r *retrieveQuery) validateRes(resObj *minio.Object) {
-	r.catcher.Exec(func() error {
+	r.baseExec(func() error {
 		return retrieveQueryResValidator.Exec(resObj)
 	})
 

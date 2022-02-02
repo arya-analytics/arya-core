@@ -24,7 +24,7 @@ import (
 
 // PK wraps the primary key of a model,
 // and provides a variety of utilities for manipulating it.
-// PKs are best created in one of two ways. The first,
+// pkChain are best created in one of two ways. The first,
 // by directly instantiating by calling:
 //
 // 		model.NewPK(m.PKField)

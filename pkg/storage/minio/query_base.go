@@ -43,6 +43,10 @@ func (b *baseQuery) baseBindVals(dvc dataValueChain) {
 	b.modelAdapter.BindDataVals(dvc)
 }
 
+func (b *baseQuery) baseExec(af errutil.ActionFunc) {
+	b.catcher.Exec(af)
+}
+
 func (b *baseQuery) baseErr() error {
 	return parseMinioErr(b.catcher.Error())
 }

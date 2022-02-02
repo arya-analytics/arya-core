@@ -7,6 +7,8 @@ import (
 	"github.com/minio/minio-go/v7"
 )
 
+var makeBucketOpts = minio.MakeBucketOptions{}
+
 type migrateQuery struct {
 	baseQuery
 }
@@ -27,7 +29,7 @@ func (m *migrateQuery) Exec(ctx context.Context) error {
 			}
 			if !bucketExists {
 				if mErr := m.baseClient().MakeBucket(ctx, ma.Bucket(),
-					minio.MakeBucketOptions{}); mErr != nil {
+					makeBucketOpts); mErr != nil {
 					return mErr
 				}
 			}
