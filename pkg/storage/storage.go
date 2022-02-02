@@ -34,30 +34,37 @@ func New(cfg Config) *Storage {
 	}
 }
 
+// NewMigrate opens a new MigrateQuery.
 func (s *Storage) NewMigrate() *MigrateQuery {
 	return newMigrate(s)
 }
 
+// NewRetrieve opens a new RetrieveQuery.
 func (s *Storage) NewRetrieve() *RetrieveQuery {
 	return newRetrieve(s)
 }
 
+// NewCreate opens a new CreateQuery.
 func (s *Storage) NewCreate() *CreateQuery {
 	return newCreate(s)
 }
 
+// NewDelete opens a new DeleteQuery.
 func (s *Storage) NewDelete() *DeleteQuery {
 	return newDelete(s)
 }
 
+// NewUpdate opens a new UpdateQuery.
 func (s *Storage) NewUpdate() *UpdateQuery {
 	return newUpdate(s)
 }
 
+// NewTSRetrieve opens a new TSRetrieveQuery.
 func (s *Storage) NewTSRetrieve() *TSRetrieveQuery {
 	return newTSRetrieve(s)
 }
 
+// NewTSCreate opens a new TSCreateQuery.
 func (s *Storage) NewTSCreate() *TSCreateQuery {
 	return newTSCreate(s)
 }
