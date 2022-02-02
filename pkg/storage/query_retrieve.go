@@ -28,7 +28,7 @@ func newRetrieve(s *Storage) *RetrieveQuery {
 // If you're expecting multiple return values,
 // pass a pointer to a slice. If you're expecting one return value,
 // pass a struct. NOTE: If a struct is passed, and multiple values are returned,
-// we assign the value of the first result.
+// the struct is assigned to the value of the first result.
 func (r *RetrieveQuery) Model(m interface{}) *RetrieveQuery {
 	r.baseBindModel(m)
 	r.setMDQuery(r.mdQuery().Model(m))

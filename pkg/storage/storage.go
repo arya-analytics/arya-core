@@ -5,10 +5,11 @@
 // The package relies on a set of dependency injected storage engines to read
 // and write data to.
 //
-// Engine can fulfill one of three roles:
-//  	MDEngine - Reads and writes lightweight, strongly consistent data to storage.
-//		ObjectEngine - Saves bulk data to node local data storage.
-//		CacheEngine - High speed cache that can read and write time series data.
+// Engines (Engine) can fulfill one of three roles:
+//
+// MDEngine - Reads and writes lightweight, strongly consistent data to storage.
+// ObjectEngine - Saves bulk data to node local data storage.
+// CacheEngine - High speed cache that can read and write time series data.
 //
 // Initialization
 //
