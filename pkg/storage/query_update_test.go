@@ -15,7 +15,7 @@ var _ = Describe("QueryUpdate", func() {
 		BeforeEach(func() {
 			newDummyModel = &storage.ChannelConfig{
 				ID:     mockChannelCfg.ID,
-				Name:   "New Name",
+				Name:   "Cool Name",
 				NodeID: 1,
 			}
 		})
@@ -35,7 +35,7 @@ var _ = Describe("QueryUpdate", func() {
 				log.Fatalln(err)
 			}
 			Expect(m.ID).To(Equal(mockChannelCfg.ID))
-			Expect(m.Name).To(Equal(newDummyModel.Name))
+			Expect(m.Name).To(Equal(mockChannelCfg.Name))
 		})
 	})
 })

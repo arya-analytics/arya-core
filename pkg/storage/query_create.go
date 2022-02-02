@@ -2,12 +2,11 @@ package storage
 
 import (
 	"context"
-	"github.com/arya-analytics/aryacore/pkg/util/model"
 )
 
+// CreateQuery creates a new model in storage.
 type CreateQuery struct {
 	baseQuery
-	modelRfl *model.Reflect
 }
 
 // |||| CONSTRUCTOR ||||
@@ -20,16 +19,18 @@ func newCreate(s *Storage) *CreateQuery {
 
 /// |||| INTERFACE ||||
 
+// Model sets the model to create. model must be passed as a pointer.
+// The model can be a pointer to a struct or a pointer to a slice.
+// The model must contain all necessary values and satisfy any relationships.
 func (c *CreateQuery) Model(m interface{}) *CreateQuery {
-	c.modelRfl = model.NewReflect(m)
+	c.baseBindModel(m)
 	c.setMDQuery(c.mdQuery().Model(c.modelRfl.Pointer()))
 	return c
 }
 
+// Exec executes the query with the provided context. Returns a storage.Error.
 func (c *CreateQuery) Exec(ctx context.Context) error {
-	c.catcher.Exec(func() error {
-		return c.mdQuery().Exec(ctx)
-	})
+	c.catcher.Exec(func() error { return c.mdQuery().Exec(ctx) })
 	if c.storage.cfg.objEngine().InCatalog(c.modelRfl.Pointer()) {
 		c.catcher.Exec(func() error {
 			return c.objQuery().Model(c.modelRfl.Pointer()).Exec(ctx)
