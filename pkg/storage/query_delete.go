@@ -47,9 +47,7 @@ func (d *DeleteQuery) Exec(ctx context.Context) error {
 	d.baseExec(func() error { return d.mdQuery().Exec(ctx) })
 	if d.baseObjEngine().InCatalog(d.modelRfl.Pointer()) {
 		d.baseExec(func() error {
-			return d.objQuery().Model(d.modelRfl.Pointer()).WherePKs(d.modelRfl.
-				PKChain().Raw(),
-			).Exec(ctx)
+			return d.objQuery().Model(d.modelRfl.Pointer()).WherePKs(d.modelRfl.PKChain().Raw()).Exec(ctx)
 		})
 	}
 	return d.baseErr()

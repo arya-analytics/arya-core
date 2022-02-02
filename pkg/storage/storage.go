@@ -1,25 +1,5 @@
 package storage
 
-// |||| CONFIG ||||
-
-type Config map[EngineRole]BaseEngine
-
-func (ec Config) retrieve(r EngineRole) BaseEngine {
-	return ec[r]
-}
-
-func (ec Config) mdEngine() MDEngine {
-	return ec.retrieve(EngineRoleMD).(MDEngine)
-}
-
-func (ec Config) objEngine() ObjectEngine {
-	return ec.retrieve(EngineRoleObject).(ObjectEngine)
-}
-
-func (ec Config) cacheEngine() CacheEngine {
-	return ec.retrieve(EngineRoleCache).(CacheEngine)
-}
-
 // |||| STORAGE ||||
 
 type Storage struct {
@@ -72,4 +52,24 @@ func (s *Storage) NewTSCreate() *TSCreateQuery {
 func (s *Storage) adapter(r EngineRole) (a Adapter) {
 	e := s.cfg.retrieve(r)
 	return s.pooler.Retrieve(e)
+}
+
+// |||| CONFIG ||||
+
+type Config map[EngineRole]BaseEngine
+
+func (ec Config) retrieve(r EngineRole) BaseEngine {
+	return ec[r]
+}
+
+func (ec Config) mdEngine() MDEngine {
+	return ec.retrieve(EngineRoleMD).(MDEngine)
+}
+
+func (ec Config) objEngine() ObjectEngine {
+	return ec.retrieve(EngineRoleObject).(ObjectEngine)
+}
+
+func (ec Config) cacheEngine() CacheEngine {
+	return ec.retrieve(EngineRoleCache).(CacheEngine)
 }
