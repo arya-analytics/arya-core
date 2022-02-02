@@ -51,7 +51,7 @@ func (s *Storage) NewTSCreate() *TSCreateQuery {
 
 func (s *Storage) adapter(r EngineRole) (a Adapter) {
 	e := s.cfg.retrieve(r)
-	return s.pooler.Retrieve(e)
+	return s.pooler.retrieve(e)
 }
 
 // |||| CONFIG ||||

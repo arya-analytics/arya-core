@@ -13,7 +13,7 @@ type pooler struct {
 }
 
 // Retrieve retrieves an engine.Adapter based on the EngineType specified.
-func (p *pooler) Retrieve(e BaseEngine) Adapter {
+func (p *pooler) retrieve(e BaseEngine) Adapter {
 	a, ok := p.findAdapter(e)
 	if !ok {
 		a = p.newAdapter(e)
