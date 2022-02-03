@@ -1,0 +1,29 @@
+run:
+  timeout: 5m
+linters:
+  disable-all: true
+  enable:
+    # UNUSED
+    - deadcode
+    - varcheck
+    - unused
+    - structcheck
+    - ineffassign
+    - unparam
+    # STYLE
+    - gosimple
+    - godot
+    - dupl
+    - dogsled
+    - gochecknoglobals
+    - gochecknoinits
+    # BUGS
+    - errcheck
+    - govet
+    - staticcheck
+    - typecheck
+    - nilerr
+    # COMPLEXITY
+    - gocognit
+    # TEST
+    - testpackage
