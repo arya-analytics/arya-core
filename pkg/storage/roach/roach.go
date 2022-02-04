@@ -1,7 +1,6 @@
 package roach
 
 import (
-	"crypto/tls"
 	"fmt"
 	"github.com/arya-analytics/aryacore/pkg/storage"
 )
@@ -54,12 +53,6 @@ type Config struct {
 
 func (c Config) addr() string {
 	return fmt.Sprintf("%s:%v", c.Host, c.Port)
-}
-
-func (c Config) tls() *tls.Config {
-	return &tls.Config{
-		InsecureSkipVerify: !c.UseTLS,
-	}
 }
 
 // |||| ENGINE ||||

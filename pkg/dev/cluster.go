@@ -14,7 +14,10 @@ import (
 func ProvisionLocalDevCluster(numNodes int, name string, cores int, memory int,
 	storage int, reInit bool, cidrOffset int) (*AryaCluster, error) {
 	var cluster *AryaCluster
-	InstallRequiredTools()
+	err := InstallRequiredTools()
+	if err != nil {
+		return nil, err
+	}
 	log.Infof("%s Provisioning an Arya Cluster named %s with %v nodes",
 		emoji.Bolt, name, numNodes)
 	cfg := AryaClusterConfig{
@@ -27,7 +30,7 @@ func ProvisionLocalDevCluster(numNodes int, name string, cores int, memory int,
 		CidrOffset: cidrOffset,
 	}
 	cluster = NewAryaCluster(cfg)
-	err := cluster.Provision()
+	err = cluster.Provision()
 	if err != nil {
 		log.Fatalln(err)
 	}
