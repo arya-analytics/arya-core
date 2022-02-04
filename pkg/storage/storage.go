@@ -68,10 +68,7 @@ type Storage struct {
 // Storage cannot operate without Config.MDEngine,
 // as it relies on this engine to maintain consistency with other engines.
 func New(cfg Config) *Storage {
-	return &Storage{
-		cfg:    cfg,
-		pooler: newPooler(),
-	}
+	return &Storage{cfg, newPooler()}
 }
 
 // NewMigrate opens a new MigrateQuery.
