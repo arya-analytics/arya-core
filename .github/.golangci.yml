@@ -13,9 +13,7 @@ linters:
     # STYLE
     - gosimple
     - godot
-    - dupl
     - dogsled
-    - gochecknoglobals
     - gochecknoinits
     # BUGS
     - errcheck
