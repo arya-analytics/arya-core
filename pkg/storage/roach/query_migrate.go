@@ -51,7 +51,7 @@ func (m *migrateQuery) Exec(ctx context.Context) error {
 }
 
 func (m *migrateQuery) Verify(ctx context.Context) error {
-	m.catcher.Exec(func() error {
+	m.baseExec(func() error {
 		_, err := m.db.NewSelect().Model((*ChannelConfig)(nil)).Count(ctx)
 		return err
 	})

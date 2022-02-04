@@ -32,7 +32,7 @@ func (c *createQuery) Model(m interface{}) storage.MDCreateQuery {
 
 // Exec implements storage.MDCreateQuery.
 func (c *createQuery) Exec(ctx context.Context) error {
-	c.catcher.Exec(func() error {
+	c.baseExec(func() error {
 		_, err := c.q.Exec(ctx)
 		return err
 	})

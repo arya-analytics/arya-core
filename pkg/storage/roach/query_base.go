@@ -36,3 +36,7 @@ func (b *baseQuery) baseExchangeToDest() {
 func (b *baseQuery) baseErr() error {
 	return parseBunErr(b.catcher.Error())
 }
+
+func (b *baseQuery) baseExec(af errutil.ActionFunc) {
+	b.catcher.Exec(af)
+}

@@ -34,7 +34,7 @@ func (u *updateQuery) Where(query string, args ...interface{}) storage.MDUpdateQ
 }
 
 func (u *updateQuery) Exec(ctx context.Context) error {
-	u.catcher.Exec(func() error {
+	u.baseExec(func() error {
 		_, err := u.q.Exec(ctx)
 		return err
 	})

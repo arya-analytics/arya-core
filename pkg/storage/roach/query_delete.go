@@ -36,7 +36,7 @@ func (d *deleteQuery) Model(m interface{}) storage.MDDeleteQuery {
 }
 
 func (d *deleteQuery) Exec(ctx context.Context) error {
-	d.catcher.Exec(func() error {
+	d.baseExec(func() error {
 		_, err := d.q.Exec(ctx)
 		return err
 	})
