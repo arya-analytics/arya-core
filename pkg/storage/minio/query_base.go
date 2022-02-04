@@ -8,9 +8,9 @@ import (
 )
 
 type baseQuery struct {
-	_client      *minio.Client
-	modelAdapter *storage.ModelAdapter
-	catcher      *errutil.Catcher
+	_client       *minio.Client
+	modelExchange *modelExchange
+	catcher       *errutil.Catcher
 }
 
 func (b *baseQuery) baseInit(client *minio.Client) {
@@ -23,27 +23,28 @@ func (b *baseQuery) baseClient() *minio.Client {
 }
 
 func (b *baseQuery) baseModel(m interface{}) {
-	b.modelAdapter = storage.NewModelAdapter(m, catalog().New(m))
-}
-
-func (b *baseQuery) baseModelWrapper() *ModelWrapper {
-	return &ModelWrapper{rfl: b.modelAdapter.Dest()}
+	b.modelExchange = newWrappedModelAdapter(storage.NewModelExchange(m,
+		catalog().New(m)))
 }
 
 func (b *baseQuery) baseBucket() string {
-	return b.baseModelWrapper().Bucket()
+	return b.modelExchange.Bucket()
 }
 
-func (b *baseQuery) baseAdaptToSource() {
-	b.modelAdapter.ExchangeToSource()
+func (b *baseQuery) baseExchangeToSource() {
+	b.modelExchange.ToSource()
 }
 
-func (b *baseQuery) baseAdaptToDest() {
-	b.modelAdapter.ExchangeToDest()
+func (b *baseQuery) baseExchangeToDest() {
+	b.modelExchange.ToDest()
 }
 
-func (b *baseQuery) baseBindVals(dvc DataValueChain) {
-	b.baseModelWrapper().BindDataVals(dvc)
+func (b *baseQuery) baseBindVals(dvc dataValueChain) {
+	b.modelExchange.BindDataVals(dvc)
+}
+
+func (b *baseQuery) baseExec(af errutil.ActionFunc) {
+	b.catcher.Exec(af)
 }
 
 func (b *baseQuery) baseErr() error {
@@ -62,7 +63,7 @@ var baseQueryReqValidator = validate.New([]validate.Func{
 
 func validateModelProvided(v interface{}) error {
 	b := v.(*baseQuery)
-	if b.modelAdapter == nil {
+	if b.modelExchange == nil {
 		return storage.Error{Type: storage.ErrTypeInvalidArgs,
 			Message: "no model provided to query"}
 	}

@@ -10,23 +10,23 @@ import (
 )
 
 var _ = Describe("Minio Engine", func() {
-	Describe("Adapter", func() {
+	Describe("adapter", func() {
 		var a storage.Adapter
 		BeforeEach(func() {
 			a = mockEngine.NewAdapter()
 		})
-		Describe("New Adapter", func() {
+		Describe("New adapter", func() {
 			It("Should create a new adapter without error", func() {
 				Expect(reflect.TypeOf(a.ID())).To(Equal(reflect.TypeOf(uuid.New())))
 			})
 		})
-		Describe("Is Adapter", func() {
-			Context("Adapter is the correct type", func() {
+		Describe("Is adapter", func() {
+			Context("adapter is the correct type", func() {
 				It("Should return true", func() {
 					Expect(mockEngine.IsAdapter(a)).To(BeTrue())
 				})
 			})
-			Context("Adapter is the incorrect type", func() {
+			Context("adapter is the incorrect type", func() {
 				It("Should return false", func() {
 					e := &mock.MDEngine{}
 					ba := e.NewAdapter()

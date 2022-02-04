@@ -5,43 +5,16 @@ import (
 	"strings"
 )
 
-type StructTagChain []StructTag
-
-func (s StructTagChain) Retrieve(cat string, key string, value string) (StructTag, bool) {
-	for _, st := range s {
-		if st.match(cat, key, value) {
-			return st, true
-		}
-	}
-	return StructTag{}, false
-}
-
-func NewStructTagChain(t reflect.Type) (tags StructTagChain) {
-	if t.Kind() != reflect.Struct {
-		panic("model.NewStructTagChain - received non-struct")
-	}
-	for i := 0; i < t.NumField(); i++ {
-		fld := t.Field(i)
-		tags = append(tags, StructTag{StructTag: fld.Tag, Field: fld})
-	}
-	return tags
-}
-
+// StructTag extends the reflect.StructTag API and provides utilities for searching
+// for and manipulating struct tags. Has no constructor.
 type StructTag struct {
 	reflect.StructTag
 	Field reflect.StructField
 }
 
-const (
-	kvPairSeparator  = ":"
-	kvChainSeparator = ","
-)
-
-func constructKVPair(key string, value string) string {
-	return key + kvPairSeparator + value
-}
-
-func (s StructTag) retrieveKVChain(cat string) (kvc []string, ok bool) {
+// RetrieveKVChain the key value pairs in a struct tag category as strings i.e.
+// ["ferrari:Fast","beetle:s"].
+func (s StructTag) RetrieveKVChain(cat string) (kvc []string, ok bool) {
 	valString, ok := s.Lookup(cat)
 	if !ok {
 		return kvc, false
@@ -50,19 +23,25 @@ func (s StructTag) retrieveKVChain(cat string) (kvc []string, ok bool) {
 	return kvc, true
 }
 
-func (s StructTag) match(cat string, key string, value string) bool {
-	kvs, ok := s.retrieveKVChain(cat)
+const allMatchIndicator = "*"
+
+// Match returns true if the provided arguments match the category, key,
+// and/or value of the StructTag. If you want to search by arbitrary value,
+// pass a "*" to key arg. NOTE: "*" will not search all categories,
+// and "*" will also not search all values.
+func (s StructTag) Match(cat string, key string, value string) bool {
+	kvs, ok := s.RetrieveKVChain(cat)
 	if !ok {
 		return false
 	}
 	var matcher func(kv string) bool
-	if key != "*" && value != "*" {
+	if key != allMatchIndicator && value != allMatchIndicator {
 		cKv := constructKVPair(key, value)
 		matcher = func(kv string) bool { return cKv == kv }
-	} else if key != "*" {
+	} else if key != allMatchIndicator {
 		matcher = func(kv string) bool { return strings.Contains(kv, key) }
-	} else if value != "*" {
-		panic("StructTag.match - can't perform a tag match with value and no key.")
+	} else if value != allMatchIndicator {
+		panic("cannot search struct tag by arbitrary value")
 	} else {
 		// If both our key and value are empty, then we're just looking
 		// up by category, so we return true.
@@ -74,4 +53,43 @@ func (s StructTag) match(cat string, key string, value string) bool {
 		}
 	}
 	return false
+}
+
+// StructTagChain provides utilities for managing a chain of struct tags.
+//This data type is ideal for storing the StructTags of the fields of a model.
+type StructTagChain []StructTag
+
+// NewStructTagChain creates a new chain of struct tags from the provided struct
+// type. Creates and appends a new StructTag for each field in the struct.
+// Panics of the provided reflect.Type t is not of reflect.Struct kind.
+func NewStructTagChain(t reflect.Type) (tags StructTagChain) {
+	if t.Kind() != reflect.Struct {
+		panic("model.NewStructTagChain - received non-struct")
+	}
+	for i := 0; i < t.NumField(); i++ {
+		fld := t.Field(i)
+		tags = append(tags, StructTag{StructTag: fld.Tag, Field: fld})
+	}
+	return tags
+}
+
+// Retrieve retrieves the StructTag in the StructTagChain that matches the provided arguments.
+// If you want to search by arbitrary value, pass a "*" to key. If you want to search by
+// arbitrary key, pass a "*" to key arg. NOTE: "*" will not search all categories.
+func (s StructTagChain) Retrieve(cat string, key string, value string) (StructTag, bool) {
+	for _, st := range s {
+		if st.Match(cat, key, value) {
+			return st, true
+		}
+	}
+	return StructTag{}, false
+}
+
+const (
+	kvPairSeparator  = ":"
+	kvChainSeparator = ","
+)
+
+func constructKVPair(key string, value string) string {
+	return key + kvPairSeparator + value
 }

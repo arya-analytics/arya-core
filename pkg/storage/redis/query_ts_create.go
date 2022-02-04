@@ -6,16 +6,16 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/storage/redis/timeseries"
 )
 
-type TSQueryVariant int
+type tsQueryVariant int
 
 const (
-	TSQueryVariantSeries TSQueryVariant = iota + 1
-	TSQueryVariantSample
+	tsQueryVariantSeries tsQueryVariant = iota + 1
+	tsQueryVariantSample
 )
 
 type tsCreateQuery struct {
-	tsBaseQuery
-	variant TSQueryVariant
+	baseQuery
+	variant tsQueryVariant
 }
 
 func newTSCreate(client *timeseries.Client) *tsCreateQuery {
@@ -25,26 +25,26 @@ func newTSCreate(client *timeseries.Client) *tsCreateQuery {
 }
 
 func (tsc *tsCreateQuery) Series() storage.CacheTSCreateQuery {
-	tsc.variant = TSQueryVariantSeries
+	tsc.variant = tsQueryVariantSeries
 	return tsc
 }
 
 func (tsc *tsCreateQuery) Sample() storage.CacheTSCreateQuery {
-	tsc.variant = TSQueryVariantSample
+	tsc.variant = tsQueryVariantSample
 	return tsc
 }
 
 func (tsc *tsCreateQuery) Model(m interface{}) storage.CacheTSCreateQuery {
 	tsc.baseModel(m)
-	tsc.baseAdaptToDest()
+	tsc.baseExchangeToDest()
 	return tsc
 }
 
 func (tsc *tsCreateQuery) Exec(ctx context.Context) error {
 	switch tsc.variant {
-	case TSQueryVariantSample:
+	case tsQueryVariantSample:
 		tsc.execSample(ctx)
-	case TSQueryVariantSeries:
+	case tsQueryVariantSeries:
 		tsc.execSeries(ctx)
 	default:
 		return storage.Error{
@@ -56,15 +56,13 @@ func (tsc *tsCreateQuery) Exec(ctx context.Context) error {
 }
 
 func (tsc *tsCreateQuery) execSample(ctx context.Context) {
-	w := tsc.tsBaseModelWrapper()
 	tsc.catcher.Exec(func() error {
-		return tsc.baseClient().TSCreateSamples(ctx, w.samples()...).Err()
+		return tsc.baseClient().TSCreateSamples(ctx, tsc.modelExchange.samples()...).Err()
 	})
 }
 
 func (tsc *tsCreateQuery) execSeries(ctx context.Context) {
-	w := tsc.tsBaseModelWrapper()
-	for _, in := range w.seriesNames() {
+	for _, in := range tsc.modelExchange.seriesNames() {
 		tsc.catcher.Exec(func() error {
 			return tsc.baseClient().TSCreateSeries(ctx, in,
 				timeseries.CreateOptions{}).Err()

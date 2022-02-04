@@ -2,7 +2,6 @@ package redis
 
 import (
 	"context"
-	"fmt"
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/storage/redis/timeseries"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
@@ -61,7 +60,6 @@ func (tsr *tsRetrieveQuery) SeriesExists(ctx context.Context, pk interface{}) (b
 }
 
 func (tsr *tsRetrieveQuery) Exec(ctx context.Context) error {
-	wrapper := &tsModelWrapper{rfl: tsr.modelAdapter.Dest()}
 	tsr.validateReq()
 	for _, pk := range tsr.PKChain {
 		tsr.catcher.Exec(func() error {
@@ -78,10 +76,10 @@ func (tsr *tsRetrieveQuery) Exec(ctx context.Context) error {
 			if err != nil {
 				return err
 			}
-			return wrapper.bindRes(pk.String(), res)
+			return tsr.modelExchange.bindRes(pk.String(), res)
 		})
 	}
-	tsr.baseAdaptToSource()
+	tsr.baseExchangeToSource()
 	return tsr.baseErr()
 }
 
@@ -100,7 +98,7 @@ func validatePKProvided(v interface{}) error {
 	if (len(q.PKChain)) == 0 {
 		return storage.Error{
 			Type:    storage.ErrTypeInvalidArgs,
-			Message: fmt.Sprintf("no PK provided to ts retrieve query"),
+			Message: "no PK provided to ts retrieve query",
 		}
 	}
 	return nil

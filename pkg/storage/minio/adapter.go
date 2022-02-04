@@ -8,14 +8,14 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type Adapter struct {
+type adapter struct {
 	id     uuid.UUID
 	client *minio.Client
 	cfg    Config
 }
 
-func newAdapter(cfg Config) *Adapter {
-	a := &Adapter{
+func newAdapter(cfg Config) *adapter {
+	a := &adapter{
 		id:  uuid.New(),
 		cfg: cfg,
 	}
@@ -23,28 +23,28 @@ func newAdapter(cfg Config) *Adapter {
 	return a
 }
 
-func bindAdapter(a storage.Adapter) (*Adapter, bool) {
-	ma, ok := a.(*Adapter)
-	return ma, ok
+func bindAdapter(a storage.Adapter) (*adapter, bool) {
+	me, ok := a.(*adapter)
+	return me, ok
 }
 
 func conn(a storage.Adapter) *minio.Client {
-	ma, ok := bindAdapter(a)
+	me, ok := bindAdapter(a)
 	if !ok {
 		panic("couldn't bind minio adapter")
 	}
-	return ma.conn()
+	return me.conn()
 }
 
-func (a *Adapter) ID() uuid.UUID {
+func (a *adapter) ID() uuid.UUID {
 	return a.id
 }
 
-func (a *Adapter) conn() *minio.Client {
+func (a *adapter) conn() *minio.Client {
 	return a.client
 }
 
-func (a *Adapter) open() {
+func (a *adapter) open() {
 	switch a.cfg.Driver {
 	case DriverMinIO:
 		a.client = connectToMinIO(a.cfg)

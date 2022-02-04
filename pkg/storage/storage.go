@@ -1,84 +1,121 @@
+// Package storage provides an interface for interacting with a set of data stores.
+//
+// Storage architecture documentation can be found at:
+// https://arya-analytics.atlassian.net/wiki/spaces/AA/pages/3212201/00+-+Storage+Layer
+// High level data architecture documentation can be found at:
+// https://arya-analytics.atlassian.net/wiki/spaces/AA/pages/819257/00+-+Arya+Core#5.2---Data-Architecture
+//
+// Engines
+//
+// The package relies on a set of dependency injected storage engines to read
+// and write data to.
+//
+// Engines (Engine) can fulfill one of three roles:
+//
+// MDEngine - Reads and writes lightweight, strongly consistent data to storage.
+// ObjectEngine - Saves bulk data to node local data storage.
+// CacheEngine - High speed cache that can read and write time series data.
+//
+// Initialization
+//
+// For initializing Storage with a set of engines, see storage.New.
+//
+// Writing and Executing Queries
+//
+// For information on writing new Queries, see Storage.
 package storage
-
-// |||| ENGINE CONFIG ||||
-
-type EngineConfig map[EngineRole]BaseEngine
-
-func (ec EngineConfig) retrieve(r EngineRole) (BaseEngine, bool) {
-	e, ok := ec[r]
-	return e, ok
-}
-
-func (ec EngineConfig) mdEngine() MDEngine {
-	e, ok := ec.retrieve(EngineRoleMD)
-	if !ok {
-		return nil
-	}
-	return e.(MDEngine)
-}
-
-func (ec EngineConfig) objEngine() ObjectEngine {
-	e, ok := ec.retrieve(EngineRoleObject)
-	if !ok {
-		return nil
-	}
-	return e.(ObjectEngine)
-}
-
-func (ec EngineConfig) cacheEngine() CacheEngine {
-	e, ok := ec.retrieve(EngineRoleCache)
-	if !ok {
-		return nil
-	}
-	return e.(CacheEngine)
-}
 
 // |||| STORAGE ||||
 
+// Storage is the main interface for the storage package.
+//
+// Initialization
+//
+// Storage should not be initialized directly, and should instead be done using New.
+//
+// Writing and Executing Queries
+//
+// Storage operates as an abstract factory for creating new queries.
+// See the Query specific documentation on how to write queries.
+//
+// Error Handling
+//
+// Storage returns errors of type storage.Error.
+// See Error's documentation for information on different ErrorType that can be
+// returned.
+//
+// If an unexpected error is encountered,
+// will return a storage.Error with an ErrTypeUnknown. Error.Base
+// can be used to access the original error.
+//
+// Implementing a new Engine
+//
+// If you're working on modifying or implementing a new Engine,
+// see Engine and its sub-interfaces.
 type Storage struct {
-	cfg    EngineConfig
+	cfg    Config
 	pooler *pooler
 }
 
-func New(cfg EngineConfig) *Storage {
-	return &Storage{
-		cfg:    cfg,
-		pooler: newPooler(),
-	}
+// New creates a new Storage based on the provided Config.
+//
+// Engine Specification
+//
+// Storage can operate without Config.CacheEngine and/or without Config.ObjectEngine.
+// However, if any queries are run that require accessing one of these data stores,
+// the query will panic.
+//
+// Storage cannot operate without Config.MDEngine,
+// as it relies on this engine to maintain consistency with other engines.
+func New(cfg Config) *Storage {
+	return &Storage{cfg, newPooler()}
 }
 
-func (s *Storage) NewMigrate() *migrateQuery {
+// NewMigrate opens a new MigrateQuery.
+func (s *Storage) NewMigrate() *MigrateQuery {
 	return newMigrate(s)
 }
 
-func (s *Storage) NewRetrieve() *retrieveQuery {
+// NewRetrieve opens a new RetrieveQuery.
+func (s *Storage) NewRetrieve() *RetrieveQuery {
 	return newRetrieve(s)
 }
 
-func (s *Storage) NewCreate() *createQuery {
+// NewCreate opens a new CreateQuery.
+func (s *Storage) NewCreate() *CreateQuery {
 	return newCreate(s)
 }
 
-func (s *Storage) NewDelete() *deleteQuery {
+// NewDelete opens a new DeleteQuery.
+func (s *Storage) NewDelete() *DeleteQuery {
 	return newDelete(s)
 }
 
-func (s *Storage) NewUpdate() *updateQuery {
+// NewUpdate opens a new UpdateQuery.
+func (s *Storage) NewUpdate() *UpdateQuery {
 	return newUpdate(s)
 }
 
-func (s *Storage) NewTSRetrieve() *tsRetrieveQuery {
+// NewTSRetrieve opens a new TSRetrieveQuery.
+func (s *Storage) NewTSRetrieve() *TSRetrieveQuery {
 	return newTSRetrieve(s)
 }
 
-func (s *Storage) NewTSCreate() *tsCreateQuery {
+// NewTSCreate opens a new TSCreateQuery.
+func (s *Storage) NewTSCreate() *TSCreateQuery {
 	return newTSCreate(s)
 }
 
-func (s *Storage) adapter(r EngineRole) (a Adapter) {
-	e, ok := s.cfg.retrieve(r)
-	if !ok {
-		panic("tried to retrieve a non-existent engine")
-	}
-	return s.pooler.Retrieve(e)
+func (s *Storage) adapter(e Engine) (a Adapter) {
+	return s.pooler.retrieve(e)
+}
+
+// |||| CONFIG ||||
+
+// Config holds the configuration information for Storage.
+// See New for information on creating Config.
+type Config struct {
+	MDEngine     MDEngine
+	ObjectEngine ObjectEngine
+	CacheEngine  CacheEngine
 }

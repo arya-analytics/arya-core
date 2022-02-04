@@ -1,0 +1,29 @@
+run:
+  timeout: 10m
+  skip-dirs:
+    - pkg/util/emoji
+linters:
+  disable-all: true
+  enable:
+    # UNUSED
+    - deadcode
+    - varcheck
+    - unused
+    - structcheck
+    - ineffassign
+    - unparam
+    # STYLE
+    - gosimple
+    - godot
+    - dogsled
+    - gochecknoinits
+    # BUGS
+    - errcheck
+    - govet
+    - staticcheck
+    - typecheck
+    - nilerr
+    # COMPLEXITY
+    - gocognit
+    # TEST
+    - testpackage

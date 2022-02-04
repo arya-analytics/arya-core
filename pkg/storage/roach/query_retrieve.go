@@ -28,17 +28,15 @@ func (r *retrieveQuery) Where(query string, args ...interface{}) storage.MDRetri
 }
 
 func (r *retrieveQuery) WherePK(pk interface{}) storage.MDRetrieveQuery {
-	return r.Where("ID = ?", pk)
+	return r.Where(pkEqualsSQL, pk)
 }
 
 func (r *retrieveQuery) WherePKs(pks interface{}) storage.MDRetrieveQuery {
-	return r.Where("ID in (?)", bun.In(pks))
+	return r.Where(pkChainInSQL, bun.In(pks))
 }
 
 func (r *retrieveQuery) Exec(ctx context.Context) error {
-	r.catcher.Exec(func() error {
-		return r.q.Scan(ctx)
-	})
-	r.baseAdaptToSource()
+	r.baseExec(func() error { return r.q.Scan(ctx) })
+	r.baseExchangeToSource()
 	return r.baseErr()
 }

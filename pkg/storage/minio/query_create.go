@@ -6,6 +6,8 @@ import (
 	"github.com/minio/minio-go/v7"
 )
 
+var putObjectOpts = minio.PutObjectOptions{}
+
 type createQuery struct {
 	baseQuery
 }
@@ -18,12 +20,12 @@ func newCreate(client *minio.Client) *createQuery {
 
 func (c *createQuery) Model(m interface{}) storage.ObjectCreateQuery {
 	c.baseModel(m)
-	c.baseAdaptToDest()
+	c.baseExchangeToDest()
 	return c
 }
 
 func (c *createQuery) Exec(ctx context.Context) error {
-	for _, dv := range c.baseModelWrapper().DataVals() {
+	for _, dv := range c.modelExchange.DataVals() {
 		c.catcher.Exec(func() error {
 			_, err := c.baseClient().PutObject(
 				ctx,
@@ -31,7 +33,7 @@ func (c *createQuery) Exec(ctx context.Context) error {
 				dv.PK.String(),
 				dv.Data,
 				dv.Data.Size(),
-				minio.PutObjectOptions{},
+				putObjectOpts,
 			)
 			return err
 		})

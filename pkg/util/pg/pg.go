@@ -74,8 +74,6 @@ type ErrorType int
 
 //go:generate stringer -type=ErrorType
 const (
-	// || ERROR CLASSES ||
-
 	ErrTypeUnknown ErrorType = iota
 	ErrTypeWarning
 	ErrTypeNoData
@@ -102,8 +100,6 @@ const (
 	ErrTypeSyntax
 	ErrTypeSystem
 	ErrTypeFeatureNotSupported
-
-	// || ERRORS ||
 	ErrTypeUniqueViolation
 	ErrTypeForeignKeyViolation
 )

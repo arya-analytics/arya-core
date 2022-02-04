@@ -1,32 +1,41 @@
 package storage
 
-import "github.com/arya-analytics/aryacore/pkg/util/errutil"
+import (
+	"github.com/arya-analytics/aryacore/pkg/util/errutil"
+	"github.com/arya-analytics/aryacore/pkg/util/model"
+)
 
 type baseQuery struct {
 	storage         *Storage
-	mdEngine        MDEngine
+	modelRfl        *model.Reflect
+	_catcher        *errutil.Catcher
 	_baseMDQuery    MDBaseQuery
-	objEngine       ObjectEngine
 	_baseObjQuery   ObjectBaseQuery
-	cacheEngine     CacheEngine
 	_baseCacheQuery CacheBaseQuery
-	catcher         *errutil.Catcher
 }
 
 func (b *baseQuery) baseInit(s *Storage) {
 	b.storage = s
-	b.mdEngine = b.storage.cfg.mdEngine()
-	b.objEngine = b.storage.cfg.objEngine()
-	b.cacheEngine = b.storage.cfg.cacheEngine()
-	b.catcher = &errutil.Catcher{}
+	b._catcher = &errutil.Catcher{}
+}
+
+// |||| MODEL UTILITIES ||||
+
+func (b *baseQuery) baseBindModel(m interface{}) {
+	b.modelRfl = model.NewReflect(m)
 }
 
 // |||| QUERY BINDING ||||
 
 // || META DATA ||
 
+func (b *baseQuery) baseMDEngine() MDEngine {
+	return b.storage.cfg.MDEngine
+
+}
+
 func (b *baseQuery) baseMDAdapter() Adapter {
-	return b.storage.adapter(EngineRoleMD)
+	return b.storage.adapter(b.baseMDEngine())
 }
 
 func (b *baseQuery) baseMDQuery() MDBaseQuery {
@@ -39,8 +48,12 @@ func (b *baseQuery) baseSetMDQuery(q MDBaseQuery) {
 
 // || OBJECT ||
 
+func (b *baseQuery) baseObjEngine() ObjectEngine {
+	return b.storage.cfg.ObjectEngine
+}
+
 func (b *baseQuery) baseObjAdapter() Adapter {
-	return b.storage.adapter(EngineRoleObject)
+	return b.storage.adapter(b.baseObjEngine())
 }
 
 func (b *baseQuery) baseObjQuery() ObjectBaseQuery {
@@ -53,8 +66,12 @@ func (b *baseQuery) baseSetObjQuery(q ObjectBaseQuery) {
 
 // || CACHE ||
 
+func (b *baseQuery) baseCacheEngine() CacheEngine {
+	return b.storage.cfg.CacheEngine
+}
+
 func (b *baseQuery) baseCacheAdapter() Adapter {
-	return b.storage.adapter(EngineRoleCache)
+	return b.storage.adapter(b.baseCacheEngine())
 }
 
 func (b *baseQuery) baseCacheQuery() CacheBaseQuery {
@@ -67,6 +84,10 @@ func (b *baseQuery) baseSetCacheQuery(q CacheBaseQuery) {
 
 // |||| EXCEPTION HANDLING  ||||
 
+func (b *baseQuery) baseExec(actionFunc errutil.ActionFunc) {
+	b._catcher.Exec(actionFunc)
+}
+
 func (b *baseQuery) baseErr() error {
-	return b.catcher.Error()
+	return b._catcher.Error()
 }

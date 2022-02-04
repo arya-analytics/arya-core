@@ -104,10 +104,7 @@ func (vm MultipassVM) Provision() error {
 // Exists checks if the virtual machine exists.
 func (vm MultipassVM) Exists() bool {
 	_, err := vm.Info()
-	if err != nil {
-		return false
-	}
-	return true
+	return err != nil
 }
 
 // Info retrieves info describing the VM.

@@ -7,7 +7,7 @@ import (
 
 func parseRedisTSErr(err error) (oErr error) {
 	if err == nil {
-		return err
+		return nil
 	}
 	switch err.(type) {
 	case storage.Error:

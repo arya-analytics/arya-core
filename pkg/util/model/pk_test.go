@@ -65,8 +65,8 @@ var _ = Describe("PK", func() {
 				Expect(pks).To(HaveLen(2))
 			})
 			It("Should return the correct interface value", func() {
-				Expect(pks.Interface()[0]).To(Equal(rawPks[0]))
-				Expect(pks.Interface()[1]).To(Equal(rawPks[1]))
+				Expect(pks.Raw()[0]).To(Equal(rawPks[0]))
+				Expect(pks.Raw()[1]).To(Equal(rawPks[1]))
 			})
 		})
 		Describe("Edge cases + errors", func() {

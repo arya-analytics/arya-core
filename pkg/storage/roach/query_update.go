@@ -19,13 +19,13 @@ func newUpdate(db *bun.DB) *updateQuery {
 
 func (u *updateQuery) Model(m interface{}) storage.MDUpdateQuery {
 	rm := u.baseModel(m)
-	u.baseAdaptToDest()
+	u.baseExchangeToDest()
 	u.q = u.q.Model(rm.Pointer())
 	return u
 }
 
 func (u *updateQuery) WherePK(pk interface{}) storage.MDUpdateQuery {
-	return u.Where("ID = ?", pk)
+	return u.Where(pkEqualsSQL, pk)
 }
 
 func (u *updateQuery) Where(query string, args ...interface{}) storage.MDUpdateQuery {
@@ -34,7 +34,7 @@ func (u *updateQuery) Where(query string, args ...interface{}) storage.MDUpdateQ
 }
 
 func (u *updateQuery) Exec(ctx context.Context) error {
-	u.catcher.Exec(func() error {
+	u.baseExec(func() error {
 		_, err := u.q.Exec(ctx)
 		return err
 	})

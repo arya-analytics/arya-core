@@ -15,9 +15,9 @@ func parseBunErr(err error) (oErr error) {
 		return oErr
 	}
 
-	switch err.(type) {
+	switch err := err.(type) {
 	case pgdriver.Error:
-		oErr = parsePgDriverErr(err.(pgdriver.Error))
+		oErr = parsePgDriverErr(err)
 	default:
 		oErr = parseSqlError(err.Error())
 	}

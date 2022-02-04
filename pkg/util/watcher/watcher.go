@@ -29,7 +29,6 @@ type Watcher struct {
 	fsWatcher *fsnotify.Watcher
 }
 
-// NewWatcher creates a new Watcher
 func NewWatcher(cfg WatcherConfig) (*Watcher, error) {
 	w := &Watcher{cfg: cfg}
 	fsw, err := fsnotify.NewWatcher()
@@ -37,7 +36,7 @@ func NewWatcher(cfg WatcherConfig) (*Watcher, error) {
 	return w, err
 }
 
-// Start starts the watcher and looks for file changes
+// Start starts the watcher and looks for file changes.
 func (w *Watcher) Start() {
 	var err error
 	w.fsWatcher, err = fsnotify.NewWatcher()
@@ -97,14 +96,12 @@ func (w *Watcher) ignored(path string) bool {
 
 func (w *Watcher) listen() {
 	for {
-		select {
-		case event, ok := <-w.fsWatcher.Events:
-			if !ok {
-				log.Fatalln(event)
-			}
-			if w.triggerAction(event) {
-				w.cfg.Action(event)
-			}
+		event, ok := <-w.fsWatcher.Events
+		if !ok {
+			log.Fatalln(event)
+		}
+		if w.triggerAction(event) {
+			w.cfg.Action(event)
 		}
 	}
 }

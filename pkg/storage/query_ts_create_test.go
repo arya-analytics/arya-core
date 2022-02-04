@@ -91,7 +91,7 @@ var _ = Describe("QueryTsCreate", func() {
 				})
 				It("The samples should be able to be retrieved after creation", func() {
 					var resSamples []*storage.ChannelSample
-					var pks = model.NewReflect(&channelCfgChain).PKChain().Interface()
+					var pks = model.NewReflect(&channelCfgChain).PKChain().Raw()
 					pks = append(pks, mockChannelCfg.ID)
 					rErr := mockStorage.NewTSRetrieve().Model(&resSamples).WherePKs(
 						pks).AllTimeRange().Exec(mockCtx)

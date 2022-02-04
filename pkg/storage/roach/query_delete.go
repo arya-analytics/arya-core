@@ -17,12 +17,12 @@ func newDelete(db *bun.DB) *deleteQuery {
 	return r
 }
 
-func (d *deleteQuery) WherePK(pks interface{}) storage.MDDeleteQuery {
-	return d.Where("ID = ?", pks)
+func (d *deleteQuery) WherePK(pk interface{}) storage.MDDeleteQuery {
+	return d.Where(pkEqualsSQL, pk)
 }
 
 func (d *deleteQuery) WherePKs(pks interface{}) storage.MDDeleteQuery {
-	return d.Where("ID in (?)", bun.In(pks))
+	return d.Where(pkChainInSQL, bun.In(pks))
 }
 
 func (d *deleteQuery) Where(query string, args ...interface{}) storage.MDDeleteQuery {
@@ -36,7 +36,7 @@ func (d *deleteQuery) Model(m interface{}) storage.MDDeleteQuery {
 }
 
 func (d *deleteQuery) Exec(ctx context.Context) error {
-	d.catcher.Exec(func() error {
+	d.baseExec(func() error {
 		_, err := d.q.Exec(ctx)
 		return err
 	})

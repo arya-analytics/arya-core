@@ -6,9 +6,14 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 )
 
+const (
+	pkEqualsSQL  = "ID = ?"
+	pkChainInSQL = "ID in (?)"
+)
+
 type baseQuery struct {
-	modelAdapter *storage.ModelAdapter
-	catcher      *errutil.Catcher
+	exchange *storage.ModelExchange
+	catcher  *errutil.Catcher
 }
 
 func (b *baseQuery) baseInit() {
@@ -16,18 +21,22 @@ func (b *baseQuery) baseInit() {
 }
 
 func (b *baseQuery) baseModel(m interface{}) *model.Reflect {
-	b.modelAdapter = storage.NewModelAdapter(m, catalog().New(m))
-	return b.modelAdapter.Dest()
+	b.exchange = storage.NewModelExchange(m, catalog().New(m))
+	return b.exchange.Dest
 }
 
-func (b *baseQuery) baseAdaptToSource() {
-	b.modelAdapter.ExchangeToSource()
+func (b *baseQuery) baseExchangeToSource() {
+	b.exchange.ToSource()
 }
 
-func (b *baseQuery) baseAdaptToDest() {
-	b.modelAdapter.ExchangeToDest()
+func (b *baseQuery) baseExchangeToDest() {
+	b.exchange.ToDest()
 }
 
 func (b *baseQuery) baseErr() error {
 	return parseBunErr(b.catcher.Error())
+}
+
+func (b *baseQuery) baseExec(af errutil.ActionFunc) {
+	b.catcher.Exec(af)
 }

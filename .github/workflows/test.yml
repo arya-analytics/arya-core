@@ -4,6 +4,19 @@ on: [ push, pull_request ]
 jobs:
   test:
     runs-on: ubuntu-latest
+    services:
+      redistimeseries:
+        image: redislabs/redistimeseries
+        ports:
+          - 6379:6379
+      minio:
+        image: mosuka/minio:latest
+        ports:
+          - "9000:9000"
+          - "9001:9001"
+        env:
+          MINIO_ROOT_USER: minio
+          MINIO_ROOT_PASSWORD: minio123
     steps:
       - uses: actions/checkout@v2
 
@@ -12,18 +25,17 @@ jobs:
         with:
           go-version: 1.17
 
-      - name: Start Redis
-        run:  docker run -d -p 6379:6379 -it --rm redislabs/redistimeseries
-
       - name: Set Up Tests
         run: |
           go get github.com/onsi/ginkgo/v2/ginkgo/generators@v2.0.0
           go get github.com/onsi/ginkgo/v2/ginkgo/internal@v2.0.0
           go get github.com/onsi/ginkgo/v2/ginkgo/labels@v2.0.0
           go install github.com/onsi/ginkgo/v2/ginkgo
-      - name: Test
+
+      - name: Run Tests
         run: ginkgo -r --covermode=atomic --coverprofile=coverage.txt -covermode=atomic
           --skip-package=dev
+
       - name: Upload Coverage
         uses: codecov/codecov-action@v2
         with:

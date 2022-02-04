@@ -1,14 +1,15 @@
 package dev
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 )
 
 const (
-	dockerCmd        = "docker"
-	nameTagSeparator = ":"
-	nameTagFormat    = "Name:tag"
+	dockerComposeRelPath = "./deploy/docker/docker-compose.yaml"
+	dockerBaseCmd        = "docker"
+	nameTagSeparator     = ":"
 )
 
 type ImageCfg struct {
@@ -29,8 +30,8 @@ func NewDockerImage(cfg ImageCfg) *DockerImage {
 	return &di
 }
 
-func (d DockerImage) command(args ...string) *exec.Cmd {
-	cmd := exec.Command(dockerCmd, args...)
+func dockerCommand(args ...string) *exec.Cmd {
+	cmd := exec.Command(dockerBaseCmd, args...)
 	cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
 	return cmd
 }
@@ -42,15 +43,21 @@ func (d DockerImage) NameTag() string {
 
 // Build builds and tags the docker image based on d.ImageCfg.
 func (d DockerImage) Build() error {
-	return d.command("build", d.cfg.BuildCtxPath, "-t", d.NameTag()).Run()
+	return dockerCommand("build", d.cfg.BuildCtxPath, "-t", d.NameTag()).Run()
 }
 
 // Push pushes the docker image to the locally authenticated repository.
 func (d DockerImage) Push() error {
-	return d.command("push", d.NameTag()).Run()
+	return dockerCommand("push", d.NameTag()).Run()
 }
 
 // createNameTag creates the given Name tag based on the repository and tag.
 func createNameTag(repository, tag string) string {
 	return repository + nameTagSeparator + tag
+}
+
+func StartDockerCompose() error {
+	cmd := dockerCommand("compose", "-f", dockerComposeRelPath, "up")
+	fmt.Print(cmd.String())
+	return cmd.Run()
 }

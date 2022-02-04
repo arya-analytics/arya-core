@@ -4,52 +4,55 @@ import (
 	"context"
 )
 
-type tsRetrieveQuery struct {
+type TSRetrieveQuery struct {
 	tsBaseQuery
 }
 
-func newTSRetrieve(s *Storage) *tsRetrieveQuery {
-	tsr := &tsRetrieveQuery{}
+func newTSRetrieve(s *Storage) *TSRetrieveQuery {
+	tsr := &TSRetrieveQuery{}
 	tsr.baseInit(s)
 	return tsr
 }
 
-func (tsr *tsRetrieveQuery) Model(m interface{}) *tsRetrieveQuery {
-	tsr.tsBaseModel(m)
+func (tsr *TSRetrieveQuery) Model(m interface{}) *TSRetrieveQuery {
+	tsr.baseBindModel(m)
 	tsr.setCacheQuery(tsr.cacheQuery().Model(m))
 	return tsr
 }
 
-func (tsr *tsRetrieveQuery) WherePK(pk interface{}) *tsRetrieveQuery {
+func (tsr *TSRetrieveQuery) WherePK(pk interface{}) *TSRetrieveQuery {
 	tsr.tsBaseWherePk(pk)
 	tsr.setCacheQuery(tsr.cacheQuery().WherePK(pk))
 	return tsr
 }
 
-func (tsr *tsRetrieveQuery) WherePKs(pks interface{}) *tsRetrieveQuery {
+func (tsr *TSRetrieveQuery) WherePKs(pks interface{}) *TSRetrieveQuery {
 	tsr.tsBaseWherePks(pks)
 	tsr.setCacheQuery(tsr.cacheQuery().WherePKs(pks))
 	return tsr
 }
 
-func (tsr *tsRetrieveQuery) AllTimeRange() *tsRetrieveQuery {
+func (tsr *TSRetrieveQuery) AllTimeRange() *TSRetrieveQuery {
 	tsr.setCacheQuery(tsr.cacheQuery().AllTimeRange())
 	return tsr
 }
 
-func (tsr *tsRetrieveQuery) WhereTimeRange(fromTS int64, toTS int64) *tsRetrieveQuery {
+func (tsr *TSRetrieveQuery) WhereTimeRange(fromTS int64, toTS int64) *TSRetrieveQuery {
 	tsr.setCacheQuery(tsr.cacheQuery().WhereTimeRange(fromTS, toTS))
 	return tsr
 }
 
-func (tsr *tsRetrieveQuery) SeriesExists(ctx context.Context, pk interface{}) (bool, error) {
-	return tsr.cacheQuery().SeriesExists(ctx, pk)
+func (tsr *TSRetrieveQuery) SeriesExists(ctx context.Context,
+	pk interface{}) (exists bool, err error) {
+	tsr.baseExec(func() error {
+		exists, err = tsr.cacheQuery().SeriesExists(ctx, pk)
+		return err
+	})
+	return exists, tsr.baseErr()
 }
 
-func (tsr *tsRetrieveQuery) Exec(ctx context.Context) error {
-	tsr.catcher.Exec(func() error {
-		return tsr.cacheQuery().Exec(ctx)
-	})
+func (tsr *TSRetrieveQuery) Exec(ctx context.Context) error {
+	tsr.baseExec(func() error { return tsr.cacheQuery().Exec(ctx) })
 	return tsr.baseErr()
 }
 
@@ -57,13 +60,13 @@ func (tsr *tsRetrieveQuery) Exec(ctx context.Context) error {
 
 // || CACHE ||
 
-func (tsr *tsRetrieveQuery) cacheQuery() CacheTSRetrieveQuery {
+func (tsr *TSRetrieveQuery) cacheQuery() CacheTSRetrieveQuery {
 	if tsr.baseCacheQuery() == nil {
-		tsr.setCacheQuery(tsr.cacheEngine.NewTSRetrieve(tsr.baseCacheAdapter()))
+		tsr.setCacheQuery(tsr.baseCacheEngine().NewTSRetrieve(tsr.baseCacheAdapter()))
 	}
 	return tsr.baseCacheQuery().(CacheTSRetrieveQuery)
 }
 
-func (tsr *tsRetrieveQuery) setCacheQuery(q CacheTSRetrieveQuery) {
+func (tsr *TSRetrieveQuery) setCacheQuery(q CacheTSRetrieveQuery) {
 	tsr.baseSetCacheQuery(q)
 }

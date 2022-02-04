@@ -18,7 +18,7 @@ var ignoreDirs = []string{
 
 const (
 	DefaultImageRepo    = "ghcr.io/arya-analytics/arya-core"
-	DefaultChartRelPath = "kubernetes/arya-core"
+	DefaultChartRelPath = "/deploy/kubernetes/arya-core"
 )
 
 // DefaultBuildCtxPath returns the default build context for the arya image.

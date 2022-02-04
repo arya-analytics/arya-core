@@ -9,26 +9,27 @@ type Adapter interface {
 	ID() uuid.UUID
 }
 
-type EngineRole int
-
-const (
-	EngineRoleMD = iota
-	EngineRoleObject
-	EngineRoleCache
-)
-
 // |||| ENGINE ||||
 
-type BaseEngine interface {
+// Engine is a set of general interfaces that each engine variant must meet.
+//
+// Assigning Data Responsibility
+//
+// Each engine variant is responsible for storing specific data types.
+// These responsibilities are assigned in the model struct using the storage.re key.
+// If no responsibility is assigned, MDEngine is assumed responsible.
+type Engine interface {
 	NewAdapter() Adapter
 	IsAdapter(a Adapter) bool
-	InCatalog(m interface{}) bool
+	InCatalog(model interface{}) bool
 }
 
 // || META DATA ||
 
+// MDEngine or the Metadata Engine is responsible for storing lightweight,
+// strongly consistent data across the cluster.
 type MDEngine interface {
-	BaseEngine
+	Engine
 	// NewRetrieve opens a new MDRetrieveQuery.
 	NewRetrieve(a Adapter) MDRetrieveQuery
 	// NewCreate opens a new MDCreateQuery.
@@ -43,32 +44,41 @@ type MDEngine interface {
 
 // || OBJECT ||
 
+// ObjectEngine is responsible for storing bulk data to node local data storage.
 type ObjectEngine interface {
-	BaseEngine
+	Engine
+	// NewRetrieve opens a new ObjectRetrieveQuery.
 	NewRetrieve(a Adapter) ObjectRetrieveQuery
+	// NewCreate opens a new ObjectCreateQuery.
 	NewCreate(a Adapter) ObjectCreateQuery
+	// NewDelete opens a new ObjectDeleteQuery.
 	NewDelete(a Adapter) ObjectDeleteQuery
+	// NewMigrate opens a new ObjectMigrateQuery.
 	NewMigrate(a Adapter) ObjectMigrateQuery
 }
 
 // || CACHE ||
 
+// CacheEngine is responsible for storing and serving lightweight,
+// ephemeral data at high speeds.
 type CacheEngine interface {
-	BaseEngine
+	Engine
+	// NewTSRetrieve opens a new CacheTSRetrieveQuery.
 	NewTSRetrieve(a Adapter) CacheTSRetrieveQuery
+	// NewTSCreate opens a new CacheTSCreateQuery.
 	NewTSCreate(a Adapter) CacheTSCreateQuery
 }
 
 // |||| QUERY ||||
 
-type BaseQuery interface {
+type Query interface {
 	Exec(ctx context.Context) error
 }
 
 // || META DATA ||
 
 type MDBaseQuery interface {
-	BaseQuery
+	Query
 }
 
 // MDRetrieveQuery is for retrieving items from metadata storage.
@@ -97,9 +107,9 @@ type MDUpdateQuery interface {
 // MDDeleteQuery is for deleting items in metadata storage.
 type MDDeleteQuery interface {
 	MDBaseQuery
+	Model(model interface{}) MDDeleteQuery
 	WherePK(pk interface{}) MDDeleteQuery
 	WherePKs(pks interface{}) MDDeleteQuery
-	Model(model interface{}) MDDeleteQuery
 }
 
 // MDMigrateQuery applies migration changes to metadata storage.
@@ -111,7 +121,7 @@ type MDMigrateQuery interface {
 // || OBJECT ||
 
 type ObjectBaseQuery interface {
-	BaseQuery
+	Query
 }
 
 type ObjectCreateQuery interface {
@@ -141,7 +151,7 @@ type ObjectMigrateQuery interface {
 // || TS CACHE ||
 
 type CacheBaseQuery interface {
-	BaseQuery
+	Query
 }
 
 type CacheCreateQuery interface {

@@ -19,7 +19,7 @@ var _ = Describe("Tooling", func() {
 				})
 			})
 			Describe("Uninstalling a tool", func() {
-				It("Should throw an errutil", func() {
+				It("Should throw an error", func() {
 					err := tooling.Uninstall("ra012hjad")
 					Expect(err).ToNot(BeNil())
 				})
@@ -52,7 +52,7 @@ var _ = Describe("Tooling", func() {
 				})
 			})
 			Describe("Installing a tool", func() {
-				It("Shouldn't throw an errutil", func() {
+				It("Shouldn't throw an errir", func() {
 					err := tooling.Install(testTool)
 					Expect(err).To(BeNil())
 				})

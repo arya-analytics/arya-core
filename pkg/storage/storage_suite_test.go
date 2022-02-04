@@ -18,16 +18,15 @@ import (
 )
 
 var (
-	mockEngineCfg = storage.EngineConfig{
-		storage.EngineRoleMD: bootstrapMockRoachEngine(),
-		storage.EngineRoleObject: minio.New(
-			minio.Config{
-				Driver:    minio.DriverMinIO,
-				Endpoint:  "play.min.io",
-				AccessKey: "Q3AM3UQ867SPQQA43P2F",
-				SecretKey: "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG",
-			}),
-		storage.EngineRoleCache: redis.New(redis.Config{
+	mockEngineCfg = storage.Config{
+		MDEngine: bootstrapMockRoachEngine(),
+		ObjectEngine: minio.New(minio.Config{
+			Driver:    minio.DriverMinIO,
+			Endpoint:  "localhost:9000",
+			AccessKey: "minio",
+			SecretKey: "minio123",
+		}),
+		CacheEngine: redis.New(redis.Config{
 			Host:     "localhost",
 			Port:     6379,
 			Password: "",
@@ -72,7 +71,7 @@ func createMock(m interface{}) {
 
 func deleteMock(m interface{}) {
 	rfl := model.NewReflect(m)
-	if err := mockStorage.NewDelete().Model(m).WherePK(rfl.PK().Interface()).Exec(
+	if err := mockStorage.NewDelete().Model(m).WherePK(rfl.PK().Raw()).Exec(
 		mockCtx); err != nil {
 		log.Fatalln(err, rfl.Type().Name())
 	}
