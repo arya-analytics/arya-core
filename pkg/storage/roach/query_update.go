@@ -19,7 +19,7 @@ func newUpdate(db *bun.DB) *updateQuery {
 
 func (u *updateQuery) Model(m interface{}) storage.MDUpdateQuery {
 	rm := u.baseModel(m)
-	u.baseAdaptToDest()
+	u.baseExchangeToDest()
 	u.q = u.q.Model(rm.Pointer())
 	return u
 }

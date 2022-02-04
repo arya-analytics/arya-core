@@ -21,11 +21,11 @@ func (b *baseQuery) baseClient() *timeseries.Client {
 	return b._client
 }
 
-func (b *baseQuery) baseAdaptToDest() {
+func (b *baseQuery) baseExchangeToDest() {
 	b.modelExchange.ToDest()
 }
 
-func (b *baseQuery) baseAdaptToSource() {
+func (b *baseQuery) baseExchangeToSource() {
 	b.modelExchange.ToSource()
 }
 

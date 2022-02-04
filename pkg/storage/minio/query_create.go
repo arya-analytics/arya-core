@@ -20,7 +20,7 @@ func newCreate(client *minio.Client) *createQuery {
 
 func (c *createQuery) Model(m interface{}) storage.ObjectCreateQuery {
 	c.baseModel(m)
-	c.baseAdaptToDest()
+	c.baseExchangeToDest()
 	return c
 }
 

@@ -21,7 +21,7 @@ func newCreate(db *bun.DB) *createQuery {
 // Model implements storage.MDCreateQuery.
 func (c *createQuery) Model(m interface{}) storage.MDCreateQuery {
 	rm := c.baseModel(m)
-	c.baseAdaptToDest()
+	c.baseExchangeToDest()
 	c.catcher.Exec(func() error {
 		beforeInsertSetUUID(rm)
 		c.q = c.q.Model(rm.Pointer())

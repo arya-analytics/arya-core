@@ -20,11 +20,11 @@ func (b *baseQuery) baseModel(m interface{}) *model.Reflect {
 	return b.modelExchange.Dest
 }
 
-func (b *baseQuery) baseAdaptToSource() {
+func (b *baseQuery) baseExchangeToSource() {
 	b.modelExchange.ToSource()
 }
 
-func (b *baseQuery) baseAdaptToDest() {
+func (b *baseQuery) baseExchangeToDest() {
 	b.modelExchange.ToDest()
 }
 

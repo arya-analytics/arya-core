@@ -36,7 +36,7 @@ func (tsc *tsCreateQuery) Sample() storage.CacheTSCreateQuery {
 
 func (tsc *tsCreateQuery) Model(m interface{}) storage.CacheTSCreateQuery {
 	tsc.baseModel(m)
-	tsc.baseAdaptToDest()
+	tsc.baseExchangeToDest()
 	return tsc
 }
 

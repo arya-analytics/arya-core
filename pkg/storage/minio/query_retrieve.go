@@ -52,7 +52,7 @@ func (r *retrieveQuery) Exec(ctx context.Context) error {
 		r.appendToDVC(&dataValue{PK: pk, Data: &object{resObj}})
 	}
 	r.baseBindVals(r.dvc)
-	r.baseAdaptToSource()
+	r.baseExchangeToSource()
 	return r.baseErr()
 }
 

@@ -31,11 +31,11 @@ func (b *baseQuery) baseBucket() string {
 	return b.modelExchange.Bucket()
 }
 
-func (b *baseQuery) baseAdaptToSource() {
+func (b *baseQuery) baseExchangeToSource() {
 	b.modelExchange.ToSource()
 }
 
-func (b *baseQuery) baseAdaptToDest() {
+func (b *baseQuery) baseExchangeToDest() {
 	b.modelExchange.ToDest()
 }
 
