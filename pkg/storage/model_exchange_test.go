@@ -8,9 +8,9 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Model Adapter", func() {
-	Describe("Adapter", func() {
-		Context("Single Model Adaptation", func() {
+var _ = Describe("Model Exchange", func() {
+	Describe("Exchange", func() {
+		Context("Single Model Exchange", func() {
 			Context("Models of the same type", func() {
 				Context("No nested rfl", func() {
 					var source *mock.ModelA
@@ -28,29 +28,29 @@ var _ = Describe("Model Adapter", func() {
 						dest = &mock.ModelA{}
 					})
 					It("Should exchange to source", func() {
-						ma := storage.NewModelAdapter(dest, source)
-						ma.ExchangeToSource()
+						me := storage.NewModelExchange(dest, source)
+						me.ToSource()
 						Expect(source.ID).To(Equal(435))
 						Expect(source.ID).To(Equal(dest.ID))
 						Expect(source.Name).To(Equal(dest.Name))
 					})
 					It("Should exchange to dest", func() {
-						ma := storage.NewModelAdapter(source, dest)
-						ma.ExchangeToDest()
+						me := storage.NewModelExchange(source, dest)
+						me.ToDest()
 						Expect(source.ID).To(Equal(435))
 						Expect(source.ID).To(Equal(dest.ID))
 						Expect(source.Name).To(Equal(dest.Name))
 					})
 					It("Shouldn't maintain refs between source and dest models",
 						func() {
-							ma := storage.NewModelAdapter(source, dest)
-							ma.ExchangeToDest()
+							me := storage.NewModelExchange(source, dest)
+							me.ToDest()
 							source.Name = "Hello"
 							Expect(dest.Name).To(Equal("Cool Name"))
 						})
 					It("Should maintain rfl internal refs", func() {
-						ma := storage.NewModelAdapter(source, dest)
-						ma.ExchangeToDest()
+						me := storage.NewModelExchange(source, dest)
+						me.ToDest()
 						refObj.ID = 9260
 						Expect(dest.RefObj.ID).To(Equal(9260))
 					})
@@ -71,20 +71,20 @@ var _ = Describe("Model Adapter", func() {
 						dest = &mock.ModelB{}
 					})
 					It("Should exchange to source", func() {
-						ma := storage.NewModelAdapter(dest, source)
-						ma.ExchangeToSource()
+						me := storage.NewModelExchange(dest, source)
+						me.ToSource()
 						Expect(source.InnerModel.ID).To(Equal(24))
 						Expect(dest.InnerModel.ID).To(Equal(source.InnerModel.ID))
 					})
 					It("Should exchange to dest", func() {
-						ma := storage.NewModelAdapter(source, dest)
-						ma.ExchangeToDest()
+						me := storage.NewModelExchange(source, dest)
+						me.ToDest()
 						Expect(source.InnerModel.ID).To(Equal(24))
 						Expect(dest.InnerModel.ID).To(Equal(source.InnerModel.ID))
 					})
 					It("Should break the reference to the inner rfl struct", func() {
-						ma := storage.NewModelAdapter(source, dest)
-						ma.ExchangeToDest()
+						me := storage.NewModelExchange(source, dest)
+						me.ToDest()
 						innerModel.ID = 45
 						Expect(dest.InnerModel.ID).To(Equal(24))
 					})
@@ -102,8 +102,8 @@ var _ = Describe("Model Adapter", func() {
 						dest = &mock.ModelB{}
 					})
 					It("Should exchange correctly", func() {
-						ma := storage.NewModelAdapter(source, dest)
-						ma.ExchangeToDest()
+						me := storage.NewModelExchange(source, dest)
+						me.ToDest()
 						Expect(source.InnerModel).To(BeNil())
 					})
 				})
@@ -123,8 +123,8 @@ var _ = Describe("Model Adapter", func() {
 						dest = &mock.ModelA{}
 					})
 					It("Should break ref between old and new nested", func() {
-						ma := storage.NewModelAdapter(source, dest)
-						ma.ExchangeToDest()
+						me := storage.NewModelExchange(source, dest)
+						me.ToDest()
 						Expect(source.InnerModel.ID).To(Equal(96))
 						Expect(dest.InnerModel.ID).To(Equal(source.InnerModel.ID))
 						source.InnerModel.ID = 45
@@ -156,8 +156,8 @@ var _ = Describe("Model Adapter", func() {
 						}
 					})
 					It("Should exchange correctly", func() {
-						ma := storage.NewModelAdapter(source, dest)
-						ma.ExchangeToDest()
+						me := storage.NewModelExchange(source, dest)
+						me.ToDest()
 						Expect(source.ID).To(Equal(420))
 						Expect(source.ID).To(Equal(dest.ID))
 						Expect(source.ChainInnerModel).To(HaveLen(2))
@@ -194,13 +194,13 @@ var _ = Describe("Model Adapter", func() {
 						dest = []*mock.ModelB{}
 					})
 					It("Should exchange correctly", func() {
-						ma := storage.NewModelAdapter(&source, &dest)
-						ma.ExchangeToDest()
+						me := storage.NewModelExchange(&source, &dest)
+						me.ToDest()
 						Expect(dest).To(HaveLen(2))
 					})
 					It("Should maintain rfl internal refs", func() {
-						ma := storage.NewModelAdapter(&source, &dest)
-						ma.ExchangeToDest()
+						me := storage.NewModelExchange(&source, &dest)
+						me.ToDest()
 						Expect(dest[0].RefObj.ID).To(Equal(source[0].RefObj.ID))
 						dest[0].RefObj.ID = 720
 						Expect(source[0].RefObj.ID).To(Equal(720))
@@ -235,8 +235,8 @@ var _ = Describe("Model Adapter", func() {
 						}
 					})
 					It("Should override the values in dest", func() {
-						ma := storage.NewModelAdapter(&source, &dest)
-						ma.ExchangeToDest()
+						me := storage.NewModelExchange(&source, &dest)
+						me.ToDest()
 						Expect(dest).To(HaveLen(2))
 						Expect(dest[0].ID).To(Equal(22))
 						Expect(dest[1].ID).To(Equal(24))
@@ -267,8 +267,8 @@ var _ = Describe("Model Adapter", func() {
 							}
 						})
 						It("Should exchange correctly", func() {
-							ma := storage.NewModelAdapter(&source, &dest)
-							ma.ExchangeToSource()
+							me := storage.NewModelExchange(&source, &dest)
+							me.ToSource()
 							Expect(source).To(HaveLen(2))
 							Expect(source[0].CommonChainInnerModel).To(Equal(chainInnerModel))
 						})
@@ -282,7 +282,7 @@ var _ = Describe("Model Adapter", func() {
 				var source []*mock.ModelA
 				var dest []*mock.ModelB
 				var refObj *mock.RefObj
-				var ma *storage.ModelAdapter
+				var me *storage.ModelExchange
 				BeforeEach(func() {
 					refObj = &mock.RefObj{
 						ID: 672,
@@ -300,15 +300,15 @@ var _ = Describe("Model Adapter", func() {
 						},
 					}
 					dest = []*mock.ModelB{}
-					ma = storage.NewModelAdapter(&source, &dest)
-					ma.ExchangeToDest()
+					me = storage.NewModelExchange(&source, &dest)
+					me.ToDest()
 				})
 				It("Should return the correct source", func() {
-					Expect(ma.Source.Type()).To(Equal(model.NewReflect(&mock.ModelA{}).
+					Expect(me.Source.Type()).To(Equal(model.NewReflect(&mock.ModelA{}).
 						Type()))
 				})
 				It("Should return the correct dest", func() {
-					Expect(ma.Dest.Type()).To(Equal(model.NewReflect(&mock.ModelB{}).
+					Expect(me.Dest.Type()).To(Equal(model.NewReflect(&mock.ModelB{}).
 						Type()))
 				})
 			})
@@ -316,7 +316,7 @@ var _ = Describe("Model Adapter", func() {
 				var source *mock.ModelA
 				var dest *mock.ModelB
 				var refObj *mock.RefObj
-				var ma *storage.ModelAdapter
+				var me *storage.ModelExchange
 				BeforeEach(func() {
 					refObj = &mock.RefObj{
 						ID: 672,
@@ -327,15 +327,15 @@ var _ = Describe("Model Adapter", func() {
 						RefObj: refObj,
 					}
 					dest = &mock.ModelB{}
-					ma = storage.NewModelAdapter(source, dest)
-					ma.ExchangeToDest()
+					me = storage.NewModelExchange(source, dest)
+					me.ToDest()
 				})
 				It("Should return the correct source", func() {
-					Expect(ma.Source.Type()).To(Equal(model.NewReflect(&mock.
-					ModelA{}).Type()))
+					Expect(me.Source.Type()).To(Equal(model.NewReflect(&mock.
+						ModelA{}).Type()))
 				})
 				It("Should return the correct dest", func() {
-					Expect(ma.Dest.Type()).To(Equal(model.NewReflect(&mock.ModelB{}).
+					Expect(me.Dest.Type()).To(Equal(model.NewReflect(&mock.ModelB{}).
 						Type()))
 				})
 			})
@@ -347,7 +347,7 @@ var _ = Describe("Model Adapter", func() {
 						var source []*mock.ModelB
 						dest := &mock.ModelB{}
 						Expect(func() {
-							storage.NewModelAdapter(&source, dest)
+							storage.NewModelExchange(&source, dest)
 						}).To(Panic())
 					})
 				})
@@ -356,7 +356,7 @@ var _ = Describe("Model Adapter", func() {
 						source := &mock.ModelB{}
 						dest := 1
 						Expect(func() {
-							storage.NewModelAdapter(source, &dest)
+							storage.NewModelExchange(source, &dest)
 						}).To(Panic())
 					})
 				})
@@ -365,7 +365,7 @@ var _ = Describe("Model Adapter", func() {
 						source := mock.ModelB{}
 						dest := &mock.ModelA{}
 						Expect(func() {
-							storage.NewModelAdapter(source, dest)
+							storage.NewModelExchange(source, dest)
 						}).To(Panic())
 					})
 				})
@@ -374,7 +374,7 @@ var _ = Describe("Model Adapter", func() {
 						source := &mock.ModelB{}
 						dest := &mock.ModelA{}
 						Expect(func() {
-							storage.NewModelAdapter(&source, &dest)
+							storage.NewModelExchange(&source, &dest)
 						}).To(Panic())
 					})
 				})
@@ -383,7 +383,7 @@ var _ = Describe("Model Adapter", func() {
 						source := []*mock.ModelB{&mock.ModelB{Name: "Hello"}}
 						dest := &[]*mock.ModelA{}
 						Expect(func() {
-							storage.NewModelAdapter(&source, &dest)
+							storage.NewModelExchange(&source, &dest)
 						}).To(Panic())
 					})
 				})
@@ -398,9 +398,9 @@ var _ = Describe("Model Adapter", func() {
 									Name: "My Cool Model",
 								}
 								dest := &mock.ModelC{}
-								ma := storage.NewModelAdapter(source, dest)
+								me := storage.NewModelExchange(source, dest)
 								Expect(func() {
-									ma.ExchangeToDest()
+									me.ToDest()
 								})
 							})
 						})
@@ -411,9 +411,9 @@ var _ = Describe("Model Adapter", func() {
 									PointerIncompatible: &map[string]string{"one": "two"},
 								}
 								dest := &mock.ModelF{}
-								ma := storage.NewModelAdapter(source, dest)
+								me := storage.NewModelExchange(source, dest)
 								Expect(func() {
-									ma.ExchangeToDest()
+									me.ToDest()
 								})
 							})
 						})
@@ -426,9 +426,9 @@ var _ = Describe("Model Adapter", func() {
 										ID: 22,
 									}
 									dest := &mock.ModelC{}
-									ma := storage.NewModelAdapter(source, dest)
+									me := storage.NewModelExchange(source, dest)
 									Expect(func() {
-										ma.ExchangeToDest()
+										me.ToDest()
 									}).ToNot(Panic())
 								})
 							})
@@ -442,9 +442,9 @@ var _ = Describe("Model Adapter", func() {
 										},
 									}
 									source := &mock.ModelC{}
-									ma := storage.NewModelAdapter(source, dest)
+									me := storage.NewModelExchange(source, dest)
 									Expect(func() {
-										ma.ExchangeToSource()
+										me.ToSource()
 									})
 								})
 							})
@@ -461,9 +461,9 @@ var _ = Describe("Model Adapter", func() {
 									},
 								}
 								source := &mock.ModelC{}
-								ma := storage.NewModelAdapter(source, dest)
+								me := storage.NewModelExchange(source, dest)
 								Expect(func() {
-									ma.ExchangeToSource()
+									me.ToSource()
 								}).To(Panic())
 							})
 						})

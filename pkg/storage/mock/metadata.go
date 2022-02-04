@@ -26,8 +26,8 @@ func (e *MDEngine) InCatalog(m interface{}) bool {
 }
 
 func (e *MDEngine) bindAdapter(a storage.Adapter) (*mdAdapter, bool) {
-	ma, ok := a.(*mdAdapter)
-	return ma, ok
+	me, ok := a.(*mdAdapter)
+	return me, ok
 }
 
 type mdAdapter struct {

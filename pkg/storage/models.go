@@ -48,12 +48,12 @@ type ChannelChunk struct {
 	RangeID         uuid.UUID
 	ChannelConfig   *ChannelConfig
 	ChannelConfigID uuid.UUID
-	Data            Object
+	Data            Object `storage:"re:object"`
 }
 
 type ChannelSample struct {
 	ChannelConfig   *ChannelConfig `model:"role:series"`
 	ChannelConfigID uuid.UUID
-	Value           float64
-	Timestamp       int64
+	Value           float64 `storage:"role:cache"`
+	Timestamp       int64   `storage:"role:cache"`
 }

@@ -1,5 +1,10 @@
 // Package storage provides an interface for interacting with a set of data stores.
 //
+// Storage architecture documentation can be found at:
+// https://arya-analytics.atlassian.net/wiki/spaces/AA/pages/3212201/00+-+Storage+Layer
+// High level data architecture documentation can be found at:
+// https://arya-analytics.atlassian.net/wiki/spaces/AA/pages/819257/00+-+Arya+Core#5.2---Data-Architecture
+//
 // Engines
 //
 // The package relies on a set of dependency injected storage engines to read

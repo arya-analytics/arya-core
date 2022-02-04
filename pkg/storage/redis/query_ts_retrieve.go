@@ -76,7 +76,7 @@ func (tsr *tsRetrieveQuery) Exec(ctx context.Context) error {
 			if err != nil {
 				return err
 			}
-			return tsr.modelAdapter.bindRes(pk.String(), res)
+			return tsr.modelExchange.bindRes(pk.String(), res)
 		})
 	}
 	tsr.baseAdaptToSource()

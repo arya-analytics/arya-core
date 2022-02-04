@@ -18,19 +18,19 @@ type dataValue struct {
 
 type dataValueChain []*dataValue
 
-type modelAdapter struct {
-	*storage.ModelAdapter
+type modelExchange struct {
+	*storage.ModelExchange
 }
 
-func newWrappedModelAdapter(sma *storage.ModelAdapter) *modelAdapter {
-	return &modelAdapter{sma}
+func newWrappedModelAdapter(sma *storage.ModelExchange) *modelExchange {
+	return &modelExchange{sma}
 }
 
-func (m *modelAdapter) Bucket() string {
+func (m *modelExchange) Bucket() string {
 	return caseconv.PascalToKebab(m.Dest.Type().Name())
 }
 
-func (m *modelAdapter) DataVals() dataValueChain {
+func (m *modelExchange) DataVals() dataValueChain {
 	var c dataValueChain
 	m.Dest.ForEach(func(rfl *model.Reflect, i int) {
 		val := rfl.StructValue()
@@ -43,7 +43,7 @@ func (m *modelAdapter) DataVals() dataValueChain {
 	return c
 }
 
-func (m *modelAdapter) BindDataVals(dvc dataValueChain) {
+func (m *modelExchange) BindDataVals(dvc dataValueChain) {
 	for _, dv := range dvc {
 		rfl, ok := m.Dest.ValueByPK(dv.PK)
 		if !ok {

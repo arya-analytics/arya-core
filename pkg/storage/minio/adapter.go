@@ -24,16 +24,16 @@ func newAdapter(cfg Config) *adapter {
 }
 
 func bindAdapter(a storage.Adapter) (*adapter, bool) {
-	ma, ok := a.(*adapter)
-	return ma, ok
+	me, ok := a.(*adapter)
+	return me, ok
 }
 
 func conn(a storage.Adapter) *minio.Client {
-	ma, ok := bindAdapter(a)
+	me, ok := bindAdapter(a)
 	if !ok {
 		panic("couldn't bind minio adapter")
 	}
-	return ma.conn()
+	return me.conn()
 }
 
 func (a *adapter) ID() uuid.UUID {

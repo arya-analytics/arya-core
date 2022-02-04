@@ -7,9 +7,9 @@ import (
 )
 
 type baseQuery struct {
-	_client      *timeseries.Client
-	modelAdapter *modelAdapter
-	catcher      *errutil.Catcher
+	_client       *timeseries.Client
+	modelExchange *modelExchange
+	catcher       *errutil.Catcher
 }
 
 func (b *baseQuery) baseInit(client *timeseries.Client) {
@@ -22,15 +22,15 @@ func (b *baseQuery) baseClient() *timeseries.Client {
 }
 
 func (b *baseQuery) baseAdaptToDest() {
-	b.modelAdapter.ExchangeToDest()
+	b.modelExchange.ToDest()
 }
 
 func (b *baseQuery) baseAdaptToSource() {
-	b.modelAdapter.ExchangeToSource()
+	b.modelExchange.ToSource()
 }
 
 func (b *baseQuery) baseModel(m interface{}) {
-	b.modelAdapter = newWrappedModelAdapter(storage.NewModelAdapter(m,
+	b.modelExchange = newWrappedModelAdapter(storage.NewModelExchange(m,
 		catalog().New(m)))
 }
 

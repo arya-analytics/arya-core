@@ -9,34 +9,36 @@ import (
 
 // |||| ADAPTER ||||
 
-type ModelAdapter struct {
+// ModelExchange is a utility for
+type ModelExchange struct {
 	Source *model.Reflect
 	Dest   *model.Reflect
 }
 
-func NewModelAdapter(sourcePtr, destPtr interface{}) *ModelAdapter {
+func NewModelExchange(sourcePtr, destPtr interface{}) *ModelExchange {
 	sRfl, dRfl := model.NewReflect(sourcePtr), model.NewReflect(destPtr)
 	if sRfl.RawType().Kind() != dRfl.RawType().Kind() {
-		panic("model adapter received model and chain. source and dest have same kind.")
+		panic("model exchange received model and chain. " +
+			"source and dest have same kind.")
 	}
-	return &ModelAdapter{sRfl, dRfl}
+	return &ModelExchange{sRfl, dRfl}
 }
 
-func (ma *ModelAdapter) ExchangeToSource() {
-	ma.exchange(ma.Source, ma.Dest)
+func (m *ModelExchange) ToSource() {
+	m.exchange(m.Dest, m.Source)
 }
 
-func (ma *ModelAdapter) ExchangeToDest() {
-	ma.exchange(ma.Dest, ma.Source)
+func (m *ModelExchange) ToDest() {
+	m.exchange(m.Source, m.Dest)
 }
 
-func (ma *ModelAdapter) exchange(to, from *model.Reflect) {
-	from.ForEach(func(fromRfl *model.Reflect, i int) {
-		toRfl := to
-		if to.IsChain() {
-			toRfl = to.ChainValueByIndexOrNew(i)
+func (m *ModelExchange) exchange(fromRfl, toRfl *model.Reflect) {
+	fromRfl.ForEach(func(nFromRfl *model.Reflect, i int) {
+		nToRfl := toRfl
+		if toRfl.IsChain() {
+			nToRfl = toRfl.ChainValueByIndexOrNew(i)
 		}
-		bindToSource(toRfl, fromRfl)
+		bindToSource(nToRfl, nFromRfl)
 	})
 }
 
@@ -46,14 +48,14 @@ type ModelCatalog []interface{}
 
 func (mc ModelCatalog) New(sourcePtr interface{}) interface{} {
 	sourceRfl := model.NewReflect(sourcePtr)
-	destRfl, ok := mc.retrieveCM(sourceRfl.Type())
+	newRfl, ok := mc.retrieveCM(sourceRfl.Type())
 	if !ok {
 		panic(fmt.Sprintf("model %s could not be found in catalog", sourceRfl.Type().Name()))
 	}
 	if sourceRfl.IsChain() {
-		return destRfl.NewChain().Pointer()
+		return newRfl.NewChain().Pointer()
 	}
-	return destRfl.NewStruct().Pointer()
+	return newRfl.NewStruct().Pointer()
 }
 
 func (mc ModelCatalog) Contains(sourcePtr interface{}) bool {
@@ -80,7 +82,7 @@ func bindToSource(sourceRfl, destRfl *model.Reflect) {
 		if validField(fld) && validValue(v) {
 			if v.Type() != fld.Type() {
 				if fld.Type().Kind() != reflect.Interface {
-					v = adaptNestedModel(fld, v)
+					v = exchangeNested(fld, v)
 				} else if !v.Type().Implements(fld.Type()) {
 					panic("doesn't implement interface")
 				}
@@ -90,17 +92,15 @@ func bindToSource(sourceRfl, destRfl *model.Reflect) {
 	}
 }
 
-func adaptNestedModel(fld, modelValue reflect.Value) reflect.Value {
-	fldPtr := newValidatedRfl(fld.Interface()).Pointer()
-	vPtr := newValidatedRfl(modelValue.Interface()).Pointer()
-	ma := NewModelAdapter(vPtr, fldPtr)
-	ma.ExchangeToDest()
+func exchangeNested(fld, modelValue reflect.Value) reflect.Value {
+	fldRfl, vRfl := newValidatedRfl(fld.Interface()), newValidatedRfl(modelValue.Interface())
+	NewModelExchange(vRfl.Pointer(), fldRfl.Pointer()).ToDest()
 	// If our model is a chain (i.e a slice),
 	// we want to get the slice itself, not the pointer to the slice.
-	if ma.Dest.IsChain() {
-		return ma.Dest.RawValue()
+	if fldRfl.IsChain() {
+		return fldRfl.RawValue()
 	}
-	return ma.Dest.PointerValue()
+	return fldRfl.PointerValue()
 }
 
 func newValidatedRfl(v interface{}) *model.Reflect {

@@ -7,8 +7,8 @@ import (
 )
 
 type baseQuery struct {
-	modelAdapter *storage.ModelAdapter
-	catcher      *errutil.Catcher
+	modelExchange *storage.ModelExchange
+	catcher       *errutil.Catcher
 }
 
 func (b *baseQuery) baseInit() {
@@ -16,16 +16,16 @@ func (b *baseQuery) baseInit() {
 }
 
 func (b *baseQuery) baseModel(m interface{}) *model.Reflect {
-	b.modelAdapter = storage.NewModelAdapter(m, catalog().New(m))
-	return b.modelAdapter.Dest
+	b.modelExchange = storage.NewModelExchange(m, catalog().New(m))
+	return b.modelExchange.Dest
 }
 
 func (b *baseQuery) baseAdaptToSource() {
-	b.modelAdapter.ExchangeToSource()
+	b.modelExchange.ToSource()
 }
 
 func (b *baseQuery) baseAdaptToDest() {
-	b.modelAdapter.ExchangeToDest()
+	b.modelExchange.ToDest()
 }
 
 func (b *baseQuery) baseErr() error {

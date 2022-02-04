@@ -25,7 +25,7 @@ func (c *createQuery) Model(m interface{}) storage.ObjectCreateQuery {
 }
 
 func (c *createQuery) Exec(ctx context.Context) error {
-	for _, dv := range c.modelAdapter.DataVals() {
+	for _, dv := range c.modelExchange.DataVals() {
 		c.catcher.Exec(func() error {
 			_, err := c.baseClient().PutObject(
 				ctx,
