@@ -67,9 +67,7 @@ func migrateUpFunc(d Driver) migrate.MigrationFunc {
 		// Binds the many-to-many relationship the bun ORM,
 		// so we can properly run queries against it.
 		db.RegisterModel((*rangeReplicaToNode)(nil))
-
 		c.execMigration(db.NewCreateTable().Model((*Node)(nil)).Exec)
-
 		if d == DriverPG {
 			c.Exec(func() error {
 				_, err := db.Exec(driverPGNodesViewSQL)
@@ -77,18 +75,15 @@ func migrateUpFunc(d Driver) migrate.MigrationFunc {
 
 			})
 		} else if d == DriverSQLite {
-
 			c.Exec(func() error {
 				_, err := db.Exec(driverSQLiteNodesViewSQL)
 				return err
 			})
 		}
-
 		c.execMigration(db.NewCreateTable().
 			Model((*ChannelConfig)(nil)).
 			ForeignKey(`("node_id") REFERENCES "nodes" ("id") ON DELETE CASCADE`).
 			Exec)
-
 		c.execMigration(db.NewCreateTable().
 			Model((*Range)(nil)).
 			ForeignKey(`("lease_holder_node_id") REFERENCES "nodes" (
@@ -99,7 +94,6 @@ func migrateUpFunc(d Driver) migrate.MigrationFunc {
 			ForeignKey(`("node_id") REFERENCES "nodes" ("id") ON DELETE CASCADE`).
 			ForeignKey(`("range_id") REFERENCES "ranges" ("id") ON DELETE CASCADE`).
 			Exec)
-
 		c.execMigration(db.NewCreateTable().
 			Model((*ChannelChunk)(nil)).
 			ForeignKey(`("channel_config_id") REFERENCES "channel_configs" ("id") 
