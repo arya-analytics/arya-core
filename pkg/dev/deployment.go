@@ -72,16 +72,16 @@ func (d Deployment) Install() error {
 	client.ReleaseName = d.cfg.Name
 	repo := fmt.Sprintf("%s=%s", imageRepoKey, d.cfg.ImageCfg.Repository)
 	tag := fmt.Sprintf("%s=%s", imageTagKey, d.cfg.ImageCfg.Tag)
-	c, err := d.chart()
-	if err != nil {
-		log.Fatalln(err)
+	c, cErr := d.chart()
+	if cErr != nil {
+		return cErr
 	}
 
 	var nodeIPs []string
 	for _, node := range d.cfg.Cluster.Nodes() {
-		info, err := node.VM.Info()
-		if err != nil {
-			log.Fatalln(err)
+		info, vErr := node.VM.Info()
+		if vErr != nil {
+			return vErr
 		}
 		nodeIPs = append(nodeIPs, info.IPv4)
 	}
@@ -109,8 +109,11 @@ func (d Deployment) Install() error {
 		}
 
 		_, err = client.Run(c, v)
+		if err != nil {
+			log.Fatalln(err)
+		}
 	})
-	return err
+	return nil
 }
 
 func (d Deployment) chart() (*chart.Chart, error) {
