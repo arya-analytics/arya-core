@@ -29,7 +29,7 @@ import (
 //
 // 		model.NewPK(m.PKField)
 //
-// or by instantiation of model.Reflect subsequent call of Reflect.PK()
+// or by instantiation of model.Reflect subsequent call of Reflect.PK().
 type PK struct {
 	raw interface{}
 }
@@ -63,7 +63,7 @@ func (pk PK) Raw() interface{} {
 }
 
 // Equals compares a provided PK tPk with PK itself. Returns true if they are equal,
-// returns false if they aren't
+// returns false if they aren't.
 func (pk PK) Equals(tPk PK) bool {
 	return pk.raw == tPk.raw
 }

@@ -9,7 +9,6 @@ import (
 
 // |||| ADAPTER ||||
 
-// ModelExchange is a utility for
 type ModelExchange struct {
 	Source *model.Reflect
 	Dest   *model.Reflect

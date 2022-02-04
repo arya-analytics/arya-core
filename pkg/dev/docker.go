@@ -58,6 +58,6 @@ func createNameTag(repository, tag string) string {
 
 func StartDockerCompose() error {
 	cmd := dockerCommand("compose", "-f", dockerComposeRelPath, "up")
-	fmt.Printf(cmd.String())
+	fmt.Print(cmd.String())
 	return cmd.Run()
 }
