@@ -7,8 +7,8 @@ import (
 
 type baseQuery struct {
 	storage         *Storage
-	catcher         *errutil.Catcher
 	modelRfl        *model.Reflect
+	_catcher        *errutil.Catcher
 	_baseMDQuery    MDBaseQuery
 	_baseObjQuery   ObjectBaseQuery
 	_baseCacheQuery CacheBaseQuery
@@ -16,7 +16,7 @@ type baseQuery struct {
 
 func (b *baseQuery) baseInit(s *Storage) {
 	b.storage = s
-	b.catcher = &errutil.Catcher{}
+	b._catcher = &errutil.Catcher{}
 }
 
 // |||| MODEL UTILITIES ||||
@@ -85,9 +85,9 @@ func (b *baseQuery) baseSetCacheQuery(q CacheBaseQuery) {
 // |||| EXCEPTION HANDLING  ||||
 
 func (b *baseQuery) baseExec(actionFunc errutil.ActionFunc) {
-	b.catcher.Exec(actionFunc)
+	b._catcher.Exec(actionFunc)
 }
 
 func (b *baseQuery) baseErr() error {
-	return b.catcher.Error()
+	return b._catcher.Error()
 }

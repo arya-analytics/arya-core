@@ -41,7 +41,7 @@ func (u *UpdateQuery) WherePK(pk interface{}) *UpdateQuery {
 
 // Exec execute the query with the provided context. Returns a storage.Error.
 func (u *UpdateQuery) Exec(ctx context.Context) error {
-	u.catcher.Exec(func() error { return u.mdQuery().Exec(ctx) })
+	u.baseExec(func() error { return u.mdQuery().Exec(ctx) })
 	return u.baseErr()
 }
 
