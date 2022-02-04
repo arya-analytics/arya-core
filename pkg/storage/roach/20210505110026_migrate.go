@@ -11,7 +11,7 @@ import (
 
 const (
 	nodesGossip = "nodes_gossip"
-	// CRDB Internal Schema
+	// CRDB Internal Schema.
 	crdbSchema         = "crdb_internal"
 	crdbGossipNodes    = crdbSchema + ".gossip_nodes"
 	crdbGossipLiveness = crdbSchema + ".gossip_liveness"

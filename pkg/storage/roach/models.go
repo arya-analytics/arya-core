@@ -63,7 +63,7 @@ type ChannelChunk struct {
 
 // || ROACH INTERNAL MODELS ||
 
-// GossipNode lives in crdb's internal schema and tracks the nodes in the roach cluster
+// GossipNode lives in crdb's internal schema and tracks the nodes in the roach cluster.
 type GossipNode struct {
 	Address   string    `bun:"type:text,scanonly"`
 	StartedAt time.Time `bun:"type:timestamp,scanonly"`
@@ -71,7 +71,7 @@ type GossipNode struct {
 }
 
 // GossipLiveness lives in crdb's internal schema and tracks the health of nodes in
-//the roach cluster
+//the roach cluster.
 type GossipLiveness struct {
 	Epoch           int       `bun:"type:bigint,scanonly"`
 	Expiration      string    `bun:"type:text,scanonly"`

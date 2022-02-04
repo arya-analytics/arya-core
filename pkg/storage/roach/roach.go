@@ -10,11 +10,11 @@ import (
 type TransactionLogLevel int
 
 const (
-	// TransactionLogLevelNone logs no queries
+	// TransactionLogLevelNone logs no queries.
 	TransactionLogLevelNone TransactionLogLevel = iota
-	// TransactionLogLevelErr logs failed queries
+	// TransactionLogLevelErr logs failed queries.
 	TransactionLogLevelErr
-	// TransactionLogLevelAll logs all queries1
+	// TransactionLogLevelAll logs all queries.
 	TransactionLogLevelAll
 )
 
@@ -23,7 +23,7 @@ type Driver int
 const (
 	// DriverPG connects via the Postgres wire protocol.
 	DriverPG Driver = iota
-	// DriverSQLite which uses an in memory SQLite database
+	// DriverSQLite which uses an in memory SQLite database.
 	DriverSQLite
 )
 
@@ -102,7 +102,7 @@ func (e *Engine) NewDelete(a storage.Adapter) storage.MDDeleteQuery {
 	return newDelete(conn(a))
 }
 
-// NewMigrate opens a new migrateQuery with the provided storage.Adapter;
+// NewMigrate opens a new migrateQuery with the provided storage.Adapter.
 func (e *Engine) NewMigrate(a storage.Adapter) storage.MDMigrateQuery {
 	return newMigrate(conn(a), e.cfg.Driver)
 }
