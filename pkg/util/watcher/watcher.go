@@ -96,14 +96,12 @@ func (w *Watcher) ignored(path string) bool {
 
 func (w *Watcher) listen() {
 	for {
-		select {
-		case event, ok := <-w.fsWatcher.Events:
-			if !ok {
-				log.Fatalln(event)
-			}
-			if w.triggerAction(event) {
-				w.cfg.Action(event)
-			}
+		event, ok := <-w.fsWatcher.Events
+		if !ok {
+			log.Fatalln(event)
+		}
+		if w.triggerAction(event) {
+			w.cfg.Action(event)
 		}
 	}
 }

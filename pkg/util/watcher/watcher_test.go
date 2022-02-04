@@ -39,6 +39,9 @@ var _ = Describe("Watcher", func() {
 			defer func() {
 				for _, f := range tmpFiles {
 					err := f.Close()
+					if err != nil {
+						log.Fatalln(err)
+					}
 					err = os.Remove(f.Name())
 					if err != nil {
 						log.Fatalln(err)
@@ -47,15 +50,12 @@ var _ = Describe("Watcher", func() {
 
 			}()
 			for !triggered {
-				select {
-				case <-t.C:
-					f, err := os.CreateTemp(tmpDir, "randomtmpfile")
-					tmpFiles = append(tmpFiles, f)
-					if err != nil {
-						log.Fatalln(err)
-					}
+				<-t.C
+				f, err := os.CreateTemp(tmpDir, "randomtmpfile")
+				tmpFiles = append(tmpFiles, f)
+				if err != nil {
+					log.Fatalln(err)
 				}
-
 			}
 			Expect(triggered).To(BeTrue())
 		})
