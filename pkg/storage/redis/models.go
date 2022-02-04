@@ -7,13 +7,12 @@ import (
 )
 
 // |||| CATALOG ||||
-var _catalog = storage.ModelCatalog{
-	&channelConfig{},
-	&channelSample{},
-}
 
 func catalog() storage.ModelCatalog {
-	return _catalog
+	return storage.ModelCatalog{
+		&channelConfig{},
+		&channelSample{},
+	}
 }
 
 type channelConfig struct {

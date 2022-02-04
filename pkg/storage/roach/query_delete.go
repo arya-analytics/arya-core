@@ -17,8 +17,8 @@ func newDelete(db *bun.DB) *deleteQuery {
 	return r
 }
 
-func (d *deleteQuery) WherePK(pks interface{}) storage.MDDeleteQuery {
-	return d.Where(pkEqualsSQL, pks)
+func (d *deleteQuery) WherePK(pk interface{}) storage.MDDeleteQuery {
+	return d.Where(pkEqualsSQL, pk)
 }
 
 func (d *deleteQuery) WherePKs(pks interface{}) storage.MDDeleteQuery {

@@ -7,13 +7,13 @@ import (
 )
 
 const (
-	pkEqualsSQL  = "ID = "
+	pkEqualsSQL  = "ID = ?"
 	pkChainInSQL = "ID in (?)"
 )
 
 type baseQuery struct {
-	modelExchange *storage.ModelExchange
-	catcher       *errutil.Catcher
+	exchange *storage.ModelExchange
+	catcher  *errutil.Catcher
 }
 
 func (b *baseQuery) baseInit() {
@@ -21,16 +21,16 @@ func (b *baseQuery) baseInit() {
 }
 
 func (b *baseQuery) baseModel(m interface{}) *model.Reflect {
-	b.modelExchange = storage.NewModelExchange(m, catalog().New(m))
-	return b.modelExchange.Dest
+	b.exchange = storage.NewModelExchange(m, catalog().New(m))
+	return b.exchange.Dest
 }
 
 func (b *baseQuery) baseExchangeToSource() {
-	b.modelExchange.ToSource()
+	b.exchange.ToSource()
 }
 
 func (b *baseQuery) baseExchangeToDest() {
-	b.modelExchange.ToDest()
+	b.exchange.ToDest()
 }
 
 func (b *baseQuery) baseErr() error {

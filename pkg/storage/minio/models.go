@@ -5,12 +5,10 @@ import (
 	"github.com/google/uuid"
 )
 
-var _catalog = storage.ModelCatalog{
-	&channelChunk{},
-}
-
 func catalog() storage.ModelCatalog {
-	return _catalog
+	return storage.ModelCatalog{
+		&channelChunk{},
+	}
 }
 
 type channelChunk struct {

@@ -9,18 +9,16 @@ import (
 
 // |||| CATALOG ||||
 
-var _catalog = storage.ModelCatalog{
-	&Node{},
-	&Range{},
-	&rangeReplicaToNode{},
-	&ChannelConfig{},
-	&ChannelChunk{},
-	&GossipNode{},
-	&GossipLiveness{},
-}
-
 func catalog() storage.ModelCatalog {
-	return _catalog
+	return storage.ModelCatalog{
+		&Node{},
+		&Range{},
+		&rangeReplicaToNode{},
+		&ChannelConfig{},
+		&ChannelChunk{},
+		&GossipNode{},
+		&GossipLiveness{},
+	}
 }
 
 // |||| DEFINITIONS ||||
