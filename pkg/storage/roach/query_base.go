@@ -6,6 +6,11 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 )
 
+const (
+	pkEqualsSQL  = "ID = "
+	pkChainInSQL = "ID in (?)"
+)
+
 type baseQuery struct {
 	modelExchange *storage.ModelExchange
 	catcher       *errutil.Catcher

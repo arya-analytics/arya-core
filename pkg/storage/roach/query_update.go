@@ -25,7 +25,7 @@ func (u *updateQuery) Model(m interface{}) storage.MDUpdateQuery {
 }
 
 func (u *updateQuery) WherePK(pk interface{}) storage.MDUpdateQuery {
-	return u.Where("ID = ?", pk)
+	return u.Where(pkEqualsSQL, pk)
 }
 
 func (u *updateQuery) Where(query string, args ...interface{}) storage.MDUpdateQuery {
