@@ -2,31 +2,16 @@ package minio
 
 import "github.com/arya-analytics/aryacore/pkg/storage"
 
-type Driver int
-
-const (
-	DriverMinIO Driver = iota
-)
-
-type Config struct {
-	Endpoint  string
-	AccessKey string
-	SecretKey string
-	Token     string
-	UseTLS    bool
-	Driver    Driver
-}
-
 type Engine struct {
-	cfg Config
+	driver Driver
 }
 
-func New(cfg Config) *Engine {
-	return &Engine{cfg}
+func New(driver Driver) *Engine {
+	return &Engine{driver}
 }
 
 func (e *Engine) NewAdapter() storage.Adapter {
-	return newAdapter(e.cfg)
+	return newAdapter(e.driver)
 }
 
 func (e *Engine) IsAdapter(a storage.Adapter) bool {

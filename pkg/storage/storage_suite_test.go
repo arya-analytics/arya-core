@@ -18,14 +18,9 @@ import (
 
 var (
 	mockEngineCfg = storage.Config{
-		MDEngine: roach.New(mock.DriverPG{}),
-		ObjectEngine: minio.New(minio.Config{
-			Driver:    minio.DriverMinIO,
-			Endpoint:  "localhost:9000",
-			AccessKey: "minio",
-			SecretKey: "minio123",
-		}),
-		CacheEngine: redis.New(mock.DriverRedis{}),
+		MDEngine:     roach.New(mock.DriverPG{}),
+		ObjectEngine: minio.New(mock.DriverMinio{}),
+		CacheEngine:  redis.New(mock.DriverRedis{}),
 	}
 	mockStorage    = storage.New(mockEngineCfg)
 	mockCtx        = context.Background()

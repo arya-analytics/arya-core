@@ -5,6 +5,8 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/storage/redis/timeseries"
 	"github.com/cockroachdb/cockroach-go/v2/testserver"
 	"github.com/go-redis/redis/v8"
+	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
 	"github.com/uptrace/bun/driver/pgdriver"
@@ -38,5 +40,20 @@ func (d DriverRedis) buildConfig() *redis.Options {
 		Addr:     "localhost:6379",
 		DB:       0,
 		Password: "",
+	}
+}
+
+// |||| MINIO ||||
+
+type DriverMinio struct{}
+
+func (d DriverMinio) Connect() (*minio.Client, error) {
+	return minio.New("localhost:9000", d.buildConfig())
+}
+
+func (d DriverMinio) buildConfig() *minio.Options {
+	return &minio.Options{
+		Creds:  credentials.NewStaticV4("minio", "minio123", ""),
+		Secure: false,
 	}
 }

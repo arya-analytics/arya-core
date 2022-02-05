@@ -14,14 +14,7 @@ import (
 )
 
 var (
-	mockEngine = minio.New(
-		minio.Config{
-			Driver:    minio.DriverMinIO,
-			Endpoint:  "localhost:9000",
-			AccessKey: "minio",
-			SecretKey: "minio123",
-		},
-	)
+	mockEngine  = minio.New(mock.DriverMinio{})
 	mockAdapter = mockEngine.NewAdapter()
 	mockCtx     = context.Background()
 	mockBytes   = []byte("mock model bytes")
