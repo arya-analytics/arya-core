@@ -63,7 +63,7 @@ func bootstrapEngine() {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	mockEngine = roach.New(roach.Config{DSN: mockDB.PGURL().String(), Driver: roach.DriverPG})
+	mockEngine = roach.New(roach.DriverPG{DSN: mockDB.PGURL().String()})
 	mockAdapter = mockEngine.NewAdapter()
 }
 

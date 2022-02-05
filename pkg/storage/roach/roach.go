@@ -1,7 +1,6 @@
 package roach
 
 import (
-	"fmt"
 	"github.com/arya-analytics/aryacore/pkg/storage"
 )
 
@@ -18,41 +17,7 @@ const (
 	TransactionLogLevelAll
 )
 
-type Driver int
-
-const (
-	// DriverPG connects via the Postgres wire protocol.
-	DriverPG Driver = iota
-	// DriverSQLite which uses an in memory SQLite database.
-	DriverSQLite
-)
-
 type Config struct {
-	// DSN is a connection string for the database. If specified,
-	// all other fields except for Driver can be left blank.
-	DSN string
-	// Username for the database. Does not need to be specified if using DriverSQLite.
-	Username string
-	// Password for the database. Does not need to be specified if using DriverSQLite.
-	Password string
-	// Host IP for the database. Does not need to be specified if using DriverSQLite.
-	Host string
-	// Port to connect to at Host. Does not need to be specified if using DriverSQLite.
-	Port int
-	// Database to connect to. Does not need to be specified if using DriverSQLite.
-	Database string
-	// Whether to open a TLS connection or not.
-	// Does not need to be specified if using DriverSQLite.
-	UseTLS bool
-	// Driver is the connection driver used for the roach data store.
-	// Options are:
-	Driver Driver
-	// TransactionLogLevel is the log level for executed SQL queries
-	TransactionLogLevel TransactionLogLevel
-}
-
-func (c Config) addr() string {
-	return fmt.Sprintf("%s:%v", c.Host, c.Port)
 }
 
 // |||| ENGINE ||||
@@ -60,16 +25,16 @@ func (c Config) addr() string {
 // Engine opens connections and execute queries with a roach database.
 // implements the storage.MDEngine interface.
 type Engine struct {
-	cfg Config
+	driver Driver
 }
 
-func New(cfg Config) *Engine {
-	return &Engine{cfg}
+func New(driver Driver) *Engine {
+	return &Engine{driver}
 }
 
 // NewAdapter opens a new connection with the data store and returns a storage.Adapter.
 func (e *Engine) NewAdapter() storage.Adapter {
-	return newAdapter(e.cfg)
+	return newAdapter(e.driver)
 }
 
 // IsAdapter checks if the provided adapter is a roach adapter.
@@ -104,5 +69,5 @@ func (e *Engine) NewDelete(a storage.Adapter) storage.MDDeleteQuery {
 
 // NewMigrate opens a new migrateQuery with the provided storage.Adapter.
 func (e *Engine) NewMigrate(a storage.Adapter) storage.MDMigrateQuery {
-	return newMigrate(conn(a), e.cfg.Driver)
+	return newMigrate(conn(a), e.driver)
 }

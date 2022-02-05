@@ -68,16 +68,17 @@ func migrateUpFunc(d Driver) migrate.MigrationFunc {
 		// so we can properly run queries against it.
 		db.RegisterModel((*rangeReplicaToNode)(nil))
 		c.execMigration(db.NewCreateTable().Model((*Node)(nil)).Exec)
-		if d == DriverPG {
+		switch d.(type) {
+		case DriverSQLite:
+			c.Exec(func() error {
+				_, err := db.Exec(driverSQLiteNodesViewSQL)
+				return err
+			})
+		default:
 			c.Exec(func() error {
 				_, err := db.Exec(driverPGNodesViewSQL)
 				return err
 
-			})
-		} else if d == DriverSQLite {
-			c.Exec(func() error {
-				_, err := db.Exec(driverSQLiteNodesViewSQL)
-				return err
 			})
 		}
 		c.execMigration(db.NewCreateTable().
