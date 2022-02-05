@@ -8,7 +8,6 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/storage/redis"
 	"github.com/arya-analytics/aryacore/pkg/storage/roach"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
-	"github.com/cockroachdb/cockroach-go/v2/testserver"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -19,7 +18,7 @@ import (
 
 var (
 	mockEngineCfg = storage.Config{
-		MDEngine: bootstrapMockRoachEngine(),
+		MDEngine: roach.New(mock.NewDriverPG()),
 		ObjectEngine: minio.New(minio.Config{
 			Driver:    minio.DriverMinIO,
 			Endpoint:  "localhost:9000",
@@ -51,16 +50,6 @@ var (
 	mockChannelChunk *storage.ChannelChunk
 	mockSamples      []*storage.ChannelSample
 )
-
-func bootstrapMockRoachEngine() storage.MDEngine {
-	var err error
-	mockDB, err := testserver.NewTestServer()
-	if err != nil {
-		log.Fatalln(err)
-	}
-	return roach.New(roach.Config{DSN: mockDB.PGURL().String(),
-		Driver: roach.DriverPG})
-}
 
 func createMock(m interface{}) {
 	rfl := model.NewReflect(m)

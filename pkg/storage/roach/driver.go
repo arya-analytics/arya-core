@@ -27,6 +27,7 @@ type DriverPG struct {
 	Host string
 	// Port to connect to at Host.
 	Port int
+
 	// Database to connect to.
 	Database string
 	// Whether to open a TLS connection or not.

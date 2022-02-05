@@ -3,8 +3,8 @@ package roach_test
 import (
 	"context"
 	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/storage/mock"
 	"github.com/arya-analytics/aryacore/pkg/storage/roach"
-	"github.com/cockroachdb/cockroach-go/v2/testserver"
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	"testing"
@@ -14,8 +14,7 @@ import (
 )
 
 var (
-	mockDB     testserver.TestServer
-	mockEngine *roach.Engine
+	mockEngine = roach.New(mock.NewDriverPG())
 	mockNode   = &storage.Node{
 		ID: 1,
 	}
@@ -25,7 +24,7 @@ var (
 		NodeID: mockNode.ID,
 	}
 	mockCtx     = context.Background()
-	mockAdapter storage.Adapter
+	mockAdapter = mockEngine.NewAdapter()
 )
 
 func migrate() {
@@ -57,24 +56,9 @@ func createMockNode() {
 	}
 }
 
-func bootstrapEngine() {
-	var err error
-	mockDB, err = testserver.NewTestServer()
-	if err != nil {
-		log.Fatalln(err)
-	}
-	mockEngine = roach.New(roach.DriverPG{DSN: mockDB.PGURL().String()})
-	mockAdapter = mockEngine.NewAdapter()
-}
-
 var _ = BeforeSuite(func() {
-	bootstrapEngine()
 	migrate()
 	createMockNode()
-})
-
-var _ = AfterSuite(func() {
-	mockDB.Stop()
 })
 
 func TestRoach(t *testing.T) {
