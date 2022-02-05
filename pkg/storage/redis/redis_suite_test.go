@@ -3,6 +3,7 @@ package redis_test
 import (
 	"context"
 	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/storage/mock"
 	"github.com/arya-analytics/aryacore/pkg/storage/redis"
 	"github.com/google/uuid"
 	"testing"
@@ -13,12 +14,7 @@ import (
 )
 
 var (
-	mockEngine = redis.New(redis.DriverRedis{
-		Host:     "localhost",
-		Port:     6379,
-		Password: "",
-		Database: 0,
-	})
+	mockEngine  = redis.New(mock.DriverRedis{})
 	mockAdapter = mockEngine.NewAdapter()
 	mockCtx     = context.Background()
 	mockSeries  *storage.ChannelConfig

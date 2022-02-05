@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	mockEngine = roach.New(mock.NewDriverPG())
+	mockEngine = roach.New(mock.DriverPG{})
 	mockNode   = &storage.Node{
 		ID: 1,
 	}

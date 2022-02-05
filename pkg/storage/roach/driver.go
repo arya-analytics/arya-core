@@ -36,10 +36,6 @@ type DriverPG struct {
 	TransactionLogLevel TransactionLogLevel
 }
 
-func NewDriverPG() DriverPG {
-	return DriverPG{}
-}
-
 func (d DriverPG) Connect() (*bun.DB, error) {
 	c := d.buildConnector()
 	db := sql.OpenDB(c)
