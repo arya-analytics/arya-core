@@ -6,59 +6,72 @@ import (
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	log "github.com/sirupsen/logrus"
 )
 
 var _ = Describe("QueryRetrieve", func() {
+	var (
+		channelChunk *storage.ChannelChunk
+		bytes        []byte
+	)
+	BeforeEach(func() {
+		bytes = []byte("randomstring")
+		channelChunk = &storage.ChannelChunk{
+			ID:   uuid.New(),
+			Data: mock.NewObject(bytes),
+		}
+	})
+	JustBeforeEach(func() {
+		err := engine.NewCreate(adapter).Model(channelChunk).Exec(ctx)
+		Expect(err).To(BeNil())
+	})
+	AfterEach(func() {
+		err := engine.NewDelete(adapter).Model(channelChunk).WherePK(channelChunk.
+			ID).Exec(ctx)
+		Expect(err).To(BeNil())
+	})
 	Describe("Standard Usage", func() {
-		BeforeEach(createMockModel)
-		AfterEach(deleteMockModel)
 		Describe("Retrieve an item", func() {
-			var retrievedModel = &storage.ChannelChunk{}
-			var err error
-			BeforeEach(func() {
-				err = mockEngine.NewRetrieve(mockAdapter).Model(retrievedModel).WherePK(mockModel.
-					ID).Exec(mockCtx)
-			})
-			It("Should retrieve it without error", func() {
-				Expect(err).To(BeNil())
-			})
 			It("Should retrieve the correct item", func() {
-				Expect(retrievedModel.Data).ToNot(BeNil())
-				b := make([]byte, retrievedModel.Data.Size())
-				_, err = retrievedModel.Data.Read(b)
+				resChannelChunk := &storage.ChannelChunk{}
+				err := engine.NewRetrieve(adapter).Model(resChannelChunk).WherePK(channelChunk.ID).Exec(ctx)
+				Expect(err).To(BeNil())
+				Expect(resChannelChunk.Data).ToNot(BeNil())
+				resBytes := make([]byte, resChannelChunk.Data.Size())
+				_, err = resChannelChunk.Data.Read(resBytes)
 				Expect(err.Error()).To(Equal("EOF"))
-				Expect(b).To(Equal(mockBytes))
+				Expect(resBytes).To(Equal(bytes))
 			})
 		})
 		Describe("Retrieve multiple items", func() {
-			It("Should retrieve the correct items", func() {
-				mockModelTwo := &storage.ChannelChunk{
+			var channelChunkTwo *storage.ChannelChunk
+			BeforeEach(func() {
+				channelChunkTwo = &storage.ChannelChunk{
 					ID:   uuid.New(),
 					Data: mock.NewObject([]byte("model two")),
 				}
-				if err := mockEngine.NewCreate(mockAdapter).Model(mockModelTwo).Exec(
-					mockCtx); err != nil {
-					log.Fatalln(err)
-				}
-
+			})
+			JustBeforeEach(func() {
+				err := engine.NewCreate(adapter).Model(channelChunkTwo).Exec(
+					ctx)
+				Expect(err).To(BeNil())
+			})
+			It("Should retrieve the correct items", func() {
 				var models []*storage.ChannelChunk
-				err := mockEngine.NewRetrieve(mockAdapter).Model(&models).WherePKs([]uuid.
-					UUID{mockModel.ID, mockModelTwo.ID}).Exec(mockCtx)
+				err := engine.NewRetrieve(adapter).Model(&models).WherePKs([]uuid.
+					UUID{channelChunk.ID, channelChunkTwo.ID}).Exec(ctx)
 				Expect(err).To(BeNil())
 				Expect(models).To(HaveLen(2))
-				Expect(models[0].ID == mockModelTwo.ID || models[1].ID == mockModelTwo.ID).
-					To(BeTrue())
+				Expect([]uuid.UUID{channelChunk.ID, channelChunkTwo.ID}).To(
+					ContainElements(models[0].ID, models[1].ID))
 			})
 		})
 	})
 	Describe("Edge cases + errors", func() {
 		Context("Retrieving an item that doesnt exist", func() {
-			It("Should return the correct errutil type", func() {
+			It("Should return the correct error type", func() {
 				somePKThatDoesntExist := uuid.New()
-				m := &storage.ChannelChunk{}
-				err := mockEngine.NewRetrieve(mockAdapter).Model(m).WherePK(
-					somePKThatDoesntExist).Exec(mockCtx)
+				err := engine.NewRetrieve(adapter).Model(channelChunk).WherePK(
+					somePKThatDoesntExist).Exec(ctx)
 				Expect(err).ToNot(BeNil())
 			})
 		})
