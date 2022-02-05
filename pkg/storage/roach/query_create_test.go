@@ -2,55 +2,57 @@ package roach_test
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/storage"
-	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Create", func() {
-	BeforeEach(migrate)
-	BeforeEach(deleteMockModel)
-	AfterEach(deleteMockModel)
+	var channelConfig *storage.ChannelConfig
+	var node *storage.Node
+	JustBeforeEach(func() {
+		nErr := engine.NewCreate(adapter).Model(node).Exec(ctx)
+		Expect(nErr).To(BeNil())
+		ccErr := engine.NewCreate(adapter).Model(channelConfig).Exec(ctx)
+		Expect(ccErr).To(BeNil())
+	})
+	AfterEach(func() {
+		ccErr := engine.NewDelete(adapter).Model(channelConfig).WherePK(channelConfig.
+			ID).Exec(ctx)
+		Expect(ccErr).To(BeNil())
+		nErr := engine.NewDelete(adapter).Model(node).WherePK(node.ID).Exec(ctx)
+		Expect(nErr).To(BeNil())
+	})
 	Describe("Create a new Channel Config", func() {
-		var errChan error
 		BeforeEach(func() {
-			errChan = mockEngine.NewCreate(mockAdapter).Model(mockModel).Exec(mockCtx)
-		})
-		AfterEach(func() {
-			errChan = mockEngine.NewDelete(mockAdapter).Model(mockModel).WherePK(
-				mockModel.ID,
-			).Exec(mockCtx)
-		})
-		It("Should create it without error", func() {
-			Expect(errChan).To(BeNil())
+			node = &storage.Node{ID: 1}
+			channelConfig = &storage.ChannelConfig{
+				Name:   "Channel Config",
+				NodeID: node.ID,
+			}
 		})
 		It("Should be able to be re-queried after creation", func() {
-			m := &storage.ChannelConfig{
-				Name:   "Channel Config",
-				NodeID: 1,
-			}
-			err := mockEngine.NewRetrieve(mockAdapter).Model(m).WherePK(mockModel.
-				ID).Exec(mockCtx)
+			resChannelConfig := &storage.ChannelConfig{}
+			err := engine.NewRetrieve(adapter).Model(resChannelConfig).WherePK(channelConfig.ID).
+				Exec(ctx)
 			Expect(err).To(BeNil())
-			Expect(m.Name).To(Equal(mockModel.Name))
-			Expect(m.ID).To(Equal(mockModel.ID))
+			Expect(resChannelConfig).To(Equal(channelConfig))
 		})
 	})
 	Describe("Edge cases + errors", func() {
 		Context("Unique Violation", func() {
+			BeforeEach(func() {
+				node = &storage.Node{ID: 1}
+				channelConfig = &storage.ChannelConfig{
+					Name:   "ChannelConfig",
+					NodeID: node.ID,
+				}
+			})
 			It("Should return the correct errutil type", func() {
-				commonPk := uuid.New()
-				mOne := &storage.ChannelConfig{
-					ID:     commonPk,
-					NodeID: mockNode.ID,
+				channelConfigTwo := &storage.ChannelConfig{
+					ID:     channelConfig.ID,
+					NodeID: node.ID,
 				}
-				err := mockEngine.NewCreate(mockAdapter).Model(mOne).Exec(mockCtx)
-				Expect(err).To(BeNil())
-				mTwo := &storage.ChannelConfig{
-					ID:     commonPk,
-					NodeID: mockNode.ID,
-				}
-				err = mockEngine.NewCreate(mockAdapter).Model(mTwo).Exec(mockCtx)
+				err := engine.NewCreate(adapter).Model(channelConfigTwo).Exec(ctx)
 				Expect(err).ToNot(BeNil())
 				Expect(err.(storage.Error).Type).To(Equal(storage.ErrTypeUniqueViolation))
 			})

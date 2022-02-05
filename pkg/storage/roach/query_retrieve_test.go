@@ -5,52 +5,65 @@ import (
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	log "github.com/sirupsen/logrus"
 )
 
 var _ = Describe("QueryRetrieve", func() {
+	var channelConfig *storage.ChannelConfig
+	var node *storage.Node
+	BeforeEach(func() {
+		node = &storage.Node{ID: 1}
+		channelConfig = &storage.ChannelConfig{NodeID: node.ID}
+	})
+	JustBeforeEach(func() {
+		nErr := engine.NewCreate(adapter).Model(node).Exec(ctx)
+		Expect(nErr).To(BeNil())
+		ccErr := engine.NewCreate(adapter).Model(channelConfig).Exec(ctx)
+		Expect(ccErr).To(BeNil())
+	})
+	AfterEach(func() {
+		ccErr := engine.NewDelete(adapter).Model(channelConfig).WherePK(channelConfig.
+			ID).Exec(ctx)
+		Expect(ccErr).To(BeNil())
+		nErr := engine.NewDelete(adapter).Model(node).WherePK(node.ID).Exec(ctx)
+		Expect(nErr).To(BeNil())
+	})
 	Describe("Standard Usage", func() {
-		BeforeEach(createMockModel)
-		AfterEach(deleteMockModel)
 		Describe("Retrieve an item", func() {
 			It("Should retrieve it without error", func() {
-				m := &storage.ChannelConfig{}
-				err := mockEngine.NewRetrieve(mockAdapter).Model(m).WherePK(mockModel.
-					ID).Exec(mockCtx)
+				err := engine.NewRetrieve(adapter).Model(&storage.ChannelConfig{}).
+					WherePK(channelConfig.ID).Exec(ctx)
 				Expect(err).To(BeNil())
 			})
 			It("Should retrieve the correct item", func() {
-				m := &storage.ChannelConfig{}
-				if err := mockEngine.NewRetrieve(mockAdapter).Model(m).WherePK(mockModel.
-					ID).Exec(mockCtx); err != nil {
-					log.Fatalln(err)
-				}
-				Expect(m.ID).To(Equal(mockModel.ID))
-				Expect(m.Name).To(Equal(mockModel.Name))
+				resChannelConfig := &storage.ChannelConfig{}
+				err := engine.NewRetrieve(adapter).Model(resChannelConfig).WherePK(channelConfig.
+					ID).Exec(ctx)
+				Expect(err).To(BeNil())
+				Expect(resChannelConfig).To(Equal(channelConfig))
 			})
 		})
 		Describe("Retrieve multiple items", func() {
-			It("Should retrieve all the correct items", func() {
-				mockModelTwo := &storage.ChannelConfig{
+			var channelConfigTwo *storage.ChannelConfig
+			BeforeEach(func() {
+				channelConfigTwo = &storage.ChannelConfig{
 					ID:     uuid.New(),
 					Name:   "CC 45",
 					NodeID: 1,
 				}
-				if err := mockEngine.NewCreate(mockAdapter).Model(mockModelTwo).Exec(
-					mockCtx); err != nil {
-					log.Fatalln(err)
-				}
-
+			})
+			JustBeforeEach(func() {
+				err := engine.NewCreate(adapter).Model(channelConfigTwo).Exec(ctx)
+				Expect(err).To(BeNil())
+			})
+			It("Should retrieve all the correct items", func() {
 				var models []*storage.ChannelConfig
-				err := mockEngine.NewRetrieve(mockAdapter).Model(&models).WherePKs(
-					[]uuid.UUID{mockModelTwo.ID,
-						mockModel.ID}).Exec(mockCtx)
+				err := engine.NewRetrieve(adapter).Model(&models).WherePKs(
+					[]uuid.UUID{channelConfigTwo.ID,
+						channelConfig.ID}).Exec(ctx)
 				Expect(err).To(BeNil())
 				Expect(models).To(HaveLen(2))
-				Expect(models[0].Name == mockModel.Name || models[0].
-					Name == mockModelTwo.Name).To(BeTrue())
-				Expect(models[1].ID == mockModelTwo.ID || models[1].ID == mockModel.
-					ID).To(BeTrue())
+				Expect([]string{channelConfig.Name,
+					channelConfigTwo.Name}).To(ContainElement(models[0].Name))
 			})
 		})
 	})
@@ -59,10 +72,10 @@ var _ = Describe("QueryRetrieve", func() {
 			It("Should return the correct errutil type", func() {
 				somePKThatDoesntExist := uuid.New()
 				m := &storage.ChannelConfig{}
-				err := mockEngine.NewRetrieve(mockAdapter).
+				err := engine.NewRetrieve(adapter).
 					Model(m).
 					WherePK(somePKThatDoesntExist).
-					Exec(mockCtx)
+					Exec(ctx)
 				Expect(err).ToNot(BeNil())
 				Expect(err.(storage.Error).Type).To(Equal(storage.ErrTypeItemNotFound))
 			})

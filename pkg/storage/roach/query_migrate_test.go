@@ -6,10 +6,9 @@ import (
 )
 
 var _ = Describe("Migrator", func() {
-	BeforeEach(migrate)
-	Describe("Init Migrations", func() {
+	Describe("Verify Migrations", func() {
 		It("Should create all of the tables correctly", func() {
-			err := mockEngine.NewMigrate(mockAdapter).Verify(mockCtx)
+			err := engine.NewMigrate(adapter).Verify(ctx)
 			Expect(err).To(BeNil())
 		})
 	})

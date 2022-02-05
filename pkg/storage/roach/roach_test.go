@@ -10,11 +10,8 @@ import (
 )
 
 var _ = Describe("Roach", func() {
+	a := engine.NewAdapter()
 	Describe("Adapter", func() {
-		var a storage.Adapter
-		BeforeEach(func() {
-			a = mockEngine.NewAdapter()
-		})
 		Describe("New adapter", func() {
 			It("Should create a new adapter without error", func() {
 				Expect(reflect.TypeOf(a.ID())).To(Equal(reflect.TypeOf(uuid.New())))
@@ -23,14 +20,14 @@ var _ = Describe("Roach", func() {
 		Describe("Is adapter", func() {
 			Context("adapter is the correct type", func() {
 				It("Should return true", func() {
-					Expect(mockEngine.IsAdapter(a)).To(BeTrue())
+					Expect(engine.IsAdapter(a)).To(BeTrue())
 				})
 			})
 			Context("adapter is the incorrect type", func() {
 				It("Should return false", func() {
 					e := &mock.MDEngine{}
 					ba := e.NewAdapter()
-					Expect(mockEngine.IsAdapter(ba)).To(BeFalse())
+					Expect(engine.IsAdapter(ba)).To(BeFalse())
 				})
 			})
 		})
@@ -39,7 +36,7 @@ var _ = Describe("Roach", func() {
 				e := &mock.MDEngine{}
 				ba := e.NewAdapter()
 				Expect(func() {
-					mockEngine.NewRetrieve(ba)
+					engine.NewRetrieve(ba)
 				}).To(Panic())
 			})
 		})
@@ -48,12 +45,12 @@ var _ = Describe("Roach", func() {
 		Describe("Contains", func() {
 			Context("Model in catalog", func() {
 				It("Should return true", func() {
-					Expect(mockEngine.InCatalog(&storage.ChannelChunk{})).To(BeTrue())
+					Expect(engine.InCatalog(&storage.ChannelChunk{})).To(BeTrue())
 				})
 			})
 			Context("Model not in catalog", func() {
 				It("Should return false", func() {
-					Expect(mockEngine.InCatalog(&storage.ChannelSample{})).To(BeFalse())
+					Expect(engine.InCatalog(&storage.ChannelSample{})).To(BeFalse())
 				})
 			})
 		})

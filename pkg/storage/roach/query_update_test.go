@@ -2,39 +2,52 @@ package roach_test
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	log "github.com/sirupsen/logrus"
 )
 
 var _ = Describe("QueryUpdate", func() {
-	BeforeEach(createMockModel)
-	AfterEach(deleteMockModel)
+	var channelConfig *storage.ChannelConfig
+	var node *storage.Node
+	BeforeEach(func() {
+		node = &storage.Node{ID: 1}
+		channelConfig = &storage.ChannelConfig{NodeID: node.ID, ID: uuid.New()}
+	})
+	JustBeforeEach(func() {
+		nErr := engine.NewCreate(adapter).Model(node).Exec(ctx)
+		Expect(nErr).To(BeNil())
+		ccErr := engine.NewCreate(adapter).Model(channelConfig).Exec(ctx)
+		Expect(ccErr).To(BeNil())
+	})
+	AfterEach(func() {
+		ccErr := engine.NewDelete(adapter).Model(channelConfig).WherePK(channelConfig.
+			ID).Exec(ctx)
+		Expect(ccErr).To(BeNil())
+		nErr := engine.NewDelete(adapter).Model(node).WherePK(node.ID).Exec(ctx)
+		Expect(nErr).To(BeNil())
+	})
 	Describe("Update an item", func() {
-		var err error
-		var um *storage.ChannelConfig
+		var updatedChannelConfig *storage.ChannelConfig
 		BeforeEach(func() {
-			um = &storage.ChannelConfig{
-				ID:     mockModel.ID,
+			updatedChannelConfig = &storage.ChannelConfig{
+				ID:     channelConfig.ID,
 				Name:   "Cool New Named Name",
 				NodeID: 1,
 			}
-			err = mockEngine.NewUpdate(mockAdapter).Model(um).WherePK(mockModel.
-				ID).Exec(mockCtx)
-			Expect(err).To(BeNil())
 		})
-		It("Should update it without error", func() {
+		JustBeforeEach(func() {
+			err := engine.NewUpdate(adapter).Model(updatedChannelConfig).WherePK(
+				channelConfig.ID).Exec(ctx)
 			Expect(err).To(BeNil())
 		})
 		It("Should reflect updates when retrieved", func() {
-			m := &storage.ChannelConfig{}
-			if err := mockEngine.NewRetrieve(mockAdapter).Model(m).WherePK(mockModel.
-				ID).Exec(mockCtx); err != nil {
-				log.Fatalln(err)
-			}
-			Expect(m.ID).To(Equal(um.ID))
-			Expect(m.Name).To(Equal(um.Name))
+			resChannelConfig := &storage.ChannelConfig{}
+			err := engine.NewRetrieve(adapter).Model(resChannelConfig).WherePK(channelConfig.
+				ID).Exec(ctx)
+			Expect(err).To(BeNil())
+			Expect(resChannelConfig.ID).To(Equal(updatedChannelConfig.ID))
+			Expect(resChannelConfig.Name).To(Equal(updatedChannelConfig.Name))
 		})
 	})
-
 })
