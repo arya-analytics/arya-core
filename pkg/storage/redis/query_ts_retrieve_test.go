@@ -14,6 +14,9 @@ var _ = Describe("QueryTsRetrieve", func() {
 		sample  *storage.ChannelSample
 		samples []*storage.ChannelSample
 	)
+	BeforeEach(func() {
+		series = &storage.ChannelConfig{ID: uuid.New()}
+	})
 	JustBeforeEach(func() {
 		err := engine.NewTSCreate(adapter).Series().Model(series).Exec(ctx)
 		Expect(err).To(BeNil())
@@ -21,12 +24,10 @@ var _ = Describe("QueryTsRetrieve", func() {
 	Describe("Standard Usage", func() {
 		Context("Single sample", func() {
 			JustBeforeEach(func() {
-				sampleErr := engine.NewTSCreate(adapter).Sample().Model(sample).Exec(
-					ctx)
+				sampleErr := engine.NewTSCreate(adapter).Sample().Model(sample).Exec(ctx)
 				Expect(sampleErr).To(BeNil())
 			})
 			BeforeEach(func() {
-				series = &storage.ChannelConfig{ID: uuid.New()}
 				sample = &storage.ChannelSample{
 					ChannelConfigID: series.ID,
 					Value:           123.2,
@@ -50,7 +51,6 @@ var _ = Describe("QueryTsRetrieve", func() {
 			})
 			Describe("Retrieving all samples", func() {
 				BeforeEach(func() {
-					series = &storage.ChannelConfig{ID: uuid.New()}
 					samples = []*storage.ChannelSample{
 						{
 							ChannelConfigID: series.ID,
@@ -111,7 +111,6 @@ var _ = Describe("QueryTsRetrieve", func() {
 			Describe("Retrieve samples across a time range", func() {
 				var err error
 				BeforeEach(func() {
-					series = &storage.ChannelConfig{ID: uuid.New()}
 					samples = []*storage.ChannelSample{
 						{
 							ChannelConfigID: series.ID,
@@ -155,7 +154,6 @@ var _ = Describe("QueryTsRetrieve", func() {
 	})
 	Describe("Edge cases + errors", func() {
 		BeforeEach(func() {
-			series = &storage.ChannelConfig{ID: uuid.New()}
 			samples = []*storage.ChannelSample{{
 				ChannelConfigID: series.ID,
 				Value:           432.1,

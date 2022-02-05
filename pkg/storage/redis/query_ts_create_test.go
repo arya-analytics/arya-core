@@ -13,17 +13,14 @@ var _ = Describe("QueryTsCreate", func() {
 		series *storage.ChannelConfig
 		sample *storage.ChannelSample
 	)
+	BeforeEach(func() {
+		series = &storage.ChannelConfig{ID: uuid.New()}
+	})
 	JustBeforeEach(func() {
 		err := engine.NewTSCreate(adapter).Series().Model(series).Exec(ctx)
 		Expect(err).To(BeNil())
 	})
 	Describe("Standard Usage", func() {
-		BeforeEach(func() {
-			series = &storage.ChannelConfig{
-				Name: "Sensor1",
-				ID:   uuid.New(),
-			}
-		})
 		Describe("Create a new series", func() {
 			It("Should exist after creation", func() {
 				exists, err := engine.NewTSRetrieve(adapter).SeriesExists(ctx, series.ID)
@@ -59,7 +56,6 @@ var _ = Describe("QueryTsCreate", func() {
 		})
 	})
 	Describe("Edge cases + errors", func() {
-		BeforeEach(func() { series = &storage.ChannelConfig{ID: uuid.New()} })
 		Describe("Not selecting a variant", func() {
 			It("Should return the correct storage error", func() {
 				err := engine.NewTSCreate(adapter).Model(series).Exec(ctx)
