@@ -50,11 +50,10 @@ func (r *RetrieveQuery) WherePKs(pks interface{}) *RetrieveQuery {
 // Exec executes the query with the provided context. Returns a storage.Error.
 func (r *RetrieveQuery) Exec(ctx context.Context) error {
 	r.baseExec(func() error { return r.mdQuery().Exec(ctx) })
-	if r.baseObjEngine().InCatalog(r.modelRfl.Pointer()) {
-		r.baseExec(func() error {
-			return r.objQuery().Model(r.modelRfl.Pointer()).WherePKs(r.modelRfl.PKChain().Raw()).
-				Exec(ctx)
-		})
+	mp := r.modelRfl.Pointer()
+	if r.baseObjEngine().InCatalog(mp) {
+		pks := r.modelRfl.PKChain().Raw()
+		r.baseExec(func() error { return r.objQuery().Model(mp).WherePKs(pks).Exec(ctx) })
 	}
 	return r.baseErr()
 }

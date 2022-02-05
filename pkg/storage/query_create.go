@@ -31,10 +31,9 @@ func (c *CreateQuery) Model(m interface{}) *CreateQuery {
 // Exec executes the query with the provided context. Returns a storage.Error.
 func (c *CreateQuery) Exec(ctx context.Context) error {
 	c.baseExec(func() error { return c.mdQuery().Exec(ctx) })
-	if c.baseObjEngine().InCatalog(c.modelRfl.Pointer()) {
-		c.baseExec(func() error {
-			return c.objQuery().Model(c.modelRfl.Pointer()).Exec(ctx)
-		})
+	mp := c.modelRfl.Pointer()
+	if c.baseObjEngine().InCatalog(mp) {
+		c.baseExec(func() error { return c.objQuery().Model(mp).Exec(ctx) })
 	}
 	return c.baseErr()
 }
