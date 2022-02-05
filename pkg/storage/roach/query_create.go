@@ -27,6 +27,8 @@ func (c *createQuery) Model(m interface{}) storage.MDCreateQuery {
 		c.q = c.q.Model(rm.Pointer())
 		return nil
 	})
+	// We set default values, so we want to exchange back to source.
+	c.baseExchangeToSource()
 	return c
 }
 

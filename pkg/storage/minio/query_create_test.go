@@ -9,30 +9,29 @@ import (
 )
 
 var _ = Describe("QueryCreate", func() {
-	var mockCreate *storage.ChannelChunk
-	var err error
+	var channelChunk *storage.ChannelChunk
 	BeforeEach(func() {
-		mockCreate = &storage.ChannelChunk{
+		channelChunk = &storage.ChannelChunk{
 			ID:   uuid.New(),
 			Data: mock.NewObject([]byte("randomstring")),
 		}
-		err = mockEngine.NewCreate(mockAdapter).Model(mockCreate).Exec(mockCtx)
+	})
+	JustBeforeEach(func() {
+		err := engine.NewCreate(adapter).Model(channelChunk).Exec(ctx)
+		Expect(err).To(BeNil())
 	})
 	AfterEach(func() {
-		err = mockEngine.NewDelete(mockAdapter).Model(mockCreate).WherePK(mockCreate.ID).Exec(
-			mockCtx)
-	})
-	It("Should create without error", func() {
+		err := engine.NewDelete(adapter).Model(channelChunk).WherePK(channelChunk.
+			ID).Exec(ctx)
 		Expect(err).To(BeNil())
 	})
-	It("Should be able to be re-queried after creation", func() {
+	It("Should be created correctly", func() {
 		mockModelTwo := &storage.ChannelChunk{}
-		err := mockEngine.NewRetrieve(mockAdapter).Model(mockModelTwo).WherePK(
-			mockCreate.ID).
-			Exec(mockCtx)
+		err := engine.NewRetrieve(adapter).Model(mockModelTwo).WherePK(channelChunk.ID).
+			Exec(ctx)
 		Expect(err).To(BeNil())
 		Expect(mockModelTwo.Data).ToNot(BeNil())
-		b := make([]byte, mockCreate.Data.Size())
+		b := make([]byte, channelChunk.Data.Size())
 		_, err = mockModelTwo.Data.Read(b)
 		Expect(err.Error()).To(Equal("EOF"))
 		Expect(b).To(Equal([]byte("randomstring")))

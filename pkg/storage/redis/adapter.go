@@ -3,20 +3,20 @@ package redis
 import (
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/storage/redis/timeseries"
-	"github.com/go-redis/redis/v8"
 	"github.com/google/uuid"
+	log "github.com/sirupsen/logrus"
 )
 
 type adapter struct {
 	id     uuid.UUID
 	client *timeseries.Client
-	cfg    Config
+	driver Driver
 }
 
-func newAdapter(cfg Config) *adapter {
+func newAdapter(driver Driver) *adapter {
 	a := &adapter{
-		id:  uuid.New(),
-		cfg: cfg,
+		id:     uuid.New(),
+		driver: driver,
 	}
 	a.open()
 	return a
@@ -40,24 +40,13 @@ func (a *adapter) ID() uuid.UUID {
 }
 
 func (a *adapter) open() {
-	switch a.cfg.Driver {
-	case DriverRedisTS:
-		a.client = connectToRedis(a.cfg)
+	var err error
+	a.client, err = a.driver.Connect()
+	if err != nil {
+		log.Fatalln(err)
 	}
 }
 
 func (a *adapter) conn() *timeseries.Client {
 	return a.client
-}
-
-func redisConfig(cfg Config) *redis.Options {
-	return &redis.Options{
-		Addr:     cfg.addr(),
-		DB:       cfg.Database,
-		Password: cfg.Password,
-	}
-}
-
-func connectToRedis(cfg Config) *timeseries.Client {
-	return timeseries.NewWrap(redis.NewClient(redisConfig(cfg)))
 }

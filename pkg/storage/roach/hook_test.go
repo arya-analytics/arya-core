@@ -7,29 +7,37 @@ import (
 )
 
 var _ = Describe("Hook", func() {
+	var node *storage.Node
+	BeforeEach(func() {
+		node = &storage.Node{ID: 1}
+	})
+	JustBeforeEach(func() {
+		nErr := engine.NewCreate(adapter).Model(node).Exec(ctx)
+		Expect(nErr).To(BeNil())
+	})
+	AfterEach(func() {
+		nErr := engine.NewDelete(adapter).Model(node).WherePK(node.ID).Exec(ctx)
+		Expect(nErr).To(BeNil())
+	})
 	Describe("UUID auto-generation", func() {
-		var (
-			cc  *storage.ChannelConfig
-			err error
-		)
+		var channelConfig *storage.ChannelConfig
 		BeforeEach(func() {
-			cc = &storage.ChannelConfig{
+			channelConfig = &storage.ChannelConfig{
 				Name:   "Auto-generated UUID",
-				NodeID: mockNode.ID,
+				NodeID: node.ID,
 			}
-			err = mockEngine.NewCreate(mockAdapter).Model(cc).Exec(mockCtx)
 		})
-		It("Should generate it without err", func() {
+		JustBeforeEach(func() {
+			err := engine.NewCreate(adapter).Model(channelConfig).Exec(ctx)
 			Expect(err).To(BeNil())
 		})
 		It("Should be able to be re-queried after creation", func() {
 			var retrievedCC = &storage.ChannelConfig{}
-			err := mockEngine.NewRetrieve(mockAdapter).
+			err := engine.NewRetrieve(adapter).
 				Model(retrievedCC).
-				Where("NAME = ?", cc.Name).
-				Exec(mockCtx)
+				WherePK(channelConfig.ID).Exec(ctx)
 			Expect(err).To(BeNil())
-			Expect(retrievedCC.Name).To(Equal(cc.Name))
+			Expect(retrievedCC.Name).To(Equal(channelConfig.Name))
 		})
 	})
 })

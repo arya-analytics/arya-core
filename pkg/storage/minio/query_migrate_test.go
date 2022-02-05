@@ -8,13 +8,13 @@ import (
 var _ = Describe("QueryMigrate", func() {
 	var err error
 	BeforeEach(func() {
-		err = mockEngine.NewMigrate(mockAdapter).Exec(mockCtx)
+		err = engine.NewMigrate(adapter).Exec(ctx)
 	})
 	It("Should migrate without error", func() {
 		Expect(err).To(BeNil())
 	})
 	It("Should execute all migrations successfully", func() {
-		vErr := mockEngine.NewMigrate(mockAdapter).Verify(mockCtx)
+		vErr := engine.NewMigrate(adapter).Verify(ctx)
 		Expect(vErr).To(BeNil())
 	})
 })

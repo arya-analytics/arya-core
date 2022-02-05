@@ -4,20 +4,19 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/google/uuid"
 	"github.com/minio/minio-go/v7"
-	"github.com/minio/minio-go/v7/pkg/credentials"
 	log "github.com/sirupsen/logrus"
 )
 
 type adapter struct {
 	id     uuid.UUID
 	client *minio.Client
-	cfg    Config
+	driver Driver
 }
 
-func newAdapter(cfg Config) *adapter {
+func newAdapter(driver Driver) *adapter {
 	a := &adapter{
-		id:  uuid.New(),
-		cfg: cfg,
+		id:     uuid.New(),
+		driver: driver,
 	}
 	a.open()
 	return a
@@ -45,23 +44,9 @@ func (a *adapter) conn() *minio.Client {
 }
 
 func (a *adapter) open() {
-	switch a.cfg.Driver {
-	case DriverMinIO:
-		a.client = connectToMinIO(a.cfg)
-	}
-
-}
-
-func connectToMinIO(cfg Config) *minio.Client {
-	client, err := minio.New(
-		cfg.Endpoint,
-		&minio.Options{
-			Creds:  credentials.NewStaticV4(cfg.AccessKey, cfg.SecretKey, ""),
-			Secure: cfg.UseTLS,
-		},
-	)
+	var err error
+	a.client, err = a.driver.Connect()
 	if err != nil {
 		log.Fatalln(err)
 	}
-	return client
 }
