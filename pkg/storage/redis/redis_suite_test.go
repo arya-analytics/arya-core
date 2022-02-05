@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	mockEngine = redis.New(redis.Config{
+	mockEngine = redis.New(redis.DriverRedis{
 		Host:     "localhost",
 		Port:     6379,
 		Password: "",

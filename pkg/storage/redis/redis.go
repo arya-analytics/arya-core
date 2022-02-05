@@ -1,42 +1,21 @@
 package redis
 
 import (
-	"fmt"
 	"github.com/arya-analytics/aryacore/pkg/storage"
 )
-
-// |||| CONFIG ||||
-
-type Driver int
-
-const (
-	DriverRedisTS Driver = iota
-)
-
-type Config struct {
-	Host     string
-	Port     int
-	Driver   Driver
-	Password string
-	Database int
-}
-
-func (c Config) addr() string {
-	return fmt.Sprintf("%s:%v", c.Host, c.Port)
-}
 
 // |||| ENGINE ||||
 
 type Engine struct {
-	cfg Config
+	driver Driver
 }
 
-func New(cfg Config) *Engine {
-	return &Engine{cfg}
+func New(driver Driver) *Engine {
+	return &Engine{driver}
 }
 
 func (e *Engine) NewAdapter() storage.Adapter {
-	return newAdapter(e.cfg)
+	return newAdapter(e.driver)
 }
 
 func (e *Engine) IsAdapter(a storage.Adapter) bool {
