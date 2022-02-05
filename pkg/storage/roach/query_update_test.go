@@ -20,7 +20,7 @@ var _ = Describe("QueryUpdate", func() {
 		ccErr := engine.NewCreate(adapter).Model(channelConfig).Exec(ctx)
 		Expect(ccErr).To(BeNil())
 	})
-	AfterEach(func() {
+	JustAfterEach(func() {
 		ccErr := engine.NewDelete(adapter).Model(channelConfig).WherePK(channelConfig.
 			ID).Exec(ctx)
 		Expect(ccErr).To(BeNil())

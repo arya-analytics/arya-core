@@ -5,59 +5,77 @@ import (
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	log "github.com/sirupsen/logrus"
 )
 
 var _ = Describe("Create", func() {
+	var (
+		node           *storage.Node
+		channelConfig  *storage.ChannelConfig
+		channelConfigs []*storage.ChannelConfig
+	)
+	BeforeEach(func() {
+		node = &storage.Node{ID: 1}
+	})
+	JustBeforeEach(func() {
+		err := store.NewCreate().Model(node).Exec(ctx)
+		Expect(err).To(BeNil())
+	})
+	JustAfterEach(func() {
+		err := store.NewDelete().Model(node).WherePK(node.ID).Exec(ctx)
+		Expect(err).To(BeNil())
+	})
 	Describe("Create a  new item", func() {
-		AfterEach(deleteMockChannelCfg)
-		It("Should create it without error", func() {
-			err := mockStorage.NewCreate().Model(mockChannelCfg).Exec(mockCtx)
+		BeforeEach(func() {
+			channelConfig = &storage.ChannelConfig{
+				NodeID: node.ID,
+			}
+		})
+		JustAfterEach(func() {
+			err := store.NewDelete().Model(channelConfig).WherePK(channelConfig.ID).
+				Exec(ctx)
 			Expect(err).To(BeNil())
 		})
-		It("Should be able to be re-queried after creation", func() {
-			err := mockStorage.NewCreate().Model(mockChannelCfg).Exec(mockCtx)
+		It("Should create the correct item", func() {
+			err := store.NewCreate().Model(channelConfig).Exec(ctx)
 			Expect(err).To(BeNil())
-			m := &storage.ChannelConfig{}
-			err = mockStorage.NewRetrieve().Model(m).WherePK(mockChannelCfg.ID).Exec(
-				mockCtx)
-			Expect(err).To(BeNil())
-			Expect(m.ID).To(Equal(mockChannelCfg.ID))
+			resChannelConfig := &storage.ChannelConfig{}
+			rErr := store.NewRetrieve().Model(resChannelConfig).WherePK(channelConfig.
+				ID).Exec(ctx)
+			Expect(rErr).To(BeNil())
+			Expect(resChannelConfig).To(Equal(channelConfig))
 		})
 	})
 	Describe("Create multiple items", func() {
-		models := []*storage.ChannelConfig{
-			&storage.ChannelConfig{
-				ID:     uuid.New(),
-				Name:   "Cool Name 1",
-				NodeID: 1,
-			},
-			&storage.ChannelConfig{
-				ID:     uuid.New(),
-				Name:   "Cool Name 2",
-				NodeID: 1,
-			},
-		}
-		modelPks := []uuid.UUID{models[0].ID, models[1].ID}
-		AfterEach(func() {
-			if err := mockStorage.NewDelete().Model(&models).WherePKs(modelPks).Exec(
-				mockCtx); err != nil {
-				log.Fatalln(err)
+		BeforeEach(func() {
+			channelConfigs = []*storage.ChannelConfig{
+				{
+					Name:   "Cool Name 1",
+					NodeID: node.ID,
+				},
+				{
+					Name:   "Cool Name 2",
+					NodeID: node.ID,
+				},
 			}
 		})
-		It("Should create without error", func() {
-			err := mockStorage.NewCreate().Model(&models).Exec(mockCtx)
+		JustAfterEach(func() {
+			pks := []uuid.UUID{channelConfigs[0].ID, channelConfigs[1].ID}
+			err := store.NewDelete().Model(&channelConfigs).WherePKs(pks).Exec(ctx)
 			Expect(err).To(BeNil())
 		})
-		It("Should be able to be re-queried after creation", func() {
-			err := mockStorage.NewCreate().Model(&models).Exec(mockCtx)
-			Expect(err).To(BeNil())
-			var m []*storage.ChannelConfig
-			err = mockStorage.NewRetrieve().Model(&m).WherePKs(modelPks).Exec(
-				mockCtx)
-			Expect(err).To(BeNil())
-			Expect(m).To(HaveLen(2))
-			Expect(m[1].ID == models[1].ID || m[1].ID == models[0].ID).To(BeTrue())
+		It("Should create the items correctly", func() {
+			var resChannelConfigs []*storage.ChannelConfig
+			By("Creating without error")
+			cErr := store.NewCreate().Model(&channelConfigs).Exec(ctx)
+			Expect(cErr).To(BeNil())
+			By("Being re-retrieved after creation")
+			pks := []uuid.UUID{channelConfigs[0].ID, channelConfigs[1].ID}
+			rErr := store.NewRetrieve().Model(&resChannelConfigs).WherePKs(pks).
+				Exec(ctx)
+			Expect(rErr).To(BeNil())
+			Expect(resChannelConfigs).To(HaveLen(2))
+			Expect(pks).To(ContainElements(resChannelConfigs[0].ID,
+				resChannelConfigs[1].ID))
 		})
 	})
 })
