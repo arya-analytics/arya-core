@@ -31,7 +31,6 @@ func (b *baseQuery) baseBindModel(m interface{}) {
 
 func (b *baseQuery) baseMDEngine() MDEngine {
 	return b.storage.cfg.MDEngine
-
 }
 
 func (b *baseQuery) baseMDAdapter() Adapter {
