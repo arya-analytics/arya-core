@@ -23,7 +23,7 @@ func (b *baseQuery) baseClient() *minio.Client {
 }
 
 func (b *baseQuery) baseModel(m interface{}) {
-	b.modelExchange = newWrappedModelAdapter(storage.NewModelExchange(m,
+	b.modelExchange = newWrappedModelExchange(storage.NewModelExchange(m,
 		catalog().New(m)))
 }
 

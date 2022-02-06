@@ -21,7 +21,7 @@ func newMigrate(client *minio.Client) *migrateQuery {
 
 func (m *migrateQuery) Exec(ctx context.Context) error {
 	for _, mod := range catalog() {
-		me := newWrappedModelAdapter(storage.NewModelExchange(mod, mod))
+		me := newWrappedModelExchange(storage.NewModelExchange(mod, mod))
 		m.catcher.Exec(func() error {
 			bucketExists, err := m.baseClient().BucketExists(ctx, me.Bucket())
 			if err != nil {
@@ -41,7 +41,7 @@ func (m *migrateQuery) Exec(ctx context.Context) error {
 
 func (m *migrateQuery) Verify(ctx context.Context) error {
 	for _, mod := range catalog() {
-		me := newWrappedModelAdapter(storage.NewModelExchange(mod, mod))
+		me := newWrappedModelExchange(storage.NewModelExchange(mod, mod))
 		exists, err := m.baseClient().BucketExists(ctx, me.Bucket())
 		if err != nil {
 			return err

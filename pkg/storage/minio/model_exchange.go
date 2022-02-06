@@ -22,7 +22,7 @@ type modelExchange struct {
 	*storage.ModelExchange
 }
 
-func newWrappedModelAdapter(sma *storage.ModelExchange) *modelExchange {
+func newWrappedModelExchange(sma *storage.ModelExchange) *modelExchange {
 	return &modelExchange{sma}
 }
 
