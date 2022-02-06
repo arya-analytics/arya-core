@@ -17,9 +17,6 @@ const (
 	TransactionLogLevelAll
 )
 
-type Config struct {
-}
-
 // |||| ENGINE ||||
 
 // Engine opens connections and execute queries with a roach database.
