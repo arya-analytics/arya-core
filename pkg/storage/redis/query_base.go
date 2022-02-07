@@ -10,10 +10,12 @@ type queryBase struct {
 	_client       *timeseries.Client
 	modelExchange *modelExchange
 	catcher       *errutil.Catcher
+	handler       storage.ErrorHandler
 }
 
 func (q *queryBase) baseInit(client *timeseries.Client) {
 	q.catcher = &errutil.Catcher{}
+	q.handler = newErrorHandler()
 	q._client = client
 }
 
@@ -35,5 +37,5 @@ func (q *queryBase) baseModel(m interface{}) {
 }
 
 func (q *queryBase) baseErr() error {
-	return parseRedisTSErr(q.catcher.Error())
+	return q.handler.Exec(q.catcher.Error())
 }

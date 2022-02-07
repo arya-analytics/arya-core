@@ -8,10 +8,10 @@ import (
 type queryBase struct {
 	storage         *Storage
 	modelRfl        *model.Reflect
-	_catcher        *errutil.Catcher
 	_baseMDQuery    QueryMDBase
 	_baseObjQuery   QueryObjectBase
 	_baseCacheQuery QueryCacheBase
+	_catcher        *errutil.Catcher
 }
 
 func (q *queryBase) baseInit(s *Storage) {

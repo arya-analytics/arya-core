@@ -3,56 +3,18 @@ package roach
 import (
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/util/pg"
-	log "github.com/sirupsen/logrus"
 	"github.com/uptrace/bun/driver/pgdriver"
 	"strings"
 )
 
-// |||| BUN ERRORS ||||
-
-func parseBunErr(err error) (oErr error) {
-	if err == nil {
-		return oErr
-	}
-
-	switch err := err.(type) {
-	case pgdriver.Error:
-		oErr = parsePgDriverErr(err)
-	default:
-		oErr = parseSqlError(err.Error())
-	}
-	se, ok := oErr.(storage.Error)
-	if ok {
-		if se.Type == storage.ErrTypeUnknown {
-			log.Errorf("Unknown err -> %s", err)
-		}
-	}
-	return oErr
+var _errTypeConverterChain = storage.ErrorTypeConverterChain{
+	errConverterPG,
 }
+var _defaultConverter = errConverterDefault
 
-// |||| PGDRIVER ERRORS ||||
-
-func parsePgDriverErr(err pgdriver.Error) error {
-	pgErr := pg.NewError(err.Field('C'))
-	return storage.Error{Base: err, Type: pgToStorageErrType(pgErr.Type),
-		Message: err.Error()}
+func newErrorHandler() storage.ErrorHandler {
+	return storage.NewErrorHandler(_errTypeConverterChain, _defaultConverter)
 }
-
-var _pgErrs = map[pg.ErrorType]storage.ErrorType{
-	pg.ErrTypeUniqueViolation:     storage.ErrTypeUniqueViolation,
-	pg.ErrTypeForeignKeyViolation: storage.ErrTypeRelationshipViolation,
-	pg.ErrTypeIntegrityConstraint: storage.ErrTypeInvalidField,
-}
-
-func pgToStorageErrType(t pg.ErrorType) storage.ErrorType {
-	ot, ok := _pgErrs[t]
-	if !ok {
-		return storage.ErrTypeUnknown
-	}
-	return ot
-}
-
-// |||| SQL ERRORS |||
 
 var _sqlErrors = map[string]storage.ErrorType{
 	"sql: no rows in result set":                  storage.ErrTypeItemNotFound,
@@ -62,15 +24,27 @@ var _sqlErrors = map[string]storage.ErrorType{
 		ErrTypeInvalidArgs,
 }
 
-func sqlToStorageErr(sql string) storage.ErrorType {
+func errConverterDefault(err error) (storage.ErrorType, bool) {
 	for k, v := range _sqlErrors {
-		if strings.Contains(sql, k) {
-			return v
+		if strings.Contains(err.Error(), k) {
+			return v, true
 		}
 	}
-	return storage.ErrTypeUnknown
+	return storage.ErrTypeUnknown, false
 }
 
-func parseSqlError(sql string) error {
-	return storage.Error{Type: sqlToStorageErr(sql), Message: sql}
+var _pgErrs = map[pg.ErrorType]storage.ErrorType{
+	pg.ErrTypeUniqueViolation:     storage.ErrTypeUniqueViolation,
+	pg.ErrTypeForeignKeyViolation: storage.ErrTypeRelationshipViolation,
+	pg.ErrTypeIntegrityConstraint: storage.ErrTypeInvalidField,
+}
+
+func errConverterPG(err error) (storage.ErrorType, bool) {
+	driverErr, ok := err.(pgdriver.Error)
+	if !ok {
+		return storage.ErrTypeUnknown, false
+	}
+	pgErr := pg.NewError(driverErr.Field('C'))
+	ot, ok := _pgErrs[pgErr.Type]
+	return ot, ok
 }

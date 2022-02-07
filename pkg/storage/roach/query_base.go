@@ -14,10 +14,12 @@ const (
 type queryBase struct {
 	exchange *storage.ModelExchange
 	catcher  *errutil.Catcher
+	handler  storage.ErrorHandler
 }
 
 func (q *queryBase) baseInit() {
 	q.catcher = &errutil.Catcher{}
+	q.handler = newErrorHandler()
 }
 
 func (q *queryBase) baseModel(m interface{}) *model.Reflect {
@@ -34,7 +36,7 @@ func (q *queryBase) baseExchangeToDest() {
 }
 
 func (q *queryBase) baseErr() error {
-	return parseBunErr(q.catcher.Error())
+	return q.handler.Exec(q.catcher.Error())
 }
 
 func (q *queryBase) baseExec(af errutil.ActionFunc) {

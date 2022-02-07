@@ -11,10 +11,12 @@ type queryBase struct {
 	_client       *minio.Client
 	modelExchange *modelExchange
 	catcher       *errutil.Catcher
+	handler       storage.ErrorHandler
 }
 
 func (q *queryBase) baseInit(client *minio.Client) {
 	q.catcher = &errutil.Catcher{}
+	q.handler = newErrorHandler()
 	q._client = client
 }
 
@@ -48,7 +50,7 @@ func (q *queryBase) baseExec(af errutil.ActionFunc) {
 }
 
 func (q *queryBase) baseErr() error {
-	return parseMinioErr(q.catcher.Error())
+	return q.handler.Exec(q.catcher.Error())
 }
 
 func (q *queryBase) baseValidateReq() {

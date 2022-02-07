@@ -5,13 +5,18 @@ import (
 	"github.com/minio/minio-go/v7"
 )
 
-func parseMinioErr(err error) error {
-	if err == nil {
-		return nil
-	}
+var _errTypeConverterChain = storage.ErrorTypeConverterChain{}
+
+var _defaultConverter = errConverterDefault
+
+func newErrorHandler() storage.ErrorHandler {
+	return storage.NewErrorHandler(_errTypeConverterChain, _defaultConverter)
+}
+
+func errConverterDefault(err error) (storage.ErrorType, bool) {
 	mErr := minio.ToErrorResponse(err)
-	return storage.Error{Base: err, Type: _minioErrors[mErr.Code],
-		Message: mErr.Error()}
+	errT, ok := _minioErrors[mErr.Code]
+	return errT, ok
 }
 
 var _minioErrors = map[string]storage.ErrorType{
