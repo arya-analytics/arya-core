@@ -13,4 +13,7 @@ var _ = Describe("Errors", func() {
 			Expect(err.Error()).To(Equal("storage: ErrTypeUnknown - Unknown Error"))
 		})
 	})
+	Context("Error Handler", func() {
+
+	})
 })

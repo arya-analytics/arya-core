@@ -40,6 +40,17 @@ type ErrorTypeConverter func(err error) (ErrorType, bool)
 
 type ErrorTypeConverterChain []ErrorTypeConverter
 
+func newIterConverter(ecc ErrorTypeConverterChain) func() (ErrorTypeConverter, bool) {
+	n := -1
+	return func() (ErrorTypeConverter, bool) {
+		n += 1
+		if n < len(ecc) {
+			return ecc[n], true
+		}
+		return nil, false
+	}
+}
+
 type ErrorHandler struct {
 	ConverterChain   ErrorTypeConverterChain
 	DefaultConverter ErrorTypeConverter
@@ -50,27 +61,10 @@ func NewErrorHandler(cc ErrorTypeConverterChain, dc ErrorTypeConverter) ErrorHan
 }
 
 func (eh ErrorHandler) Exec(err error) error {
-	t := reflect.TypeOf(err)
-	if err == nil {
-		return nil
-	}
-	if t == reflect.TypeOf(Error{}) {
+	if err == nil || isStorageError(err) {
 		return err
 	}
-	var (
-		errT ErrorType
-		ok   bool
-	)
-	for _, c := range eh.ConverterChain {
-		errT, ok = c(err)
-		if ok {
-			break
-		}
-	}
-	if !ok {
-		errT, ok = eh.DefaultConverter(err)
-	}
-
+	errT, ok := eh.errType(err)
 	if !ok {
 		return unknownErr(err)
 	}
@@ -80,10 +74,27 @@ func (eh ErrorHandler) Exec(err error) error {
 	}
 }
 
+func (eh ErrorHandler) errType(err error) (ErrorType, bool) {
+	next := newIterConverter(eh.ConverterChain)
+	for {
+		c, nextOk := next()
+		if !nextOk {
+			return eh.DefaultConverter(err)
+		}
+		if errT, ok := c(err); ok {
+			return errT, ok
+		}
+	}
+}
+
 func unknownErr(err error) error {
 	log.Errorf("Storage - Unknown Err -> %s", err)
 	return Error{
 		Type: ErrTypeUnknown,
 		Base: err,
 	}
+}
+
+func isStorageError(err error) bool {
+	return reflect.TypeOf(err) == reflect.TypeOf(Error{})
 }
