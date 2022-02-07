@@ -3,12 +3,17 @@ package roach
 import (
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/util/pg"
+	"github.com/lib/pq"
 	"github.com/uptrace/bun/driver/pgdriver"
 	"strings"
 )
 
 func newErrorHandler() storage.ErrorHandler {
-	return storage.NewErrorHandler(errorTypeConverterDefault, errorTypeConverterPG)
+	return storage.NewErrorHandler(
+		errorTypeConverterDefault,
+		errorTypeConverterPQ,
+		errorTypeConverterPGDriver,
+	)
 }
 
 var _sqlErrors = map[string]storage.ErrorType{
@@ -34,12 +39,22 @@ var _pgErrs = map[pg.ErrorType]storage.ErrorType{
 	pg.ErrorTypeIntegrityConstraint: storage.ErrorTypeInvalidField,
 }
 
-func errorTypeConverterPG(err error) (storage.ErrorType, bool) {
+func errorTypeConverterPGDriver(err error) (storage.ErrorType, bool) {
 	driverErr, ok := err.(pgdriver.Error)
 	if !ok {
 		return storage.ErrorTypeUnknown, false
 	}
 	pgErr := pg.NewError(driverErr.Field('C'))
+	ot, ok := _pgErrs[pgErr.Type]
+	return ot, ok
+}
+
+func errorTypeConverterPQ(err error) (storage.ErrorType, bool) {
+	pqErr, ok := err.(*pq.Error)
+	if !ok {
+		return storage.ErrorTypeUnknown, false
+	}
+	pgErr := pg.NewError(string(pqErr.Code))
 	ot, ok := _pgErrs[pgErr.Type]
 	return ot, ok
 }
