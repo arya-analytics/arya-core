@@ -90,8 +90,9 @@ func (eh ErrorHandler) errType(err error) (ErrorType, bool) {
 func unknownErr(err error) error {
 	log.Errorf("Storage - Unknown Err -> %s", err)
 	return Error{
-		Type: ErrTypeUnknown,
-		Base: err,
+		Type:    ErrTypeUnknown,
+		Base:    err,
+		Message: "storage - unknown error",
 	}
 }
 
