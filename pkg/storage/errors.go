@@ -38,17 +38,6 @@ const (
 
 type ErrorTypeConverter func(err error) (ErrorType, bool)
 
-func newIterConverter(ecc []ErrorTypeConverter) func() (ErrorTypeConverter, bool) {
-	n := -1
-	return func() (ErrorTypeConverter, bool) {
-		n += 1
-		if n < len(ecc) {
-			return ecc[n], true
-		}
-		return nil, false
-	}
-}
-
 type ErrorHandler struct {
 	ConverterChain   []ErrorTypeConverter
 	DefaultConverter ErrorTypeConverter
@@ -96,4 +85,15 @@ func unknownErr(err error) error {
 
 func isStorageError(err error) bool {
 	return reflect.TypeOf(err) == reflect.TypeOf(Error{})
+}
+
+func newIterConverter(ecc []ErrorTypeConverter) func() (ErrorTypeConverter, bool) {
+	n := -1
+	return func() (ErrorTypeConverter, bool) {
+		n += 1
+		if n < len(ecc) {
+			return ecc[n], true
+		}
+		return nil, false
+	}
 }
