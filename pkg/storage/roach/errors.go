@@ -7,13 +7,8 @@ import (
 	"strings"
 )
 
-var _ErrorTypeConverterChain = storage.ErrorTypeConverterChain{
-	errConverterPG,
-}
-var _defaultConverter = errConverterDefault
-
 func newErrorHandler() storage.ErrorHandler {
-	return storage.NewErrorHandler(_ErrorTypeConverterChain, _defaultConverter)
+	return storage.NewErrorHandler(errorTypeConverterDefault, errorTypeConverterPG)
 }
 
 var _sqlErrors = map[string]storage.ErrorType{
@@ -24,7 +19,7 @@ var _sqlErrors = map[string]storage.ErrorType{
 		ErrorTypeInvalidArgs,
 }
 
-func errConverterDefault(err error) (storage.ErrorType, bool) {
+func errorTypeConverterDefault(err error) (storage.ErrorType, bool) {
 	for k, v := range _sqlErrors {
 		if strings.Contains(err.Error(), k) {
 			return v, true
@@ -39,7 +34,7 @@ var _pgErrs = map[pg.ErrorType]storage.ErrorType{
 	pg.ErrorTypeIntegrityConstraint: storage.ErrorTypeInvalidField,
 }
 
-func errConverterPG(err error) (storage.ErrorType, bool) {
+func errorTypeConverterPG(err error) (storage.ErrorType, bool) {
 	driverErr, ok := err.(pgdriver.Error)
 	if !ok {
 		return storage.ErrorTypeUnknown, false

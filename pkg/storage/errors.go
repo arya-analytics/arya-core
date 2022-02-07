@@ -38,9 +38,7 @@ const (
 
 type ErrorTypeConverter func(err error) (ErrorType, bool)
 
-type ErrorTypeConverterChain []ErrorTypeConverter
-
-func newIterConverter(ecc ErrorTypeConverterChain) func() (ErrorTypeConverter, bool) {
+func newIterConverter(ecc []ErrorTypeConverter) func() (ErrorTypeConverter, bool) {
 	n := -1
 	return func() (ErrorTypeConverter, bool) {
 		n += 1
@@ -52,11 +50,11 @@ func newIterConverter(ecc ErrorTypeConverterChain) func() (ErrorTypeConverter, b
 }
 
 type ErrorHandler struct {
-	ConverterChain   ErrorTypeConverterChain
+	ConverterChain   []ErrorTypeConverter
 	DefaultConverter ErrorTypeConverter
 }
 
-func NewErrorHandler(cc ErrorTypeConverterChain, dc ErrorTypeConverter) ErrorHandler {
+func NewErrorHandler(dc ErrorTypeConverter, cc ...ErrorTypeConverter) ErrorHandler {
 	return ErrorHandler{cc, dc}
 }
 

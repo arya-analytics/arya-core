@@ -5,15 +5,11 @@ import (
 	"github.com/minio/minio-go/v7"
 )
 
-var _ErrorTypeConverterChain = storage.ErrorTypeConverterChain{}
-
-var _defaultConverter = errConverterDefault
-
 func newErrorHandler() storage.ErrorHandler {
-	return storage.NewErrorHandler(_ErrorTypeConverterChain, _defaultConverter)
+	return storage.NewErrorHandler(errorTypeConverterDefault)
 }
 
-func errConverterDefault(err error) (storage.ErrorType, bool) {
+func errorTypeConverterDefault(err error) (storage.ErrorType, bool) {
 	mErr := minio.ToErrorResponse(err)
 	errT, ok := _minioErrors[mErr.Code]
 	return errT, ok
