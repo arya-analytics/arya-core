@@ -9,8 +9,8 @@ import (
 
 func NewStorage() *storage.Storage {
 	return storage.New(storage.Config{
-		MDEngine:     roach.New(DriverPG{}),
-		CacheEngine:  redis.New(DriverRedis{}),
-		ObjectEngine: minio.New(DriverMinio{}),
+		EngineMD:     roach.New(DriverPG{}),
+		EngineCache:  redis.New(DriverRedis{}),
+		EngineObject: minio.New(DriverMinio{}),
 	})
 }

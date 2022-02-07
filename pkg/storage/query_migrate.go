@@ -2,46 +2,46 @@ package storage
 
 import "context"
 
-type MigrateQuery struct {
-	baseQuery
+type QueryMigrate struct {
+	queryBase
 }
 
 // |||| CONSTRUCTOR ||||
 
-func newMigrate(s *Storage) *MigrateQuery {
-	m := &MigrateQuery{}
-	m.baseInit(s)
-	return m
+func newMigrate(s *Storage) *QueryMigrate {
+	q := &QueryMigrate{}
+	q.baseInit(s)
+	return q
 }
 
 /// |||| INTERFACE ||||
 
-func (m *MigrateQuery) Exec(ctx context.Context) error {
-	m.baseExec(func() error {
-		return m.mdQuery().Exec(ctx)
+func (q *QueryMigrate) Exec(ctx context.Context) error {
+	q.baseExec(func() error {
+		return q.mdQuery().Exec(ctx)
 	})
-	m.baseExec(func() error {
-		return m.objQuery().Exec(ctx)
+	q.baseExec(func() error {
+		return q.objQuery().Exec(ctx)
 	})
-	return m.baseErr()
+	return q.baseErr()
 }
 
 // |||| QUERY BINDING ||||
 
 // || META DATA ||
 
-func (m *MigrateQuery) mdQuery() MDMigrateQuery {
-	if m.baseMDQuery() == nil {
-		m.baseSetMDQuery(m.baseMDEngine().NewMigrate(m.baseMDAdapter()))
+func (q *QueryMigrate) mdQuery() QueryMDMigrate {
+	if q.baseMDQuery() == nil {
+		q.baseSetMDQuery(q.baseMDEngine().NewMigrate(q.baseMDAdapter()))
 	}
-	return m.baseMDQuery().(MDMigrateQuery)
+	return q.baseMDQuery().(QueryMDMigrate)
 }
 
 // || OBJECT ||
 
-func (m *MigrateQuery) objQuery() ObjectMigrateQuery {
-	if m.baseObjQuery() == nil {
-		m.baseSetObjQuery(m.baseObjEngine().NewMigrate(m.baseObjAdapter()))
+func (q *QueryMigrate) objQuery() QueryObjectMigrate {
+	if q.baseObjQuery() == nil {
+		q.baseSetObjQuery(q.baseObjEngine().NewMigrate(q.baseObjAdapter()))
 	}
-	return m.baseObjQuery().(ObjectMigrateQuery)
+	return q.baseObjQuery().(QueryObjectMigrate)
 }

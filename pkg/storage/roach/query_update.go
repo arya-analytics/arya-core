@@ -6,37 +6,37 @@ import (
 	"github.com/uptrace/bun"
 )
 
-type updateQuery struct {
-	baseQuery
+type queryUpdate struct {
+	queryBase
 	q *bun.UpdateQuery
 }
 
-func newUpdate(db *bun.DB) *updateQuery {
-	r := &updateQuery{q: db.NewUpdate()}
-	r.baseInit()
-	return r
+func newUpdate(db *bun.DB) *queryUpdate {
+	q := &queryUpdate{q: db.NewUpdate()}
+	q.baseInit()
+	return q
 }
 
-func (u *updateQuery) Model(m interface{}) storage.MDUpdateQuery {
-	rm := u.baseModel(m)
-	u.baseExchangeToDest()
-	u.q = u.q.Model(rm.Pointer())
-	return u
+func (q *queryUpdate) Model(m interface{}) storage.QueryMDUpdate {
+	rm := q.baseModel(m)
+	q.baseExchangeToDest()
+	q.q = q.q.Model(rm.Pointer())
+	return q
 }
 
-func (u *updateQuery) WherePK(pk interface{}) storage.MDUpdateQuery {
-	return u.Where(pkEqualsSQL, pk)
+func (q *queryUpdate) WherePK(pk interface{}) storage.QueryMDUpdate {
+	return q.Where(pkEqualsSQL, pk)
 }
 
-func (u *updateQuery) Where(query string, args ...interface{}) storage.MDUpdateQuery {
-	u.q = u.q.Where(query, args...)
-	return u
+func (q *queryUpdate) Where(query string, args ...interface{}) storage.QueryMDUpdate {
+	q.q = q.q.Where(query, args...)
+	return q
 }
 
-func (u *updateQuery) Exec(ctx context.Context) error {
-	u.baseExec(func() error {
-		_, err := u.q.Exec(ctx)
+func (q *queryUpdate) Exec(ctx context.Context) error {
+	q.baseExec(func() error {
+		_, err := q.q.Exec(ctx)
 		return err
 	})
-	return u.baseErr()
+	return q.baseErr()
 }

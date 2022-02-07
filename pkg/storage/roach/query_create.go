@@ -6,37 +6,37 @@ import (
 	"github.com/uptrace/bun"
 )
 
-// createQuery implements storage.MDCreateQuery.
-type createQuery struct {
-	baseQuery
+// queryCreate implements storage.QueryMDCreate.
+type queryCreate struct {
+	queryBase
 	q *bun.InsertQuery
 }
 
-func newCreate(db *bun.DB) *createQuery {
-	r := &createQuery{q: db.NewInsert()}
-	r.baseInit()
-	return r
+func newCreate(db *bun.DB) *queryCreate {
+	q := &queryCreate{q: db.NewInsert()}
+	q.baseInit()
+	return q
 }
 
-// Model implements storage.MDCreateQuery.
-func (c *createQuery) Model(m interface{}) storage.MDCreateQuery {
-	rm := c.baseModel(m)
-	c.baseExchangeToDest()
-	c.catcher.Exec(func() error {
+// Model implements storage.QueryMDCreate.
+func (q *queryCreate) Model(m interface{}) storage.QueryMDCreate {
+	rm := q.baseModel(m)
+	q.baseExchangeToDest()
+	q.catcher.Exec(func() error {
 		beforeInsertSetUUID(rm)
-		c.q = c.q.Model(rm.Pointer())
+		q.q = q.q.Model(rm.Pointer())
 		return nil
 	})
 	// We set default values, so we want to exchange back to source.
-	c.baseExchangeToSource()
-	return c
+	q.baseExchangeToSource()
+	return q
 }
 
-// Exec implements storage.MDCreateQuery.
-func (c *createQuery) Exec(ctx context.Context) error {
-	c.baseExec(func() error {
-		_, err := c.q.Exec(ctx)
+// Exec implements storage.QueryMDCreate.
+func (q *queryCreate) Exec(ctx context.Context) error {
+	q.baseExec(func() error {
+		_, err := q.q.Exec(ctx)
 		return err
 	})
-	return c.baseErr()
+	return q.baseErr()
 }

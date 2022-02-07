@@ -8,41 +8,41 @@ import (
 
 var removeObjectOpts = minio.RemoveObjectOptions{}
 
-type deleteQuery struct {
-	whereBaseQuery
+type queryDelete struct {
+	queryWhereBase
 }
 
-func newDelete(client *minio.Client) *deleteQuery {
-	d := &deleteQuery{}
-	d.baseInit(client)
-	return d
+func newDelete(client *minio.Client) *queryDelete {
+	q := &queryDelete{}
+	q.baseInit(client)
+	return q
 }
 
-func (d *deleteQuery) WherePK(pk interface{}) storage.ObjectDeleteQuery {
-	d.whereBasePK(pk)
-	return d
+func (q *queryDelete) WherePK(pk interface{}) storage.QueryObjectDelete {
+	q.whereBasePK(pk)
+	return q
 }
 
-func (d *deleteQuery) WherePKs(pks interface{}) storage.ObjectDeleteQuery {
-	d.whereBasePKs(pks)
-	return d
+func (q *queryDelete) WherePKs(pks interface{}) storage.QueryObjectDelete {
+	q.whereBasePKs(pks)
+	return q
 }
 
-func (d *deleteQuery) Model(m interface{}) storage.ObjectDeleteQuery {
-	d.baseModel(m)
-	return d
+func (q *queryDelete) Model(m interface{}) storage.QueryObjectDelete {
+	q.baseModel(m)
+	return q
 }
 
-func (d *deleteQuery) Exec(ctx context.Context) error {
-	for _, pk := range d.pkChain {
-		d.baseExec(func() error {
-			return d.baseClient().RemoveObject(
+func (q *queryDelete) Exec(ctx context.Context) error {
+	for _, pk := range q.pkChain {
+		q.baseExec(func() error {
+			return q.baseClient().RemoveObject(
 				ctx,
-				d.baseBucket(),
+				q.baseBucket(),
 				pk.String(),
 				removeObjectOpts,
 			)
 		})
 	}
-	return d.baseErr()
+	return q.baseErr()
 }

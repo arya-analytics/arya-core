@@ -2,48 +2,48 @@ package storage
 
 import "context"
 
-type TSCreateQuery struct {
-	tsBaseQuery
+type QueryTSCreate struct {
+	queryTSBase
 }
 
-func newTSCreate(s *Storage) *TSCreateQuery {
-	tsc := &TSCreateQuery{}
-	tsc.baseInit(s)
-	return tsc
+func newTSCreate(s *Storage) *QueryTSCreate {
+	q := &QueryTSCreate{}
+	q.baseInit(s)
+	return q
 }
 
-func (tsc *TSCreateQuery) Model(m interface{}) *TSCreateQuery {
-	tsc.baseBindModel(m)
-	tsc.setCacheQuery(tsc.cacheQuery().Model(m))
-	return tsc
+func (q *QueryTSCreate) Model(m interface{}) *QueryTSCreate {
+	q.baseBindModel(m)
+	q.setCacheQuery(q.cacheQuery().Model(m))
+	return q
 }
 
-func (tsc *TSCreateQuery) Series() *TSCreateQuery {
-	tsc.setCacheQuery(tsc.cacheQuery().Series())
-	return tsc
+func (q *QueryTSCreate) Series() *QueryTSCreate {
+	q.setCacheQuery(q.cacheQuery().Series())
+	return q
 }
 
-func (tsc *TSCreateQuery) Sample() *TSCreateQuery {
-	tsc.setCacheQuery(tsc.cacheQuery().Sample())
-	return tsc
+func (q *QueryTSCreate) Sample() *QueryTSCreate {
+	q.setCacheQuery(q.cacheQuery().Sample())
+	return q
 }
 
-func (tsc *TSCreateQuery) Exec(ctx context.Context) error {
-	tsc.baseExec(func() error { return tsc.cacheQuery().Exec(ctx) })
-	return tsc.baseErr()
+func (q *QueryTSCreate) Exec(ctx context.Context) error {
+	q.baseExec(func() error { return q.cacheQuery().Exec(ctx) })
+	return q.baseErr()
 }
 
 // |||| QUERY BINDING |||
 
 // || CACHE ||
 
-func (tsc *TSCreateQuery) cacheQuery() CacheTSCreateQuery {
-	if tsc.baseCacheQuery() == nil {
-		tsc.setCacheQuery(tsc.baseCacheEngine().NewTSCreate(tsc.baseCacheAdapter()))
+func (q *QueryTSCreate) cacheQuery() QueryCacheTSCreate {
+	if q.baseCacheQuery() == nil {
+		q.setCacheQuery(q.baseCacheEngine().NewTSCreate(q.baseCacheAdapter()))
 	}
-	return tsc.baseCacheQuery().(CacheTSCreateQuery)
+	return q.baseCacheQuery().(QueryCacheTSCreate)
 }
 
-func (tsc *TSCreateQuery) setCacheQuery(q CacheTSCreateQuery) {
-	tsc.baseSetCacheQuery(q)
+func (q *QueryTSCreate) setCacheQuery(qca QueryCacheTSCreate) {
+	q.baseSetCacheQuery(qca)
 }

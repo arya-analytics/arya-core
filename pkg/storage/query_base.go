@@ -5,88 +5,88 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 )
 
-type baseQuery struct {
+type queryBase struct {
 	storage         *Storage
 	modelRfl        *model.Reflect
 	_catcher        *errutil.Catcher
-	_baseMDQuery    MDBaseQuery
-	_baseObjQuery   ObjectBaseQuery
-	_baseCacheQuery CacheBaseQuery
+	_baseMDQuery    QueryMDBase
+	_baseObjQuery   QueryObjectBase
+	_baseCacheQuery QueryCacheBase
 }
 
-func (b *baseQuery) baseInit(s *Storage) {
-	b.storage = s
-	b._catcher = &errutil.Catcher{}
+func (q *queryBase) baseInit(s *Storage) {
+	q.storage = s
+	q._catcher = &errutil.Catcher{}
 }
 
 // |||| MODEL UTILITIES ||||
 
-func (b *baseQuery) baseBindModel(m interface{}) {
-	b.modelRfl = model.NewReflect(m)
+func (q *queryBase) baseBindModel(m interface{}) {
+	q.modelRfl = model.NewReflect(m)
 }
 
 // |||| QUERY BINDING ||||
 
 // || META DATA ||
 
-func (b *baseQuery) baseMDEngine() MDEngine {
-	return b.storage.cfg.MDEngine
+func (q *queryBase) baseMDEngine() EngineMD {
+	return q.storage.cfg.EngineMD
 }
 
-func (b *baseQuery) baseMDAdapter() Adapter {
-	return b.storage.adapter(b.baseMDEngine())
+func (q *queryBase) baseMDAdapter() Adapter {
+	return q.storage.adapter(q.baseMDEngine())
 }
 
-func (b *baseQuery) baseMDQuery() MDBaseQuery {
-	return b._baseMDQuery
+func (q *queryBase) baseMDQuery() QueryMDBase {
+	return q._baseMDQuery
 }
 
-func (b *baseQuery) baseSetMDQuery(q MDBaseQuery) {
-	b._baseMDQuery = q
+func (q *queryBase) baseSetMDQuery(qmd QueryMDBase) {
+	q._baseMDQuery = qmd
 }
 
 // || OBJECT ||
 
-func (b *baseQuery) baseObjEngine() ObjectEngine {
-	return b.storage.cfg.ObjectEngine
+func (q *queryBase) baseObjEngine() EngineObject {
+	return q.storage.cfg.EngineObject
 }
 
-func (b *baseQuery) baseObjAdapter() Adapter {
-	return b.storage.adapter(b.baseObjEngine())
+func (q *queryBase) baseObjAdapter() Adapter {
+	return q.storage.adapter(q.baseObjEngine())
 }
 
-func (b *baseQuery) baseObjQuery() ObjectBaseQuery {
-	return b._baseObjQuery
+func (q *queryBase) baseObjQuery() QueryObjectBase {
+	return q._baseObjQuery
 }
 
-func (b *baseQuery) baseSetObjQuery(q ObjectBaseQuery) {
-	b._baseObjQuery = q
+func (q *queryBase) baseSetObjQuery(qob QueryObjectBase) {
+	q._baseObjQuery = qob
 }
 
 // || CACHE ||
 
-func (b *baseQuery) baseCacheEngine() CacheEngine {
-	return b.storage.cfg.CacheEngine
+func (q *queryBase) baseCacheEngine() EngineCache {
+	return q.storage.cfg.EngineCache
 }
 
-func (b *baseQuery) baseCacheAdapter() Adapter {
-	return b.storage.adapter(b.baseCacheEngine())
+func (q *queryBase) baseCacheAdapter() Adapter {
+	return q.storage.adapter(q.baseCacheEngine())
 }
 
-func (b *baseQuery) baseCacheQuery() CacheBaseQuery {
-	return b._baseCacheQuery
+func (q *queryBase) baseCacheQuery() QueryCacheBase {
+	return q._baseCacheQuery
 }
 
-func (b *baseQuery) baseSetCacheQuery(q CacheBaseQuery) {
-	b._baseCacheQuery = q
+func (q *queryBase) baseSetCacheQuery(qca QueryCacheBase) {
+	q._baseCacheQuery = qca
 }
 
 // |||| EXCEPTION HANDLING  ||||
 
-func (b *baseQuery) baseExec(actionFunc errutil.ActionFunc) {
-	b._catcher.Exec(actionFunc)
+func (q *queryBase) baseExec(actionFunc errutil.ActionFunc) {
+	q._catcher.Exec(actionFunc)
 }
 
-func (b *baseQuery) baseErr() error {
-	return b._catcher.Error()
+func (q *queryBase) baseErr() error {
+	return q._catcher.Error()
 }

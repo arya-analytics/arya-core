@@ -8,7 +8,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("RetrieveQuery", func() {
+var _ = Describe("QueryRetrieve", func() {
 	var (
 		node          *storage.Node
 		channelConfig *storage.ChannelConfig

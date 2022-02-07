@@ -11,32 +11,32 @@ const (
 	pkChainInSQL = "ID in (?)"
 )
 
-type baseQuery struct {
+type queryBase struct {
 	exchange *storage.ModelExchange
 	catcher  *errutil.Catcher
 }
 
-func (b *baseQuery) baseInit() {
-	b.catcher = &errutil.Catcher{}
+func (q *queryBase) baseInit() {
+	q.catcher = &errutil.Catcher{}
 }
 
-func (b *baseQuery) baseModel(m interface{}) *model.Reflect {
-	b.exchange = storage.NewModelExchange(m, catalog().New(m))
-	return b.exchange.Dest
+func (q *queryBase) baseModel(m interface{}) *model.Reflect {
+	q.exchange = storage.NewModelExchange(m, catalog().New(m))
+	return q.exchange.Dest
 }
 
-func (b *baseQuery) baseExchangeToSource() {
-	b.exchange.ToSource()
+func (q *queryBase) baseExchangeToSource() {
+	q.exchange.ToSource()
 }
 
-func (b *baseQuery) baseExchangeToDest() {
-	b.exchange.ToDest()
+func (q *queryBase) baseExchangeToDest() {
+	q.exchange.ToDest()
 }
 
-func (b *baseQuery) baseErr() error {
-	return parseBunErr(b.catcher.Error())
+func (q *queryBase) baseErr() error {
+	return parseBunErr(q.catcher.Error())
 }
 
-func (b *baseQuery) baseExec(af errutil.ActionFunc) {
-	b.catcher.Exec(af)
+func (q *queryBase) baseExec(af errutil.ActionFunc) {
+	q.catcher.Exec(af)
 }

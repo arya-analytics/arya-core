@@ -4,69 +4,69 @@ import (
 	"context"
 )
 
-type TSRetrieveQuery struct {
-	tsBaseQuery
+type QueryTSRetrieve struct {
+	queryTSBase
 }
 
-func newTSRetrieve(s *Storage) *TSRetrieveQuery {
-	tsr := &TSRetrieveQuery{}
-	tsr.baseInit(s)
-	return tsr
+func newTSRetrieve(s *Storage) *QueryTSRetrieve {
+	q := &QueryTSRetrieve{}
+	q.baseInit(s)
+	return q
 }
 
-func (tsr *TSRetrieveQuery) Model(m interface{}) *TSRetrieveQuery {
-	tsr.baseBindModel(m)
-	tsr.setCacheQuery(tsr.cacheQuery().Model(m))
-	return tsr
+func (q *QueryTSRetrieve) Model(m interface{}) *QueryTSRetrieve {
+	q.baseBindModel(m)
+	q.setCacheQuery(q.cacheQuery().Model(m))
+	return q
 }
 
-func (tsr *TSRetrieveQuery) WherePK(pk interface{}) *TSRetrieveQuery {
-	tsr.tsBaseWherePk(pk)
-	tsr.setCacheQuery(tsr.cacheQuery().WherePK(pk))
-	return tsr
+func (q *QueryTSRetrieve) WherePK(pk interface{}) *QueryTSRetrieve {
+	q.tsBaseWherePk(pk)
+	q.setCacheQuery(q.cacheQuery().WherePK(pk))
+	return q
 }
 
-func (tsr *TSRetrieveQuery) WherePKs(pks interface{}) *TSRetrieveQuery {
-	tsr.tsBaseWherePks(pks)
-	tsr.setCacheQuery(tsr.cacheQuery().WherePKs(pks))
-	return tsr
+func (q *QueryTSRetrieve) WherePKs(pks interface{}) *QueryTSRetrieve {
+	q.tsBaseWherePks(pks)
+	q.setCacheQuery(q.cacheQuery().WherePKs(pks))
+	return q
 }
 
-func (tsr *TSRetrieveQuery) AllTimeRange() *TSRetrieveQuery {
-	tsr.setCacheQuery(tsr.cacheQuery().AllTimeRange())
-	return tsr
+func (q *QueryTSRetrieve) AllTimeRange() *QueryTSRetrieve {
+	q.setCacheQuery(q.cacheQuery().AllTimeRange())
+	return q
 }
 
-func (tsr *TSRetrieveQuery) WhereTimeRange(fromTS int64, toTS int64) *TSRetrieveQuery {
-	tsr.setCacheQuery(tsr.cacheQuery().WhereTimeRange(fromTS, toTS))
-	return tsr
+func (q *QueryTSRetrieve) WhereTimeRange(fromTS int64, toTS int64) *QueryTSRetrieve {
+	q.setCacheQuery(q.cacheQuery().WhereTimeRange(fromTS, toTS))
+	return q
 }
 
-func (tsr *TSRetrieveQuery) SeriesExists(ctx context.Context,
+func (q *QueryTSRetrieve) SeriesExists(ctx context.Context,
 	pk interface{}) (exists bool, err error) {
-	tsr.baseExec(func() error {
-		exists, err = tsr.cacheQuery().SeriesExists(ctx, pk)
+	q.baseExec(func() error {
+		exists, err = q.cacheQuery().SeriesExists(ctx, pk)
 		return err
 	})
-	return exists, tsr.baseErr()
+	return exists, q.baseErr()
 }
 
-func (tsr *TSRetrieveQuery) Exec(ctx context.Context) error {
-	tsr.baseExec(func() error { return tsr.cacheQuery().Exec(ctx) })
-	return tsr.baseErr()
+func (q *QueryTSRetrieve) Exec(ctx context.Context) error {
+	q.baseExec(func() error { return q.cacheQuery().Exec(ctx) })
+	return q.baseErr()
 }
 
 // |||| QUERY BINDING |||
 
 // || CACHE ||
 
-func (tsr *TSRetrieveQuery) cacheQuery() CacheTSRetrieveQuery {
-	if tsr.baseCacheQuery() == nil {
-		tsr.setCacheQuery(tsr.baseCacheEngine().NewTSRetrieve(tsr.baseCacheAdapter()))
+func (q *QueryTSRetrieve) cacheQuery() QueryCacheTSRetrieve {
+	if q.baseCacheQuery() == nil {
+		q.setCacheQuery(q.baseCacheEngine().NewTSRetrieve(q.baseCacheAdapter()))
 	}
-	return tsr.baseCacheQuery().(CacheTSRetrieveQuery)
+	return q.baseCacheQuery().(QueryCacheTSRetrieve)
 }
 
-func (tsr *TSRetrieveQuery) setCacheQuery(q CacheTSRetrieveQuery) {
-	tsr.baseSetCacheQuery(q)
+func (q *QueryTSRetrieve) setCacheQuery(qca QueryCacheTSRetrieve) {
+	q.baseSetCacheQuery(qca)
 }

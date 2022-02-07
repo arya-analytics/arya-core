@@ -10,7 +10,7 @@ import (
 )
 
 type tsRetrieveQuery struct {
-	baseQuery
+	queryBase
 	PKChain  model.PKChain
 	allRange bool
 	fromTS   int64
@@ -23,27 +23,27 @@ func newTSRetrieve(client *timeseries.Client) *tsRetrieveQuery {
 	return c
 }
 
-func (tsr *tsRetrieveQuery) Model(m interface{}) storage.CacheTSRetrieveQuery {
+func (tsr *tsRetrieveQuery) Model(m interface{}) storage.QueryCacheTSRetrieve {
 	tsr.baseModel(m)
 	return tsr
 }
 
-func (tsr *tsRetrieveQuery) WherePK(pk interface{}) storage.CacheTSRetrieveQuery {
+func (tsr *tsRetrieveQuery) WherePK(pk interface{}) storage.QueryCacheTSRetrieve {
 	tsr.PKChain = append(tsr.PKChain, model.NewPK(pk))
 	return tsr
 }
 
-func (tsr *tsRetrieveQuery) WherePKs(pks interface{}) storage.CacheTSRetrieveQuery {
+func (tsr *tsRetrieveQuery) WherePKs(pks interface{}) storage.QueryCacheTSRetrieve {
 	tsr.PKChain = model.NewPKChain(pks)
 	return tsr
 }
 
-func (tsr *tsRetrieveQuery) AllTimeRange() storage.CacheTSRetrieveQuery {
+func (tsr *tsRetrieveQuery) AllTimeRange() storage.QueryCacheTSRetrieve {
 	tsr.allRange = true
 	return tsr
 }
 
-func (tsr *tsRetrieveQuery) WhereTimeRange(fromTS int64, toTS int64) storage.CacheTSRetrieveQuery {
+func (tsr *tsRetrieveQuery) WhereTimeRange(fromTS int64, toTS int64) storage.QueryCacheTSRetrieve {
 	tsr.fromTS = fromTS
 	tsr.toTS = toTS
 	return tsr

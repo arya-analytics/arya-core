@@ -9,62 +9,62 @@ import (
 
 var getObjectOpts = minio.GetObjectOptions{}
 
-type retrieveQuery struct {
-	whereBaseQuery
+type queryRetrieve struct {
+	queryWhereBase
 	dvc dataValueChain
 }
 
-func newRetrieve(client *minio.Client) *retrieveQuery {
-	r := &retrieveQuery{dvc: dataValueChain{}}
-	r.baseInit(client)
-	return r
+func newRetrieve(client *minio.Client) *queryRetrieve {
+	q := &queryRetrieve{dvc: dataValueChain{}}
+	q.baseInit(client)
+	return q
 }
 
-func (r *retrieveQuery) Model(m interface{}) storage.ObjectRetrieveQuery {
-	r.baseModel(m)
-	return r
+func (q *queryRetrieve) Model(m interface{}) storage.QueryObjectRetrieve {
+	q.baseModel(m)
+	return q
 }
 
-func (r *retrieveQuery) WherePKs(pks interface{}) storage.ObjectRetrieveQuery {
-	r.whereBasePKs(pks)
-	return r
+func (q *queryRetrieve) WherePKs(pks interface{}) storage.QueryObjectRetrieve {
+	q.whereBasePKs(pks)
+	return q
 }
 
-func (r *retrieveQuery) WherePK(pk interface{}) storage.ObjectRetrieveQuery {
-	r.whereBasePK(pk)
-	return r
+func (q *queryRetrieve) WherePK(pk interface{}) storage.QueryObjectRetrieve {
+	q.whereBasePK(pk)
+	return q
 }
 
-func (r *retrieveQuery) Exec(ctx context.Context) error {
-	r.whereBaseValidateReq()
-	for _, pk := range r.pkChain {
+func (q *queryRetrieve) Exec(ctx context.Context) error {
+	q.whereBaseValidateReq()
+	for _, pk := range q.pkChain {
 		var resObj *minio.Object
-		r.baseExec(func() (err error) {
-			resObj, err = r.baseClient().GetObject(
+		q.baseExec(func() (err error) {
+			resObj, err = q.baseClient().GetObject(
 				ctx,
-				r.baseBucket(),
+				q.baseBucket(),
 				pk.String(),
 				getObjectOpts,
 			)
 			return err
 		})
-		r.validateRes(resObj)
-		r.appendToDVC(&dataValue{PK: pk, Data: &object{resObj}})
+		q.validateRes(resObj)
+		q.appendToDVC(&dataValue{PK: pk, Data: &object{resObj}})
 	}
-	r.baseBindVals(r.dvc)
-	r.baseExchangeToSource()
-	return r.baseErr()
+	q.baseBindVals(q.dvc)
+	q.baseExchangeToSource()
+	return q.baseErr()
 }
 
-func (r *retrieveQuery) appendToDVC(dv *dataValue) {
-	r.baseExec(func() error {
-		r.dvc = append(r.dvc, dv)
+func (q *queryRetrieve) appendToDVC(dv *dataValue) {
+	q.baseExec(func() error {
+		q.dvc = append(q.dvc, dv)
 		return nil
 	})
 }
 
-func (r *retrieveQuery) validateRes(resObj *minio.Object) {
-	r.baseExec(func() error {
+func (q *queryRetrieve) validateRes(resObj *minio.Object) {
+	q.baseExec(func() error {
 		return retrieveQueryResValidator.Exec(resObj)
 	})
 

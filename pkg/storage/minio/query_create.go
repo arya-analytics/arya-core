@@ -9,7 +9,7 @@ import (
 var putObjectOpts = minio.PutObjectOptions{}
 
 type createQuery struct {
-	baseQuery
+	queryBase
 }
 
 func newCreate(client *minio.Client) *createQuery {
@@ -18,7 +18,7 @@ func newCreate(client *minio.Client) *createQuery {
 	return c
 }
 
-func (c *createQuery) Model(m interface{}) storage.ObjectCreateQuery {
+func (c *createQuery) Model(m interface{}) storage.QueryObjectCreate {
 	c.baseModel(m)
 	c.baseExchangeToDest()
 	return c

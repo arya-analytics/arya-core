@@ -12,7 +12,7 @@ import (
 
 var (
 	ctx     = context.Background()
-	engine  storage.CacheEngine
+	engine  storage.EngineCache
 	adapter storage.Adapter
 )
 
