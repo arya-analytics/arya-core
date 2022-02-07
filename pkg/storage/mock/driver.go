@@ -2,6 +2,7 @@ package mock
 
 import (
 	"database/sql"
+	"errors"
 	"github.com/arya-analytics/aryacore/pkg/storage/redis/timeseries"
 	"github.com/cockroachdb/cockroach-go/v2/testserver"
 	"github.com/go-redis/redis/v8"
@@ -9,21 +10,62 @@ import (
 	"github.com/minio/minio-go/v7/pkg/credentials"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
-	"github.com/uptrace/bun/driver/pgdriver"
+	"net"
+	"net/url"
+	"strconv"
 )
 
-// |||| PG ||||
+// |||| ROACH ||||
 
-type DriverPG struct{}
+type DriverRoach struct {
+	Host     string
+	Port     int
+	HTTPPort int
+	Username string
+	Password string
+}
 
-func (d DriverPG) Connect() (*bun.DB, error) {
-	ts, err := testserver.NewTestServer()
+func availHTTPPort() int {
+	listener, err := net.Listen("tcp", ":0")
+	if err != nil {
+		panic(err)
+	}
+	return listener.Addr().(*net.TCPAddr).Port
+}
+
+func (d DriverRoach) Connect() (*bun.DB, error) {
+	port := availHTTPPort()
+	d.HTTPPort = availHTTPPort()
+	ts, err := testserver.NewTestServer(testserver.HTTPPortOpt(port),
+		testserver.SecureOpt(), testserver.RootPasswordOpt("testpass"))
 	if err != nil {
 		return nil, err
 	}
-	sqlDB := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(ts.PGURL().String())))
-	db := bun.NewDB(sqlDB, pgdialect.New())
-	return db, nil
+	sqlDB, err := sql.Open("postgres", ts.PGURL().String())
+	if cErr := d.bindConnProperties(ts.PGURL()); cErr != nil {
+		return nil, cErr
+	}
+	if err != nil {
+		return nil, err
+	}
+	return bun.NewDB(sqlDB, pgdialect.New()), nil
+}
+
+func (d DriverRoach) bindConnProperties(url *url.URL) error {
+	d.Host = url.Hostname()
+	port, err := strconv.Atoi(url.Port())
+	if err != nil {
+		return err
+	}
+	d.Port = port
+	uname := url.User.Username()
+	d.Username = uname
+	pwd, ok := url.User.Password()
+	if !ok {
+		return errors.New("could not bind password")
+	}
+	d.Password = pwd
+	return nil
 }
 
 // |||| REDIS ||||
