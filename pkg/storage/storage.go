@@ -45,7 +45,7 @@ package storage
 // returned.
 //
 // If an unexpected error is encountered,
-// will return a storage.Error with an ErrTypeUnknown. Error.Base
+// will return a storage.Error with an ErrorTypeUnknown. Error.Base
 // can be used to access the original error.
 //
 // Implementing a new Engine

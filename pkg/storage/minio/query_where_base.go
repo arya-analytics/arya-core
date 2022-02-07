@@ -31,7 +31,7 @@ var whereBaseQueryReqValidator = validate.New([]validate.Func{
 func validatePKProvided(v interface{}) error {
 	q := v.(*queryWhereBase)
 	if (len(q.pkChain)) == 0 {
-		return storage.Error{Type: storage.ErrTypeInvalidArgs,
+		return storage.Error{Type: storage.ErrorTypeInvalidArgs,
 			Message: "no PK provided to where query"}
 	}
 	return nil

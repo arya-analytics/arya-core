@@ -35,7 +35,7 @@ var _ = Describe("QueryDelete", func() {
 			rErr := engine.NewRetrieve(adapter).Model(channelConfig).WherePK(channelConfig.ID).
 				Exec(ctx)
 			Expect(rErr).ToNot(BeNil())
-			Expect(rErr.(storage.Error).Type).To(Equal(storage.ErrTypeItemNotFound))
+			Expect(rErr.(storage.Error).Type).To(Equal(storage.ErrorTypeItemNotFound))
 		})
 	})
 	Describe("Delete multiple items", func() {

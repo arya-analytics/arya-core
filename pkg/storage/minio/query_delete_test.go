@@ -32,7 +32,7 @@ var _ = Describe("QueryDelete", func() {
 				rErr := engine.NewRetrieve(adapter).Model(channelChunk).WherePK(
 					channelChunk.ID).Exec(ctx)
 				Expect(rErr).ToNot(BeNil())
-				Expect(rErr.(storage.Error).Type).To(Equal(storage.ErrTypeItemNotFound))
+				Expect(rErr.(storage.Error).Type).To(Equal(storage.ErrorTypeItemNotFound))
 			})
 		})
 		Describe("Delete multiple Items", func() {
@@ -55,7 +55,7 @@ var _ = Describe("QueryDelete", func() {
 				e := engine.NewRetrieve(adapter).Model(&models).WherePKs(
 					[]uuid.UUID{channelChunkTwo.ID, channelChunk.ID}).Exec(ctx)
 				Expect(e).ToNot(BeNil())
-				Expect(e.(storage.Error).Type).To(Equal(storage.ErrTypeItemNotFound))
+				Expect(e.(storage.Error).Type).To(Equal(storage.ErrorTypeItemNotFound))
 			})
 		})
 	})

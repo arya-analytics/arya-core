@@ -10,55 +10,55 @@ import (
 var _ = Describe("Errors", func() {
 	Context("Error string", func() {
 		It("Should return the correct string", func() {
-			err := storage.Error{Type: storage.ErrTypeUnknown, Message: "Unknown Error"}
-			Expect(err.Error()).To(Equal("storage: ErrTypeUnknown - Unknown Error"))
+			err := storage.Error{Type: storage.ErrorTypeUnknown, Message: "Unknown Error"}
+			Expect(err.Error()).To(Equal("storage: ErrorTypeUnknown - Unknown Error"))
 		})
 	})
 	Context("Error Handler", func() {
 		Context("Converter chain handles error", func() {
 			converterChain := storage.ErrorTypeConverterChain{
 				func(err error) (storage.ErrorType, bool) {
-					return storage.ErrTypeRelationshipViolation, true
+					return storage.ErrorTypeRelationshipViolation, true
 				},
 			}
 			converterDefault := func(err error) (storage.ErrorType, bool) {
-				return storage.ErrTypeUnknown, true
+				return storage.ErrorTypeUnknown, true
 			}
 			handler := storage.NewErrorHandler(converterChain, converterDefault)
 			It("Should return a relationship violation error", func() {
 				err := handler.Exec(fmt.Errorf("random error"))
-				Expect(err.(storage.Error).Type).To(Equal(storage.ErrTypeRelationshipViolation))
+				Expect(err.(storage.Error).Type).To(Equal(storage.ErrorTypeRelationshipViolation))
 			})
 		})
 		Context("Default handler handles error", func() {
 			converterChain := storage.ErrorTypeConverterChain{
 				func(err error) (storage.ErrorType, bool) {
-					return storage.ErrTypeUnknown, false
+					return storage.ErrorTypeUnknown, false
 				},
 			}
 			converterDefault := func(err error) (storage.ErrorType, bool) {
-				return storage.ErrTypeRelationshipViolation, true
+				return storage.ErrorTypeRelationshipViolation, true
 			}
 			handler := storage.NewErrorHandler(converterChain, converterDefault)
 			It("Should return a relationship violation error", func() {
 				err := handler.Exec(fmt.Errorf("random error"))
-				Expect(err.(storage.Error).Type).To(Equal(storage.ErrTypeRelationshipViolation))
+				Expect(err.(storage.Error).Type).To(Equal(storage.ErrorTypeRelationshipViolation))
 			})
 		})
 		Context("Neither handler handles the error", func() {
 			converterChain := storage.ErrorTypeConverterChain{
 				func(err error) (storage.ErrorType, bool) {
-					return storage.ErrTypeItemNotFound, false
+					return storage.ErrorTypeItemNotFound, false
 				},
 			}
 			converterDefault := func(err error) (storage.ErrorType, bool) {
-				return storage.ErrTypeRelationshipViolation, false
+				return storage.ErrorTypeRelationshipViolation, false
 			}
 			handler := storage.NewErrorHandler(converterChain, converterDefault)
 			It("Should return an unknown error", func() {
 				err := handler.Exec(fmt.Errorf("random error"))
 				sErr := err.(storage.Error)
-				Expect(sErr.Type).To(Equal(storage.ErrTypeUnknown))
+				Expect(sErr.Type).To(Equal(storage.ErrorTypeUnknown))
 				Expect(sErr.Message).To(Equal("storage - unknown error"))
 
 			})

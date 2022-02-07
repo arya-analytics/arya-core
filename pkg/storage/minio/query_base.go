@@ -66,7 +66,7 @@ var baseQueryReqValidator = validate.New([]validate.Func{
 func validateModelProvided(v interface{}) error {
 	b := v.(*queryBase)
 	if b.modelExchange == nil {
-		return storage.Error{Type: storage.ErrTypeInvalidArgs,
+		return storage.Error{Type: storage.ErrorTypeInvalidArgs,
 			Message: "no model provided to query"}
 	}
 	return nil

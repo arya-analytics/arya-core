@@ -7,21 +7,21 @@ import (
 	"strings"
 )
 
-var _errTypeConverterChain = storage.ErrorTypeConverterChain{
+var _ErrorTypeConverterChain = storage.ErrorTypeConverterChain{
 	errConverterPG,
 }
 var _defaultConverter = errConverterDefault
 
 func newErrorHandler() storage.ErrorHandler {
-	return storage.NewErrorHandler(_errTypeConverterChain, _defaultConverter)
+	return storage.NewErrorHandler(_ErrorTypeConverterChain, _defaultConverter)
 }
 
 var _sqlErrors = map[string]storage.ErrorType{
-	"sql: no rows in result set":                  storage.ErrTypeItemNotFound,
-	"constraint failed: UNIQUE constraint failed": storage.ErrTypeUniqueViolation,
-	"SQL logic errutil: no such table":            storage.ErrTypeMigration,
+	"sql: no rows in result set":                  storage.ErrorTypeItemNotFound,
+	"constraint failed: UNIQUE constraint failed": storage.ErrorTypeUniqueViolation,
+	"SQL logic errutil: no such table":            storage.ErrorTypeMigration,
 	"bun: Update and Delete queries require at least one Where": storage.
-		ErrTypeInvalidArgs,
+		ErrorTypeInvalidArgs,
 }
 
 func errConverterDefault(err error) (storage.ErrorType, bool) {
@@ -30,19 +30,19 @@ func errConverterDefault(err error) (storage.ErrorType, bool) {
 			return v, true
 		}
 	}
-	return storage.ErrTypeUnknown, false
+	return storage.ErrorTypeUnknown, false
 }
 
 var _pgErrs = map[pg.ErrorType]storage.ErrorType{
-	pg.ErrTypeUniqueViolation:     storage.ErrTypeUniqueViolation,
-	pg.ErrTypeForeignKeyViolation: storage.ErrTypeRelationshipViolation,
-	pg.ErrTypeIntegrityConstraint: storage.ErrTypeInvalidField,
+	pg.ErrorTypeUniqueViolation:     storage.ErrorTypeUniqueViolation,
+	pg.ErrorTypeForeignKeyViolation: storage.ErrorTypeRelationshipViolation,
+	pg.ErrorTypeIntegrityConstraint: storage.ErrorTypeInvalidField,
 }
 
 func errConverterPG(err error) (storage.ErrorType, bool) {
 	driverErr, ok := err.(pgdriver.Error)
 	if !ok {
-		return storage.ErrTypeUnknown, false
+		return storage.ErrorTypeUnknown, false
 	}
 	pgErr := pg.NewError(driverErr.Field('C'))
 	ot, ok := _pgErrs[pgErr.Type]

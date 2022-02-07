@@ -5,42 +5,42 @@ package pg
 import "strconv"
 
 func _() {
-	// An "invalid array index" compiler errutil signifies that the constant values have changed.
+	// An "invalid array index" compiler error signifies that the constant values have changed.
 	// Re-run the stringer command to generate them again.
 	var x [1]struct{}
-	_ = x[ErrTypeUnknown-0]
-	_ = x[ErrTypeWarning-1]
-	_ = x[ErrTypeNoData-2]
-	_ = x[ErrTypeSQLNotComplete-3]
-	_ = x[ErrTypeConn-4]
-	_ = x[ErrTypeTriggeredAction-5]
-	_ = x[ErrTypeInvalidTransaction-6]
-	_ = x[ErrTypeLocator-7]
-	_ = x[ErrTypeGrantor-8]
-	_ = x[ErrTypeInvalidRoleSpec-9]
-	_ = x[ErrTypeDiagnosticsException-10]
-	_ = x[ErrTypeCaseNotFound-11]
-	_ = x[ErrTypeCardinalityViolation-12]
-	_ = x[ErrTypeDataException-13]
-	_ = x[ErrTypeIntegrityConstraint-14]
-	_ = x[ErrTypeInvalidCursor-15]
-	_ = x[ErrTypeInvalidSQLStatementName-16]
-	_ = x[ErrTypeTriggeredDataChangeViolation-17]
-	_ = x[ErrTypeInvalidAuthSpec-18]
-	_ = x[ErrTypeDependentPrivileged-19]
-	_ = x[ErrTypeSQLRoutine-20]
-	_ = x[ErrTypeInvalidCatalog-21]
-	_ = x[ErrTypeTransactionRollback-22]
-	_ = x[ErrTypeSyntax-23]
-	_ = x[ErrTypeSystem-24]
-	_ = x[ErrTypeFeatureNotSupported-25]
-	_ = x[ErrTypeUniqueViolation-26]
-	_ = x[ErrTypeForeignKeyViolation-27]
+	_ = x[ErrorTypeUnknown-0]
+	_ = x[ErrorTypeWarning-1]
+	_ = x[ErrorTypeNoData-2]
+	_ = x[ErrorTypeSQLNotComplete-3]
+	_ = x[ErrorTypeConn-4]
+	_ = x[ErrorTypeTriggeredAction-5]
+	_ = x[ErrorTypeInvalidTransaction-6]
+	_ = x[ErrorTypeLocator-7]
+	_ = x[ErrorTypeGrantor-8]
+	_ = x[ErrorTypeInvalidRoleSpec-9]
+	_ = x[ErrorTypeDiagnosticsException-10]
+	_ = x[ErrorTypeCaseNotFound-11]
+	_ = x[ErrorTypeCardinalityViolation-12]
+	_ = x[ErrorTypeDataException-13]
+	_ = x[ErrorTypeIntegrityConstraint-14]
+	_ = x[ErrorTypeInvalidCursor-15]
+	_ = x[ErrorTypeInvalidSQLStatementName-16]
+	_ = x[ErrorTypeTriggeredDataChangeViolation-17]
+	_ = x[ErrorTypeInvalidAuthSpec-18]
+	_ = x[ErrorTypeDependentPrivileged-19]
+	_ = x[ErrorTypeSQLRoutine-20]
+	_ = x[ErrorTypeInvalidCatalog-21]
+	_ = x[ErrorTypeTransactionRollback-22]
+	_ = x[ErrorTypeSyntax-23]
+	_ = x[ErrorTypeSystem-24]
+	_ = x[ErrorTypeFeatureNotSupported-25]
+	_ = x[ErrorTypeUniqueViolation-26]
+	_ = x[ErrorTypeForeignKeyViolation-27]
 }
 
-const _ErrorType_name = "ErrTypeUnknownErrTypeWarningErrTypeNoDataErrTypeSQLNotCompleteErrTypeConnErrTypeTriggeredActionErrTypeInvalidTransactionErrTypeLocatorErrTypeGrantorErrTypeInvalidRoleSpecErrTypeDiagnosticsExceptionErrTypeCaseNotFoundErrTypeCardinalityViolationErrTypeDataExceptionErrTypeIntegrityConstraintErrTypeInvalidCursorErrTypeInvalidSQLStatementNameErrTypeTriggeredDataChangeViolationErrTypeInvalidAuthSpecErrTypeDependentPrivilegedErrTypeSQLRoutineErrTypeInvalidCatalogErrTypeTransactionRollbackErrTypeSyntaxErrTypeSystemErrTypeFeatureNotSupportedErrTypeUniqueViolationErrTypeForeignKeyViolation"
+const _ErrorType_name = "ErrorTypeUnknownErrorTypeWarningErrorTypeNoDataErrorTypeSQLNotCompleteErrorTypeConnErrorTypeTriggeredActionErrorTypeInvalidTransactionErrorTypeLocatorErrorTypeGrantorErrorTypeInvalidRoleSpecErrorTypeDiagnosticsExceptionErrorTypeCaseNotFoundErrorTypeCardinalityViolationErrorTypeDataExceptionErrorTypeIntegrityConstraintErrorTypeInvalidCursorErrorTypeInvalidSQLStatementNameErrorTypeTriggeredDataChangeViolationErrorTypeInvalidAuthSpecErrorTypeDependentPrivilegedErrorTypeSQLRoutineErrorTypeInvalidCatalogErrorTypeTransactionRollbackErrorTypeSyntaxErrorTypeSystemErrorTypeFeatureNotSupportedErrorTypeUniqueViolationErrorTypeForeignKeyViolation"
 
-var _ErrorType_index = [...]uint16{0, 14, 28, 41, 62, 73, 95, 120, 134, 148, 170, 197, 216, 243, 263, 289, 309, 339, 374, 396, 422, 439, 460, 486, 499, 512, 538, 560, 586}
+var _ErrorType_index = [...]uint16{0, 16, 32, 47, 70, 83, 107, 134, 150, 166, 190, 219, 240, 269, 291, 319, 341, 373, 410, 434, 462, 481, 504, 532, 547, 562, 590, 614, 642}
 
 func (i ErrorType) String() string {
 	if i < 0 || i >= ErrorType(len(_ErrorType_index)-1) {

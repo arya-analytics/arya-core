@@ -5,12 +5,12 @@ import (
 	"github.com/minio/minio-go/v7"
 )
 
-var _errTypeConverterChain = storage.ErrorTypeConverterChain{}
+var _ErrorTypeConverterChain = storage.ErrorTypeConverterChain{}
 
 var _defaultConverter = errConverterDefault
 
 func newErrorHandler() storage.ErrorHandler {
-	return storage.NewErrorHandler(_errTypeConverterChain, _defaultConverter)
+	return storage.NewErrorHandler(_ErrorTypeConverterChain, _defaultConverter)
 }
 
 func errConverterDefault(err error) (storage.ErrorType, bool) {
@@ -20,5 +20,5 @@ func errConverterDefault(err error) (storage.ErrorType, bool) {
 }
 
 var _minioErrors = map[string]storage.ErrorType{
-	"NoSuchKey": storage.ErrTypeItemNotFound,
+	"NoSuchKey": storage.ErrorTypeItemNotFound,
 }

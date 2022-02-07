@@ -48,7 +48,7 @@ func (tsc *tsCreateQuery) Exec(ctx context.Context) error {
 		tsc.execSeries(ctx)
 	default:
 		return storage.Error{
-			Type:    storage.ErrTypeInvalidArgs,
+			Type:    storage.ErrorTypeInvalidArgs,
 			Message: "ts create queries require a variant selection",
 		}
 	}

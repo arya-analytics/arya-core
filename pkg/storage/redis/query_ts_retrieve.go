@@ -97,7 +97,7 @@ func validatePKProvided(v interface{}) error {
 	q := v.(*tsRetrieveQuery)
 	if (len(q.PKChain)) == 0 {
 		return storage.Error{
-			Type:    storage.ErrTypeInvalidArgs,
+			Type:    storage.ErrorTypeInvalidArgs,
 			Message: "no PK provided to ts retrieve query",
 		}
 	}

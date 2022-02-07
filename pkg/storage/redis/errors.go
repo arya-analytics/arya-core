@@ -4,7 +4,7 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/storage"
 )
 
-var _errTypeConverterChain = storage.ErrorTypeConverterChain{}
+var _ErrorTypeConverterChain = storage.ErrorTypeConverterChain{}
 var _defaultConverter = errConverterDefault
 
 func errConverterDefault(err error) (storage.ErrorType, bool) {
@@ -13,10 +13,10 @@ func errConverterDefault(err error) (storage.ErrorType, bool) {
 }
 
 var _redisErrors = map[string]storage.ErrorType{
-	"ERR TSDB: the key does not exist": storage.ErrTypeItemNotFound,
-	"ERR TSDB: key already exists":     storage.ErrTypeUniqueViolation,
+	"ERR TSDB: the key does not exist": storage.ErrorTypeItemNotFound,
+	"ERR TSDB: key already exists":     storage.ErrorTypeUniqueViolation,
 }
 
 func newErrorHandler() storage.ErrorHandler {
-	return storage.NewErrorHandler(_errTypeConverterChain, _defaultConverter)
+	return storage.NewErrorHandler(_ErrorTypeConverterChain, _defaultConverter)
 }

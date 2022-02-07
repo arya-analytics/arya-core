@@ -26,14 +26,14 @@ type ErrorType int
 
 //go:generate stringer -type=ErrorType
 const (
-	ErrTypeUnknown ErrorType = iota
-	ErrTypeItemNotFound
-	ErrTypeUniqueViolation
-	ErrTypeRelationshipViolation
-	ErrTypeInvalidField
-	ErrTypeNoPK
-	ErrTypeMigration
-	ErrTypeInvalidArgs
+	ErrorTypeUnknown ErrorType = iota
+	ErrorTypeItemNotFound
+	ErrorTypeUniqueViolation
+	ErrorTypeRelationshipViolation
+	ErrorTypeInvalidField
+	ErrorTypeNoPK
+	ErrorTypeMigration
+	ErrorTypeInvalidArgs
 )
 
 type ErrorTypeConverter func(err error) (ErrorType, bool)
@@ -64,7 +64,7 @@ func (eh ErrorHandler) Exec(err error) error {
 	if err == nil || isStorageError(err) {
 		return err
 	}
-	errT, ok := eh.errType(err)
+	errT, ok := eh.ErrorType(err)
 	if !ok {
 		return unknownErr(err)
 	}
@@ -74,7 +74,7 @@ func (eh ErrorHandler) Exec(err error) error {
 	}
 }
 
-func (eh ErrorHandler) errType(err error) (ErrorType, bool) {
+func (eh ErrorHandler) ErrorType(err error) (ErrorType, bool) {
 	next := newIterConverter(eh.ConverterChain)
 	for {
 		c, nextOk := next()
@@ -90,7 +90,7 @@ func (eh ErrorHandler) errType(err error) (ErrorType, bool) {
 func unknownErr(err error) error {
 	log.Errorf("Storage - Unknown Err -> %s", err)
 	return Error{
-		Type:    ErrTypeUnknown,
+		Type:    ErrorTypeUnknown,
 		Base:    err,
 		Message: "storage - unknown error",
 	}

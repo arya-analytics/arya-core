@@ -44,7 +44,7 @@ var _ = Describe("QueryTSCreate", func() {
 			JustBeforeEach(func() {
 				sErr := store.NewTSCreate().Series().Model(channelConfig).Exec(ctx)
 				if sErr != nil {
-					Expect(sErr.(storage.Error).Type).To(Equal(storage.ErrTypeUniqueViolation))
+					Expect(sErr.(storage.Error).Type).To(Equal(storage.ErrorTypeUniqueViolation))
 				} else {
 					Expect(sErr).To(BeNil())
 				}

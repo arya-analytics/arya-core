@@ -5,22 +5,22 @@ package storage
 import "strconv"
 
 func _() {
-	// An "invalid array index" compiler errutil signifies that the constant values have changed.
+	// An "invalid array index" compiler error signifies that the constant values have changed.
 	// Re-run the stringer command to generate them again.
 	var x [1]struct{}
-	_ = x[ErrTypeUnknown-0]
-	_ = x[ErrTypeItemNotFound-1]
-	_ = x[ErrTypeUniqueViolation-2]
-	_ = x[ErrTypeRelationshipViolation-3]
-	_ = x[ErrTypeInvalidField-4]
-	_ = x[ErrTypeNoPK-5]
-	_ = x[ErrTypeMigration-6]
-	_ = x[ErrTypeInvalidArgs-7]
+	_ = x[ErrorTypeUnknown-0]
+	_ = x[ErrorTypeItemNotFound-1]
+	_ = x[ErrorTypeUniqueViolation-2]
+	_ = x[ErrorTypeRelationshipViolation-3]
+	_ = x[ErrorTypeInvalidField-4]
+	_ = x[ErrorTypeNoPK-5]
+	_ = x[ErrorTypeMigration-6]
+	_ = x[ErrorTypeInvalidArgs-7]
 }
 
-const _ErrorType_name = "ErrTypeUnknownErrTypeItemNotFoundErrTypeUniqueViolationErrTypeRelationshipViolationErrTypeInvalidFieldErrTypeNoPKErrTypeMigrationErrTypeInvalidArgs"
+const _ErrorType_name = "ErrorTypeUnknownErrorTypeItemNotFoundErrorTypeUniqueViolationErrorTypeRelationshipViolationErrorTypeInvalidFieldErrorTypeNoPKErrorTypeMigrationErrorTypeInvalidArgs"
 
-var _ErrorType_index = [...]uint8{0, 14, 33, 55, 83, 102, 113, 129, 147}
+var _ErrorType_index = [...]uint8{0, 16, 37, 61, 91, 112, 125, 143, 163}
 
 func (i ErrorType) String() string {
 	if i < 0 || i >= ErrorType(len(_ErrorType_index)-1) {
