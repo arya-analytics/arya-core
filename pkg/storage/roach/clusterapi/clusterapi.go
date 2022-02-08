@@ -1,4 +1,4 @@
-package roachdriver
+package clusterapi
 
 import (
 	"crypto/tls"

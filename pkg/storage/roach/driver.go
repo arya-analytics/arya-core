@@ -1,4 +1,4 @@
-package roachdriver
+package roach
 
 import (
 	"database/sql"
@@ -6,9 +6,10 @@ import (
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
 	"github.com/uptrace/bun/driver/pgdriver"
+	"github.com/uptrace/bun/extra/bundebug"
 )
 
-type DriverPG struct {
+type DriverRoach struct {
 	// DSN is a connection string for the database. If specified,
 	// all other fields except for Driver can be left blank.
 	DSN string
@@ -24,20 +25,23 @@ type DriverPG struct {
 	Database string
 	// Whether to open a TLS connection or not.
 	UseTLS bool
+	// TransactionLogLevel
+	TransactionLogLevel TransactionLogLevel
 }
 
-func (d DriverPG) Connect() (*bun.DB, error) {
+func (d DriverRoach) Connect() (*bun.DB, error) {
 	c := d.buildConnector()
 	db := sql.OpenDB(c)
 	bunDB := bun.NewDB(db, pgdialect.New())
+	setLogLevel(d.TransactionLogLevel, bunDB)
 	return bunDB, nil
 }
 
-func (d DriverPG) addr() string {
+func (d DriverRoach) addr() string {
 	return fmt.Sprintf("%s:%v", d.Host, d.Port)
 }
 
-func (d DriverPG) buildConnector() *pgdriver.Connector {
+func (d DriverRoach) buildConnector() *pgdriver.Connector {
 	if d.DSN != "" {
 		return pgdriver.NewConnector(pgdriver.WithDSN(d.DSN))
 	}
@@ -47,4 +51,24 @@ func (d DriverPG) buildConnector() *pgdriver.Connector {
 		pgdriver.WithUser(d.Username),
 		pgdriver.WithPassword(d.Password),
 		pgdriver.WithDatabase(d.Database))
+}
+
+type TransactionLogLevel int
+
+const (
+	// TransactionLogLevelNone logs no queries.
+	TransactionLogLevelNone TransactionLogLevel = iota
+	// TransactionLogLevelErr logs failed queries.
+	TransactionLogLevelErr
+	// TransactionLogLevelAll logs all queries.
+	TransactionLogLevelAll
+)
+
+func setLogLevel(t TransactionLogLevel, db *bun.DB) {
+	switch t {
+	case TransactionLogLevelAll:
+		db.AddQueryHook(bundebug.NewQueryHook(bundebug.WithVerbose(true)))
+	case TransactionLogLevelErr:
+		db.AddQueryHook(bundebug.NewQueryHook())
+	}
 }

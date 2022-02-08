@@ -1,15 +1,15 @@
-package roachdriver_test
+package clusterapi_test
 
 import (
-	"github.com/arya-analytics/aryacore/pkg/storage/roach/roachdriver"
+	"github.com/arya-analytics/aryacore/pkg/storage/roach/clusterapi"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Clusterapi", func() {
-	var clusterAPI *roachdriver.ClusterAPI
+	var clusterAPI *clusterapi.ClusterAPI
 	BeforeEach(func() {
-		clusterAPI = &roachdriver.ClusterAPI{
+		clusterAPI = &clusterapi.ClusterAPI{
 			Port:     mockDriver.HTTPPort,
 			Host:     mockDriver.Host,
 			Username: mockDriver.Username,

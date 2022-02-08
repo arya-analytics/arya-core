@@ -11,17 +11,6 @@ type Driver interface {
 	Connect() (*bun.DB, error)
 }
 
-type TransactionLogLevel int
-
-const (
-	// TransactionLogLevelNone logs no queries.
-	TransactionLogLevelNone TransactionLogLevel = iota
-	// TransactionLogLevelErr logs failed queries.
-	TransactionLogLevelErr
-	// TransactionLogLevelAll logs all queries.
-	TransactionLogLevelAll
-)
-
 // |||| ENGINE ||||
 
 // Engine opens connections and execute queries with a roach database.

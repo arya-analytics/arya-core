@@ -1,4 +1,4 @@
-package roachdriver_test
+package clusterapi_test
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/storage/mock"
@@ -20,7 +20,7 @@ var _ = AfterSuite(func() {
 	mockDriver.Stop()
 })
 
-func TestRoachdriver(t *testing.T) {
+func TestClusterAPI(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Roachdriver Suite")
+	RunSpecs(t, "ClusterAPI Suite")
 }
