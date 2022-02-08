@@ -3,24 +3,24 @@ package roach
 import (
 	"context"
 	"github.com/arya-analytics/aryacore/pkg/storage"
-	"github.com/arya-analytics/aryacore/pkg/storage/tasks"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
+	tasks2 "github.com/arya-analytics/aryacore/pkg/util/tasks"
 	"github.com/uptrace/bun"
 	"time"
 )
 
 const taskTickInterval = 3 * time.Second
 
-func newTaskScheduler(db *bun.DB) *tasks.Scheduler {
-	return tasks.NewScheduler(
-		[]tasks.Task{
+func newTaskScheduler(db *bun.DB) *tasks2.Scheduler {
+	return tasks2.NewScheduler(
+		[]tasks2.Task{
 			{
 				Action:   syncNodesAction(db),
 				Interval: syncNodesInterval,
 			},
 		},
 		taskTickInterval,
-		tasks.SchedulerWithName("roach tasks"),
+		tasks2.ScheduleWithName("roach tasks"),
 	)
 }
 
@@ -28,7 +28,7 @@ func newTaskScheduler(db *bun.DB) *tasks.Scheduler {
 
 const syncNodesInterval = 3 * time.Second
 
-func syncNodesAction(db *bun.DB) tasks.Action {
+func syncNodesAction(db *bun.DB) tasks2.Action {
 	return func(ctx context.Context) error {
 		gnc, nc, err := nodeCounts(db, ctx)
 		if err != nil {
@@ -53,8 +53,7 @@ func syncNodesAction(db *bun.DB) tasks.Action {
 			if gnc > nc {
 				for _, gnId := range gnIds {
 					pk := model.NewPK(gnId)
-					_, ok := nodesRfl.ValueByPK(pk)
-					if !ok {
+					if _, ok := nodesRfl.ValueByPK(pk); !ok {
 						nodeRfl := nodesRfl.NewStruct()
 						nodeRfl.PKField().Set(pk.Value())
 						if cErr := newCreate(db).Model(nodeRfl.Pointer()).Exec(

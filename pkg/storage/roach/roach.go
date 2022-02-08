@@ -2,7 +2,7 @@ package roach
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/storage"
-	"github.com/arya-analytics/aryacore/pkg/storage/tasks"
+	"github.com/arya-analytics/aryacore/pkg/util/tasks"
 	"github.com/uptrace/bun"
 )
 
