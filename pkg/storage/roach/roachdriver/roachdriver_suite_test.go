@@ -11,7 +11,7 @@ import (
 var mockDriver *mock.DriverRoach
 
 var _ = BeforeSuite(func() {
-	mockDriver = &mock.DriverRoach{}
+	mockDriver = mock.NewDriverRoach(true)
 	_, err := mockDriver.Connect()
 	Expect(err).To(BeNil())
 })

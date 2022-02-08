@@ -12,7 +12,7 @@ import (
 
 var (
 	ctx     = context.Background()
-	driver  = &mock.DriverRoach{}
+	driver  = mock.NewDriverRoach(false)
 	engine  = roach.New(driver)
 	adapter = engine.NewAdapter()
 )

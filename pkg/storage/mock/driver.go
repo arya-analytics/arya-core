@@ -20,10 +20,15 @@ import (
 type DriverRoach struct {
 	Host     string
 	Port     int
+	WithHTTP bool
 	HTTPPort int
 	Username string
 	Password string
 	servers  []testserver.TestServer
+}
+
+func NewDriverRoach(withHTTP bool) *DriverRoach {
+	return &DriverRoach{WithHTTP: withHTTP}
 }
 
 func availHTTPPort() int {
@@ -35,9 +40,11 @@ func availHTTPPort() int {
 }
 
 func (d *DriverRoach) Connect() (*bun.DB, error) {
-	port := availHTTPPort()
-	d.HTTPPort = port
-	ts, err := testserver.NewTestServer(testserver.HTTPPortOpt(port),
+	if d.WithHTTP {
+		port := availHTTPPort()
+		d.HTTPPort = port
+	}
+	ts, err := testserver.NewTestServer(testserver.HTTPPortOpt(d.HTTPPort),
 		testserver.SecureOpt(), testserver.RootPasswordOpt("testpass"))
 	d.servers = append(d.servers, ts)
 	if err != nil {
