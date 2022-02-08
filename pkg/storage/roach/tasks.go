@@ -3,6 +3,7 @@ package roach
 import (
 	"context"
 	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/util/errutil"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/tasks"
 	"github.com/uptrace/bun"
@@ -30,56 +31,81 @@ func newTaskScheduler(db *bun.DB, opts ...tasks.SchedulerOpt) *tasks.Scheduler {
 
 // |||| NODE SYNCING |||
 
-const syncNodesInterval = 5 * time.Second
+const (
+	syncNodesInterval  = 5 * time.Second
+	gossipNodeIDColumn = "node_id"
+)
 
 func syncNodesAction(db *bun.DB) tasks.Action {
-	return func(ctx context.Context) error {
-		gnc, nc, err := nodeCounts(db, ctx)
-		if err != nil {
-			return err
-		}
-		if gnc != nc {
-			var (
-				gnIds []int
-				nodes []*storage.Node
-			)
-			if gnErr := db.NewSelect().Table(crdbGossipNodes).Column("node_id").Scan(ctx,
-				&gnIds); gnErr != nil {
-				return gnErr
-			}
-
-			if nErr := newRetrieve(db).Model(&nodes).Exec(ctx); nErr != nil {
-				return nErr
-			}
-
-			nodesRfl := model.NewReflect(&nodes)
-
-			if gnc > nc {
-				for _, gnId := range gnIds {
-					pk := model.NewPK(gnId)
-					if _, ok := nodesRfl.ValueByPK(pk); !ok {
-						nodeRfl := nodesRfl.NewStruct()
-						nodeRfl.PKField().Set(pk.Value())
-						if cErr := newCreate(db).Model(nodeRfl.Pointer()).Exec(
-							ctx); cErr != nil {
-							return cErr
-						}
-					}
-				}
-			}
-		}
-		return nil
-	}
+	sn := &syncNodes{db: db, catcher: &errutil.Catcher{}}
+	return func(ctx context.Context) error { return sn.exec(ctx) }
 }
 
-func nodeCounts(db *bun.DB, ctx context.Context) (int, int, error) {
-	gnc, err := db.NewSelect().Column("node_id").Count(ctx)
-	if err != nil {
-		return 0, 0, err
+type syncNodes struct {
+	ctx     context.Context
+	db      *bun.DB
+	catcher *errutil.Catcher
+}
+
+func (sn *syncNodes) exec(ctx context.Context) error {
+	sn.ctx = ctx
+	gnc, nc := sn.countNodeImbalance()
+	if gnc > nc {
+		sn.createMissingNodes()
 	}
-	nc, err := newRetrieve(db).Model(&storage.Node{}).Count(ctx)
-	if err != nil {
-		return 0, 0, err
+	return sn.catcher.Error()
+}
+
+func (sn *syncNodes) countNodeImbalance() (gnc int, nc int) {
+	sn.catcher.Exec(func() (err error) {
+		if gnc, err = sn.db.NewSelect().
+			Column(gossipNodeIDColumn).
+			Count(sn.ctx); err != nil {
+			return err
+		}
+		if nc, err = newRetrieve(sn.db).
+			Model(&storage.Node{}).
+			Count(sn.ctx); err != nil {
+			return err
+		}
+		return nil
+	})
+	return gnc, nc
+}
+
+func (sn *syncNodes) createMissingNodes() {
+	gnIDs, nodesRfl := sn.retrieveGossipNodeIDs(), sn.retrieveNodesRfl()
+	for _, gnID := range gnIDs {
+		pk := model.NewPK(gnID)
+		if _, ok := nodesRfl.ValueByPK(pk); !ok {
+			sn.createNodeWithPK(pk, nodesRfl)
+		}
 	}
-	return gnc, nc, nil
+
+}
+
+func (sn *syncNodes) createNodeWithPK(pk model.PK, nodesRfl *model.Reflect) {
+	nodeRfl := nodesRfl.NewStruct()
+	nodeRfl.PKField().Set(pk.Value())
+	sn.catcher.Exec(func() error {
+		return newCreate(sn.db).Model(nodeRfl.Pointer()).Exec(sn.ctx)
+	})
+}
+
+func (sn *syncNodes) retrieveGossipNodeIDs() (gnIDs []int) {
+	sn.catcher.Exec(func() error {
+		return sn.db.NewSelect().
+			Table(crdbGossipNodes).
+			Column(gossipNodeIDColumn).
+			Scan(sn.ctx, &gnIDs)
+	})
+	return gnIDs
+}
+
+func (sn *syncNodes) retrieveNodesRfl() *model.Reflect {
+	nodesRfl := model.NewReflect(&[]*storage.Node{})
+	sn.catcher.Exec(func() error {
+		return newRetrieve(sn.db).Model(nodesRfl.Pointer()).Exec(sn.ctx)
+	})
+	return nodesRfl
 }
