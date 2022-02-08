@@ -23,12 +23,12 @@ type Node struct {
 
 const protocol = "https://"
 
-type clusterAPIEndpoint string
+type endpoint string
 
 const (
-	clusterAPIEndpointBase  clusterAPIEndpoint = "/api/v2/"
-	clusterAPIEndpointLogin clusterAPIEndpoint = "login/"
-	clusterAPIEndpointNodes clusterAPIEndpoint = "nodes/"
+	endpointBase  endpoint = "/api/v2/"
+	endpointLogin endpoint = "login/"
+	endpointNodes endpoint = "nodes/"
 )
 
 type ClusterAPI struct {
@@ -58,7 +58,7 @@ const (
 )
 
 func (c *ClusterAPI) Connect() error {
-	req := c.buildPOSTRequest(clusterAPIEndpointLogin, c.authParamString())
+	req := c.buildPOSTRequest(endpointLogin, c.authParamString())
 	req.Header.Add(contentTypeHeaderKey, loginContentType)
 	resp, err := c.client().Do(req)
 	if err != nil {
@@ -68,7 +68,7 @@ func (c *ClusterAPI) Connect() error {
 }
 
 func (c *ClusterAPI) Nodes() (Nodes, error) {
-	resp, err := c.doGETRequest(clusterAPIEndpointNodes, "")
+	resp, err := c.doGETRequest(endpointNodes, "")
 	if err != nil {
 		return nil, err
 	}
@@ -83,16 +83,16 @@ func (c *ClusterAPI) Nodes() (Nodes, error) {
 	return jsonBody["nodes"], err
 }
 
-func (c *ClusterAPI) doGETRequest(ep clusterAPIEndpoint, ext string) (*http.Response,
+func (c *ClusterAPI) doGETRequest(ep endpoint, ext string) (*http.Response,
 	error) {
 	return c.client().Do(c.buildGETRequest(ep, ext))
 }
 
-func (c *ClusterAPI) buildGETRequest(ep clusterAPIEndpoint, ext string) *http.Request {
+func (c *ClusterAPI) buildGETRequest(ep endpoint, ext string) *http.Request {
 	return c.buildRequest("GET", ep, ext)
 }
 
-func (c *ClusterAPI) buildPOSTRequest(ep clusterAPIEndpoint,
+func (c *ClusterAPI) buildPOSTRequest(ep endpoint,
 	ext string) *http.Request {
 	return c.buildRequest("POST", ep, ext)
 
@@ -100,7 +100,7 @@ func (c *ClusterAPI) buildPOSTRequest(ep clusterAPIEndpoint,
 
 const jsonContentType = "application/json"
 
-func (c *ClusterAPI) buildRequest(method string, ep clusterAPIEndpoint,
+func (c *ClusterAPI) buildRequest(method string, ep endpoint,
 	ext string) *http.Request {
 	u := c.buildURL(ep, ext)
 	req, err := http.NewRequest(method, u.String(), nil)
@@ -114,9 +114,9 @@ func (c *ClusterAPI) buildRequest(method string, ep clusterAPIEndpoint,
 	return req
 }
 
-func (c *ClusterAPI) buildURL(ep clusterAPIEndpoint, ext string) *url.URL {
+func (c *ClusterAPI) buildURL(ep endpoint, ext string) *url.URL {
 	u, err := url.Parse(protocol + c.Host + ":" + strconv.Itoa(c.
-		Port) + string(clusterAPIEndpointBase) + string(ep) + ext)
+		Port) + string(endpointBase) + string(ep) + ext)
 	// because we aren't accepting any outside input for urls,
 	// a failure to parse is a programmatic error
 	if err != nil {
