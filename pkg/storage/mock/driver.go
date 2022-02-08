@@ -2,6 +2,7 @@ package mock
 
 import (
 	"database/sql"
+	"errors"
 	"github.com/arya-analytics/aryacore/pkg/storage/redis/timeseries"
 	"github.com/cockroachdb/cockroach-go/v2/testserver"
 	"github.com/go-redis/redis/v8"
@@ -59,11 +60,11 @@ func (d *DriverRoach) bindConnProperties(url *url.URL) error {
 	d.Port = port
 	uname := url.User.Username()
 	d.Username = uname
-	//pwd, ok := url.User.Password()
-	//if !ok {
-	//	return errors.New("could not bind password")
-	//}
-	//d.Password = pwd
+	pwd, ok := url.User.Password()
+	if !ok {
+		return errors.New("could not bind password")
+	}
+	d.Password = pwd
 	return nil
 }
 
