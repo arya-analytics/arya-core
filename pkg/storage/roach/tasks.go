@@ -70,7 +70,7 @@ func syncNodesAction(db *bun.DB) tasks.Action {
 }
 
 func nodeCounts(db *bun.DB, ctx context.Context) (int, int, error) {
-	gnc, err := db.NewSelect().Table(crdbGossipNodes).ScanAndCount(ctx)
+	gnc, err := db.NewSelect().Column("node_id").Count(ctx)
 	if err != nil {
 		return 0, 0, err
 	}
