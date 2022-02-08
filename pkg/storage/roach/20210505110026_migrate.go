@@ -21,7 +21,7 @@ var (
 	/* If we're using DriverPG, we expect two CRDB internal tables that provide
 	information on Node identity and status. This logic creates a view so that this
 	info can be accessed by the ORM. */
-	driverPGNodesViewSQL = fmt.Sprintf(`CREATE VIEW %s AS SELECT n.id,
+	nodesViewSQL = fmt.Sprintf(`CREATE VIEW %s AS SELECT n.id,
 									gn.address, 
 									gn.is_live, 
 									gn.started_at, 
@@ -36,11 +36,6 @@ var (
 		nodesGossip,
 		crdbGossipNodes,
 		crdbGossipLiveness)
-	/* If we're using DriverSQLite, CRDB internal tables aren't available,
-	so we just only map the view to the Node table,
-	that way we don't need to change any ORM logic. */
-	driverSQLiteNodesViewSQL = fmt.Sprintf(`CREATE VIEW %s AS SELECT n.id
-									FROM nodes n`, nodesGossip)
 )
 
 // |||| CATCHER ||||
@@ -68,19 +63,10 @@ func migrateUpFunc(d Driver) migrate.MigrationFunc {
 		// so we can properly run queries against it.
 		db.RegisterModel((*rangeReplicaToNode)(nil))
 		c.execMigration(db.NewCreateTable().Model((*Node)(nil)).Exec)
-		switch d.(type) {
-		case DriverSQLite:
-			c.Exec(func() error {
-				_, err := db.Exec(driverSQLiteNodesViewSQL)
-				return err
-			})
-		default:
-			c.Exec(func() error {
-				_, err := db.Exec(driverPGNodesViewSQL)
-				return err
-
-			})
-		}
+		c.Exec(func() error {
+			_, err := db.Exec(nodesViewSQL)
+			return err
+		})
 		c.execMigration(db.NewCreateTable().
 			Model((*ChannelConfig)(nil)).
 			ForeignKey(`("node_id") REFERENCES "nodes" ("id") ON DELETE CASCADE`).
