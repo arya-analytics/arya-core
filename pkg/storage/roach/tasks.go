@@ -20,6 +20,7 @@ func newTaskScheduler(db *bun.DB) *tasks.Scheduler {
 			},
 		},
 		taskTickInterval,
+		tasks.SchedulerWithName("roach tasks"),
 	)
 }
 
