@@ -12,13 +12,18 @@ import (
 
 var (
 	ctx     = context.Background()
-	engine  = roach.New(&mock.DriverRoach{})
+	driver  = &mock.DriverRoach{}
+	engine  = roach.New(driver)
 	adapter = engine.NewAdapter()
 )
 
 var _ = BeforeSuite(func() {
 	migrateErr := engine.NewMigrate(adapter).Exec(ctx)
 	Expect(migrateErr).To(BeNil())
+})
+
+var _ = AfterSuite(func() {
+	driver.Stop()
 })
 
 func TestRoach(t *testing.T) {

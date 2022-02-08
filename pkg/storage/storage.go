@@ -52,7 +52,19 @@ package storage
 //
 // If you're working on modifying or implementing a new Engine,
 // see Engine and its sub-interfaces.
-type Storage struct {
+type Storage interface {
+	NewCreate() *QueryCreate
+	NewRetrieve() *QueryRetrieve
+	NewUpdate() *QueryUpdate
+	NewDelete() *QueryDelete
+	NewTSRetrieve() *QueryTSRetrieve
+	NewTSCreate() *QueryTSCreate
+	NewMigrate() *QueryMigrate
+	config() Config
+	adapter(e Engine) Adapter
+}
+
+type Impl struct {
 	cfg    Config
 	pooler *pooler
 }
@@ -67,47 +79,51 @@ type Storage struct {
 //
 // Storage cannot operate without Config.EngineMD,
 // as it relies on this engine to maintain consistency with other engines.
-func New(cfg Config) *Storage {
-	return &Storage{cfg, newPooler()}
+func New(cfg Config) Storage {
+	return &Impl{cfg, newPooler()}
 }
 
 // NewMigrate opens a new QueryMigrate.
-func (s *Storage) NewMigrate() *QueryMigrate {
+func (s *Impl) NewMigrate() *QueryMigrate {
 	return newMigrate(s)
 }
 
 // NewRetrieve opens a new QueryRetrieve.
-func (s *Storage) NewRetrieve() *QueryRetrieve {
+func (s *Impl) NewRetrieve() *QueryRetrieve {
 	return newRetrieve(s)
 }
 
 // NewCreate opens a new QueryCreate.
-func (s *Storage) NewCreate() *QueryCreate {
+func (s *Impl) NewCreate() *QueryCreate {
 	return newCreate(s)
 }
 
 // NewDelete opens a new QueryDelete.
-func (s *Storage) NewDelete() *QueryDelete {
+func (s *Impl) NewDelete() *QueryDelete {
 	return newDelete(s)
 }
 
 // NewUpdate opens a new QueryUpdate.
-func (s *Storage) NewUpdate() *QueryUpdate {
+func (s *Impl) NewUpdate() *QueryUpdate {
 	return newUpdate(s)
 }
 
 // NewTSRetrieve opens a new QueryTSRetrieve.
-func (s *Storage) NewTSRetrieve() *QueryTSRetrieve {
+func (s *Impl) NewTSRetrieve() *QueryTSRetrieve {
 	return newTSRetrieve(s)
 }
 
 // NewTSCreate opens a new QueryTSCreate.
-func (s *Storage) NewTSCreate() *QueryTSCreate {
+func (s *Impl) NewTSCreate() *QueryTSCreate {
 	return newTSCreate(s)
 }
 
-func (s *Storage) adapter(e Engine) (a Adapter) {
+func (s *Impl) adapter(e Engine) (a Adapter) {
 	return s.pooler.retrieve(e)
+}
+
+func (s *Impl) config() Config {
+	return s.cfg
 }
 
 // |||| CONFIG ||||

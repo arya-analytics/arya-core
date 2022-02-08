@@ -12,7 +12,7 @@ type QueryDelete struct {
 	queryBase
 }
 
-func newDelete(s *Storage) *QueryDelete {
+func newDelete(s Storage) *QueryDelete {
 	q := &QueryDelete{}
 	q.baseInit(s)
 	return q

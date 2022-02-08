@@ -8,7 +8,7 @@ type QueryTSRetrieve struct {
 	queryTSBase
 }
 
-func newTSRetrieve(s *Storage) *QueryTSRetrieve {
+func newTSRetrieve(s Storage) *QueryTSRetrieve {
 	q := &QueryTSRetrieve{}
 	q.baseInit(s)
 	return q

@@ -6,7 +6,7 @@ import (
 )
 
 type queryBase struct {
-	storage         *Storage
+	storage         Storage
 	modelRfl        *model.Reflect
 	_baseMDQuery    QueryMDBase
 	_baseObjQuery   QueryObjectBase
@@ -14,7 +14,7 @@ type queryBase struct {
 	_catcher        *errutil.Catcher
 }
 
-func (q *queryBase) baseInit(s *Storage) {
+func (q *queryBase) baseInit(s Storage) {
 	q.storage = s
 	q._catcher = &errutil.Catcher{}
 }
@@ -30,7 +30,7 @@ func (q *queryBase) baseBindModel(m interface{}) {
 // || META DATA ||
 
 func (q *queryBase) baseMDEngine() EngineMD {
-	return q.storage.cfg.EngineMD
+	return q.storage.config().EngineMD
 }
 
 func (q *queryBase) baseMDAdapter() Adapter {
@@ -48,7 +48,7 @@ func (q *queryBase) baseSetMDQuery(qmd QueryMDBase) {
 // || OBJECT ||
 
 func (q *queryBase) baseObjEngine() EngineObject {
-	return q.storage.cfg.EngineObject
+	return q.storage.config().EngineObject
 }
 
 func (q *queryBase) baseObjAdapter() Adapter {
@@ -66,7 +66,7 @@ func (q *queryBase) baseSetObjQuery(qob QueryObjectBase) {
 // || CACHE ||
 
 func (q *queryBase) baseCacheEngine() EngineCache {
-	return q.storage.cfg.EngineCache
+	return q.storage.config().EngineCache
 }
 
 func (q *queryBase) baseCacheAdapter() Adapter {

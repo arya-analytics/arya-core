@@ -16,7 +16,7 @@ type QueryRetrieve struct {
 
 // |||| CONSTRUCTOR ||||
 
-func newRetrieve(s *Storage) *QueryRetrieve {
+func newRetrieve(s Storage) *QueryRetrieve {
 	q := &QueryRetrieve{}
 	q.baseInit(s)
 	return q

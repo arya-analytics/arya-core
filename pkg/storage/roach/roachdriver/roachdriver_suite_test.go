@@ -16,6 +16,10 @@ var _ = BeforeSuite(func() {
 	Expect(err).To(BeNil())
 })
 
+var _ = AfterSuite(func() {
+	mockDriver.Stop()
+})
+
 func TestRoachdriver(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Roachdriver Suite")

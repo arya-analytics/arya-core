@@ -6,7 +6,7 @@ type QueryTSCreate struct {
 	queryTSBase
 }
 
-func newTSCreate(s *Storage) *QueryTSCreate {
+func newTSCreate(s Storage) *QueryTSCreate {
 	q := &QueryTSCreate{}
 	q.baseInit(s)
 	return q

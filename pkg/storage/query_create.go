@@ -11,7 +11,7 @@ type QueryCreate struct {
 
 // |||| CONSTRUCTOR ||||
 
-func newCreate(s *Storage) *QueryCreate {
+func newCreate(s Storage) *QueryCreate {
 	c := &QueryCreate{}
 	c.baseInit(s)
 	return c

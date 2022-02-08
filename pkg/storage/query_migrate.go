@@ -8,7 +8,7 @@ type QueryMigrate struct {
 
 // |||| CONSTRUCTOR ||||
 
-func newMigrate(s *Storage) *QueryMigrate {
+func newMigrate(s Storage) *QueryMigrate {
 	q := &QueryMigrate{}
 	q.baseInit(s)
 	return q

@@ -1,3 +1,6 @@
 .idea/
 coverprofile.out
 coverage.txt
+heap_profiler/
+goroutine_dump
+inflight_trace_dump

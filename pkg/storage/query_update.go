@@ -14,7 +14,7 @@ type QueryUpdate struct {
 
 // |||| CONSTRUCTOR ||||
 
-func newUpdate(s *Storage) *QueryUpdate {
+func newUpdate(s Storage) *QueryUpdate {
 	q := &QueryUpdate{}
 	q.baseInit(s)
 	return q

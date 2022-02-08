@@ -23,6 +23,7 @@ type DriverRoach struct {
 	HTTPPort int
 	Username string
 	Password string
+	servers  []testserver.TestServer
 }
 
 func availHTTPPort() int {
@@ -38,6 +39,7 @@ func (d *DriverRoach) Connect() (*bun.DB, error) {
 	d.HTTPPort = port
 	ts, err := testserver.NewTestServer(testserver.HTTPPortOpt(port),
 		testserver.SecureOpt(), testserver.RootPasswordOpt("testpass"))
+	d.servers = append(d.servers, ts)
 	if err != nil {
 		return nil, err
 	}
@@ -49,6 +51,12 @@ func (d *DriverRoach) Connect() (*bun.DB, error) {
 		return nil, err
 	}
 	return bun.NewDB(sqlDB, pgdialect.New()), nil
+}
+
+func (d *DriverRoach) Stop() {
+	for _, ts := range d.servers {
+		ts.Stop()
+	}
 }
 
 func (d *DriverRoach) bindConnProperties(url *url.URL) error {
