@@ -4,31 +4,35 @@ import (
 	"context"
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
-	tasks2 "github.com/arya-analytics/aryacore/pkg/util/tasks"
+	"github.com/arya-analytics/aryacore/pkg/util/tasks"
 	"github.com/uptrace/bun"
 	"time"
 )
 
-const taskTickInterval = 3 * time.Second
+const (
+	taskTickInterval = 5 * time.Second
+	tasksName        = "roach_tasks"
+)
 
-func newTaskScheduler(db *bun.DB) *tasks2.Scheduler {
-	return tasks2.NewScheduler(
-		[]tasks2.Task{
+func newTaskScheduler(db *bun.DB, opts ...tasks.SchedulerOpt) *tasks.Scheduler {
+	opts = append(opts, tasks.ScheduleWithName(tasksName))
+	return tasks.NewScheduler(
+		[]tasks.Task{
 			{
 				Action:   syncNodesAction(db),
 				Interval: syncNodesInterval,
 			},
 		},
 		taskTickInterval,
-		tasks2.ScheduleWithName("roach tasks"),
+		opts...,
 	)
 }
 
 // |||| NODE SYNCING |||
 
-const syncNodesInterval = 3 * time.Second
+const syncNodesInterval = 5 * time.Second
 
-func syncNodesAction(db *bun.DB) tasks2.Action {
+func syncNodesAction(db *bun.DB) tasks.Action {
 	return func(ctx context.Context) error {
 		gnc, nc, err := nodeCounts(db, ctx)
 		if err != nil {

@@ -64,6 +64,6 @@ func (e *Engine) NewMigrate(a storage.Adapter) storage.QueryMDMigrate {
 	return newMigrate(conn(a), e.driver)
 }
 
-func (e *Engine) Tasks(a storage.Adapter) *tasks.Scheduler {
-	return newTaskScheduler(conn(a))
+func (e *Engine) Tasks(a storage.Adapter, opts ...tasks.SchedulerOpt) *tasks.Scheduler {
+	return newTaskScheduler(conn(a), opts...)
 }
