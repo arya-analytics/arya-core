@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/arya-analytics/aryacore/pkg/storage/mock"
 	"github.com/arya-analytics/aryacore/pkg/storage/roach"
-	log "github.com/sirupsen/logrus"
 	"testing"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -19,7 +18,6 @@ var (
 )
 
 var _ = BeforeSuite(func() {
-	log.SetReportCaller(true)
 	migrateErr := engine.NewMigrate(adapter).Exec(ctx)
 	Expect(migrateErr).To(BeNil())
 })
