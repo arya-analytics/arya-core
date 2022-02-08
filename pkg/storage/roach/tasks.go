@@ -44,7 +44,7 @@ func syncNodesAction(db *bun.DB) tasks.Action {
 				return gnErr
 			}
 
-			if nErr := queryNode(db).Model(&nodes).Exec(ctx); nErr != nil {
+			if nErr := newRetrieve(db).Model(&nodes).Exec(ctx); nErr != nil {
 				return nErr
 			}
 
@@ -74,13 +74,9 @@ func nodeCounts(db *bun.DB, ctx context.Context) (int, int, error) {
 	if err != nil {
 		return 0, 0, err
 	}
-	nc, err := queryNode(db).Count(ctx)
+	nc, err := newRetrieve(db).Model(&storage.Node{}).Count(ctx)
 	if err != nil {
 		return 0, 0, err
 	}
 	return gnc, nc, nil
-}
-
-func queryNode(db *bun.DB) storage.QueryMDRetrieve {
-	return newRetrieve(db).Model(&storage.Node{})
 }
