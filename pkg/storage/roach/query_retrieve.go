@@ -35,6 +35,14 @@ func (q *queryRetrieve) WherePKs(pks interface{}) storage.QueryMDRetrieve {
 	return q.Where(pkChainInSQL, bun.In(pks))
 }
 
+func (q *queryRetrieve) Count(ctx context.Context) (count int, err error) {
+	q.baseExec(func() error {
+		count, err = q.q.Count(ctx)
+		return err
+	})
+	return count, q.baseErr()
+}
+
 func (q *queryRetrieve) Exec(ctx context.Context) error {
 	q.baseExec(func() error { return q.q.Scan(ctx) })
 	q.baseExchangeToSource()

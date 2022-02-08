@@ -2,6 +2,7 @@ package roach
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/storage/tasks"
 	"github.com/uptrace/bun"
 )
 
@@ -61,4 +62,8 @@ func (e *Engine) NewDelete(a storage.Adapter) storage.QueryMDDelete {
 // NewMigrate opens a new queryMigrate with the provided storage.Adapter.
 func (e *Engine) NewMigrate(a storage.Adapter) storage.QueryMDMigrate {
 	return newMigrate(conn(a), e.driver)
+}
+
+func (e *Engine) Tasks(a storage.Adapter) *tasks.Scheduler {
+	return newTaskScheduler(conn(a))
 }

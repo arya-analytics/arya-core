@@ -88,6 +88,7 @@ type QueryMDRetrieve interface {
 	Where(query string, args ...interface{}) QueryMDRetrieve
 	WherePK(pk interface{}) QueryMDRetrieve
 	WherePKs(pks interface{}) QueryMDRetrieve
+	Count(ctx context.Context) (int, error)
 }
 
 // QueryMDCreate is for creating items in metadata storage.
