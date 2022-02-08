@@ -2,9 +2,14 @@ package roach
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/uptrace/bun"
 )
 
 // |||| CONFIG ||||
+
+type Driver interface {
+	Connect() (*bun.DB, error)
+}
 
 type TransactionLogLevel int
 
