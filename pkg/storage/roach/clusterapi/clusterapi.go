@@ -46,8 +46,8 @@ func (c *ClusterAPI) authParamString() string {
 
 func (c *ClusterAPI) client() *http.Client {
 	if c._client == nil {
-		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-		c._client = &http.Client{}
+		c._client = &http.Client{Transport: &http.Transport{TLSClientConfig: &tls.
+			Config{InsecureSkipVerify: true}}}
 	}
 	return c._client
 }

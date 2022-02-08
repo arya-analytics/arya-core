@@ -41,8 +41,7 @@ func availHTTPPort() int {
 
 func (d *DriverRoach) Connect() (*bun.DB, error) {
 	if d.WithHTTP {
-		port := availHTTPPort()
-		d.HTTPPort = port
+		d.HTTPPort = availHTTPPort()
 	}
 	ts, err := testserver.NewTestServer(testserver.HTTPPortOpt(d.HTTPPort),
 		testserver.SecureOpt(), testserver.RootPasswordOpt("testpass"))
