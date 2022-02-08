@@ -12,6 +12,15 @@ import (
 	"strings"
 )
 
+type Nodes []Node
+
+type Metrics map[string]int
+
+type Node struct {
+	ID      int `json:"node_id"`
+	Metrics Metrics
+}
+
 const protocol = "https://"
 
 type clusterAPIEndpoint string
@@ -58,7 +67,7 @@ func (c *ClusterAPI) Connect() error {
 	return c.parseSessionToken(resp.Body)
 }
 
-func (c *ClusterAPI) Nodes() (ClusterAPINodes, error) {
+func (c *ClusterAPI) Nodes() (Nodes, error) {
 	resp, err := c.doGETRequest(clusterAPIEndpointNodes, "")
 	if err != nil {
 		return nil, err
@@ -67,7 +76,7 @@ func (c *ClusterAPI) Nodes() (ClusterAPINodes, error) {
 	if err != nil {
 		return nil, err
 	}
-	jsonBody := map[string]ClusterAPINodes{}
+	jsonBody := map[string]Nodes{}
 	if err := json.Unmarshal(body, &jsonBody); err != nil {
 		return nil, err
 	}
@@ -132,13 +141,4 @@ const sessionTokenKey = "X-Cockroach-API-Session"
 func (c *ClusterAPI) addSessionTokenHeader(req *http.Request) {
 	req.Header.Add(sessionTokenKey, c.sessionToken)
 
-}
-
-type ClusterAPINodes []ClusterAPINode
-
-type ClusterAPINodeMetrics map[string]int
-
-type ClusterAPINode struct {
-	ID      int `json:"node_id"`
-	Metrics ClusterAPINodeMetrics
 }
