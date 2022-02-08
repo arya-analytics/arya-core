@@ -1,6 +1,6 @@
 module github.com/arya-analytics/aryacore
 
-go 1.18
+go 1.17
 
 require (
 	github.com/cockroachdb/cockroach-go/v2 v2.2.6
