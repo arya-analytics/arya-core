@@ -43,9 +43,14 @@ func (c *ClusterAPI) client() *http.Client {
 	return c._client
 }
 
+const (
+	contentTypeHeaderKey = "Content-Type"
+	loginContentType     = "application/x-www-form-urlencoded"
+)
+
 func (c *ClusterAPI) Connect() error {
 	req := c.buildPOSTRequest(clusterAPIEndpointLogin, c.authParamString())
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add(contentTypeHeaderKey, loginContentType)
 	resp, err := c.client().Do(req)
 	if err != nil {
 		return err
@@ -84,6 +89,8 @@ func (c *ClusterAPI) buildPOSTRequest(ep clusterAPIEndpoint,
 
 }
 
+const jsonContentType = "application/json"
+
 func (c *ClusterAPI) buildRequest(method string, ep clusterAPIEndpoint,
 	ext string) *http.Request {
 	u := c.buildURL(ep, ext)
@@ -94,7 +101,7 @@ func (c *ClusterAPI) buildRequest(method string, ep clusterAPIEndpoint,
 	if c.sessionToken != "" {
 		c.addSessionTokenHeader(req)
 	}
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set(contentTypeHeaderKey, jsonContentType)
 	return req
 }
 
