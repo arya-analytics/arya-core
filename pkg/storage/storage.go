@@ -64,7 +64,7 @@ type Storage interface {
 	adapter(e Engine) Adapter
 }
 
-type Impl struct {
+type storage struct {
 	cfg    Config
 	pooler *pooler
 }
@@ -80,49 +80,49 @@ type Impl struct {
 // Storage cannot operate without Config.EngineMD,
 // as it relies on this engine to maintain consistency with other engines.
 func New(cfg Config) Storage {
-	return &Impl{cfg, newPooler()}
+	return &storage{cfg, newPooler()}
 }
 
 // NewMigrate opens a new QueryMigrate.
-func (s *Impl) NewMigrate() *QueryMigrate {
+func (s *storage) NewMigrate() *QueryMigrate {
 	return newMigrate(s)
 }
 
 // NewRetrieve opens a new QueryRetrieve.
-func (s *Impl) NewRetrieve() *QueryRetrieve {
+func (s *storage) NewRetrieve() *QueryRetrieve {
 	return newRetrieve(s)
 }
 
 // NewCreate opens a new QueryCreate.
-func (s *Impl) NewCreate() *QueryCreate {
+func (s *storage) NewCreate() *QueryCreate {
 	return newCreate(s)
 }
 
 // NewDelete opens a new QueryDelete.
-func (s *Impl) NewDelete() *QueryDelete {
+func (s *storage) NewDelete() *QueryDelete {
 	return newDelete(s)
 }
 
 // NewUpdate opens a new QueryUpdate.
-func (s *Impl) NewUpdate() *QueryUpdate {
+func (s *storage) NewUpdate() *QueryUpdate {
 	return newUpdate(s)
 }
 
 // NewTSRetrieve opens a new QueryTSRetrieve.
-func (s *Impl) NewTSRetrieve() *QueryTSRetrieve {
+func (s *storage) NewTSRetrieve() *QueryTSRetrieve {
 	return newTSRetrieve(s)
 }
 
 // NewTSCreate opens a new QueryTSCreate.
-func (s *Impl) NewTSCreate() *QueryTSCreate {
+func (s *storage) NewTSCreate() *QueryTSCreate {
 	return newTSCreate(s)
 }
 
-func (s *Impl) adapter(e Engine) (a Adapter) {
+func (s *storage) adapter(e Engine) (a Adapter) {
 	return s.pooler.retrieve(e)
 }
 
-func (s *Impl) config() Config {
+func (s *storage) config() Config {
 	return s.cfg
 }
 
