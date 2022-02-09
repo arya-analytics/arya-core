@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"github.com/arya-analytics/aryacore/pkg/util/tasks"
 	"github.com/google/uuid"
 )
 
@@ -17,7 +18,7 @@ type Adapter interface {
 //
 // Each engine variant is responsible for storing specific data types.
 // These responsibilities are assigned in the model struct using the storage.re key.
-// If no responsibility is assigned, MDEngine is assumed responsible.
+// If no responsibility is assigned, EngineMD is assumed responsible.
 type Engine interface {
 	NewAdapter() Adapter
 	IsAdapter(a Adapter) bool
@@ -26,47 +27,48 @@ type Engine interface {
 
 // || META DATA ||
 
-// MDEngine or the Metadata Engine is responsible for storing lightweight,
+// EngineMD or the Metadata Engine is responsible for storing lightweight,
 // strongly consistent data across the cluster.
-type MDEngine interface {
+type EngineMD interface {
 	Engine
-	// NewRetrieve opens a new MDRetrieveQuery.
-	NewRetrieve(a Adapter) MDRetrieveQuery
-	// NewCreate opens a new MDCreateQuery.
-	NewCreate(a Adapter) MDCreateQuery
-	// NewDelete opens a new MDDeleteQuery.
-	NewDelete(a Adapter) MDDeleteQuery
-	// NewMigrate opens a new MDMigrateQuery.
-	NewMigrate(a Adapter) MDMigrateQuery
-	// NewUpdate opens a new MDUpdateQuery.
-	NewUpdate(a Adapter) MDUpdateQuery
+	// NewRetrieve opens a new QueryMDRetrieve.
+	NewRetrieve(a Adapter) QueryMDRetrieve
+	// NewCreate opens a new QueryMDCreate.
+	NewCreate(a Adapter) QueryMDCreate
+	// NewDelete opens a new QueryMDDelete.
+	NewDelete(a Adapter) QueryMDDelete
+	// NewMigrate opens a new QueryMDMigrate.
+	NewMigrate(a Adapter) QueryMDMigrate
+	// NewUpdate opens a new QueryMDUpdate.
+	NewUpdate(a Adapter) QueryMDUpdate
+	NewTasks(a Adapter, opts ...tasks.SchedulerOpt) tasks.Scheduler
 }
 
 // || OBJECT ||
 
-// ObjectEngine is responsible for storing bulk data to node local data storage.
-type ObjectEngine interface {
+// EngineObject is responsible for storing bulk data to node local data storage.
+type EngineObject interface {
 	Engine
-	// NewRetrieve opens a new ObjectRetrieveQuery.
-	NewRetrieve(a Adapter) ObjectRetrieveQuery
-	// NewCreate opens a new ObjectCreateQuery.
-	NewCreate(a Adapter) ObjectCreateQuery
-	// NewDelete opens a new ObjectDeleteQuery.
-	NewDelete(a Adapter) ObjectDeleteQuery
-	// NewMigrate opens a new ObjectMigrateQuery.
-	NewMigrate(a Adapter) ObjectMigrateQuery
+	// NewRetrieve opens a new QueryObjectRetrieve.
+	NewRetrieve(a Adapter) QueryObjectRetrieve
+	// NewCreate opens a new QueryObjectCreate.
+	NewCreate(a Adapter) QueryObjectCreate
+	// NewDelete opens a new QueryObjectDelete.
+	NewDelete(a Adapter) QueryObjectDelete
+	// NewMigrate opens a new QueryObjectMigrate.
+	NewMigrate(a Adapter) QueryObjectMigrate
 }
 
 // || CACHE ||
 
-// CacheEngine is responsible for storing and serving lightweight,
+// EngineCache is responsible for storing and serving lightweight,
 // ephemeral data at high speeds.
-type CacheEngine interface {
+type EngineCache interface {
 	Engine
-	// NewTSRetrieve opens a new CacheTSRetrieveQuery.
-	NewTSRetrieve(a Adapter) CacheTSRetrieveQuery
-	// NewTSCreate opens a new CacheTSCreateQuery.
-	NewTSCreate(a Adapter) CacheTSCreateQuery
+	// NewTSRetrieve opens a new QueryCacheTSRetrieve.
+	NewTSRetrieve(a Adapter) QueryCacheTSRetrieve
+	// NewTSCreate opens a new QueryCacheTSCreate.
+	NewTSCreate(a Adapter) QueryCacheTSCreate
 }
 
 // |||| QUERY ||||
@@ -77,101 +79,102 @@ type Query interface {
 
 // || META DATA ||
 
-type MDBaseQuery interface {
+type QueryMDBase interface {
 	Query
 }
 
-// MDRetrieveQuery is for retrieving items from metadata storage.
-type MDRetrieveQuery interface {
-	MDBaseQuery
-	Model(model interface{}) MDRetrieveQuery
-	Where(query string, args ...interface{}) MDRetrieveQuery
-	WherePK(pk interface{}) MDRetrieveQuery
-	WherePKs(pks interface{}) MDRetrieveQuery
+// QueryMDRetrieve is for retrieving items from metadata storage.
+type QueryMDRetrieve interface {
+	QueryMDBase
+	Model(model interface{}) QueryMDRetrieve
+	Where(query string, args ...interface{}) QueryMDRetrieve
+	WherePK(pk interface{}) QueryMDRetrieve
+	WherePKs(pks interface{}) QueryMDRetrieve
+	Count(ctx context.Context) (int, error)
 }
 
-// MDCreateQuery is for creating items in metadata storage.
-type MDCreateQuery interface {
-	MDBaseQuery
-	Model(model interface{}) MDCreateQuery
+// QueryMDCreate is for creating items in metadata storage.
+type QueryMDCreate interface {
+	QueryMDBase
+	Model(model interface{}) QueryMDCreate
 }
 
-// MDUpdateQuery is for updating items in metadata storage.
-type MDUpdateQuery interface {
-	MDBaseQuery
-	Model(model interface{}) MDUpdateQuery
-	Where(query string, args ...interface{}) MDUpdateQuery
-	WherePK(pk interface{}) MDUpdateQuery
+// QueryMDUpdate is for updating items in metadata storage.
+type QueryMDUpdate interface {
+	QueryMDBase
+	Model(model interface{}) QueryMDUpdate
+	Where(query string, args ...interface{}) QueryMDUpdate
+	WherePK(pk interface{}) QueryMDUpdate
 }
 
-// MDDeleteQuery is for deleting items in metadata storage.
-type MDDeleteQuery interface {
-	MDBaseQuery
-	Model(model interface{}) MDDeleteQuery
-	WherePK(pk interface{}) MDDeleteQuery
-	WherePKs(pks interface{}) MDDeleteQuery
+// QueryMDDelete is for deleting items in metadata storage.
+type QueryMDDelete interface {
+	QueryMDBase
+	Model(model interface{}) QueryMDDelete
+	WherePK(pk interface{}) QueryMDDelete
+	WherePKs(pks interface{}) QueryMDDelete
 }
 
-// MDMigrateQuery applies migration changes to metadata storage.
-type MDMigrateQuery interface {
-	MDBaseQuery
+// QueryMDMigrate applies migration changes to metadata storage.
+type QueryMDMigrate interface {
+	QueryMDBase
 	Verify(ctx context.Context) error
 }
 
 // || OBJECT ||
 
-type ObjectBaseQuery interface {
+type QueryObjectBase interface {
 	Query
 }
 
-type ObjectCreateQuery interface {
-	ObjectBaseQuery
-	Model(model interface{}) ObjectCreateQuery
+type QueryObjectCreate interface {
+	QueryObjectBase
+	Model(model interface{}) QueryObjectCreate
 }
 
-type ObjectRetrieveQuery interface {
-	ObjectBaseQuery
-	Model(model interface{}) ObjectRetrieveQuery
-	WherePK(pk interface{}) ObjectRetrieveQuery
-	WherePKs(pks interface{}) ObjectRetrieveQuery
+type QueryObjectRetrieve interface {
+	QueryObjectBase
+	Model(model interface{}) QueryObjectRetrieve
+	WherePK(pk interface{}) QueryObjectRetrieve
+	WherePKs(pks interface{}) QueryObjectRetrieve
 }
 
-type ObjectDeleteQuery interface {
-	ObjectBaseQuery
-	Model(model interface{}) ObjectDeleteQuery
-	WherePK(pk interface{}) ObjectDeleteQuery
-	WherePKs(pks interface{}) ObjectDeleteQuery
+type QueryObjectDelete interface {
+	QueryObjectBase
+	Model(model interface{}) QueryObjectDelete
+	WherePK(pk interface{}) QueryObjectDelete
+	WherePKs(pks interface{}) QueryObjectDelete
 }
 
-type ObjectMigrateQuery interface {
-	ObjectBaseQuery
+type QueryObjectMigrate interface {
+	QueryObjectBase
 	Verify(ctx context.Context) error
 }
 
 // || TS CACHE ||
 
-type CacheBaseQuery interface {
+type QueryCacheBase interface {
 	Query
 }
 
-type CacheCreateQuery interface {
-	CacheBaseQuery
-	Model(model interface{}) CacheCreateQuery
+type QueryCacheCreate interface {
+	QueryCacheBase
+	Model(model interface{}) QueryCacheCreate
 }
 
-type CacheTSRetrieveQuery interface {
-	CacheBaseQuery
+type QueryCacheTSRetrieve interface {
+	QueryCacheBase
 	SeriesExists(ctx context.Context, pk interface{}) (bool, error)
-	Model(model interface{}) CacheTSRetrieveQuery
-	WherePK(pk interface{}) CacheTSRetrieveQuery
-	WherePKs(pks interface{}) CacheTSRetrieveQuery
-	AllTimeRange() CacheTSRetrieveQuery
-	WhereTimeRange(fromTS int64, toTS int64) CacheTSRetrieveQuery
+	Model(model interface{}) QueryCacheTSRetrieve
+	WherePK(pk interface{}) QueryCacheTSRetrieve
+	WherePKs(pks interface{}) QueryCacheTSRetrieve
+	AllTimeRange() QueryCacheTSRetrieve
+	WhereTimeRange(fromTS int64, toTS int64) QueryCacheTSRetrieve
 }
 
-type CacheTSCreateQuery interface {
-	CacheBaseQuery
-	Model(model interface{}) CacheTSCreateQuery
-	Series() CacheTSCreateQuery
-	Sample() CacheTSCreateQuery
+type QueryCacheTSCreate interface {
+	QueryCacheBase
+	Model(model interface{}) QueryCacheTSCreate
+	Series() QueryCacheTSCreate
+	Sample() QueryCacheTSCreate
 }

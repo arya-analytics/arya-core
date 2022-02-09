@@ -5,55 +5,55 @@ import (
 	"fmt"
 )
 
-// UpdateQuery updates a model in storage.
-// UpdateQuery requires that WherePK is called, and will panic upon UpdateQuery.
+// QueryUpdate updates a model in storage.
+// QueryUpdate requires that WherePK is called, and will panic upon QueryUpdate.
 // Exec if it is not.
-type UpdateQuery struct {
-	baseQuery
+type QueryUpdate struct {
+	queryBase
 }
 
 // |||| CONSTRUCTOR ||||
 
-func newUpdate(s *Storage) *UpdateQuery {
-	u := &UpdateQuery{}
-	u.baseInit(s)
-	return u
+func newUpdate(s Storage) *QueryUpdate {
+	q := &QueryUpdate{}
+	q.baseInit(s)
+	return q
 }
 
 // Model sets the model to update.
 // The model MUST be a single struct and MUST be a pointer.
 // NOTE: This query currently updates ALL values of the model. Not just defined ones.
-func (u *UpdateQuery) Model(model interface{}) *UpdateQuery {
-	u.baseBindModel(model)
-	if !u.modelRfl.IsStruct() {
+func (q *QueryUpdate) Model(model interface{}) *QueryUpdate {
+	q.baseBindModel(model)
+	if !q.modelRfl.IsStruct() {
 		panic(fmt.Sprintf("received a non struct model of type %T. "+
-			"model must be a struct", u.modelRfl.Type()))
+			"model must be a struct", q.modelRfl.Type()))
 	}
-	u.setMDQuery(u.mdQuery().Model(model))
-	return u
+	q.setMDQuery(q.mdQuery().Model(model))
+	return q
 }
 
 // WherePK queries the primary key of the model to be deleted.
-func (u *UpdateQuery) WherePK(pk interface{}) *UpdateQuery {
-	u.setMDQuery(u.mdQuery().WherePK(pk))
-	return u
+func (q *QueryUpdate) WherePK(pk interface{}) *QueryUpdate {
+	q.setMDQuery(q.mdQuery().WherePK(pk))
+	return q
 }
 
 // Exec execute the query with the provided context. Returns a storage.Error.
-func (u *UpdateQuery) Exec(ctx context.Context) error {
-	u.baseExec(func() error { return u.mdQuery().Exec(ctx) })
-	return u.baseErr()
+func (q *QueryUpdate) Exec(ctx context.Context) error {
+	q.baseExec(func() error { return q.mdQuery().Exec(ctx) })
+	return q.baseErr()
 }
 
 // |||| QUERY BINDING ||||
 
-func (u *UpdateQuery) mdQuery() MDUpdateQuery {
-	if u.baseMDQuery() == nil {
-		u.setMDQuery(u.baseMDEngine().NewUpdate(u.baseMDAdapter()))
+func (q *QueryUpdate) mdQuery() QueryMDUpdate {
+	if q.baseMDQuery() == nil {
+		q.setMDQuery(q.baseMDEngine().NewUpdate(q.baseMDAdapter()))
 	}
-	return u.baseMDQuery().(MDUpdateQuery)
+	return q.baseMDQuery().(QueryMDUpdate)
 }
 
-func (u *UpdateQuery) setMDQuery(q MDUpdateQuery) {
-	u.baseSetMDQuery(q)
+func (q *QueryUpdate) setMDQuery(qmd QueryMDUpdate) {
+	q.baseSetMDQuery(qmd)
 }

@@ -6,34 +6,36 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/util/errutil"
 )
 
-type baseQuery struct {
+type queryBase struct {
 	_client       *timeseries.Client
 	modelExchange *modelExchange
 	catcher       *errutil.Catcher
+	handler       storage.ErrorHandler
 }
 
-func (b *baseQuery) baseInit(client *timeseries.Client) {
-	b.catcher = &errutil.Catcher{}
-	b._client = client
+func (q *queryBase) baseInit(client *timeseries.Client) {
+	q.catcher = &errutil.Catcher{}
+	q.handler = newErrorHandler()
+	q._client = client
 }
 
-func (b *baseQuery) baseClient() *timeseries.Client {
-	return b._client
+func (q *queryBase) baseClient() *timeseries.Client {
+	return q._client
 }
 
-func (b *baseQuery) baseExchangeToDest() {
-	b.modelExchange.ToDest()
+func (q *queryBase) baseExchangeToDest() {
+	q.modelExchange.ToDest()
 }
 
-func (b *baseQuery) baseExchangeToSource() {
-	b.modelExchange.ToSource()
+func (q *queryBase) baseExchangeToSource() {
+	q.modelExchange.ToSource()
 }
 
-func (b *baseQuery) baseModel(m interface{}) {
-	b.modelExchange = newWrappedModelExchange(storage.NewModelExchange(m,
+func (q *queryBase) baseModel(m interface{}) {
+	q.modelExchange = newWrappedModelExchange(storage.NewModelExchange(m,
 		catalog().New(m)))
 }
 
-func (b *baseQuery) baseErr() error {
-	return parseRedisTSErr(b.catcher.Error())
+func (q *queryBase) baseErr() error {
+	return q.handler.Exec(q.catcher.Error())
 }

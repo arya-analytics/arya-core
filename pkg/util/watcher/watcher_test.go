@@ -18,7 +18,7 @@ var _ = Describe("Watcher", func() {
 			Expect(err).To(BeNil())
 		})
 	})
-	Describe("Start", func() {
+	Describe("start", func() {
 		It("Should start the watcher and listen for file changes", func() {
 			triggered := false
 			cfg := watcher.WatcherConfig{

@@ -237,7 +237,7 @@ var _ = Describe("Reflect", func() {
 			})
 		})
 	})
-	Describe("Errors + edge cases", func() {
+	Describe("errChan + edge cases", func() {
 		It("Should panic when a non pointer is provided", func() {
 			Expect(func() {
 				model.NewReflect(mock.ModelA{ID: 22})

@@ -3,74 +3,58 @@ package roach
 import (
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/util/pg"
-	log "github.com/sirupsen/logrus"
+	"github.com/lib/pq"
 	"github.com/uptrace/bun/driver/pgdriver"
 	"strings"
 )
 
-// |||| BUN ERRORS ||||
-
-func parseBunErr(err error) (oErr error) {
-	if err == nil {
-		return oErr
-	}
-
-	switch err := err.(type) {
-	case pgdriver.Error:
-		oErr = parsePgDriverErr(err)
-	default:
-		oErr = parseSqlError(err.Error())
-	}
-	se, ok := oErr.(storage.Error)
-	if ok {
-		if se.Type == storage.ErrTypeUnknown {
-			log.Errorf("Unknown err -> %s", err)
-		}
-	}
-	return oErr
+func newErrorHandler() storage.ErrorHandler {
+	return storage.NewErrorHandler(
+		errorTypeConverterDefault,
+		errorTypeConverterPQ,
+		errorTypeConverterPGDriver,
+	)
 }
 
-// |||| PGDRIVER ERRORS ||||
+var _sqlErrors = map[string]storage.ErrorType{
+	"sql: no rows in result set":                  storage.ErrorTypeItemNotFound,
+	"constraint failed: UNIQUE constraint failed": storage.ErrorTypeUniqueViolation,
+	"SQL logic errutil: no such table":            storage.ErrorTypeMigration,
+	"bun: Update and Delete queries require at least one Where": storage.
+		ErrorTypeInvalidArgs,
+}
 
-func parsePgDriverErr(err pgdriver.Error) error {
-	pgErr := pg.NewError(err.Field('C'))
-	return storage.Error{Base: err, Type: pgToStorageErrType(pgErr.Type),
-		Message: err.Error()}
+func errorTypeConverterDefault(err error) (storage.ErrorType, bool) {
+	for k, v := range _sqlErrors {
+		if strings.Contains(err.Error(), k) {
+			return v, true
+		}
+	}
+	return storage.ErrorTypeUnknown, false
 }
 
 var _pgErrs = map[pg.ErrorType]storage.ErrorType{
-	pg.ErrTypeUniqueViolation:     storage.ErrTypeUniqueViolation,
-	pg.ErrTypeForeignKeyViolation: storage.ErrTypeRelationshipViolation,
-	pg.ErrTypeIntegrityConstraint: storage.ErrTypeInvalidField,
+	pg.ErrorTypeUniqueViolation:     storage.ErrorTypeUniqueViolation,
+	pg.ErrorTypeForeignKeyViolation: storage.ErrorTypeRelationshipViolation,
+	pg.ErrorTypeIntegrityConstraint: storage.ErrorTypeInvalidField,
 }
 
-func pgToStorageErrType(t pg.ErrorType) storage.ErrorType {
-	ot, ok := _pgErrs[t]
+func errorTypeConverterPGDriver(err error) (storage.ErrorType, bool) {
+	driverErr, ok := err.(pgdriver.Error)
 	if !ok {
-		return storage.ErrTypeUnknown
+		return storage.ErrorTypeUnknown, false
 	}
-	return ot
+	pgErr := pg.NewError(driverErr.Field('C'))
+	ot, ok := _pgErrs[pgErr.Type]
+	return ot, ok
 }
 
-// |||| SQL ERRORS |||
-
-var _sqlErrors = map[string]storage.ErrorType{
-	"sql: no rows in result set":                  storage.ErrTypeItemNotFound,
-	"constraint failed: UNIQUE constraint failed": storage.ErrTypeUniqueViolation,
-	"SQL logic errutil: no such table":            storage.ErrTypeMigration,
-	"bun: Update and Delete queries require at least one Where": storage.
-		ErrTypeInvalidArgs,
-}
-
-func sqlToStorageErr(sql string) storage.ErrorType {
-	for k, v := range _sqlErrors {
-		if strings.Contains(sql, k) {
-			return v
-		}
+func errorTypeConverterPQ(err error) (storage.ErrorType, bool) {
+	pqErr, ok := err.(*pq.Error)
+	if !ok {
+		return storage.ErrorTypeUnknown, false
 	}
-	return storage.ErrTypeUnknown
-}
-
-func parseSqlError(sql string) error {
-	return storage.Error{Type: sqlToStorageErr(sql), Message: sql}
+	pgErr := pg.NewError(string(pqErr.Code))
+	ot, ok := _pgErrs[pgErr.Type]
+	return ot, ok
 }

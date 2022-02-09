@@ -6,39 +6,39 @@ import (
 	"github.com/uptrace/bun"
 )
 
-type deleteQuery struct {
-	baseQuery
+type queryDelete struct {
+	queryBase
 	q *bun.DeleteQuery
 }
 
-func newDelete(db *bun.DB) *deleteQuery {
-	r := &deleteQuery{q: db.NewDelete()}
-	r.baseInit()
-	return r
+func newDelete(db *bun.DB) *queryDelete {
+	q := &queryDelete{q: db.NewDelete()}
+	q.baseInit()
+	return q
 }
 
-func (d *deleteQuery) WherePK(pk interface{}) storage.MDDeleteQuery {
-	return d.Where(pkEqualsSQL, pk)
+func (q *queryDelete) WherePK(pk interface{}) storage.QueryMDDelete {
+	return q.Where(pkEqualsSQL, pk)
 }
 
-func (d *deleteQuery) WherePKs(pks interface{}) storage.MDDeleteQuery {
-	return d.Where(pkChainInSQL, bun.In(pks))
+func (q *queryDelete) WherePKs(pks interface{}) storage.QueryMDDelete {
+	return q.Where(pkChainInSQL, bun.In(pks))
 }
 
-func (d *deleteQuery) Where(query string, args ...interface{}) storage.MDDeleteQuery {
-	d.q = d.q.Where(query, args...)
-	return d
+func (q *queryDelete) Where(query string, args ...interface{}) storage.QueryMDDelete {
+	q.q = q.q.Where(query, args...)
+	return q
 }
 
-func (d *deleteQuery) Model(m interface{}) storage.MDDeleteQuery {
-	d.q = d.q.Model(d.baseModel(m).Pointer())
-	return d
+func (q *queryDelete) Model(m interface{}) storage.QueryMDDelete {
+	q.q = q.q.Model(q.baseModel(m).Pointer())
+	return q
 }
 
-func (d *deleteQuery) Exec(ctx context.Context) error {
-	d.baseExec(func() error {
-		_, err := d.q.Exec(ctx)
+func (q *queryDelete) Exec(ctx context.Context) error {
+	q.baseExec(func() error {
+		_, err := q.q.Exec(ctx)
 		return err
 	})
-	return d.baseErr()
+	return q.baseErr()
 }

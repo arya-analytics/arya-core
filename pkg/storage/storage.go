@@ -12,9 +12,9 @@
 //
 // Engines (Engine) can fulfill one of three roles:
 //
-// MDEngine - Reads and writes lightweight, strongly consistent data to storage.
-// ObjectEngine - Saves bulk data to node local data storage.
-// CacheEngine - High speed cache that can read and write time series data.
+// EngineMD - Reads and writes lightweight, strongly consistent data to storage.
+// EngineObject - Saves bulk data to node local data storage.
+// EngineCache - High speed cache that can read and write time series data.
 //
 // Initialization
 //
@@ -24,6 +24,10 @@
 //
 // For information on writing new Queries, see Storage.
 package storage
+
+import (
+	"github.com/arya-analytics/aryacore/pkg/util/tasks"
+)
 
 // |||| STORAGE ||||
 
@@ -45,14 +49,27 @@ package storage
 // returned.
 //
 // If an unexpected error is encountered,
-// will return a storage.Error with an ErrTypeUnknown. Error.Base
+// will return a storage.Error with an ErrorTypeUnknown. Error.Base
 // can be used to access the original error.
 //
 // Implementing a new Engine
 //
 // If you're working on modifying or implementing a new Engine,
 // see Engine and its sub-interfaces.
-type Storage struct {
+type Storage interface {
+	NewCreate() *QueryCreate
+	NewRetrieve() *QueryRetrieve
+	NewUpdate() *QueryUpdate
+	NewDelete() *QueryDelete
+	NewTSRetrieve() *QueryTSRetrieve
+	NewTSCreate() *QueryTSCreate
+	NewMigrate() *QueryMigrate
+	NewTasks(opts ...tasks.SchedulerOpt) tasks.Scheduler
+	config() Config
+	adapter(e Engine) Adapter
+}
+
+type storage struct {
 	cfg    Config
 	pooler *pooler
 }
@@ -61,53 +78,63 @@ type Storage struct {
 //
 // Engine Specification
 //
-// Storage can operate without Config.CacheEngine and/or without Config.ObjectEngine.
+// Storage can operate without Config.EngineCache and/or without Config.EngineObject.
 // However, if any queries are run that require accessing one of these data stores,
 // the query will panic.
 //
-// Storage cannot operate without Config.MDEngine,
+// Storage cannot operate without Config.EngineMD,
 // as it relies on this engine to maintain consistency with other engines.
-func New(cfg Config) *Storage {
-	return &Storage{cfg, newPooler()}
+func New(cfg Config) Storage {
+	return &storage{cfg: cfg, pooler: newPooler()}
 }
 
-// NewMigrate opens a new MigrateQuery.
-func (s *Storage) NewMigrate() *MigrateQuery {
+// NewMigrate opens a new QueryMigrate.
+func (s *storage) NewMigrate() *QueryMigrate {
 	return newMigrate(s)
 }
 
-// NewRetrieve opens a new RetrieveQuery.
-func (s *Storage) NewRetrieve() *RetrieveQuery {
+// NewRetrieve opens a new QueryRetrieve.
+func (s *storage) NewRetrieve() *QueryRetrieve {
 	return newRetrieve(s)
 }
 
-// NewCreate opens a new CreateQuery.
-func (s *Storage) NewCreate() *CreateQuery {
+// NewCreate opens a new QueryCreate.
+func (s *storage) NewCreate() *QueryCreate {
 	return newCreate(s)
 }
 
-// NewDelete opens a new DeleteQuery.
-func (s *Storage) NewDelete() *DeleteQuery {
+// NewDelete opens a new QueryDelete.
+func (s *storage) NewDelete() *QueryDelete {
 	return newDelete(s)
 }
 
-// NewUpdate opens a new UpdateQuery.
-func (s *Storage) NewUpdate() *UpdateQuery {
+// NewUpdate opens a new QueryUpdate.
+func (s *storage) NewUpdate() *QueryUpdate {
 	return newUpdate(s)
 }
 
-// NewTSRetrieve opens a new TSRetrieveQuery.
-func (s *Storage) NewTSRetrieve() *TSRetrieveQuery {
+// NewTSRetrieve opens a new QueryTSRetrieve.
+func (s *storage) NewTSRetrieve() *QueryTSRetrieve {
 	return newTSRetrieve(s)
 }
 
-// NewTSCreate opens a new TSCreateQuery.
-func (s *Storage) NewTSCreate() *TSCreateQuery {
+// NewTSCreate opens a new QueryTSCreate.
+func (s *storage) NewTSCreate() *QueryTSCreate {
 	return newTSCreate(s)
 }
 
-func (s *Storage) adapter(e Engine) (a Adapter) {
+func (s *storage) NewTasks(opts ...tasks.SchedulerOpt) tasks.Scheduler {
+	return tasks.NewBatchScheduler(
+		s.cfg.EngineMD.NewTasks(s.adapter(s.cfg.EngineMD), opts...),
+	)
+}
+
+func (s *storage) adapter(e Engine) (a Adapter) {
 	return s.pooler.retrieve(e)
+}
+
+func (s *storage) config() Config {
+	return s.cfg
 }
 
 // |||| CONFIG ||||
@@ -115,7 +142,7 @@ func (s *Storage) adapter(e Engine) (a Adapter) {
 // Config holds the configuration information for Storage.
 // See New for information on creating Config.
 type Config struct {
-	MDEngine     MDEngine
-	ObjectEngine ObjectEngine
-	CacheEngine  CacheEngine
+	EngineMD     EngineMD
+	EngineObject EngineObject
+	EngineCache  EngineCache
 }

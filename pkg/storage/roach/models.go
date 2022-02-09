@@ -71,7 +71,7 @@ type GossipNode struct {
 }
 
 // GossipLiveness lives in crdb's internal schema and tracks the health of nodes in
-//the roach cluster.
+// the roach cluster.
 type GossipLiveness struct {
 	Epoch           int       `bun:"type:bigint,scanonly"`
 	Expiration      string    `bun:"type:text,scanonly"`

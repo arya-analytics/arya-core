@@ -7,52 +7,54 @@ import (
 	"github.com/minio/minio-go/v7"
 )
 
-type baseQuery struct {
+type queryBase struct {
 	_client       *minio.Client
 	modelExchange *modelExchange
 	catcher       *errutil.Catcher
+	handler       storage.ErrorHandler
 }
 
-func (b *baseQuery) baseInit(client *minio.Client) {
-	b.catcher = &errutil.Catcher{}
-	b._client = client
+func (q *queryBase) baseInit(client *minio.Client) {
+	q.catcher = &errutil.Catcher{}
+	q.handler = newErrorHandler()
+	q._client = client
 }
 
-func (b *baseQuery) baseClient() *minio.Client {
-	return b._client
+func (q *queryBase) baseClient() *minio.Client {
+	return q._client
 }
 
-func (b *baseQuery) baseModel(m interface{}) {
-	b.modelExchange = newWrappedModelExchange(storage.NewModelExchange(m,
+func (q *queryBase) baseModel(m interface{}) {
+	q.modelExchange = newWrappedModelExchange(storage.NewModelExchange(m,
 		catalog().New(m)))
 }
 
-func (b *baseQuery) baseBucket() string {
-	return b.modelExchange.Bucket()
+func (q *queryBase) baseBucket() string {
+	return q.modelExchange.Bucket()
 }
 
-func (b *baseQuery) baseExchangeToSource() {
-	b.modelExchange.ToSource()
+func (q *queryBase) baseExchangeToSource() {
+	q.modelExchange.ToSource()
 }
 
-func (b *baseQuery) baseExchangeToDest() {
-	b.modelExchange.ToDest()
+func (q *queryBase) baseExchangeToDest() {
+	q.modelExchange.ToDest()
 }
 
-func (b *baseQuery) baseBindVals(dvc dataValueChain) {
-	b.modelExchange.BindDataVals(dvc)
+func (q *queryBase) baseBindVals(dvc dataValueChain) {
+	q.modelExchange.BindDataVals(dvc)
 }
 
-func (b *baseQuery) baseExec(af errutil.ActionFunc) {
-	b.catcher.Exec(af)
+func (q *queryBase) baseExec(af errutil.ActionFunc) {
+	q.catcher.Exec(af)
 }
 
-func (b *baseQuery) baseErr() error {
-	return parseMinioErr(b.catcher.Error())
+func (q *queryBase) baseErr() error {
+	return q.handler.Exec(q.catcher.Error())
 }
 
-func (b *baseQuery) baseValidateReq() {
-	b.catcher.Exec(func() error { return baseQueryReqValidator.Exec(b) })
+func (q *queryBase) baseValidateReq() {
+	q.catcher.Exec(func() error { return baseQueryReqValidator.Exec(q) })
 }
 
 // |||| VALIDATORS |||
@@ -62,9 +64,9 @@ var baseQueryReqValidator = validate.New([]validate.Func{
 })
 
 func validateModelProvided(v interface{}) error {
-	b := v.(*baseQuery)
+	b := v.(*queryBase)
 	if b.modelExchange == nil {
-		return storage.Error{Type: storage.ErrTypeInvalidArgs,
+		return storage.Error{Type: storage.ErrorTypeInvalidArgs,
 			Message: "no model provided to query"}
 	}
 	return nil

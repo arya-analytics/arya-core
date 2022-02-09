@@ -2,25 +2,20 @@ package roach
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/util/tasks"
+	"github.com/uptrace/bun"
 )
 
 // |||| CONFIG ||||
 
-type TransactionLogLevel int
-
-const (
-	// TransactionLogLevelNone logs no queries.
-	TransactionLogLevelNone TransactionLogLevel = iota
-	// TransactionLogLevelErr logs failed queries.
-	TransactionLogLevelErr
-	// TransactionLogLevelAll logs all queries.
-	TransactionLogLevelAll
-)
+type Driver interface {
+	Connect() (*bun.DB, error)
+}
 
 // |||| ENGINE ||||
 
 // Engine opens connections and execute queries with a roach database.
-// implements the storage.MDEngine interface.
+// implements the storage.EngineMD interface.
 type Engine struct {
 	driver Driver
 }
@@ -44,27 +39,31 @@ func (e *Engine) InCatalog(m interface{}) bool {
 	return catalog().Contains(m)
 }
 
-// NewCreate opens a new createQuery query with the provided storage.Adapter.
-func (e *Engine) NewCreate(a storage.Adapter) storage.MDCreateQuery {
+// NewCreate opens a new queryCreate query with the provided storage.Adapter.
+func (e *Engine) NewCreate(a storage.Adapter) storage.QueryMDCreate {
 	return newCreate(conn(a))
 }
 
-// NewRetrieve opens a new retrieveQuery query with the provided storage.Adapter.
-func (e *Engine) NewRetrieve(a storage.Adapter) storage.MDRetrieveQuery {
+// NewRetrieve opens a new queryRetrieve query with the provided storage.Adapter.
+func (e *Engine) NewRetrieve(a storage.Adapter) storage.QueryMDRetrieve {
 	return newRetrieve(conn(a))
 }
 
-// NewUpdate opens a new updateQuery with the provided storage.Adapter.
-func (e *Engine) NewUpdate(a storage.Adapter) storage.MDUpdateQuery {
+// NewUpdate opens a new queryUpdate with the provided storage.Adapter.
+func (e *Engine) NewUpdate(a storage.Adapter) storage.QueryMDUpdate {
 	return newUpdate(conn(a))
 }
 
-// NewDelete opens a new deleteQuery with the provided storage.Adapter.
-func (e *Engine) NewDelete(a storage.Adapter) storage.MDDeleteQuery {
+// NewDelete opens a new queryDelete with the provided storage.Adapter.
+func (e *Engine) NewDelete(a storage.Adapter) storage.QueryMDDelete {
 	return newDelete(conn(a))
 }
 
-// NewMigrate opens a new migrateQuery with the provided storage.Adapter.
-func (e *Engine) NewMigrate(a storage.Adapter) storage.MDMigrateQuery {
+// NewMigrate opens a new queryMigrate with the provided storage.Adapter.
+func (e *Engine) NewMigrate(a storage.Adapter) storage.QueryMDMigrate {
 	return newMigrate(conn(a), e.driver)
+}
+
+func (e *Engine) NewTasks(a storage.Adapter, opts ...tasks.SchedulerOpt) tasks.Scheduler {
+	return newTaskScheduler(conn(a), opts...)
 }

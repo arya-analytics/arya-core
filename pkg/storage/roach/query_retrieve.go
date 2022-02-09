@@ -6,37 +6,45 @@ import (
 	"github.com/uptrace/bun"
 )
 
-type retrieveQuery struct {
-	baseQuery
+type queryRetrieve struct {
+	queryBase
 	q *bun.SelectQuery
 }
 
-func newRetrieve(db *bun.DB) *retrieveQuery {
-	r := &retrieveQuery{q: db.NewSelect()}
-	r.baseInit()
-	return r
+func newRetrieve(db *bun.DB) *queryRetrieve {
+	q := &queryRetrieve{q: db.NewSelect()}
+	q.baseInit()
+	return q
 }
 
-func (r *retrieveQuery) Model(m interface{}) storage.MDRetrieveQuery {
-	r.q = r.q.Model(r.baseModel(m).Pointer())
-	return r
+func (q *queryRetrieve) Model(m interface{}) storage.QueryMDRetrieve {
+	q.q = q.q.Model(q.baseModel(m).Pointer())
+	return q
 }
 
-func (r *retrieveQuery) Where(query string, args ...interface{}) storage.MDRetrieveQuery {
-	r.q = r.q.Where(query, args...)
-	return r
+func (q *queryRetrieve) Where(query string, args ...interface{}) storage.QueryMDRetrieve {
+	q.q = q.q.Where(query, args...)
+	return q
 }
 
-func (r *retrieveQuery) WherePK(pk interface{}) storage.MDRetrieveQuery {
-	return r.Where(pkEqualsSQL, pk)
+func (q *queryRetrieve) WherePK(pk interface{}) storage.QueryMDRetrieve {
+	return q.Where(pkEqualsSQL, pk)
 }
 
-func (r *retrieveQuery) WherePKs(pks interface{}) storage.MDRetrieveQuery {
-	return r.Where(pkChainInSQL, bun.In(pks))
+func (q *queryRetrieve) WherePKs(pks interface{}) storage.QueryMDRetrieve {
+	return q.Where(pkChainInSQL, bun.In(pks))
 }
 
-func (r *retrieveQuery) Exec(ctx context.Context) error {
-	r.baseExec(func() error { return r.q.Scan(ctx) })
-	r.baseExchangeToSource()
-	return r.baseErr()
+func (q *queryRetrieve) Count(ctx context.Context) (count int, err error) {
+	q.baseExec(func() error {
+		count, err = q.q.Count(ctx)
+		return err
+	})
+	return count, q.baseErr()
+}
+
+func (q *queryRetrieve) Exec(ctx context.Context) error {
+	q.baseExec(func() error { return q.q.Scan(ctx) })
+	q.baseExchangeToSource()
+	return q.baseErr()
 }

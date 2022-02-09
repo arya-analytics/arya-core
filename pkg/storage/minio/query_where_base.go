@@ -6,22 +6,22 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/util/validate"
 )
 
-type whereBaseQuery struct {
-	baseQuery
+type queryWhereBase struct {
+	queryBase
 	pkChain model.PKChain
 }
 
-func (w *whereBaseQuery) whereBasePK(pk interface{}) {
-	w.pkChain = append(w.pkChain, model.NewPK(pk))
+func (q *queryWhereBase) whereBasePK(pk interface{}) {
+	q.pkChain = append(q.pkChain, model.NewPK(pk))
 }
 
-func (w *whereBaseQuery) whereBasePKs(pks interface{}) {
-	w.pkChain = model.NewPKChain(pks)
+func (q *queryWhereBase) whereBasePKs(pks interface{}) {
+	q.pkChain = model.NewPKChain(pks)
 }
 
-func (w *whereBaseQuery) whereBaseValidateReq() {
-	w.baseValidateReq()
-	w.baseExec(func() error { return whereBaseQueryReqValidator.Exec(w) })
+func (q *queryWhereBase) whereBaseValidateReq() {
+	q.baseValidateReq()
+	q.baseExec(func() error { return whereBaseQueryReqValidator.Exec(q) })
 }
 
 var whereBaseQueryReqValidator = validate.New([]validate.Func{
@@ -29,9 +29,9 @@ var whereBaseQueryReqValidator = validate.New([]validate.Func{
 })
 
 func validatePKProvided(v interface{}) error {
-	q := v.(*whereBaseQuery)
+	q := v.(*queryWhereBase)
 	if (len(q.pkChain)) == 0 {
-		return storage.Error{Type: storage.ErrTypeInvalidArgs,
+		return storage.Error{Type: storage.ErrorTypeInvalidArgs,
 			Message: "no PK provided to where query"}
 	}
 	return nil

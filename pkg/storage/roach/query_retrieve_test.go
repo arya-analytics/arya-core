@@ -77,7 +77,7 @@ var _ = Describe("QueryRetrieve", func() {
 					WherePK(somePKThatDoesntExist).
 					Exec(ctx)
 				Expect(err).ToNot(BeNil())
-				Expect(err.(storage.Error).Type).To(Equal(storage.ErrTypeItemNotFound))
+				Expect(err.(storage.Error).Type).To(Equal(storage.ErrorTypeItemNotFound))
 			})
 		})
 	})

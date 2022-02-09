@@ -23,18 +23,18 @@ func (e *Engine) InCatalog(m interface{}) bool {
 	return catalog().Contains(m)
 }
 
-func (e *Engine) NewCreate(a storage.Adapter) storage.ObjectCreateQuery {
+func (e *Engine) NewCreate(a storage.Adapter) storage.QueryObjectCreate {
 	return newCreate(conn(a))
 }
 
-func (e *Engine) NewRetrieve(a storage.Adapter) storage.ObjectRetrieveQuery {
+func (e *Engine) NewRetrieve(a storage.Adapter) storage.QueryObjectRetrieve {
 	return newRetrieve(conn(a))
 }
 
-func (e *Engine) NewDelete(a storage.Adapter) storage.ObjectDeleteQuery {
+func (e *Engine) NewDelete(a storage.Adapter) storage.QueryObjectDelete {
 	return newDelete(conn(a))
 }
 
-func (e *Engine) NewMigrate(a storage.Adapter) storage.ObjectMigrateQuery {
+func (e *Engine) NewMigrate(a storage.Adapter) storage.QueryObjectMigrate {
 	return newMigrate(conn(a))
 }

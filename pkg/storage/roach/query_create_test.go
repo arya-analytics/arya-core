@@ -54,7 +54,7 @@ var _ = Describe("Create", func() {
 				}
 				err := engine.NewCreate(adapter).Model(channelConfigTwo).Exec(ctx)
 				Expect(err).ToNot(BeNil())
-				Expect(err.(storage.Error).Type).To(Equal(storage.ErrTypeUniqueViolation))
+				Expect(err.(storage.Error).Type).To(Equal(storage.ErrorTypeUniqueViolation))
 			})
 		})
 	})

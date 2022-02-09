@@ -14,7 +14,7 @@ const (
 )
 
 type tsCreateQuery struct {
-	baseQuery
+	queryBase
 	variant tsQueryVariant
 }
 
@@ -24,17 +24,17 @@ func newTSCreate(client *timeseries.Client) *tsCreateQuery {
 	return tsc
 }
 
-func (tsc *tsCreateQuery) Series() storage.CacheTSCreateQuery {
+func (tsc *tsCreateQuery) Series() storage.QueryCacheTSCreate {
 	tsc.variant = tsQueryVariantSeries
 	return tsc
 }
 
-func (tsc *tsCreateQuery) Sample() storage.CacheTSCreateQuery {
+func (tsc *tsCreateQuery) Sample() storage.QueryCacheTSCreate {
 	tsc.variant = tsQueryVariantSample
 	return tsc
 }
 
-func (tsc *tsCreateQuery) Model(m interface{}) storage.CacheTSCreateQuery {
+func (tsc *tsCreateQuery) Model(m interface{}) storage.QueryCacheTSCreate {
 	tsc.baseModel(m)
 	tsc.baseExchangeToDest()
 	return tsc
@@ -48,7 +48,7 @@ func (tsc *tsCreateQuery) Exec(ctx context.Context) error {
 		tsc.execSeries(ctx)
 	default:
 		return storage.Error{
-			Type:    storage.ErrTypeInvalidArgs,
+			Type:    storage.ErrorTypeInvalidArgs,
 			Message: "ts create queries require a variant selection",
 		}
 	}

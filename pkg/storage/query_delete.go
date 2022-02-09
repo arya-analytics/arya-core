@@ -2,82 +2,82 @@ package storage
 
 import "context"
 
-// DeleteQuery deletes a model or set of models depending on the parameters passed.
-// DeleteQuery requires that WherePK or WherePKs is called,
-// and will panic upon DeleteQuery.Exec if it isn't.
+// QueryDelete deletes a model or set of models depending on the parameters passed.
+// QueryDelete requires that WherePK or WherePKs is called,
+// and will panic upon QueryDelete.Exec if it isn't.
 //
-// DeleteQuery should not be instantiated directly,
+// QueryDelete should not be instantiated directly,
 // and should instead should be opened using Storage.NewDelete().
-type DeleteQuery struct {
-	baseQuery
+type QueryDelete struct {
+	queryBase
 }
 
-func newDelete(s *Storage) *DeleteQuery {
-	d := &DeleteQuery{}
-	d.baseInit(s)
-	return d
+func newDelete(s Storage) *QueryDelete {
+	q := &QueryDelete{}
+	q.baseInit(s)
+	return q
 }
 
 // |||| INTERFACE ||||
 
 // Model sets the model to be deleted. model must be passed as a pointer.
-// DeleteQuery only uses the model for location lookups,
+// QueryDelete only uses the model for location lookups,
 // and doesn't actually do anything  with the value.
 // You're good to provide a nil pointer as long as it has the right type.
-func (d *DeleteQuery) Model(model interface{}) *DeleteQuery {
-	d.baseBindModel(model)
-	d.setMDQuery(d.mdQuery().Model(model))
-	return d
+func (q *QueryDelete) Model(model interface{}) *QueryDelete {
+	q.baseBindModel(model)
+	q.setMDQuery(q.mdQuery().Model(model))
+	return q
 }
 
 // WherePK queries by the primary of the model to be deleted.
-func (d *DeleteQuery) WherePK(pk interface{}) *DeleteQuery {
-	d.setMDQuery(d.mdQuery().WherePK(pk))
-	return d
+func (q *QueryDelete) WherePK(pk interface{}) *QueryDelete {
+	q.setMDQuery(q.mdQuery().WherePK(pk))
+	return q
 }
 
 // WherePKs queries by a set of primary keys of models to be deleted.
-func (d *DeleteQuery) WherePKs(pks interface{}) *DeleteQuery {
-	d.setMDQuery(d.mdQuery().WherePKs(pks))
-	return d
+func (q *QueryDelete) WherePKs(pks interface{}) *QueryDelete {
+	q.setMDQuery(q.mdQuery().WherePKs(pks))
+	return q
 }
 
 // Exec executes the query with the provided context. Returns a storage.Error.
-func (d *DeleteQuery) Exec(ctx context.Context) error {
-	d.baseExec(func() error { return d.mdQuery().Exec(ctx) })
-	if d.baseObjEngine().InCatalog(d.modelRfl.Pointer()) {
-		d.baseExec(func() error {
-			return d.objQuery().Model(d.modelRfl.Pointer()).WherePKs(d.modelRfl.PKChain().Raw()).Exec(ctx)
+func (q *QueryDelete) Exec(ctx context.Context) error {
+	q.baseExec(func() error { return q.mdQuery().Exec(ctx) })
+	if q.baseObjEngine().InCatalog(q.modelRfl.Pointer()) {
+		q.baseExec(func() error {
+			return q.objQuery().Model(q.modelRfl.Pointer()).WherePKs(q.modelRfl.PKChain().Raw()).Exec(ctx)
 		})
 	}
-	return d.baseErr()
+	return q.baseErr()
 }
 
 // |||| QUERY BINDING ||||
 
 // || META DATA ||
 
-func (d *DeleteQuery) mdQuery() MDDeleteQuery {
-	if d.baseMDQuery() == nil {
-		d.setMDQuery(d.baseMDEngine().NewDelete(d.baseMDAdapter()))
+func (q *QueryDelete) mdQuery() QueryMDDelete {
+	if q.baseMDQuery() == nil {
+		q.setMDQuery(q.baseMDEngine().NewDelete(q.baseMDAdapter()))
 	}
 
-	return d.baseMDQuery().(MDDeleteQuery)
+	return q.baseMDQuery().(QueryMDDelete)
 }
 
-func (d *DeleteQuery) setMDQuery(q MDDeleteQuery) {
-	d.baseSetMDQuery(q)
+func (q *QueryDelete) setMDQuery(qmd QueryMDDelete) {
+	q.baseSetMDQuery(qmd)
 }
 
 // || OBJECT ||
 
-func (d *DeleteQuery) objQuery() ObjectDeleteQuery {
-	if d.baseObjQuery() == nil {
-		d.setObjQuery(d.baseObjEngine().NewDelete(d.baseObjAdapter()))
+func (q *QueryDelete) objQuery() QueryObjectDelete {
+	if q.baseObjQuery() == nil {
+		q.setObjQuery(q.baseObjEngine().NewDelete(q.baseObjAdapter()))
 	}
-	return d.baseObjQuery().(ObjectDeleteQuery)
+	return q.baseObjQuery().(QueryObjectDelete)
 }
 
-func (d *DeleteQuery) setObjQuery(q ObjectDeleteQuery) {
-	d.baseSetObjQuery(q)
+func (q *QueryDelete) setObjQuery(qob QueryObjectDelete) {
+	q.baseSetObjQuery(qob)
 }

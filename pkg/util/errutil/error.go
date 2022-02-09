@@ -1,5 +1,7 @@
 package errutil
 
+// |||| CATCHER ||||
+
 type Catcher struct {
 	err error
 }

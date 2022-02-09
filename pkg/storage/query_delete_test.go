@@ -34,7 +34,7 @@ var _ = Describe("QueryDelete", func() {
 				rErr := store.NewRetrieve().Model(channelConfig).WherePK(
 					channelConfig.ID).Exec(ctx)
 				Expect(rErr).ToNot(BeNil())
-				Expect(rErr.(storage.Error).Type).To(Equal(storage.ErrTypeItemNotFound))
+				Expect(rErr.(storage.Error).Type).To(Equal(storage.ErrorTypeItemNotFound))
 			})
 		})
 	})
@@ -43,7 +43,7 @@ var _ = Describe("QueryDelete", func() {
 			It("Should return an error", func() {
 				err := store.NewDelete().Model(&storage.ChannelConfig{}).Exec(ctx)
 				Expect(err).ToNot(BeNil())
-				Expect(err.(storage.Error).Type).To(Equal(storage.ErrTypeInvalidArgs))
+				Expect(err.(storage.Error).Type).To(Equal(storage.ErrorTypeInvalidArgs))
 			})
 		})
 	})

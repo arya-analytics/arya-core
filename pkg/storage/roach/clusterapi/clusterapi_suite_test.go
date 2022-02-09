@@ -1,28 +1,26 @@
-package storage_test
+package clusterapi_test
 
 import (
-	"context"
 	"github.com/arya-analytics/aryacore/pkg/storage/mock"
+	"testing"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"testing"
 )
 
-var (
-	ctx   = context.Background()
-	store = mock.NewStorage()
-)
+var mockDriver *mock.DriverRoach
 
 var _ = BeforeSuite(func() {
-	err := store.NewMigrate().Exec(ctx)
+	mockDriver = mock.NewDriverRoach(true)
+	_, err := mockDriver.Connect()
 	Expect(err).To(BeNil())
 })
 
 var _ = AfterSuite(func() {
-	store.Stop()
+	mockDriver.Stop()
 })
 
-func TestStorage(t *testing.T) {
+func TestClusterAPI(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Storage Suite")
+	RunSpecs(t, "ClusterAPI Suite")
 }

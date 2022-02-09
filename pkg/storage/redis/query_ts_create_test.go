@@ -60,7 +60,7 @@ var _ = Describe("QueryTsCreate", func() {
 			It("Should return the correct storage error", func() {
 				err := engine.NewTSCreate(adapter).Model(series).Exec(ctx)
 				Expect(err).ToNot(BeNil())
-				Expect(err.(storage.Error).Type).To(Equal(storage.ErrTypeInvalidArgs))
+				Expect(err.(storage.Error).Type).To(Equal(storage.ErrorTypeInvalidArgs))
 			})
 		})
 	})

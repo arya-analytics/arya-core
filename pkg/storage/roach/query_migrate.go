@@ -7,53 +7,53 @@ import (
 	bunMigrate "github.com/uptrace/bun/migrate"
 )
 
-type migrateQuery struct {
-	baseQuery
+type queryMigrate struct {
+	queryBase
 	db         *bun.DB
 	migrations *bunMigrate.Migrations
 	driver     Driver
 }
 
-func newMigrate(db *bun.DB, driver Driver) *migrateQuery {
-	m := &migrateQuery{
+func newMigrate(db *bun.DB, driver Driver) *queryMigrate {
+	q := &queryMigrate{
 		db:         db,
 		migrations: bunMigrate.NewMigrations(),
 		driver:     driver,
 	}
-	m.baseInit()
-	bindMigrations(m.migrations, m.driver)
-	return m
+	q.baseInit()
+	bindMigrations(q.migrations, q.driver)
+	return q
 }
 
-func (m *migrateQuery) bunMigrator() *bunMigrate.Migrator {
-	return bunMigrate.NewMigrator(m.db, m.migrations)
+func (q *queryMigrate) bunMigrator() *bunMigrate.Migrator {
+	return bunMigrate.NewMigrator(q.db, q.migrations)
 }
 
-func (m *migrateQuery) init(ctx context.Context) {
-	m.catcher.Exec(func() error { return m.bunMigrator().Init(ctx) })
+func (q *queryMigrate) init(ctx context.Context) {
+	q.catcher.Exec(func() error { return q.bunMigrator().Init(ctx) })
 }
 
-func (m *migrateQuery) Exec(ctx context.Context) error {
-	m.init(ctx)
+func (q *queryMigrate) Exec(ctx context.Context) error {
+	q.init(ctx)
 	var group *bunMigrate.MigrationGroup
-	m.catcher.Exec(func() (err error) {
-		group, err = m.bunMigrator().Migrate(ctx)
+	q.catcher.Exec(func() (err error) {
+		group, err = q.bunMigrator().Migrate(ctx)
 		return err
 	})
-	m.catcher.Exec(func() error {
+	q.catcher.Exec(func() error {
 		if group.ID == 0 {
 			log.Info("No new migrations to run.")
 		}
 		log.Infof("Migrated to group %s \n", group)
 		return nil
 	})
-	return m.baseErr()
+	return q.baseErr()
 }
 
-func (m *migrateQuery) Verify(ctx context.Context) error {
-	m.baseExec(func() error {
-		_, err := m.db.NewSelect().Model((*ChannelConfig)(nil)).Count(ctx)
+func (q *queryMigrate) Verify(ctx context.Context) error {
+	q.baseExec(func() error {
+		_, err := q.db.NewSelect().Model((*ChannelConfig)(nil)).Count(ctx)
 		return err
 	})
-	return m.baseErr()
+	return q.baseErr()
 }

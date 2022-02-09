@@ -8,47 +8,47 @@ const (
 )
 
 var _errs = map[string]ErrorType{
-	"23505": ErrTypeUniqueViolation,
-	"23503": ErrTypeForeignKeyViolation,
+	"23505": ErrorTypeUniqueViolation,
+	"23503": ErrorTypeForeignKeyViolation,
 }
 
 var _errClasses = map[string]ErrorType{
-	"01": ErrTypeWarning,
-	"02": ErrTypeNoData,
-	"03": ErrTypeSQLNotComplete,
-	"08": ErrTypeConn,
-	"09": ErrTypeTriggeredAction,
-	"0A": ErrTypeFeatureNotSupported,
-	"0B": ErrTypeInvalidTransaction,
-	"0F": ErrTypeLocator,
-	"0L": ErrTypeGrantor,
-	"OP": ErrTypeInvalidRoleSpec,
-	"0Z": ErrTypeDiagnosticsException,
-	"20": ErrTypeCaseNotFound,
-	"21": ErrTypeCardinalityViolation,
-	"22": ErrTypeDataException,
-	"23": ErrTypeIntegrityConstraint,
-	"24": ErrTypeInvalidCursor,
-	"25": ErrTypeInvalidTransaction,
-	"26": ErrTypeInvalidSQLStatementName,
-	"27": ErrTypeTriggeredDataChangeViolation,
-	"28": ErrTypeInvalidAuthSpec,
-	"2B": ErrTypeDependentPrivileged,
-	"2D": ErrTypeInvalidSQLStatementName,
-	"2F": ErrTypeSQLRoutine,
-	"34": ErrTypeInvalidCursor,
-	"3D": ErrTypeInvalidCatalog,
-	"40": ErrTypeTransactionRollback,
-	"42": ErrTypeSyntax,
-	"58": ErrTypeSystem,
+	"01": ErrorTypeWarning,
+	"02": ErrorTypeNoData,
+	"03": ErrorTypeSQLNotComplete,
+	"08": ErrorTypeConn,
+	"09": ErrorTypeTriggeredAction,
+	"0A": ErrorTypeFeatureNotSupported,
+	"0B": ErrorTypeInvalidTransaction,
+	"0F": ErrorTypeLocator,
+	"0L": ErrorTypeGrantor,
+	"OP": ErrorTypeInvalidRoleSpec,
+	"0Z": ErrorTypeDiagnosticsException,
+	"20": ErrorTypeCaseNotFound,
+	"21": ErrorTypeCardinalityViolation,
+	"22": ErrorTypeDataException,
+	"23": ErrorTypeIntegrityConstraint,
+	"24": ErrorTypeInvalidCursor,
+	"25": ErrorTypeInvalidTransaction,
+	"26": ErrorTypeInvalidSQLStatementName,
+	"27": ErrorTypeTriggeredDataChangeViolation,
+	"28": ErrorTypeInvalidAuthSpec,
+	"2B": ErrorTypeDependentPrivileged,
+	"2D": ErrorTypeInvalidSQLStatementName,
+	"2F": ErrorTypeSQLRoutine,
+	"34": ErrorTypeInvalidCursor,
+	"3D": ErrorTypeInvalidCatalog,
+	"40": ErrorTypeTransactionRollback,
+	"42": ErrorTypeSyntax,
+	"58": ErrorTypeSystem,
 }
 
-func errTypeFromCode(code string) ErrorType {
+func ErrorTypeFromCode(code string) ErrorType {
 	t, ok := _errs[code]
 	if !ok {
 		t, ok = _errClasses[code[0:errClassLength]]
 		if !ok {
-			t = ErrTypeUnknown
+			t = ErrorTypeUnknown
 		}
 	}
 	return t
@@ -62,7 +62,7 @@ type Error struct {
 func NewError(code string) Error {
 	return Error{
 		Code: code,
-		Type: errTypeFromCode(code),
+		Type: ErrorTypeFromCode(code),
 	}
 }
 
@@ -74,32 +74,32 @@ type ErrorType int
 
 //go:generate stringer -type=ErrorType
 const (
-	ErrTypeUnknown ErrorType = iota
-	ErrTypeWarning
-	ErrTypeNoData
-	ErrTypeSQLNotComplete
-	ErrTypeConn
-	ErrTypeTriggeredAction
-	ErrTypeInvalidTransaction
-	ErrTypeLocator
-	ErrTypeGrantor
-	ErrTypeInvalidRoleSpec
-	ErrTypeDiagnosticsException
-	ErrTypeCaseNotFound
-	ErrTypeCardinalityViolation
-	ErrTypeDataException
-	ErrTypeIntegrityConstraint
-	ErrTypeInvalidCursor
-	ErrTypeInvalidSQLStatementName
-	ErrTypeTriggeredDataChangeViolation
-	ErrTypeInvalidAuthSpec
-	ErrTypeDependentPrivileged
-	ErrTypeSQLRoutine
-	ErrTypeInvalidCatalog
-	ErrTypeTransactionRollback
-	ErrTypeSyntax
-	ErrTypeSystem
-	ErrTypeFeatureNotSupported
-	ErrTypeUniqueViolation
-	ErrTypeForeignKeyViolation
+	ErrorTypeUnknown ErrorType = iota
+	ErrorTypeWarning
+	ErrorTypeNoData
+	ErrorTypeSQLNotComplete
+	ErrorTypeConn
+	ErrorTypeTriggeredAction
+	ErrorTypeInvalidTransaction
+	ErrorTypeLocator
+	ErrorTypeGrantor
+	ErrorTypeInvalidRoleSpec
+	ErrorTypeDiagnosticsException
+	ErrorTypeCaseNotFound
+	ErrorTypeCardinalityViolation
+	ErrorTypeDataException
+	ErrorTypeIntegrityConstraint
+	ErrorTypeInvalidCursor
+	ErrorTypeInvalidSQLStatementName
+	ErrorTypeTriggeredDataChangeViolation
+	ErrorTypeInvalidAuthSpec
+	ErrorTypeDependentPrivileged
+	ErrorTypeSQLRoutine
+	ErrorTypeInvalidCatalog
+	ErrorTypeTransactionRollback
+	ErrorTypeSyntax
+	ErrorTypeSystem
+	ErrorTypeFeatureNotSupported
+	ErrorTypeUniqueViolation
+	ErrorTypeForeignKeyViolation
 )

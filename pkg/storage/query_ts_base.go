@@ -4,15 +4,15 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 )
 
-type tsBaseQuery struct {
+type queryTSBase struct {
 	pks model.PKChain
-	baseQuery
+	queryBase
 }
 
-func (tsb *tsBaseQuery) tsBaseWherePk(pk interface{}) {
-	tsb.pks = append(tsb.pks, model.NewPK(pk))
+func (q *queryTSBase) tsBaseWherePk(pk interface{}) {
+	q.pks = append(q.pks, model.NewPK(pk))
 }
 
-func (tsb *tsBaseQuery) tsBaseWherePks(pks interface{}) {
-	tsb.pks = model.NewPKChain(pks)
+func (q *queryTSBase) tsBaseWherePks(pks interface{}) {
+	q.pks = model.NewPKChain(pks)
 }

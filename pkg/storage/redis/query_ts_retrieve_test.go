@@ -171,7 +171,7 @@ var _ = Describe("QueryTsRetrieve", func() {
 				It("Should return the correct storage error", func() {
 					err := engine.NewTSRetrieve(adapter).Model(s).Exec(ctx)
 					Expect(err).ToNot(BeNil())
-					Expect(err.(storage.Error).Type).To(Equal(storage.ErrTypeInvalidArgs))
+					Expect(err.(storage.Error).Type).To(Equal(storage.ErrorTypeInvalidArgs))
 				})
 			})
 			Context("Invalid PK provided", func() {
@@ -179,7 +179,7 @@ var _ = Describe("QueryTsRetrieve", func() {
 					err := engine.NewTSRetrieve(adapter).WherePK(uuid.New()).Model(s).
 						Exec(ctx)
 					Expect(err).ToNot(BeNil())
-					Expect(err.(storage.Error).Type).To(Equal(storage.ErrTypeItemNotFound))
+					Expect(err.(storage.Error).Type).To(Equal(storage.ErrorTypeItemNotFound))
 				})
 			})
 		})

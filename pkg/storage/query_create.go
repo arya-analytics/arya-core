@@ -4,15 +4,15 @@ import (
 	"context"
 )
 
-// CreateQuery creates a new model in storage.
-type CreateQuery struct {
-	baseQuery
+// QueryCreate creates a new model in storage.
+type QueryCreate struct {
+	queryBase
 }
 
 // |||| CONSTRUCTOR ||||
 
-func newCreate(s *Storage) *CreateQuery {
-	c := &CreateQuery{}
+func newCreate(s Storage) *QueryCreate {
+	c := &QueryCreate{}
 	c.baseInit(s)
 	return c
 }
@@ -22,14 +22,14 @@ func newCreate(s *Storage) *CreateQuery {
 // Model sets the model to create. model must be passed as a pointer.
 // The model can be a pointer to a struct or a pointer to a slice.
 // The model must contain all necessary values and satisfy any relationships.
-func (c *CreateQuery) Model(m interface{}) *CreateQuery {
+func (c *QueryCreate) Model(m interface{}) *QueryCreate {
 	c.baseBindModel(m)
 	c.setMDQuery(c.mdQuery().Model(c.modelRfl.Pointer()))
 	return c
 }
 
 // Exec executes the query with the provided context. Returns a storage.Error.
-func (c *CreateQuery) Exec(ctx context.Context) error {
+func (c *QueryCreate) Exec(ctx context.Context) error {
 	c.baseExec(func() error { return c.mdQuery().Exec(ctx) })
 	mp := c.modelRfl.Pointer()
 	if c.baseObjEngine().InCatalog(mp) {
@@ -42,26 +42,26 @@ func (c *CreateQuery) Exec(ctx context.Context) error {
 
 // || META DATA ||
 
-func (c *CreateQuery) mdQuery() MDCreateQuery {
+func (c *QueryCreate) mdQuery() QueryMDCreate {
 	if c.baseMDQuery() == nil {
 		c.setMDQuery(c.baseMDEngine().NewCreate(c.baseMDAdapter()))
 	}
-	return c.baseMDQuery().(MDCreateQuery)
+	return c.baseMDQuery().(QueryMDCreate)
 }
 
-func (c *CreateQuery) setMDQuery(q MDCreateQuery) {
+func (c *QueryCreate) setMDQuery(q QueryMDCreate) {
 	c.baseSetMDQuery(q)
 }
 
 // || OBJECT ||
 
-func (c *CreateQuery) objQuery() ObjectCreateQuery {
+func (c *QueryCreate) objQuery() QueryObjectCreate {
 	if c.baseObjQuery() == nil {
 		c.setObjQuery(c.baseObjEngine().NewCreate(c.baseObjAdapter()))
 	}
-	return c.baseObjQuery().(ObjectCreateQuery)
+	return c.baseObjQuery().(QueryObjectCreate)
 }
 
-func (c *CreateQuery) setObjQuery(q ObjectCreateQuery) {
+func (c *QueryCreate) setObjQuery(q QueryObjectCreate) {
 	c.baseSetObjQuery(q)
 }

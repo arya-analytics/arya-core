@@ -9,26 +9,26 @@ import (
 
 var makeBucketOpts = minio.MakeBucketOptions{}
 
-type migrateQuery struct {
-	baseQuery
+type queryMigrate struct {
+	queryBase
 }
 
-func newMigrate(client *minio.Client) *migrateQuery {
-	m := &migrateQuery{}
-	m.baseInit(client)
-	return m
+func newMigrate(client *minio.Client) *queryMigrate {
+	q := &queryMigrate{}
+	q.baseInit(client)
+	return q
 }
 
-func (m *migrateQuery) Exec(ctx context.Context) error {
+func (q *queryMigrate) Exec(ctx context.Context) error {
 	for _, mod := range catalog() {
 		me := newWrappedModelExchange(storage.NewModelExchange(mod, mod))
-		m.catcher.Exec(func() error {
-			bucketExists, err := m.baseClient().BucketExists(ctx, me.Bucket())
+		q.catcher.Exec(func() error {
+			bucketExists, err := q.baseClient().BucketExists(ctx, me.Bucket())
 			if err != nil {
 				return err
 			}
 			if !bucketExists {
-				if mErr := m.baseClient().MakeBucket(ctx, me.Bucket(),
+				if mErr := q.baseClient().MakeBucket(ctx, me.Bucket(),
 					makeBucketOpts); mErr != nil {
 					return mErr
 				}
@@ -36,13 +36,13 @@ func (m *migrateQuery) Exec(ctx context.Context) error {
 			return nil
 		})
 	}
-	return m.baseErr()
+	return q.baseErr()
 }
 
-func (m *migrateQuery) Verify(ctx context.Context) error {
+func (q *queryMigrate) Verify(ctx context.Context) error {
 	for _, mod := range catalog() {
 		me := newWrappedModelExchange(storage.NewModelExchange(mod, mod))
-		exists, err := m.baseClient().BucketExists(ctx, me.Bucket())
+		exists, err := q.baseClient().BucketExists(ctx, me.Bucket())
 		if err != nil {
 			return err
 		}

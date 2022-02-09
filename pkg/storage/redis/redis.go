@@ -27,10 +27,10 @@ func (e *Engine) InCatalog(m interface{}) bool {
 	return catalog().Contains(m)
 }
 
-func (e *Engine) NewTSRetrieve(a storage.Adapter) storage.CacheTSRetrieveQuery {
+func (e *Engine) NewTSRetrieve(a storage.Adapter) storage.QueryCacheTSRetrieve {
 	return newTSRetrieve(conn(a))
 }
 
-func (e *Engine) NewTSCreate(a storage.Adapter) storage.CacheTSCreateQuery {
+func (e *Engine) NewTSCreate(a storage.Adapter) storage.QueryCacheTSCreate {
 	return newTSCreate(conn(a))
 }
