@@ -9,12 +9,12 @@ import (
 	"time"
 )
 
-var _ = Describe("SchedulerBase", func() {
+var _ = Describe("SchedulerSimple", func() {
 	Describe("Standard usage", func() {
 		Context("Base Scheduler", func() {
 			It("Should execute tasks at the correct interval", func() {
 				count := 0
-				s := tasks.NewBaseScheduler([]tasks.Task{
+				s := tasks.NewSimpleScheduler([]tasks.Task{
 					{
 						Interval: 250 * time.Millisecond,
 						Action: func(ctx context.Context, cfg tasks.SchedulerConfig) error {
@@ -31,7 +31,7 @@ var _ = Describe("SchedulerBase", func() {
 				Expect(count).To(Equal(2))
 			})
 			It("Should pipe to the errors channel when a task fails", func() {
-				s := tasks.NewBaseScheduler([]tasks.Task{
+				s := tasks.NewSimpleScheduler([]tasks.Task{
 					{
 						Name:     "bad task",
 						Interval: 250 * time.Millisecond,
@@ -48,7 +48,7 @@ var _ = Describe("SchedulerBase", func() {
 			It("Should break out of the scheduler when the context is cancelled", func() {
 				ctxWithCancel, cancel := context.WithCancel(ctx)
 				count := 0
-				s := tasks.NewBaseScheduler([]tasks.Task{
+				s := tasks.NewSimpleScheduler([]tasks.Task{
 					{
 						Interval: 250 * time.Millisecond,
 						Action: func(ctx context.Context, cfg tasks.SchedulerConfig) error {
@@ -65,7 +65,7 @@ var _ = Describe("SchedulerBase", func() {
 			Context("Acceleration", func() {
 				It("Should accelerate the scheduler correctly", func() {
 					count := 0
-					s := tasks.NewBaseScheduler([]tasks.Task{
+					s := tasks.NewSimpleScheduler([]tasks.Task{
 						{
 							Interval: 250 * time.Millisecond,
 							Action: func(ctx context.Context, cfg tasks.SchedulerConfig) error {
@@ -86,7 +86,7 @@ var _ = Describe("SchedulerBase", func() {
 			Context("Multiple Tasks", func() {
 				It("Should execute the tasks at the correct interval", func() {
 					countOne, countTwo := 0, 0
-					s := tasks.NewBaseScheduler([]tasks.Task{
+					s := tasks.NewSimpleScheduler([]tasks.Task{
 						{
 							Interval: 250 * time.Millisecond,
 							Action: func(ctx context.Context, cfg tasks.SchedulerConfig) error {
@@ -116,7 +116,7 @@ var _ = Describe("SchedulerBase", func() {
 		Context("Batch Scheduler", func() {
 			It("Should execute tasks at the correct interval", func() {
 				count := 0
-				s := tasks.NewBaseScheduler([]tasks.Task{
+				s := tasks.NewSimpleScheduler([]tasks.Task{
 					{
 						Interval: 250 * time.Millisecond,
 						Action: func(ctx context.Context, cfg tasks.SchedulerConfig) error {
