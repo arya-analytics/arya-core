@@ -30,10 +30,13 @@ var _ = Describe("NewTasks", func() {
 			)
 			go tasks.Start(ctx)
 			go func() {
-				log.Fatalln(<-tasks.Errors)
+				err := <-tasks.Errors
+				if err != nil {
+					log.Fatalln(err)
+				}
 			}()
-			tasks.Stop()
 			time.Sleep(sleepDuration)
+			tasks.Stop()
 			count, err := engine.NewRetrieve(adapter).Model(&storage.Node{}).Count(ctx)
 			Expect(err).To(BeNil())
 			Expect(count).To(Equal(1))
@@ -59,7 +62,10 @@ var _ = Describe("NewTasks", func() {
 				)
 				go tasks.Start(ctx)
 				go func() {
-					log.Fatalln(<-tasks.Errors)
+					err := <-tasks.Errors
+					if err != nil {
+						log.Fatalln(err)
+					}
 				}()
 				time.Sleep(sleepDuration)
 				tasks.Stop()
