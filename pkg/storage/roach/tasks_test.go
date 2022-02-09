@@ -49,10 +49,11 @@ var _ = Describe("NewTasks", func() {
 				extraNode = &storage.Node{ID: 2}
 			})
 			JustBeforeEach(func() {
-				err := engine.NewCreate(adapter).Model(extraNode).Exec(ctx)
-				Expect(err).To(BeNil())
-				count, err := bunDB.NewSelect().Table("nodes").
+				cErr := engine.NewCreate(adapter).Model(extraNode).Exec(ctx)
+				Expect(cErr).To(BeNil())
+				count, sErr := bunDB.NewSelect().Table("nodes").
 					Count(ctx)
+				Expect(sErr).To(BeNil())
 				Expect(count).To(Equal(1))
 			})
 			It("Should remove the extra nodes", func() {

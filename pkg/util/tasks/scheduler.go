@@ -165,7 +165,6 @@ func (s *SchedulerSimple) logTaskFailure(task Task, err error) {
 type SchedulerBatch struct {
 	schedulers []Scheduler
 	chanErr    chan error
-	chanStop   chan bool
 }
 
 // NewBatchScheduler creates a new SchedulerBatch from a set of Scheduler.

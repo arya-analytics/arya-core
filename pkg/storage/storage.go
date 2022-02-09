@@ -70,9 +70,8 @@ type Storage interface {
 }
 
 type storage struct {
-	cfg           Config
-	pooler        *pooler
-	taskScheduler tasks.Scheduler
+	cfg    Config
+	pooler *pooler
 }
 
 // New creates a new Storage based on the provided Config.
