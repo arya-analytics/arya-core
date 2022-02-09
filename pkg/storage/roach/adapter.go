@@ -53,3 +53,7 @@ func (a *adapter) open() {
 		log.Fatalln(err)
 	}
 }
+
+func UnsafeConn(a storage.Adapter) *bun.DB {
+	return conn(a)
+}

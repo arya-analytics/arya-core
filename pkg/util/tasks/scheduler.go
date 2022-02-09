@@ -14,6 +14,7 @@ type Scheduler struct {
 	Tasks        []Task
 	TickInterval time.Duration
 	Errors       chan error
+	stop         chan bool
 	opts         *schedulerOpts
 }
 
@@ -22,6 +23,7 @@ func NewScheduler(tasks []Task, tickInterval time.Duration, opts ...SchedulerOpt
 		Tasks:        tasks,
 		TickInterval: tickInterval,
 		Errors:       make(chan error),
+		stop:         make(chan bool),
 		opts: &schedulerOpts{
 			accel: defaultAccel,
 		},
@@ -30,18 +32,26 @@ func NewScheduler(tasks []Task, tickInterval time.Duration, opts ...SchedulerOpt
 	return s
 }
 
+func (s *Scheduler) Stop() {
+	s.stop <- true
+}
+
 func (s *Scheduler) Start(ctx context.Context) {
 	s.logStart()
 	t, t0 := time.NewTicker(s.accelerate(s.TickInterval)), time.Now()
 	defer t.Stop()
 	for {
 		select {
-		case <-ctx.Done():
-			break
 		case ct := <-t.C:
 			if err := s.exec(ctx, ct.Sub(t0)); err != nil {
 				s.Errors <- err
 			}
+		case <-s.stop:
+			s.logStop()
+			break
+		case <-ctx.Done():
+			s.logStop()
+			break
 		}
 	}
 }
@@ -52,6 +62,7 @@ func (s *Scheduler) exec(ctx context.Context, t time.Duration) error {
 	for _, task := range s.Tasks {
 		if t%s.accelerate(task.Interval) < taskExecThreshold {
 			if err := task.Action(ctx); err != nil {
+				s.logTaskFailure(task, err)
 				return err
 			}
 		}
@@ -79,6 +90,15 @@ func (s *Scheduler) logStart() {
 			"interval":   s.TickInterval,
 			"accel":      s.opts.accel,
 		}).Infof("Starting %s", s.opts.name)
+	}
+}
+
+func (s *Scheduler) logStop() {
+	if s.opts.name != "" && !s.opts.silent {
+		log.WithFields(log.Fields{
+			"name": s.opts.name,
+		}).Infof("Stopping %s", s.opts.name)
+
 	}
 }
 

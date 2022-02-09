@@ -56,7 +56,9 @@ func (d *DriverRoach) Connect() (*bun.DB, error) {
 	if err != nil {
 		return nil, err
 	}
-	return bun.NewDB(sqlDB, pgdialect.New()), nil
+	bunDB := bun.NewDB(sqlDB, pgdialect.New())
+	//bunDB.AddQueryHook(bundebug.NewQueryHook(bundebug.WithVerbose(true)))
+	return bunDB, nil
 }
 
 func (d *DriverRoach) Stop() {

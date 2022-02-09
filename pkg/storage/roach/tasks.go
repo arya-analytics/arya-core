@@ -6,6 +6,7 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/util/errutil"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/tasks"
+	log "github.com/sirupsen/logrus"
 	"github.com/uptrace/bun"
 	"time"
 )
@@ -34,10 +35,15 @@ func newTaskScheduler(db *bun.DB, opts ...tasks.SchedulerOpt) *tasks.Scheduler {
 const (
 	syncNodesInterval  = 5 * time.Second
 	gossipNodeIDColumn = "node_id"
+	nodesTable         = "nodes"
+	nodesIDColumn      = "id"
 )
 
+// syncNodesAction scans the cockroach internal node table,
+// and updates the arya nodes table to add/remove nodes that have
+// joined/exited the cluster.
 func syncNodesAction(db *bun.DB) tasks.Action {
-	sn := &syncNodes{db: db, catcher: &errutil.Catcher{}}
+	sn := &syncNodes{db: db, catcher: &errutil.Catcher{}, handler: newErrorHandler()}
 	return func(ctx context.Context) error { return sn.exec(ctx) }
 }
 
@@ -45,67 +51,86 @@ type syncNodes struct {
 	ctx     context.Context
 	db      *bun.DB
 	catcher *errutil.Catcher
+	handler storage.ErrorHandler
 }
 
 func (sn *syncNodes) exec(ctx context.Context) error {
 	sn.ctx = ctx
-	gnc, nc := sn.countNodeImbalance()
-	if gnc > nc {
-		sn.createMissingNodes()
-	}
-	return sn.catcher.Error()
+	gnPKC, nodePKC := sn.retrieveGossipNodePKChain(), sn.retrieveNodePKChain()
+	sn.runNodeAction(gnPKC, nodePKC, sn.createNodeWithPK)
+	sn.runNodeAction(nodePKC, gnPKC, sn.deleteNodeWithPK)
+	return sn.handler.Exec(sn.catcher.Error())
 }
 
-func (sn *syncNodes) countNodeImbalance() (gnc int, nc int) {
-	sn.catcher.Exec(func() (err error) {
-		if gnc, err = sn.db.NewSelect().
-			Column(gossipNodeIDColumn).
-			Count(sn.ctx); err != nil {
-			return err
+func (sn *syncNodes) runNodeAction(sourcePKC model.PKChain, destPKC model.PKChain,
+	action func(pk model.PK)) {
+	for _, sPK := range sourcePKC {
+		found := false
+		for _, dPK := range destPKC {
+			if sPK.Equals(dPK) {
+				found = true
+			}
 		}
-		if nc, err = newRetrieve(sn.db).
-			Model(&storage.Node{}).
-			Count(sn.ctx); err != nil {
-			return err
+		if !found {
+			action(sPK)
+		}
+	}
+}
+
+func (sn *syncNodes) createNodeWithPK(pk model.PK) {
+	fld := log.Fields{
+		"pk": pk.Raw(),
+	}
+	log.WithFields(fld).Info("A new node joined the cluster. Creating table entry.")
+	newNode := &storage.Node{ID: pk.Raw().(int)}
+	sn.catcher.Exec(func() error {
+		if err := newCreate(sn.db).Model(newNode).Exec(sn.ctx); err != nil {
+			sErr, ok := err.(storage.Error)
+			if !ok {
+				log.Error("Encountered un-parseable err after roach query exec.")
+			}
+			if sErr.Type == storage.ErrorTypeUniqueViolation {
+				log.WithFields(fld).Warnf("someone just created the table entry!")
+			} else {
+				return err
+			}
 		}
 		return nil
 	})
-	return gnc, nc
 }
 
-func (sn *syncNodes) createMissingNodes() {
-	gnIDs, nodesRfl := sn.retrieveGossipNodeIDs(), sn.retrieveNodesRfl()
-	for _, gnID := range gnIDs {
-		pk := model.NewPK(gnID)
-		if _, ok := nodesRfl.ValueByPK(pk); !ok {
-			sn.createNodeWithPK(pk, nodesRfl)
-		}
-	}
-
-}
-
-func (sn *syncNodes) createNodeWithPK(pk model.PK, nodesRfl *model.Reflect) {
-	nodeRfl := nodesRfl.NewStruct()
-	nodeRfl.PKField().Set(pk.Value())
+func (sn *syncNodes) deleteNodeWithPK(pk model.PK) {
+	log.WithFields(log.Fields{
+		"pk": pk.Raw(),
+	}).Info("A node left the cluster. Removing table entry.")
 	sn.catcher.Exec(func() error {
-		return newCreate(sn.db).Model(nodeRfl.Pointer()).Exec(sn.ctx)
+		_, err := sn.db.NewDelete().
+			Table(nodesTable).
+			Where("ID = ?", pk.Raw()).
+			Exec(sn.ctx)
+		return err
 	})
 }
 
-func (sn *syncNodes) retrieveGossipNodeIDs() (gnIDs []int) {
+func (sn *syncNodes) retrieveGossipNodePKChain() model.PKChain {
+	var gnIDs []int
 	sn.catcher.Exec(func() error {
 		return sn.db.NewSelect().
 			Table(crdbGossipNodes).
 			Column(gossipNodeIDColumn).
 			Scan(sn.ctx, &gnIDs)
 	})
-	return gnIDs
+	return model.NewPKChain(gnIDs)
 }
 
-func (sn *syncNodes) retrieveNodesRfl() *model.Reflect {
-	nodesRfl := model.NewReflect(&[]*storage.Node{})
+func (sn *syncNodes) retrieveNodePKChain() model.PKChain {
+	var nodeIDs []int
 	sn.catcher.Exec(func() error {
-		return newRetrieve(sn.db).Model(nodesRfl.Pointer()).Exec(sn.ctx)
+		return sn.db.
+			NewSelect().
+			Table(nodesTable).
+			Column(nodesIDColumn).
+			Scan(sn.ctx, &nodeIDs)
 	})
-	return nodesRfl
+	return model.NewPKChain(nodeIDs)
 }
