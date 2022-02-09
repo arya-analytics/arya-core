@@ -17,7 +17,7 @@ const (
 
 func newTaskScheduler(db *bun.DB, opts ...tasks.SchedulerOpt) tasks.Scheduler {
 	opts = append(opts, tasks.ScheduleWithName(tasksName))
-	return tasks.NewBaseScheduler(
+	return tasks.NewSimpleScheduler(
 		[]tasks.Task{
 			{
 				Action:   syncNodesAction(db),
