@@ -16,11 +16,12 @@ func _() {
 	_ = x[ErrorTypeNoPK-5]
 	_ = x[ErrorTypeMigration-6]
 	_ = x[ErrorTypeInvalidArgs-7]
+	_ = x[ErrorTypeConnection-8]
 }
 
-const _ErrorType_name = "ErrorTypeUnknownErrorTypeItemNotFoundErrorTypeUniqueViolationErrorTypeRelationshipViolationErrorTypeInvalidFieldErrorTypeNoPKErrorTypeMigrationErrorTypeInvalidArgs"
+const _ErrorType_name = "ErrorTypeUnknownErrorTypeItemNotFoundErrorTypeUniqueViolationErrorTypeRelationshipViolationErrorTypeInvalidFieldErrorTypeNoPKErrorTypeMigrationErrorTypeInvalidArgsErrorTypeConnection"
 
-var _ErrorType_index = [...]uint8{0, 16, 37, 61, 91, 112, 125, 143, 163}
+var _ErrorType_index = [...]uint8{0, 16, 37, 61, 91, 112, 125, 143, 163, 182}
 
 func (i ErrorType) String() string {
 	if i < 0 || i >= ErrorType(len(_ErrorType_index)-1) {

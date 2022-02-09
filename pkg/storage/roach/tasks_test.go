@@ -25,12 +25,13 @@ var _ = Describe("NewTasks", func() {
 		It("Should create the missing nodes", func() {
 			tasks := engine.NewTasks(
 				adapter,
+				tasks.ScheduleWithSilence(),
 				tasks.ScheduleWithAccel(taskAccel),
 				tasks.ScheduleWithName("roach tasks"),
 			)
 			go tasks.Start(ctx)
 			go func() {
-				err := <-tasks.Errors
+				err := <-tasks.Errors()
 				if err != nil {
 					log.Fatalln(err)
 				}
@@ -57,12 +58,13 @@ var _ = Describe("NewTasks", func() {
 			It("Should remove the extra nodes", func() {
 				tasks := engine.NewTasks(
 					adapter,
+					tasks.ScheduleWithSilence(),
 					tasks.ScheduleWithAccel(taskAccel),
 					tasks.ScheduleWithName("roach tasks"),
 				)
 				go tasks.Start(ctx)
 				go func() {
-					err := <-tasks.Errors
+					err := <-tasks.Errors()
 					if err != nil {
 						log.Fatalln(err)
 					}

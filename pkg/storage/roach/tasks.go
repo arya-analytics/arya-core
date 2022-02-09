@@ -12,20 +12,18 @@ import (
 )
 
 const (
-	taskTickInterval = 5 * time.Second
-	tasksName        = "roach_tasks"
+	tasksName = "roach_tasks"
 )
 
-func newTaskScheduler(db *bun.DB, opts ...tasks.SchedulerOpt) *tasks.Scheduler {
+func newTaskScheduler(db *bun.DB, opts ...tasks.SchedulerOpt) tasks.Scheduler {
 	opts = append(opts, tasks.ScheduleWithName(tasksName))
-	return tasks.NewScheduler(
+	return tasks.NewBaseScheduler(
 		[]tasks.Task{
 			{
 				Action:   syncNodesAction(db),
 				Interval: syncNodesInterval,
 			},
 		},
-		taskTickInterval,
 		opts...,
 	)
 }

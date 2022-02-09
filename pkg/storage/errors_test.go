@@ -7,7 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Errors", func() {
+var _ = Describe("errChan", func() {
 	Context("Error string", func() {
 		It("Should return the correct string", func() {
 			err := storage.Error{Type: storage.ErrorTypeUnknown, Message: "Unknown Error"}

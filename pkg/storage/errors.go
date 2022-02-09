@@ -34,6 +34,7 @@ const (
 	ErrorTypeNoPK
 	ErrorTypeMigration
 	ErrorTypeInvalidArgs
+	ErrorTypeConnection
 )
 
 type ErrorTypeConverter func(err error) (ErrorType, bool)

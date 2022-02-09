@@ -26,7 +26,6 @@
 package storage
 
 import (
-	"context"
 	"github.com/arya-analytics/aryacore/pkg/util/tasks"
 )
 
@@ -65,16 +64,15 @@ type Storage interface {
 	NewTSRetrieve() *QueryTSRetrieve
 	NewTSCreate() *QueryTSCreate
 	NewMigrate() *QueryMigrate
-	StartTaskRunner(ctx context.Context, opts ...tasks.SchedulerOpt)
-	StopTaskRunner()
+	NewTasks(opts ...tasks.SchedulerOpt) tasks.Scheduler
 	config() Config
 	adapter(e Engine) Adapter
 }
 
 type storage struct {
-	cfg        Config
-	pooler     *pooler
-	taskRunner *taskRunner
+	cfg           Config
+	pooler        *pooler
+	taskScheduler tasks.Scheduler
 }
 
 // New creates a new Storage based on the provided Config.
@@ -126,12 +124,10 @@ func (s *storage) NewTSCreate() *QueryTSCreate {
 	return newTSCreate(s)
 }
 
-func (s *storage) StartTaskRunner(ctx context.Context, opts ...tasks.SchedulerOpt) {
-	startTaskRunner(ctx, s, opts...)
-}
-
-func (s *storage) StopTaskRunner() {
-	stopTaskRunner(s)
+func (s *storage) NewTasks(opts ...tasks.SchedulerOpt) tasks.Scheduler {
+	return tasks.NewBatchScheduler(
+		s.cfg.EngineMD.NewTasks(s.adapter(s.cfg.EngineMD), opts...),
+	)
 }
 
 func (s *storage) adapter(e Engine) (a Adapter) {
