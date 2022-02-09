@@ -17,7 +17,7 @@ var _ = Describe("SchedulerBase", func() {
 				s := tasks.NewBaseScheduler([]tasks.Task{
 					{
 						Interval: 250 * time.Millisecond,
-						Action: func(ctx context.Context) error {
+						Action: func(ctx context.Context, cfg tasks.SchedulerConfig) error {
 							count += 1
 							return nil
 						},
@@ -34,7 +34,7 @@ var _ = Describe("SchedulerBase", func() {
 					{
 						Name:     "bad task",
 						Interval: 250 * time.Millisecond,
-						Action: func(ctx context.Context) error {
+						Action: func(ctx context.Context, cfg tasks.SchedulerConfig) error {
 							return errors.New("a terrible error")
 						},
 					},
@@ -48,7 +48,7 @@ var _ = Describe("SchedulerBase", func() {
 				s := tasks.NewBaseScheduler([]tasks.Task{
 					{
 						Interval: 250 * time.Millisecond,
-						Action: func(ctx context.Context) error {
+						Action: func(ctx context.Context, cfg tasks.SchedulerConfig) error {
 							count += 1
 							return nil
 						},
@@ -65,7 +65,7 @@ var _ = Describe("SchedulerBase", func() {
 					s := tasks.NewBaseScheduler([]tasks.Task{
 						{
 							Interval: 250 * time.Millisecond,
-							Action: func(ctx context.Context) error {
+							Action: func(ctx context.Context, cfg tasks.SchedulerConfig) error {
 								count += 1
 								return nil
 							},
@@ -86,7 +86,7 @@ var _ = Describe("SchedulerBase", func() {
 				s := tasks.NewBaseScheduler([]tasks.Task{
 					{
 						Interval: 250 * time.Millisecond,
-						Action: func(ctx context.Context) error {
+						Action: func(ctx context.Context, cfg tasks.SchedulerConfig) error {
 							count += 1
 							return nil
 						},
