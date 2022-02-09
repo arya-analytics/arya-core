@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-type Action func(ctx context.Context) error
+type Action func(ctx context.Context, cfg SchedulerConfig) error
 
 type Task struct {
 	Interval time.Duration

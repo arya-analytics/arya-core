@@ -41,8 +41,11 @@ const (
 // and updates the arya nodes table to add/remove nodes that have
 // joined/exited the cluster.
 func syncNodesAction(db *bun.DB) tasks.Action {
-	sn := &syncNodes{db: db, catcher: &errutil.Catcher{}, handler: newErrorHandler()}
-	return func(ctx context.Context) error { return sn.exec(ctx) }
+	return func(ctx context.Context, cfg tasks.SchedulerConfig) error {
+		sn := &syncNodes{db: db, catcher: &errutil.Catcher{},
+			handler: newErrorHandler(), cfg: cfg}
+		return sn.exec(ctx)
+	}
 }
 
 type syncNodes struct {
@@ -50,6 +53,7 @@ type syncNodes struct {
 	db      *bun.DB
 	catcher *errutil.Catcher
 	handler storage.ErrorHandler
+	cfg     tasks.SchedulerConfig
 }
 
 func (sn *syncNodes) exec(ctx context.Context) error {
@@ -79,7 +83,9 @@ func (sn *syncNodes) createNodeWithPK(pk model.PK) {
 	fld := log.Fields{
 		"pk": pk.Raw(),
 	}
-	log.WithFields(fld).Info("A new node joined the cluster. Creating table entry.")
+	if !sn.cfg.Silent {
+		log.WithFields(fld).Info("A new node joined the cluster. Creating table entry.")
+	}
 	newNode := &storage.Node{ID: pk.Raw().(int)}
 	sn.catcher.Exec(func() error {
 		if err := newCreate(sn.db).Model(newNode).Exec(sn.ctx); err != nil {
@@ -88,7 +94,7 @@ func (sn *syncNodes) createNodeWithPK(pk model.PK) {
 				log.Error("Encountered un-parseable err after roach query exec.")
 			}
 			if sErr.Type == storage.ErrorTypeUniqueViolation {
-				log.WithFields(fld).Warnf("someone just created the table entry!")
+				log.WithFields(fld).Warnf("someone just created the node table entry!")
 			} else {
 				return err
 			}
@@ -98,9 +104,11 @@ func (sn *syncNodes) createNodeWithPK(pk model.PK) {
 }
 
 func (sn *syncNodes) deleteNodeWithPK(pk model.PK) {
-	log.WithFields(log.Fields{
-		"pk": pk.Raw(),
-	}).Info("A node left the cluster. Removing table entry.")
+	if !sn.cfg.Silent {
+		log.WithFields(log.Fields{
+			"pk": pk.Raw(),
+		}).Info("A node left the cluster. Removing table entry.")
+	}
 	sn.catcher.Exec(func() error {
 		_, err := sn.db.NewDelete().
 			Table(nodesTable).

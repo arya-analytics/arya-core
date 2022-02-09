@@ -19,7 +19,7 @@ const defaultAccel = 1
 
 type SchedulerBase struct {
 	Tasks    []Task
-	opts     *schedulerOpts
+	cfg      *SchedulerConfig
 	chanErr  chan error
 	chanStop chan bool
 }
@@ -29,8 +29,8 @@ func NewBaseScheduler(tasks []Task, opts ...SchedulerOpt) Scheduler {
 		Tasks:    tasks,
 		chanErr:  make(chan error),
 		chanStop: make(chan bool),
-		opts: &schedulerOpts{
-			accel: defaultAccel,
+		cfg: &SchedulerConfig{
+			Accel: defaultAccel,
 		},
 	}
 	s.bindOpts(opts...)
@@ -77,7 +77,7 @@ const taskExecThreshold = 50 * time.Millisecond
 func (s *SchedulerBase) exec(ctx context.Context, t time.Duration) {
 	for _, task := range s.Tasks {
 		if t%s.accelerate(task.Interval) < taskExecThreshold {
-			if err := task.Action(ctx); err != nil {
+			if err := task.Action(ctx, *s.cfg); err != nil {
 				s.logTaskFailure(task, err)
 				s.chanErr <- err
 			}
@@ -88,39 +88,39 @@ func (s *SchedulerBase) exec(ctx context.Context, t time.Duration) {
 const minToNanoSec = 1000000000 * 60
 
 func (s *SchedulerBase) accelerate(t time.Duration) time.Duration {
-	return time.Duration((t.Minutes() / s.opts.accel) * minToNanoSec)
+	return time.Duration((t.Minutes() / s.cfg.Accel) * minToNanoSec)
 }
 
 func (s *SchedulerBase) bindOpts(opts ...SchedulerOpt) {
 	for _, opt := range opts {
-		opt(s.opts)
+		opt(s.cfg)
 	}
 }
 
 func (s *SchedulerBase) logStart() {
-	if s.opts.name != "" && !s.opts.silent {
+	if s.cfg.Name != "" && !s.cfg.Silent {
 		log.WithFields(log.Fields{
-			"name":          s.opts.name,
+			"Name":          s.cfg.Name,
 			"task_count":    len(s.Tasks),
 			"tick_interval": s.tickInterval(),
-			"accel":         s.opts.accel,
-		}).Infof("Starting %s", s.opts.name)
+			"Accel":         s.cfg.Accel,
+		}).Infof("Starting %s", s.cfg.Name)
 	}
 }
 
 func (s *SchedulerBase) logStop() {
-	if s.opts.name != "" && !s.opts.silent {
+	if s.cfg.Name != "" && !s.cfg.Silent {
 		log.WithFields(log.Fields{
-			"name": s.opts.name,
-		}).Infof("Stopping %s", s.opts.name)
+			"Name": s.cfg.Name,
+		}).Infof("Stopping %s", s.cfg.Name)
 
 	}
 }
 
 func (s *SchedulerBase) logTaskFailure(task Task, err error) {
-	if !s.opts.silent {
+	if !s.cfg.Silent {
 		log.WithFields(log.Fields{
-			"name":      s.opts.name,
+			"Name":      s.cfg.Name,
 			"task_name": task.Name,
 		}).Errorf("Task failed! %s", err)
 	}
@@ -128,24 +128,24 @@ func (s *SchedulerBase) logTaskFailure(task Task, err error) {
 
 // |||| SCHEDULER OPTIONS ||||
 
-type schedulerOpts struct {
-	name   string
-	accel  float64
-	silent bool
+type SchedulerConfig struct {
+	Name   string
+	Accel  float64
+	Silent bool
 }
 
-type SchedulerOpt func(opts *schedulerOpts)
+type SchedulerOpt func(opts *SchedulerConfig)
 
 func ScheduleWithName(name string) SchedulerOpt {
-	return func(opts *schedulerOpts) { opts.name = name }
+	return func(opts *SchedulerConfig) { opts.Name = name }
 }
 
 func ScheduleWithAccel(accel float64) SchedulerOpt {
-	return func(opts *schedulerOpts) { opts.accel = accel }
+	return func(opts *SchedulerConfig) { opts.Accel = accel }
 }
 
 func ScheduleWithSilence() SchedulerOpt {
-	return func(opts *schedulerOpts) { opts.silent = true }
+	return func(opts *SchedulerConfig) { opts.Silent = true }
 }
 
 func durationGCD(durs ...time.Duration) time.Duration {
