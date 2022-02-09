@@ -1,5 +1,7 @@
 package mock
 
+import "github.com/google/uuid"
+
 type ModelA struct {
 	ID                    int    `model:"role:pk"`
 	Name                  string `model:"role:str" randomcat:"random:hello"`
@@ -44,4 +46,12 @@ type ModelE struct {
 type ModelF struct {
 	ID                  int `model:"role:pk"`
 	PointerIncompatible *map[int]int
+}
+
+type ModelG struct {
+	ID uuid.UUID `model:"role:pk,"`
+}
+
+type ModelH struct {
+	ID string `model:"role:pk,"`
 }

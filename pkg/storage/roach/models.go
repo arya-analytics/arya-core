@@ -1,7 +1,7 @@
 package roach
 
 import (
-	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/google/uuid"
 	"github.com/uptrace/bun"
 	"time"
@@ -9,8 +9,8 @@ import (
 
 // |||| CATALOG ||||
 
-func catalog() storage.ModelCatalog {
-	return storage.ModelCatalog{
+func catalog() model.Catalog {
+	return model.Catalog{
 		&Node{},
 		&Range{},
 		&rangeReplicaToNode{},

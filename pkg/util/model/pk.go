@@ -24,8 +24,8 @@ import (
 
 // PK wraps the primary key of a model,
 // and provides a variety of utilities for manipulating it.
-// pkChain are best created in one of two ways. The first,
-// by directly instantiating by calling:
+// pkChain are best created in one of two ways. Directly
+// instantiate by calling:
 //
 // 		model.NewPK(m.PKField)
 //
@@ -57,6 +57,32 @@ func (pk PK) String() string {
 	panic(fmt.Sprintf("pk has unknown type %T, could not stringify", pk.raw))
 }
 
+// NewFromString creates a new PK with the same type as PK from the provided string.
+// Returns an error fi the PK can't be converted.
+func (pk PK) NewFromString(pkStr string) (PK, error) {
+	var (
+		newRawPk interface{}
+		err      error
+	)
+	switch t := pk.raw.(type) {
+	case uuid.UUID:
+		newRawPk, err = uuid.Parse(pkStr)
+	case int:
+		newRawPk, err = strconv.Atoi(pkStr)
+	case int32:
+		newRawPk, err = strconv.Atoi(pkStr)
+		newRawPk = int32(newRawPk.(int))
+	case int64:
+		newRawPk, err = strconv.Atoi(pkStr)
+		newRawPk = int64(newRawPk.(int))
+	case string:
+		newRawPk = pkStr
+	default:
+		panic(fmt.Sprintf("pk could not be converted from string to %t. pkStr is %s", t, pkStr))
+	}
+	return NewPK(newRawPk), err
+}
+
 // Raw returns raw value of the pk i.e. the pk provided when calling model.NewPK.
 func (pk PK) Raw() interface{} {
 	return pk.raw
@@ -71,6 +97,11 @@ func (pk PK) Equals(tPk PK) bool {
 // Value returns the reflect.Value of the PK.
 func (pk PK) Value() reflect.Value {
 	return reflect.ValueOf(pk.raw)
+}
+
+// Type returns the type of the PK
+func (pk PK) Type() reflect.Type {
+	return reflect.TypeOf(pk.raw)
 }
 
 // IsZero returns true if the pk is the zero value for its type.
@@ -100,4 +131,8 @@ func (pkc PKChain) Raw() (pks []interface{}) {
 		pks = append(pks, pk.Raw())
 	}
 	return pks
+}
+
+func isPKStructTag(t StructTag) bool {
+	return t.Match(tagCat, roleKey, pkRole)
 }

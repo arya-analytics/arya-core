@@ -4,6 +4,7 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/storage/redis/timeseries"
 	"github.com/arya-analytics/aryacore/pkg/util/errutil"
+	"github.com/arya-analytics/aryacore/pkg/util/model"
 )
 
 type queryBase struct {
@@ -32,7 +33,7 @@ func (q *queryBase) baseExchangeToSource() {
 }
 
 func (q *queryBase) baseModel(m interface{}) {
-	q.modelExchange = newWrappedModelExchange(storage.NewModelExchange(m,
+	q.modelExchange = newWrappedModelExchange(model.NewExchange(m,
 		catalog().New(m)))
 }
 

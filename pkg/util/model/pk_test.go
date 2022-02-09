@@ -1,6 +1,7 @@
 package model_test
 
 import (
+	"fmt"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -35,6 +36,33 @@ var _ = Describe("PK", func() {
 			It("Should panic with an unknown pk type", func() {
 				Expect(func() {
 					_ = model.NewPK(123.2).String()
+				}).To(Panic())
+			})
+		})
+		Describe("Setting from a string", func() {
+			DescribeTable("Normal usage",
+				func(rawSource interface{}, rawDest interface{}) {
+					sourcePK, destPK := model.NewPK(rawSource), model.NewPK(rawDest)
+					newPK, err := destPK.NewFromString(sourcePK.String())
+					Expect(err).To(BeNil())
+					Expect(newPK.Type()).To(Equal(destPK.Type()))
+					Expect(newPK.String()).To(Equal(sourcePK.String()))
+				},
+				Entry("Set UUID from string", uuid.New().String(), uuid.UUID{}),
+				Entry("Set string from UUID", uuid.New(), ""),
+				Entry("Set int from string", "123", 0),
+				Entry("Set string from int", 123, ""),
+				Entry("Set int32 from string", "123", int32(0)),
+				Entry("Set string from int32", int32(123), ""),
+				Entry("Set int64 from string", "123", int64(0)),
+				Entry("Set string from int64", int64(123), ""),
+			)
+			It("Should panic when an unknown type is provided", func() {
+				pk := model.NewPK(123.2)
+				Expect(func() {
+					newPK, _ := pk.NewFromString("123")
+					// Just here so we don't get a compiler error
+					fmt.Println(newPK)
 				}).To(Panic())
 			})
 		})

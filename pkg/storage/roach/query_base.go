@@ -12,7 +12,7 @@ const (
 )
 
 type queryBase struct {
-	exchange *storage.ModelExchange
+	exchange *model.Exchange
 	catcher  *errutil.Catcher
 	handler  storage.ErrorHandler
 }
@@ -23,7 +23,7 @@ func (q *queryBase) baseInit() {
 }
 
 func (q *queryBase) baseModel(m interface{}) *model.Reflect {
-	q.exchange = storage.NewModelExchange(m, catalog().New(m))
+	q.exchange = model.NewExchange(m, catalog().New(m))
 	return q.exchange.Dest
 }
 

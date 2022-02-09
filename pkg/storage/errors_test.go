@@ -14,7 +14,7 @@ var _ = Describe("errChan", func() {
 			Expect(err.Error()).To(Equal("storage: ErrorTypeUnknown - Unknown Error"))
 		})
 	})
-	Context("Error Handler", func() {
+	Context("Error FieldHandlers", func() {
 		Context("Converter chain handles error", func() {
 			converterNonDefault := func(err error) (storage.ErrorType, bool) {
 				return storage.ErrorTypeRelationshipViolation, true

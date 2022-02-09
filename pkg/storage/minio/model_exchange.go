@@ -19,10 +19,10 @@ type dataValue struct {
 type dataValueChain []*dataValue
 
 type modelExchange struct {
-	*storage.ModelExchange
+	*model.Exchange
 }
 
-func newWrappedModelExchange(sma *storage.ModelExchange) *modelExchange {
+func newWrappedModelExchange(sma *model.Exchange) *modelExchange {
 	return &modelExchange{sma}
 }
 

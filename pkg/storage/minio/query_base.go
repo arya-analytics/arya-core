@@ -3,6 +3,7 @@ package minio
 import (
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/util/errutil"
+	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/validate"
 	"github.com/minio/minio-go/v7"
 )
@@ -25,7 +26,7 @@ func (q *queryBase) baseClient() *minio.Client {
 }
 
 func (q *queryBase) baseModel(m interface{}) {
-	q.modelExchange = newWrappedModelExchange(storage.NewModelExchange(m,
+	q.modelExchange = newWrappedModelExchange(model.NewExchange(m,
 		catalog().New(m)))
 }
 

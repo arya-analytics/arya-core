@@ -3,7 +3,7 @@ package minio
 import (
 	"context"
 	"fmt"
-	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/minio/minio-go/v7"
 )
 
@@ -21,7 +21,7 @@ func newMigrate(client *minio.Client) *queryMigrate {
 
 func (q *queryMigrate) Exec(ctx context.Context) error {
 	for _, mod := range catalog() {
-		me := newWrappedModelExchange(storage.NewModelExchange(mod, mod))
+		me := newWrappedModelExchange(model.NewExchange(mod, mod))
 		q.catcher.Exec(func() error {
 			bucketExists, err := q.baseClient().BucketExists(ctx, me.Bucket())
 			if err != nil {
@@ -41,7 +41,7 @@ func (q *queryMigrate) Exec(ctx context.Context) error {
 
 func (q *queryMigrate) Verify(ctx context.Context) error {
 	for _, mod := range catalog() {
-		me := newWrappedModelExchange(storage.NewModelExchange(mod, mod))
+		me := newWrappedModelExchange(model.NewExchange(mod, mod))
 		exists, err := q.baseClient().BucketExists(ctx, me.Bucket())
 		if err != nil {
 			return err

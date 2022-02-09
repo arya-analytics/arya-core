@@ -2,11 +2,12 @@ package minio
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/google/uuid"
 )
 
-func catalog() storage.ModelCatalog {
-	return storage.ModelCatalog{
+func catalog() model.Catalog {
+	return model.Catalog{
 		&channelChunk{},
 	}
 }
