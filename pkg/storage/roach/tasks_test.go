@@ -11,6 +11,11 @@ import (
 	. "github.com/onsi/gomega"
 )
 
+const (
+	taskAccel     = 50
+	sleepDuration = 300 * time.Millisecond
+)
+
 var _ = Describe("Tasks", func() {
 	Describe("Node Synchronization", func() {
 		AfterEach(func() {
@@ -20,7 +25,7 @@ var _ = Describe("Tasks", func() {
 		It("Should create the missing nodes", func() {
 			tasks := engine.Tasks(
 				adapter,
-				tasks.ScheduleWithAccel(100),
+				tasks.ScheduleWithAccel(taskAccel),
 				tasks.ScheduleWithName("roach tasks"),
 			)
 			go tasks.Start(ctx)
@@ -28,7 +33,7 @@ var _ = Describe("Tasks", func() {
 				log.Fatalln(<-tasks.Errors)
 			}()
 			tasks.Stop()
-			time.Sleep(150 * time.Millisecond)
+			time.Sleep(sleepDuration)
 			count, err := engine.NewRetrieve(adapter).Model(&storage.Node{}).Count(ctx)
 			Expect(err).To(BeNil())
 			Expect(count).To(Equal(1))
@@ -49,14 +54,14 @@ var _ = Describe("Tasks", func() {
 			It("Should remove the extra nodes", func() {
 				tasks := engine.Tasks(
 					adapter,
-					tasks.ScheduleWithAccel(100),
+					tasks.ScheduleWithAccel(taskAccel),
 					tasks.ScheduleWithName("roach tasks"),
 				)
 				go tasks.Start(ctx)
 				go func() {
 					log.Fatalln(<-tasks.Errors)
 				}()
-				time.Sleep(150 * time.Millisecond)
+				time.Sleep(sleepDuration)
 				tasks.Stop()
 				count, err := bunDB.NewSelect().Table("nodes").
 					Count(ctx)
