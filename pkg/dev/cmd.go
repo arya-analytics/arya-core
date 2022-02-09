@@ -144,7 +144,7 @@ var reloaderCmd = &cli.Command{
 	Subcommands: []*cli.Command{
 		{
 			Name:  "start",
-			Usage: "Start the hot-reloader",
+			Usage: "start the hot-reloader",
 			Flags: []cli.Flag{
 				&cli.StringFlag{
 					Name:    "clusterName",

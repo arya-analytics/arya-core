@@ -12,5 +12,5 @@ var ctx = context.Background()
 
 func TestTasks(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Tasks Suite")
+	RunSpecs(t, "NewTasks Suite")
 }

@@ -25,6 +25,11 @@
 // For information on writing new Queries, see Storage.
 package storage
 
+import (
+	"context"
+	"github.com/arya-analytics/aryacore/pkg/util/tasks"
+)
+
 // |||| STORAGE ||||
 
 // Storage is the main interface for the storage package.
@@ -60,13 +65,16 @@ type Storage interface {
 	NewTSRetrieve() *QueryTSRetrieve
 	NewTSCreate() *QueryTSCreate
 	NewMigrate() *QueryMigrate
+	StartTaskRunner(ctx context.Context, opts ...tasks.SchedulerOpt)
+	StopTaskRunner()
 	config() Config
 	adapter(e Engine) Adapter
 }
 
 type storage struct {
-	cfg    Config
-	pooler *pooler
+	cfg        Config
+	pooler     *pooler
+	taskRunner *taskRunner
 }
 
 // New creates a new Storage based on the provided Config.
@@ -80,7 +88,7 @@ type storage struct {
 // Storage cannot operate without Config.EngineMD,
 // as it relies on this engine to maintain consistency with other engines.
 func New(cfg Config) Storage {
-	return &storage{cfg, newPooler()}
+	return &storage{cfg: cfg, pooler: newPooler()}
 }
 
 // NewMigrate opens a new QueryMigrate.
@@ -116,6 +124,14 @@ func (s *storage) NewTSRetrieve() *QueryTSRetrieve {
 // NewTSCreate opens a new QueryTSCreate.
 func (s *storage) NewTSCreate() *QueryTSCreate {
 	return newTSCreate(s)
+}
+
+func (s *storage) StartTaskRunner(ctx context.Context, opts ...tasks.SchedulerOpt) {
+	startTaskRunner(ctx, s, opts...)
+}
+
+func (s *storage) StopTaskRunner() {
+	stopTaskRunner(s)
 }
 
 func (s *storage) adapter(e Engine) (a Adapter) {

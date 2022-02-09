@@ -48,10 +48,12 @@ func (s *Scheduler) Start(ctx context.Context) {
 			}
 		case <-s.stop:
 			s.logStop()
-			break
+			close(s.Errors)
+			close(s.stop)
+			return
 		case <-ctx.Done():
 			s.logStop()
-			break
+			return
 		}
 	}
 }

@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"github.com/arya-analytics/aryacore/pkg/util/tasks"
 	"github.com/google/uuid"
 )
 
@@ -40,6 +41,7 @@ type EngineMD interface {
 	NewMigrate(a Adapter) QueryMDMigrate
 	// NewUpdate opens a new QueryMDUpdate.
 	NewUpdate(a Adapter) QueryMDUpdate
+	NewTasks(a Adapter, opts ...tasks.SchedulerOpt) *tasks.Scheduler
 }
 
 // || OBJECT ||
