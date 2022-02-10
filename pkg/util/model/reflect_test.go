@@ -1,8 +1,8 @@
 package model_test
 
 import (
-	"github.com/arya-analytics/aryacore/pkg/storage/mock"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
+	"github.com/arya-analytics/aryacore/pkg/util/model/mock"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -237,7 +237,130 @@ var _ = Describe("Reflect", func() {
 			})
 		})
 	})
-	Describe("errChan + edge cases", func() {
+	Context("Embedded model", func() {
+		Context("Single model", func() {
+			var (
+				m         *mock.ModelJ
+				embeddedM *mock.ModelA
+			)
+			BeforeEach(func() {
+				embeddedM = &mock.ModelA{
+					ID:   123,
+					Name: "Cool Name",
+				}
+				m = &mock.ModelJ{
+					ModelA: embeddedM,
+				}
+			})
+			It("Should pass validation without panicking", func() {
+				Expect(func() {
+					model.NewReflect(m)
+				}).ToNot(Panic())
+			})
+			It("Should return true when asked if the model is an extension", func() {
+				rfl := model.NewReflect(m)
+				Expect(rfl.IsExtension()).To(BeTrue())
+			})
+			Context("Creating a new reflect to the embedded model", func() {
+				It("Should create the reflect without panicking", func() {
+					Expect(func() {
+						model.NewReflect(m).NewToEmbedded()
+					}).ToNot(Panic())
+				})
+				It("Should be the correct type", func() {
+					rfl := model.NewReflect(m).NewToEmbedded()
+					Expect(rfl.Type()).To(Equal(reflect.TypeOf(mock.ModelA{})))
+				})
+				It("Should contain all of the correct fields", func() {
+					rfl := model.NewReflect(m).NewToEmbedded()
+					Expect(rfl.StructValue().Field(0).Interface()).To(Equal(123))
+					Expect(rfl.StructValue().Field(1).Interface()).To(Equal("Cool Name"))
+				})
+				Specify("Assigning to the embedded fields reflects the changes in the extended model", func() {
+					rfl := model.NewReflect(m).NewToEmbedded()
+					rfl.StructValue().Field(0).Set(reflect.ValueOf(124))
+					Expect(m.ID).To(Equal(124))
+				})
+			})
+		})
+		Context("Chain of models", func() {
+			var m []*mock.ModelJ
+			BeforeEach(func() {
+				m = []*mock.ModelJ{
+					{
+						&mock.ModelA{ID: 22},
+					},
+					{
+						&mock.ModelA{ID: 43},
+					},
+				}
+			})
+			It("Should pass validation without panicking", func() {
+				Expect(func() {
+					model.NewReflect(&m)
+				}).ToNot(Panic())
+			})
+			It("Should return true when asked if the model is an extension", func() {
+				Expect(model.NewReflect(&m).IsExtension()).To(BeTrue())
+			})
+			Context("Creating a new reflect to the embedded models", func() {
+				It("Should create the reflect without panicking", func() {
+					Expect(func() {
+						model.NewReflect(&m).NewToEmbedded()
+					}).ToNot(Panic())
+				})
+				Context("After asserting on panic", func() {
+					var rfl *model.Reflect
+					BeforeEach(func() {
+						rfl = model.NewReflect(&m).NewToEmbedded()
+					})
+					It("Should be the correct type", func() {
+						Expect(rfl.Type()).To(Equal(reflect.TypeOf(mock.ModelA{})))
+					})
+					It("Should contain all of the correct fields", func() {
+						Expect(rfl.ChainValueByIndex(0).StructValue().Field(0).Interface()).To(Equal(22))
+						Expect(rfl.ChainValueByIndex(1).StructValue().Field(0).Interface()).To(Equal(43))
+					})
+					Specify("Assigning to the embedded fields reflects the changes in the extended model", func() {
+						rfl.ChainValueByIndex(0).StructValue().Field(0).Set(reflect.ValueOf(23))
+						Expect(m[0].ID).To(Equal(23))
+					})
+				})
+
+			})
+		})
+		Context("errors + edge cases", func() {
+			It("Should fail validation when the embedded model is not a pointer", func() {
+				m := &mock.ModelK{
+					ModelA: mock.ModelA{ID: 123},
+				}
+				Expect(func() {
+					model.NewReflect(m)
+				}).To(Panic())
+			})
+			It("Should fail validation when the embedded model contains a field other than the embed", func() {
+				m := []*mock.ModelL{
+					{
+						ModelA:   &mock.ModelA{ID: 123},
+						BadField: 1,
+					},
+				}
+				Expect(func() {
+					model.NewReflect(&m)
+				}).To(Panic())
+			})
+			It("Should panic when creating a new to embedded with a non-extension", func() {
+				m := &mock.ModelA{
+					ID: 123,
+				}
+				rfl := model.NewReflect(m)
+				Expect(func() {
+					rfl.NewToEmbedded()
+				}).To(Panic())
+			})
+		})
+	})
+	Describe("errors + edge cases", func() {
 		It("Should panic when a non pointer is provided", func() {
 			Expect(func() {
 				model.NewReflect(mock.ModelA{ID: 22})

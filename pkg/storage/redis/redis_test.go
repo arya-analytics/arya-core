@@ -3,6 +3,7 @@ package redis_test
 import (
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/storage/mock"
+	mock2 "github.com/arya-analytics/aryacore/pkg/util/model/mock"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -53,7 +54,7 @@ var _ = Describe("Redis Engine", func() {
 			})
 			Context("Model not in catalog", func() {
 				It("Should return false", func() {
-					Expect(engine.InCatalog(&mock.ModelB{})).To(BeFalse())
+					Expect(engine.InCatalog(&mock2.ModelB{})).To(BeFalse())
 				})
 			})
 		})

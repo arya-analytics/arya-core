@@ -7,9 +7,10 @@ import (
 )
 
 const (
-	tagCat  = "model"
-	roleKey = "role"
-	pkRole  = "pk"
+	tagCat    = "model"
+	roleKey   = "role"
+	pkRole    = "pk"
+	embedRole = "embed"
 )
 
 // Reflect wraps a model object and provides utilities for accessing and manipulating
@@ -83,6 +84,12 @@ func (r *Reflect) IsChain() bool {
 // IsStruct Returns true if the model object's type is a single struct.
 func (r *Reflect) IsStruct() bool {
 	return r.RawType().Kind() == reflect.Struct
+}
+
+// IsExtension Returns true if the model object extends another model.
+func (r *Reflect) IsExtension() bool {
+	_, ok := r.StructTagChain().Retrieve(tagCat, roleKey, embedRole)
+	return ok
 }
 
 // || STRUCT METHODS ||
@@ -227,6 +234,24 @@ func (r *Reflect) ToNewPointer() *Reflect {
 	return NewReflect(p.Interface())
 }
 
+func (r *Reflect) NewToEmbedded() (newRfl *Reflect) {
+	if !r.IsExtension() {
+		panic("model is not extension - can't create a new reflect to a non-existent embed!")
+	}
+	r.ForEach(func(rfl *Reflect, i int) {
+		fld := rfl.StructFieldByRole(embedRole)
+		if i == forEachIfStructIndex {
+			newRfl = NewReflect(fld.Interface())
+		} else {
+			if newRfl == nil {
+				newRfl = NewReflect(fld.Interface()).NewChain()
+			}
+			newRfl.ChainAppend(NewReflect(fld.Interface()))
+		}
+	})
+	return newRfl
+}
+
 // || PK ||
 
 // PKField returns the primary key field of the model object (ie assigned role:pk).
@@ -304,7 +329,7 @@ func (r *Reflect) panicIfStruct() {
 func validateSliceOrStruct(v interface{}) error {
 	r := v.(*Reflect)
 	if !r.IsStruct() && !r.IsChain() {
-		return fmt.Errorf("model validation failed, is %s must be struct or slice",
+		return fmt.Errorf("model validation failed - is %s, must be struct or slice",
 			r.Type().Kind())
 	}
 	return nil
@@ -313,7 +338,7 @@ func validateSliceOrStruct(v interface{}) error {
 func validateIsPointer(v interface{}) error {
 	r := v.(*Reflect)
 	if r.PointerType().Kind() != reflect.Ptr {
-		return fmt.Errorf("model validation failed. model is not a pointer")
+		return fmt.Errorf("model validation failed - model is not a pointer")
 	}
 	return nil
 }
@@ -321,7 +346,22 @@ func validateIsPointer(v interface{}) error {
 func validateNonZero(v interface{}) error {
 	r := v.(*Reflect)
 	if r.PointerValue().IsZero() {
-		return fmt.Errorf("model validation failed. model is nil")
+		return fmt.Errorf("model validation failed - model is nil")
+	}
+	return nil
+}
+
+func validateEmbedded(v interface{}) error {
+	r := v.(*Reflect)
+	st, ok := r.StructTagChain().Retrieve(tagCat, roleKey, embedRole)
+	if !ok {
+		return nil
+	}
+	if r.Type().NumField() > 1 {
+		return fmt.Errorf("model validation failed - embedded model can't have more than one field")
+	}
+	if st.Field.Type.Kind() != reflect.Ptr {
+		return fmt.Errorf("model validation failed - embedded model must be a pointer")
 	}
 	return nil
 }
@@ -330,4 +370,5 @@ var validator = validate.New([]validate.Func{
 	validateIsPointer,
 	validateSliceOrStruct,
 	validateNonZero,
+	validateEmbedded,
 })

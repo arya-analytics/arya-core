@@ -23,12 +23,19 @@ func NewExchange(sourcePtr, destPtr interface{}, handlers ...FieldHandler) *Exch
 	return &Exchange{sRfl, dRfl, handlers}
 }
 
+func (m *Exchange) handleExtend(rfl *Reflect) *Reflect {
+	if rfl.IsExtension() {
+		return rfl.NewToEmbedded()
+	}
+	return rfl
+}
+
 func (m *Exchange) ToSource() {
-	m.exchange(m.Dest, m.Source)
+	m.exchange(m.handleExtend(m.Dest), m.handleExtend(m.Source))
 }
 
 func (m *Exchange) ToDest() {
-	m.exchange(m.Source, m.Dest)
+	m.exchange(m.handleExtend(m.Source), m.handleExtend(m.Dest))
 }
 
 func (m *Exchange) exchange(fromRfl, toRfl *Reflect) {
