@@ -234,6 +234,18 @@ func (r *Reflect) ToNewPointer() *Reflect {
 	return NewReflect(p.Interface())
 }
 
+// NewToEmbedded takes the embedded model inside the Reflect model object, creates new Reflect to it,
+// and returns that Reflect.
+//
+// For example:
+//
+//		rfl := model.NewReflect(&ExtendedModel{
+//				Embedded: &EmbeddedModel {
+//					ID: 124
+//				}
+//		}).NewToEmbedded()
+//
+// rfl would contain a reflected &EmbeddedModel
 func (r *Reflect) NewToEmbedded() (newRfl *Reflect) {
 	if !r.IsExtension() {
 		panic("model is not extension - can't create a new reflect to a non-existent embed!")
