@@ -66,6 +66,16 @@ var _ = Describe("QueryRetrieve", func() {
 					channelConfigTwo.Name}).To(ContainElement(models[0].Name))
 			})
 		})
+		Describe("Retrieve a related item", func() {
+			It("Should retrieve all of the correct items", func() {
+				resChannelConfig := &storage.ChannelConfig{}
+				err := engine.NewRetrieve(adapter).Model(resChannelConfig).Relation("Node").
+					WherePK(channelConfig.ID).Exec(ctx)
+				Expect(err).To(BeNil())
+				Expect(resChannelConfig.Node.ID).To(Equal(1))
+
+			})
+		})
 	})
 	Describe("Edge cases + errors", func() {
 		Context("Retrieving an item that doesn't exist", func() {

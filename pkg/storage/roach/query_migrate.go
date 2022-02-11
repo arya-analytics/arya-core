@@ -20,7 +20,7 @@ func newMigrate(db *bun.DB, driver Driver) *queryMigrate {
 		migrations: bunMigrate.NewMigrations(),
 		driver:     driver,
 	}
-	q.baseInit()
+	q.baseInit(db)
 	bindMigrations(q.migrations, q.driver)
 	return q
 }

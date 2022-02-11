@@ -13,12 +13,13 @@ type queryRetrieve struct {
 
 func newRetrieve(db *bun.DB) *queryRetrieve {
 	q := &queryRetrieve{q: db.NewSelect()}
-	q.baseInit()
+	q.baseInit(db)
 	return q
 }
 
 func (q *queryRetrieve) Model(m interface{}) storage.QueryMDRetrieve {
-	q.q = q.q.Model(q.baseModel(m).Pointer())
+	q.baseModel(m)
+	q.q = q.q.Model(q.Dest().Pointer())
 	return q
 }
 
@@ -28,11 +29,16 @@ func (q *queryRetrieve) Where(query string, args ...interface{}) storage.QueryMD
 }
 
 func (q *queryRetrieve) WherePK(pk interface{}) storage.QueryMDRetrieve {
-	return q.Where(pkEqualsSQL, pk)
+	return q.Where(q.baseSQL().pk(), pk)
 }
 
 func (q *queryRetrieve) WherePKs(pks interface{}) storage.QueryMDRetrieve {
-	return q.Where(pkChainInSQL, bun.In(pks))
+	return q.Where(q.baseSQL().pks(), bun.In(pks))
+}
+
+func (q *queryRetrieve) Relation(rel string) storage.QueryMDRetrieve {
+	q.q = q.q.Relation(rel)
+	return q
 }
 
 func (q *queryRetrieve) Count(ctx context.Context) (count int, err error) {
