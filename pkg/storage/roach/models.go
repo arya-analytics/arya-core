@@ -14,10 +14,12 @@ func catalog() model.Catalog {
 		&Node{},
 		&Range{},
 		&RangeReplica{},
+		&RangeLease{},
 		&ChannelConfig{},
 		&ChannelChunk{},
 		&GossipNode{},
 		&GossipLiveness{},
+		&ChannelChunkReplica{},
 	}
 }
 
@@ -37,7 +39,7 @@ type Node struct {
 
 type Range struct {
 	ID           uuid.UUID `bun:"type:UUID,pk" model:"role:pk,"`
-	RangeLeaseID uuid.UUID `bun:"type:UUID"`
+	RangeLeaseID uuid.UUID `bun:"type:UUID,nullzero"`
 }
 
 type RangeLease struct {

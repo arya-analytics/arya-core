@@ -12,7 +12,7 @@ var _ = Describe("QueryRetrieve", func() {
 	var node *storage.Node
 	BeforeEach(func() {
 		node = &storage.Node{ID: 1}
-		channelConfig = &storage.ChannelConfig{NodeID: node.ID}
+		channelConfig = &storage.ChannelConfig{NodeID: node.ID, ID: uuid.New()}
 	})
 	JustBeforeEach(func() {
 		nErr := engine.NewCreate(adapter).Model(node).Exec(ctx)
@@ -73,6 +73,50 @@ var _ = Describe("QueryRetrieve", func() {
 					WherePK(channelConfig.ID).Exec(ctx)
 				Expect(err).To(BeNil())
 				Expect(resChannelConfig.Node.ID).To(Equal(1))
+			})
+		})
+		FDescribe("Retrieve through multiple levels of relations", func() {
+			var (
+				//rangeLease          *storage.RangeLease
+				rangeX              *storage.Range
+				channelChunkReplica *storage.ChannelChunkReplica
+				rangeReplica        *storage.RangeReplica
+				channelChunk        *storage.ChannelChunk
+			)
+			BeforeEach(func() {
+				rangeX = &storage.Range{
+					ID: uuid.New(),
+				}
+				channelChunk = &storage.ChannelChunk{
+					ID:              uuid.New(),
+					RangeID:         rangeX.ID,
+					ChannelConfigID: channelConfig.ID,
+				}
+				rangeReplica = &storage.RangeReplica{
+					ID:      uuid.New(),
+					RangeID: rangeX.ID,
+					NodeID:  node.ID,
+				}
+				channelChunkReplica = &storage.ChannelChunkReplica{
+					RangeReplicaID: rangeReplica.ID,
+					ChannelChunkID: channelChunk.ID,
+				}
+			})
+			JustBeforeEach(func() {
+				rErr := engine.NewCreate(adapter).Model(rangeX).Exec(ctx)
+				Expect(rErr).To(BeNil())
+				ccErr := engine.NewCreate(adapter).Model(channelChunk).Exec(ctx)
+				Expect(ccErr).To(BeNil())
+				rrErr := engine.NewCreate(adapter).Model(rangeReplica).Exec(ctx)
+				Expect(rrErr).To(BeNil())
+				ccRErr := engine.NewCreate(adapter).Model(channelChunkReplica).Exec(ctx)
+				Expect(ccRErr).To(BeNil())
+			})
+			It("Should retrieve all of the correct items", func() {
+				channelChunkReplicaRes := &storage.ChannelChunkReplica{}
+				err := engine.NewRetrieve(adapter).Model(channelChunkReplicaRes).WherePK(channelChunkReplica.ID).Relation("RangeReplica.Node").Exec(ctx)
+				Expect(err).To(BeNil())
+				Expect(channelChunkReplicaRes.RangeReplica.Node.ID).To(Equal(node.ID))
 
 			})
 		})
