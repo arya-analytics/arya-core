@@ -168,37 +168,6 @@ var _ = Describe("Model Exchange", func() {
 					})
 				})
 			})
-			Context("Embedded model", func() {
-				var source *mock.ModelJ
-				var dest *mock.ModelA
-				var refObj *mock.RefObj
-				BeforeEach(func() {
-					refObj = &mock.RefObj{
-						ID: 220,
-					}
-					source = &mock.ModelJ{
-						ModelA: &mock.ModelA{ID: 435,
-							Name:   "Cool Name",
-							RefObj: refObj,
-						},
-					}
-					dest = &mock.ModelA{}
-				})
-				It("Should exchange to source", func() {
-					me := model.NewExchange(dest, source)
-					me.ToSource()
-					Expect(source.ID).To(Equal(435))
-					Expect(source.ID).To(Equal(dest.ID))
-					Expect(source.Name).To(Equal(dest.Name))
-				})
-				It("Should exchange to dest", func() {
-					me := model.NewExchange(source, dest)
-					me.ToDest()
-					Expect(source.ID).To(Equal(435))
-					Expect(source.ID).To(Equal(dest.ID))
-					Expect(source.Name).To(Equal(dest.Name))
-				})
-			})
 		})
 		Context("Chain Model Adaptation", func() {
 			Context("Models of different types", func() {

@@ -8,11 +8,11 @@ import (
 
 func catalog() model.Catalog {
 	return model.Catalog{
-		&channelChunk{},
+		&channelChunkReplica{},
 	}
 }
 
-type channelChunk struct {
-	ID   uuid.UUID `model:"role:pk"`
-	Data storage.Object
+type channelChunkReplica struct {
+	ID    uuid.UUID `model:"role:pk"`
+	Telem storage.Object
 }

@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	dataKey = "Data"
+	dataKey = "Telem"
 )
 
 type dataValue struct {

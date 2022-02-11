@@ -134,5 +134,5 @@ func (pkc PKChain) Raw() (pks []interface{}) {
 }
 
 func isPKStructTag(t StructTag) bool {
-	return t.Match(tagCat, roleKey, pkRole)
+	return t.Match(TagCat, RoleKey, PKRole)
 }

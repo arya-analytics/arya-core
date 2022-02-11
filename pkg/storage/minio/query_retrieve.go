@@ -36,7 +36,7 @@ func (q *queryRetrieve) WherePK(pk interface{}) storage.QueryObjectRetrieve {
 }
 
 func (q *queryRetrieve) Exec(ctx context.Context) error {
-	q.whereBaseValidateReq()
+	q.baseValidateReq()
 	for _, pk := range q.pkChain {
 		var resObj *minio.Object
 		q.baseExec(func() (err error) {

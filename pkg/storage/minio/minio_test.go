@@ -49,7 +49,7 @@ var _ = Describe("Minio Engine", func() {
 		Describe("Contains", func() {
 			Context("Model in catalog", func() {
 				It("Should return true", func() {
-					Expect(engine.InCatalog(&storage.ChannelChunk{})).To(BeTrue())
+					Expect(engine.InCatalog(&storage.ChannelChunkReplica{})).To(BeTrue())
 				})
 			})
 			Context("Model not in catalog", func() {

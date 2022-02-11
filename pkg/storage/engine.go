@@ -14,7 +14,7 @@ type Adapter interface {
 
 // Engine is a set of general interfaces that each engine variant must meet.
 //
-// Assigning Data Responsibility
+// Assigning Telem Responsibility
 //
 // Each engine variant is responsible for storing specific data types.
 // These responsibilities are assigned in the model struct using the storage.re key.
@@ -41,6 +41,7 @@ type EngineMD interface {
 	NewMigrate(a Adapter) QueryMDMigrate
 	// NewUpdate opens a new QueryMDUpdate.
 	NewUpdate(a Adapter) QueryMDUpdate
+
 	NewTasks(a Adapter, opts ...tasks.SchedulerOpt) tasks.Scheduler
 }
 
@@ -90,6 +91,7 @@ type QueryMDRetrieve interface {
 	Where(query string, args ...interface{}) QueryMDRetrieve
 	WherePK(pk interface{}) QueryMDRetrieve
 	WherePKs(pks interface{}) QueryMDRetrieve
+	Relation(rel string) QueryMDRetrieve
 	Count(ctx context.Context) (int, error)
 }
 

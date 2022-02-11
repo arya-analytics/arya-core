@@ -95,6 +95,10 @@ func (s StructTagChain) RetrieveByFieldName(fldName string) (StructTag, bool) {
 	return StructTag{}, false
 }
 
+func (s StructTagChain) RetrieveByFieldRole(role string) (StructTag, bool) {
+	return s.Retrieve(TagCat, RoleKey, role)
+}
+
 const (
 	kvPairSeparator  = ":"
 	kvChainSeparator = ","

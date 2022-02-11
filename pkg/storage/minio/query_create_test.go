@@ -9,11 +9,11 @@ import (
 )
 
 var _ = Describe("QueryCreate", func() {
-	var channelChunk *storage.ChannelChunk
+	var channelChunk *storage.ChannelChunkReplica
 	BeforeEach(func() {
-		channelChunk = &storage.ChannelChunk{
-			ID:   uuid.New(),
-			Data: mock.NewObject([]byte("randomstring")),
+		channelChunk = &storage.ChannelChunkReplica{
+			ID:    uuid.New(),
+			Telem: mock.NewObject([]byte("randomstring")),
 		}
 	})
 	JustBeforeEach(func() {
@@ -26,13 +26,13 @@ var _ = Describe("QueryCreate", func() {
 		Expect(err).To(BeNil())
 	})
 	It("Should be created correctly", func() {
-		mockModelTwo := &storage.ChannelChunk{}
+		mockModelTwo := &storage.ChannelChunkReplica{}
 		err := engine.NewRetrieve(adapter).Model(mockModelTwo).WherePK(channelChunk.ID).
 			Exec(ctx)
 		Expect(err).To(BeNil())
-		Expect(mockModelTwo.Data).ToNot(BeNil())
-		b := make([]byte, channelChunk.Data.Size())
-		_, err = mockModelTwo.Data.Read(b)
+		Expect(mockModelTwo.Telem).ToNot(BeNil())
+		b := make([]byte, channelChunk.Telem.Size())
+		_, err = mockModelTwo.Telem.Read(b)
 		Expect(err.Error()).To(Equal("EOF"))
 		Expect(b).To(Equal([]byte("randomstring")))
 	})

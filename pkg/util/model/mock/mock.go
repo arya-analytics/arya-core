@@ -55,16 +55,3 @@ type ModelG struct {
 type ModelH struct {
 	ID string `model:"role:pk,"`
 }
-
-type ModelJ struct {
-	*ModelA `model:"role:embed,"`
-}
-
-type ModelK struct {
-	ModelA `model:"role:embed"`
-}
-
-type ModelL struct {
-	*ModelA  `model:"role:embed"`
-	BadField int
-}

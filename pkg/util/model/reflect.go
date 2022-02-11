@@ -7,10 +7,9 @@ import (
 )
 
 const (
-	tagCat    = "model"
-	roleKey   = "role"
-	pkRole    = "pk"
-	embedRole = "embed"
+	TagCat  = "model"
+	RoleKey = "role"
+	PKRole  = "pk"
 )
 
 // Reflect wraps a model object and provides utilities for accessing and manipulating
@@ -86,12 +85,6 @@ func (r *Reflect) IsStruct() bool {
 	return r.RawType().Kind() == reflect.Struct
 }
 
-// IsExtension Returns true if the model object extends another model.
-func (r *Reflect) IsExtension() bool {
-	_, ok := r.StructTagChain().Retrieve(tagCat, roleKey, embedRole)
-	return ok
-}
-
 // || STRUCT METHODS ||
 
 // StructValue returns the value of the model object.
@@ -108,7 +101,7 @@ func (r *Reflect) StructValue() reflect.Value {
 // StructFieldByRole retrieves the field from the model object by its role.
 // Panics if the field can't be found.
 func (r *Reflect) StructFieldByRole(role string) reflect.Value {
-	tag, ok := r.StructTagChain().Retrieve(tagCat, roleKey, role)
+	tag, ok := r.StructTagChain().Retrieve(TagCat, RoleKey, role)
 	if !ok {
 		panic(fmt.Sprintf("could not find field with role %s", role))
 	}
@@ -160,6 +153,33 @@ func (r *Reflect) ChainValueByIndexOrNew(i int) *Reflect {
 		rfl := r.NewStruct()
 		r.ChainAppend(rfl)
 		return rfl
+	}
+}
+
+func (r *Reflect) Fields(i int) *Fields {
+	var rawFlds []reflect.Value
+	r.ForEach(func(rfl *Reflect, i int) {
+		rawFlds = append(rawFlds, rfl.StructValue().Field(i))
+	})
+	t := r.Type().Field(i)
+	return &Fields{
+		t:      t.Type,
+		values: rawFlds,
+	}
+}
+
+func (r *Reflect) FieldsByName(name string) *Fields {
+	var rawFlds []reflect.Value
+	r.ForEach(func(rfl *Reflect, i int) {
+		rawFlds = append(rawFlds, rfl.StructValue().FieldByName(name))
+	})
+	t, ok := r.Type().FieldByName(name)
+	if !ok {
+		panic("field does not exist!")
+	}
+	return &Fields{
+		t:      t.Type,
+		values: rawFlds,
 	}
 }
 
@@ -234,42 +254,12 @@ func (r *Reflect) ToNewPointer() *Reflect {
 	return NewReflect(p.Interface())
 }
 
-// NewToEmbedded takes the embedded model inside the Reflect model object, creates new Reflect to it,
-// and returns that Reflect.
-//
-// For example:
-//
-//		rfl := model.NewReflect(&ExtendedModel{
-//				Embedded: &EmbeddedModel {
-//					ID: 124
-//				}
-//		}).NewToEmbedded()
-//
-// rfl would contain a reflected &EmbeddedModel
-func (r *Reflect) NewToEmbedded() (newRfl *Reflect) {
-	if !r.IsExtension() {
-		panic("model is not extension - can't create a new reflect to a non-existent embed!")
-	}
-	r.ForEach(func(rfl *Reflect, i int) {
-		fld := rfl.StructFieldByRole(embedRole)
-		if i == forEachIfStructIndex {
-			newRfl = NewReflect(fld.Interface())
-		} else {
-			if newRfl == nil {
-				newRfl = NewReflect(fld.Interface()).NewChain()
-			}
-			newRfl.ChainAppend(NewReflect(fld.Interface()))
-		}
-	})
-	return newRfl
-}
-
 // || PK ||
 
 // PKField returns the primary key field of the model object (ie assigned role:pk).
 // Panics if the field does not exist, or if the Reflect model object is a chain.
 func (r *Reflect) PKField() reflect.Value {
-	return r.StructFieldByRole(pkRole)
+	return r.StructFieldByRole(PKRole)
 }
 
 // PK returns new PK representing the primary key of the model.
@@ -363,24 +353,8 @@ func validateNonZero(v interface{}) error {
 	return nil
 }
 
-func validateEmbedded(v interface{}) error {
-	r := v.(*Reflect)
-	st, ok := r.StructTagChain().Retrieve(tagCat, roleKey, embedRole)
-	if !ok {
-		return nil
-	}
-	if r.Type().NumField() > 1 {
-		return fmt.Errorf("model validation failed - embedded model can't have more than one field")
-	}
-	if st.Field.Type.Kind() != reflect.Ptr {
-		return fmt.Errorf("model validation failed - embedded model must be a pointer")
-	}
-	return nil
-}
-
 var validator = validate.New([]validate.Func{
 	validateIsPointer,
 	validateSliceOrStruct,
 	validateNonZero,
-	validateEmbedded,
 })
