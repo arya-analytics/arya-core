@@ -17,8 +17,6 @@ func catalog() model.Catalog {
 		&RangeLease{},
 		&ChannelConfig{},
 		&ChannelChunk{},
-		&GossipNode{},
-		&GossipLiveness{},
 		&ChannelChunkReplica{},
 	}
 }
@@ -29,10 +27,18 @@ func catalog() model.Catalog {
 
 type Node struct {
 	// Select key MUST match nodesGossip table in migrations file.
-	bun.BaseModel `bun:"select:nodes_gossip,table:nodes"`
-	ID            int `bun:",pk" model:"role:pk,"`
-	GossipNode
-	GossipLiveness
+	bun.BaseModel   `bun:"select:nodes_gossip,table:nodes"`
+	ID              int       `bun:",pk" model:"role:pk,"`
+	Address         string    `bun:"type:text,scanonly"`
+	IsHost          bool      `bun:"type:boolean,scanonly"`
+	StartedAt       time.Time `bun:"type:timestamp,scanonly"`
+	IsLive          bool      `bun:"type:boolean,scanonly"`
+	Epoch           int       `bun:"type:bigint,scanonly"`
+	Expiration      string    `bun:"type:text,scanonly"`
+	Draining        bool      `bun:"type:boolean,scanonly"`
+	Decommissioning bool      `bun:"type:boolean,scanonly"`
+	Membership      string    `bun:"type:text,scanonly"`
+	UpdatedAt       time.Time `bun:"type:timestamp,scanonly"`
 }
 
 // |||| RANGE ||||
@@ -80,24 +86,4 @@ type ChannelChunkReplica struct {
 	ChannelChunkID uuid.UUID     `bun:"type:UUID,"`
 	RangeReplica   *RangeReplica `bun:"rel:belongs-to,join:range_replica_id=id,"`
 	RangeReplicaID uuid.UUID     `bun:"type:UUID,"`
-}
-
-// || ROACH INTERNAL MODELS ||
-
-// GossipNode lives in crdb's internal schema and tracks the nodes in the roach cluster.
-type GossipNode struct {
-	Address   string    `bun:"type:text,scanonly"`
-	StartedAt time.Time `bun:"type:timestamp,scanonly"`
-	IsLive    bool      `bun:"type:boolean,scanonly"`
-}
-
-// GossipLiveness lives in crdb's internal schema and tracks the health of nodes in
-// the roach cluster.
-type GossipLiveness struct {
-	Epoch           int       `bun:"type:bigint,scanonly"`
-	Expiration      string    `bun:"type:text,scanonly"`
-	Draining        bool      `bun:"type:boolean,scanonly"`
-	Decommissioning bool      `bun:"type:boolean,scanonly"`
-	Membership      string    `bun:"type:text,scanonly"`
-	UpdatedAt       time.Time `bun:"type:timestamp,scanonly"`
 }

@@ -36,8 +36,13 @@ func (q *queryRetrieve) WherePKs(pks interface{}) storage.QueryMDRetrieve {
 	return q.Where(q.baseSQL().pks(), bun.In(pks))
 }
 
-func (q *queryRetrieve) Relation(rel string) storage.QueryMDRetrieve {
-	q.q = q.q.Relation(rel)
+func (q *queryRetrieve) Relation(rel string, fields ...string) storage.QueryMDRetrieve {
+	q.q = q.q.Relation(rel, func(q *bun.SelectQuery) *bun.SelectQuery { return q.Column(fields...) })
+	return q
+}
+
+func (q *queryRetrieve) Field(fields ...string) storage.QueryMDRetrieve {
+	q.q = q.q.Column(fields...)
 	return q
 }
 
@@ -50,7 +55,10 @@ func (q *queryRetrieve) Count(ctx context.Context) (count int, err error) {
 }
 
 func (q *queryRetrieve) Exec(ctx context.Context) error {
-	q.baseExec(func() error { return q.q.Scan(ctx) })
+	q.baseExec(func() error {
+		err := q.q.Scan(ctx)
+		return err
+	})
 	q.baseExchangeToSource()
 	return q.baseErr()
 }

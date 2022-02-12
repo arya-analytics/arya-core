@@ -49,18 +49,18 @@ func (m *modelExchange) BindDataVals(dvc dataValueChain) {
 		if !ok {
 			if m.Dest.IsChain() {
 				newRfl := m.Dest.NewStruct()
-				newRfl.StructValue().FieldByName(dataKey).Set(reflect.ValueOf(dv.Data))
-				newRfl.StructValue().FieldByName("ID").Set(dv.PK.Value())
+				newRfl.StructFieldByName(dataKey).Set(reflect.ValueOf(dv.Data))
+				newRfl.StructFieldByName("ID").Set(dv.PK.Value())
 				m.Dest.ChainAppend(newRfl)
 			} else {
 				if !m.Dest.PKField().IsZero() {
 					panic("object store meta data mismatch")
 				}
-				m.Dest.StructValue().FieldByName("ID").Set(dv.PK.Value())
-				m.Dest.StructValue().FieldByName(dataKey).Set(reflect.ValueOf(dv.Data))
+				m.Dest.StructFieldByName("ID").Set(dv.PK.Value())
+				m.Dest.StructFieldByName(dataKey).Set(reflect.ValueOf(dv.Data))
 			}
 		} else {
-			rfl.StructValue().FieldByName(dataKey).Set(reflect.ValueOf(dv.Data))
+			rfl.StructFieldByName(dataKey).Set(reflect.ValueOf(dv.Data))
 		}
 	}
 }

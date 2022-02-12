@@ -15,13 +15,14 @@ const (
 	crdbSchema         = "crdb_internal"
 	crdbGossipNodes    = crdbSchema + ".gossip_nodes"
 	crdbGossipLiveness = crdbSchema + ".gossip_liveness"
+	crdNodeRuntimeInfo = crdbSchema + ".node_runtime_info"
 )
 
 var (
 	/* If we're using DriverPG, we expect two CRDB internal tables that provide
 	information on Node identity and status. This logic creates a view so that this
 	info can be accessed by the ORM. */
-	nodesViewSQL = fmt.Sprintf(`CREATE VIEW %s AS SELECT n.id,
+	nodesViewSQL = fmt.Sprintf(`CREATE VIEW %s AS SELECT DISTINCT n.id,
 									gn.address, 
 									gn.is_live, 
 									gn.started_at, 
@@ -29,13 +30,17 @@ var (
 									gv.draining, 
 									gv.decommissioning, 
 									gv.membership, 
-									gv.updated_at 
+									gv.updated_at,
+									n.id = nri.node_id is_host
 									FROM nodes n 
-									JOIN %s gn ON n.id =
-									gn.node_id LEFT JOIN %s gv ON gv.node_id=n.id`,
+									JOIN %s gn ON n.id = gn.node_id 
+									LEFT JOIN %s gv ON gv.node_id=n.id
+									LEFT JOIN %s nri ON nri.node_id=n.id`,
 		nodesGossip,
 		crdbGossipNodes,
-		crdbGossipLiveness)
+		crdbGossipLiveness,
+		crdNodeRuntimeInfo,
+	)
 )
 
 // |||| CATCHER ||||
@@ -85,7 +90,8 @@ func migrateUpFunc(d Driver) migrate.MigrationFunc {
 			Exec,
 		)
 		c.Exec(func() error {
-			_, err := db.Exec(`ALTER TABLE "ranges" ADD CONSTRAINT fk_range_lease_id_ref_range_leases FOREIGN KEY ("range_lease_id") REFERENCES "range_leases" ("id") ON DELETE CASCADE`)
+			_, err := db.Exec(`ALTER TABLE "ranges" ADD CONSTRAINT fk_range_lease_id_ref_range_leases 
+									FOREIGN KEY ("range_lease_id") REFERENCES "range_leases" ("id") ON DELETE CASCADE`)
 			return err
 		})
 

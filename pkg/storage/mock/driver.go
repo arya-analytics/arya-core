@@ -2,7 +2,6 @@ package mock
 
 import (
 	"database/sql"
-	"errors"
 	"github.com/arya-analytics/aryacore/pkg/storage/redis/timeseries"
 	"github.com/cockroachdb/cockroach-go/v2/testserver"
 	"github.com/go-redis/redis/v8"
@@ -43,8 +42,13 @@ func (d *DriverRoach) Connect() (*bun.DB, error) {
 	if d.WithHTTP {
 		d.HTTPPort = availHTTPPort()
 	}
-	ts, err := testserver.NewTestServer(testserver.HTTPPortOpt(d.HTTPPort),
-		testserver.SecureOpt(), testserver.RootPasswordOpt("testpass"))
+	ts, err := testserver.NewTestServer(
+		testserver.HTTPPortOpt(d.HTTPPort),
+		testserver.SecureOpt(),
+		testserver.RootPasswordOpt("testpass"),
+	)
+
+	ts.WaitForInit()
 	d.servers = append(d.servers, ts)
 	if err != nil {
 		return nil, err
@@ -57,7 +61,6 @@ func (d *DriverRoach) Connect() (*bun.DB, error) {
 		return nil, err
 	}
 	bunDB := bun.NewDB(sqlDB, pgdialect.New())
-	//bunDB.AddQueryHook(bundebug.NewQueryHook(bundebug.WithVerbose(true)))
 	return bunDB, nil
 }
 
@@ -76,11 +79,11 @@ func (d *DriverRoach) bindConnProperties(url *url.URL) error {
 	d.Port = port
 	uname := url.User.Username()
 	d.Username = uname
-	pwd, ok := url.User.Password()
-	if !ok {
-		return errors.New("could not bind password")
-	}
-	d.Password = pwd
+	//pwd, ok := url.User.Password()
+	//if !ok {
+	//	return errors.New("could not bind password")
+	//}
+	//d.Password = pwd
 	return nil
 }
 

@@ -28,7 +28,7 @@ func (f *Fields) Raw() (rawFlds []interface{}) {
 func (f *Fields) ToReflect() *Reflect {
 	rfl := NewReflect(reflect.New(f.t.Elem()).Interface()).NewChain()
 	for _, v := range f.values {
-		vRfl := NewReflect(v.Interface())
+		vRfl := newRflNilOrNonPointer(v.Interface())
 		if vRfl.Type() != rfl.Type() {
 			panic("incorrect type")
 		}

@@ -12,7 +12,7 @@ var _ = Describe("QueryRetrieve", func() {
 	var node *storage.Node
 	BeforeEach(func() {
 		node = &storage.Node{ID: 1}
-		channelConfig = &storage.ChannelConfig{NodeID: node.ID, ID: uuid.New()}
+		channelConfig = &storage.ChannelConfig{NodeID: node.ID, ID: uuid.New(), Name: "Channel Config"}
 	})
 	JustBeforeEach(func() {
 		nErr := engine.NewCreate(adapter).Model(node).Exec(ctx)
@@ -40,6 +40,14 @@ var _ = Describe("QueryRetrieve", func() {
 					ID).Exec(ctx)
 				Expect(err).To(BeNil())
 				Expect(resChannelConfig).To(Equal(channelConfig))
+			})
+			It("Retrieve a single field", func() {
+				resChannelConfig := &storage.ChannelConfig{}
+				err := engine.NewRetrieve(adapter).Model(resChannelConfig).Field("name").WherePK(channelConfig.
+					ID).Exec(ctx)
+				Expect(err).To(BeNil())
+				Expect(resChannelConfig.ID).To(Equal(uuid.UUID{}))
+				Expect(resChannelConfig.Name).To(Equal("Channel Config"))
 			})
 		})
 		Describe("Retrieve multiple items", func() {
@@ -75,7 +83,7 @@ var _ = Describe("QueryRetrieve", func() {
 				Expect(resChannelConfig.Node.ID).To(Equal(1))
 			})
 		})
-		FDescribe("Retrieve through multiple levels of relations", func() {
+		Describe("Retrieve through multiple levels of relations", func() {
 			var (
 				//rangeLease          *storage.RangeLease
 				rangeX              *storage.Range

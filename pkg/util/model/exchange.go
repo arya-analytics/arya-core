@@ -46,7 +46,7 @@ func (m *Exchange) exchange(fromRfl, toRfl *Reflect) {
 func (m *Exchange) bindToSource(sourceRfl, destRfl *Reflect) {
 	for i := 0; i < destRfl.StructValue().NumField(); i++ {
 		fldName, destFld := destRfl.Type().Field(i).Name, destRfl.StructValue().Field(i)
-		sourceFld := sourceRfl.StructValue().FieldByName(fldName)
+		sourceFld := sourceRfl.StructFieldByName(fldName)
 		if validSourceField(sourceFld) && validDestField(destFld) {
 			if destFld.Type() != sourceFld.Type() {
 				if sourceFld.Type().Kind() == destFld.Type().Kind() {

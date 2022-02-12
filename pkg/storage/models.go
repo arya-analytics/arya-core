@@ -10,6 +10,7 @@ type Node struct {
 	Address         string
 	StartedAt       time.Time
 	IsLive          bool
+	IsHost          bool
 	Epoch           int
 	Expiration      string
 	Draining        bool

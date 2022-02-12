@@ -47,8 +47,13 @@ func (q *QueryRetrieve) WherePKs(pks interface{}) *QueryRetrieve {
 	return q
 }
 
-func (q *QueryRetrieve) Relation(rel string) *QueryRetrieve {
-	q.setMDQuery(q.mdQuery().Relation(rel))
+func (q *QueryRetrieve) Relation(rel string, fields ...string) *QueryRetrieve {
+	q.setMDQuery(q.mdQuery().Relation(rel, fields...))
+	return q
+}
+
+func (q *QueryRetrieve) Field(fields ...string) *QueryRetrieve {
+	q.setMDQuery(q.mdQuery().Field(fields...))
 	return q
 }
 

@@ -31,75 +31,85 @@ var _ = Describe("Reflect", func() {
 	Context("Single Model", func() {
 		var m = &mock.ModelA{
 			ID: 22,
+			InnerModel: &mock.ModelB{
+				ID: 23,
+			},
 		}
 		var mBaseType = reflect.TypeOf(mock.ModelA{})
 		var mType = reflect.TypeOf(m)
 		var rfl = model.NewReflect(m)
-		It("Should pass validation without panicking", func() {
-			Expect(rfl.Validate).ToNot(Panic())
-		})
-		It("Should return the correct pointer interface", func() {
-			Expect(rfl.Pointer()).To(Equal(m))
-		})
-		It("Should return the correct type", func() {
-			Expect(rfl.Type()).To(Equal(mBaseType))
-		})
-		It("Should return the correct value", func() {
-			Expect(rfl.StructValue().Type()).To(Equal(mBaseType))
-		})
-		It("Should return false for IsChain", func() {
-			Expect(rfl.IsChain()).To(BeFalse())
-		})
-		It("Should return true for IsStruct", func() {
-			Expect(rfl.IsStruct()).To(BeTrue())
-		})
-		It("Should return the correct struct field by name", func() {
-			Expect(rfl.StructValue().FieldByName("ID").Interface()).To(Equal(22))
-		})
-		It("Should return the correct struct field by role", func() {
-			Expect(rfl.StructFieldByRole("pk").Interface()).To(Equal(22))
-		})
-		It("Should panic if the role doesn't exist", func() {
-			Expect(func() {
-				rfl.StructFieldByRole("nonexistentrole").Interface()
-			}).To(Panic())
-		})
+		Describe("The Basics", func() {
+			It("Should pass validation without panicking", func() {
+				Expect(rfl.Validate).ToNot(Panic())
+			})
+			It("Should return the correct pointer interface", func() {
+				Expect(rfl.Pointer()).To(Equal(m))
+			})
+			It("Should return the correct type", func() {
+				Expect(rfl.Type()).To(Equal(mBaseType))
+			})
+			It("Should return the correct value", func() {
+				Expect(rfl.StructValue().Type()).To(Equal(mBaseType))
+			})
+			It("Should return false for IsChain", func() {
+				Expect(rfl.IsChain()).To(BeFalse())
+			})
+			It("Should return true for IsStruct", func() {
+				Expect(rfl.IsStruct()).To(BeTrue())
+			})
+			It("Should return the correct struct field by name", func() {
+				Expect(rfl.StructFieldByName("ID").Interface()).To(Equal(22))
+			})
+			It("Should access the correct nested struct field by name", func() {
+				Expect(rfl.StructFieldByName("InnerModel.ID").Interface()).To(Equal(23))
 
-		It("Should return the correct struct field by index", func() {
-			Expect(rfl.StructValue().Field(0).Interface()).To(Equal(22))
-		})
-		It("Should return the same item for the raw value as for the value",
-			func() {
-				Expect(rfl.RawValue()).To(Equal(rfl.StructValue()))
 			})
-		It("Should return the same type for the raw type as for the type", func() {
-			Expect(rfl.RawType()).To(Equal(rfl.Type()))
-		})
-		It("Should return the correct pointer type", func() {
-			Expect(rfl.PointerType()).To(Equal(mType))
-		})
-		It("Should return the correct pointer value", func() {
-			Expect(rfl.PointerValue()).To(Equal(reflect.ValueOf(m)))
-		})
-		Describe("New Chain", func() {
-			It("Should return the correct type", func() {
-				newC := rfl.NewChain()
-				Expect(newC.RawType()).To(Equal(reflect.TypeOf([]*mock.ModelA{})))
-				Expect(newC.Type()).To(Equal(mBaseType))
+			It("Should return the correct struct field by role", func() {
+				Expect(rfl.StructFieldByRole("pk").Interface()).To(Equal(22))
 			})
-		})
-		Describe("New Model", func() {
-			It("Should return the correct type", func() {
-				newM := rfl.NewStruct()
-				Expect(newM.PointerType()).To(Equal(mType))
-				Expect(newM.Type()).To(Equal(mBaseType))
+			It("Should panic if the role doesn't exist", func() {
+				Expect(func() {
+					rfl.StructFieldByRole("nonexistentrole").Interface()
+				}).To(Panic())
+			})
+			It("Should return the correct struct field by index", func() {
+				Expect(rfl.StructValue().Field(0).Interface()).To(Equal(22))
+			})
+			It("Should return the same item for the raw value as for the value",
+				func() {
+					Expect(rfl.RawValue()).To(Equal(rfl.StructValue()))
+				})
+			It("Should return the same type for the raw type as for the type", func() {
+				Expect(rfl.RawType()).To(Equal(rfl.Type()))
+			})
+			It("Should return the correct pointer type", func() {
+				Expect(rfl.PointerType()).To(Equal(mType))
+			})
+			It("Should return the correct pointer value", func() {
+				Expect(rfl.PointerValue()).To(Equal(reflect.ValueOf(m)))
 			})
 		})
-		Describe("New Raw", func() {
-			It("Should return a single model", func() {
-				newM := rfl.NewRaw()
-				Expect(newM.PointerType()).To(Equal(mType))
-				Expect(newM.Type()).To(Equal(mBaseType))
+		Context("Constructors", func() {
+			Describe("New Chain", func() {
+				It("Should return the correct type", func() {
+					newC := rfl.NewChain()
+					Expect(newC.RawType()).To(Equal(reflect.TypeOf([]*mock.ModelA{})))
+					Expect(newC.Type()).To(Equal(mBaseType))
+				})
+			})
+			Describe("New Model", func() {
+				It("Should return the correct type", func() {
+					newM := rfl.NewStruct()
+					Expect(newM.PointerType()).To(Equal(mType))
+					Expect(newM.Type()).To(Equal(mBaseType))
+				})
+			})
+			Describe("New Raw", func() {
+				It("Should return a single model", func() {
+					newM := rfl.NewRaw()
+					Expect(newM.PointerType()).To(Equal(mType))
+					Expect(newM.Type()).To(Equal(mBaseType))
+				})
 			})
 		})
 		Describe("For Each", func() {

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/arya-analytics/aryacore/pkg/util/validate"
 	"reflect"
+	"strings"
 )
 
 const (
@@ -108,6 +109,15 @@ func (r *Reflect) StructFieldByRole(role string) reflect.Value {
 	return r.StructValue().FieldByIndex(tag.Field.Index)
 }
 
+func (r *Reflect) StructFieldByName(name string) reflect.Value {
+	splitNames := strings.Split(name, ".")
+	var fld = r.StructValue().FieldByName(splitNames[0])
+	for _, splitName := range splitNames[1:] {
+		fld = fld.Elem().FieldByName(splitName)
+	}
+	return fld
+}
+
 // || CHAIN METHODS ||
 
 // ChainValue returns the value of the value of the model object.
@@ -171,7 +181,7 @@ func (r *Reflect) Fields(i int) *Fields {
 func (r *Reflect) FieldsByName(name string) *Fields {
 	var rawFlds []reflect.Value
 	r.ForEach(func(rfl *Reflect, i int) {
-		rawFlds = append(rawFlds, rfl.StructValue().FieldByName(name))
+		rawFlds = append(rawFlds, rfl.StructFieldByName(name))
 	})
 	t, ok := r.Type().FieldByName(name)
 	if !ok {

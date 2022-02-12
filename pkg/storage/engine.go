@@ -41,7 +41,6 @@ type EngineMD interface {
 	NewMigrate(a Adapter) QueryMDMigrate
 	// NewUpdate opens a new QueryMDUpdate.
 	NewUpdate(a Adapter) QueryMDUpdate
-
 	NewTasks(a Adapter, opts ...tasks.SchedulerOpt) tasks.Scheduler
 }
 
@@ -91,7 +90,8 @@ type QueryMDRetrieve interface {
 	Where(query string, args ...interface{}) QueryMDRetrieve
 	WherePK(pk interface{}) QueryMDRetrieve
 	WherePKs(pks interface{}) QueryMDRetrieve
-	Relation(rel string) QueryMDRetrieve
+	Relation(rel string, fields ...string) QueryMDRetrieve
+	Field(fields ...string) QueryMDRetrieve
 	Count(ctx context.Context) (int, error)
 }
 
