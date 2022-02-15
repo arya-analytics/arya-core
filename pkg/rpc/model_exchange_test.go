@@ -16,7 +16,7 @@ type BytesTelemModel struct {
 	Telem []byte `model:"role:bulkTelem"`
 }
 
-var _ = FDescribe("ModelExchange", func() {
+var _ = Describe("ModelExchange", func() {
 	Describe("FieldHandlerTelemBulk", func() {
 		Context("Standard usage", func() {
 			blk := telem.NewBulk([]byte{})

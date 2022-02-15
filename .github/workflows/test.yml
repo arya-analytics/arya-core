@@ -33,8 +33,7 @@ jobs:
           go install github.com/onsi/ginkgo/v2/ginkgo
 
       - name: Run Tests
-        run: ginkgo -r --covermode=atomic --coverprofile=coverage.txt -covermode=atomic
-          --skip-package=dev
+        run: ginkgo -r --covermode=atomic --coverprofile=coverage.txt -covermode=atomic --skip-package=dev
 
       - name: Upload Coverage
         uses: codecov/codecov-action@v2
