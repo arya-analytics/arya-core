@@ -121,7 +121,7 @@ var _ = Describe("Reflect", func() {
 			})
 		})
 		Describe("PKS", func() {
-			It("Should return the correct PK", func() {
+			It("Should return the correct PKC", func() {
 				Expect(rfl.PKChain()).To(HaveLen(1))
 				Expect(rfl.PKChain()[0].Raw()).To(Equal(m.ID))
 			})
@@ -229,7 +229,7 @@ var _ = Describe("Reflect", func() {
 			})
 		})
 		Describe("PKS", func() {
-			It("Should get the correct value by PK", func() {
+			It("Should get the correct value by PKC", func() {
 				val, ok := rfl.ValueByPK(model.NewPK(m[0].ID))
 				Expect(ok).To(BeTrue())
 				Expect(val.Type()).To(Equal(mSingleBaseType))

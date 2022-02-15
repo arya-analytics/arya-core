@@ -75,8 +75,8 @@ func MergeClusterConfig(c K3sCluster) {
 	}
 }
 
-// BindConfigToCluster binds a remote kubeconfig to the host machine by adding the
-// remote IP and setting the correct context.
+// BindConfigToCluster binds a remoterpc kubeconfig to the host machine by adding the
+// remoterpc IP and setting the correct context.
 func BindConfigToCluster(c K3sCluster, cfgPath string) {
 	n := c.VM.Name()
 	info, err := c.VM.Info()

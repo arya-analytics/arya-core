@@ -9,7 +9,7 @@ import (
 
 // || LOCAL DEV CLUSTER ||
 
-// ProvisionLocalDevCluster provisions a local development Cluster based on the
+// ProvisionLocalDevCluster provisions a localstorage development Cluster based on the
 // specified parameters.
 func ProvisionLocalDevCluster(numNodes int, name string, cores int, memory int,
 	storage int, reInit bool, cidrOffset int) (*AryaCluster, error) {
@@ -49,7 +49,7 @@ func ProvisionLocalDevCluster(numNodes int, name string, cores int, memory int,
 	return cluster, nil
 }
 
-// DeleteLocalDevCluster deletes a local development Cluster based on its Name.
+// DeleteLocalDevCluster deletes a localstorage development Cluster based on its Name.
 func DeleteLocalDevCluster(name string) error {
 	log.Infof("%s Deleting Arya Cluster %s", emoji.Flame, name)
 	cfg := AryaClusterConfig{Name: name}
@@ -97,7 +97,7 @@ func (a *AryaCluster) Provision() error {
 	for i := 1; i <= a.cfg.NumNodes; i++ {
 		nodeName := a.cfg.Name + strconv.Itoa(i)
 		log.Infof("Bootstrapping node %v  with name %s", i, nodeName)
-		log.Infof("Memory: %v Gb, Cores: %v, Storage: %v Gb", a.cfg.Memory,
+		log.Infof("Memory: %v Gb, Cores: %v, storage: %v Gb", a.cfg.Memory,
 			a.cfg.Cores,
 			a.cfg.Storage)
 		vm, err := a.provisionVM(nodeName)
@@ -115,7 +115,7 @@ func (a *AryaCluster) Provision() error {
 }
 
 // provisionK3s provisions a K3s Cluster on a VM
-// Needs to receive a pod cidr PK (ex. 44 would result in the call Cidr(
+// Needs to receive a pod cidr PKC (ex. 44 would result in the call Cidr(
 // 44) for the pod Cidr and Cidr(45) for the service Cidr).
 func (a *AryaCluster) provisionK3s(vm VM, podCidrID int) (*K3sCluster, error) {
 	log.Infof("Provisioning new K3s Cluster on VM %s", vm.Name())
@@ -247,7 +247,7 @@ const (
 )
 
 // Cidr is a utility for generating kubernetes resource IP ranges.
-// Generates an IPv4 address from a two digit unique PK (00-99).
+// Generates an IPv4 address from a two digit unique PKC (00-99).
 func Cidr(ID int) string {
 	return baseCidrPrefix + strconv.Itoa(ID) + baseCidrSuffix
 }

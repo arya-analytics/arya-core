@@ -172,10 +172,7 @@ func (r *Reflect) Fields(i int) *Fields {
 		rawFlds = append(rawFlds, rfl.StructValue().Field(i))
 	})
 	t := r.Type().Field(i)
-	return &Fields{
-		t:      t.Type,
-		values: rawFlds,
-	}
+	return &Fields{fldName: t.Name, source: r}
 }
 
 func (r *Reflect) FieldsByName(name string) *Fields {
@@ -183,14 +180,7 @@ func (r *Reflect) FieldsByName(name string) *Fields {
 	r.ForEach(func(rfl *Reflect, i int) {
 		rawFlds = append(rawFlds, rfl.StructFieldByName(name))
 	})
-	t, ok := r.Type().FieldByName(name)
-	if !ok {
-		panic("field does not exist!")
-	}
-	return &Fields{
-		t:      t.Type,
-		values: rawFlds,
-	}
+	return &Fields{fldName: name, source: r}
 }
 
 // || FINDING VALUES ||
@@ -264,7 +254,7 @@ func (r *Reflect) ToNewPointer() *Reflect {
 	return NewReflect(p.Interface())
 }
 
-// || PK ||
+// || PKC ||
 
 // PKField returns the primary key field of the model object (ie assigned role:pk).
 // Panics if the field does not exist, or if the Reflect model object is a chain.
@@ -353,6 +343,7 @@ func validateIsPointer(v interface{}) error {
 		return fmt.Errorf("model validation failed - model is not a pointer")
 	}
 	return nil
+
 }
 
 func validateNonZero(v interface{}) error {

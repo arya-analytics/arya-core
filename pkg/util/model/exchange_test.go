@@ -339,7 +339,7 @@ var _ = Describe("Model Exchange", func() {
 		})
 		Describe("Custom Field Handler", func() {
 			Describe("Adapting Primary Keys", func() {
-				It("Should adapt a UUID PK to a string PK", func() {
+				It("Should adapt a UUID PKC to a string PKC", func() {
 					source := &mock.ModelG{
 						ID: uuid.New(),
 					}

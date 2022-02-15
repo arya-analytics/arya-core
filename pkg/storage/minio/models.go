@@ -1,8 +1,8 @@
 package minio
 
 import (
-	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
+	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"github.com/google/uuid"
 )
 
@@ -13,6 +13,6 @@ func catalog() model.Catalog {
 }
 
 type channelChunkReplica struct {
-	ID    uuid.UUID `model:"role:pk"`
-	Telem storage.Object
+	ID    uuid.UUID   `model:"role:pk"`
+	Telem *telem.Bulk `model:"role:bulkTelem"`
 }

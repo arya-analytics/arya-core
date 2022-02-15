@@ -1,9 +1,9 @@
 package minio
 
 import (
-	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/util/caseconv"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
+	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"reflect"
 )
 
@@ -13,7 +13,7 @@ const (
 
 type dataValue struct {
 	PK   model.PK
-	Data storage.Object
+	Data *telem.Bulk
 }
 
 type dataValueChain []*dataValue
@@ -37,7 +37,7 @@ func (m *modelExchange) DataVals() dataValueChain {
 		data := val.FieldByName(dataKey)
 		c = append(c, &dataValue{
 			PK:   rfl.PK(),
-			Data: data.Interface().(storage.Object),
+			Data: data.Interface().(*telem.Bulk),
 		})
 	})
 	return c
@@ -49,7 +49,7 @@ func (m *modelExchange) BindDataVals(dvc dataValueChain) {
 		if !ok {
 			if m.Dest.IsChain() {
 				newRfl := m.Dest.NewStruct()
-				newRfl.StructFieldByName(dataKey).Set(reflect.ValueOf(dv.Data))
+				newRfl.StructFieldByRole("bulkTelem").Set(reflect.ValueOf(dv.Data))
 				newRfl.StructFieldByName("ID").Set(dv.PK.Value())
 				m.Dest.ChainAppend(newRfl)
 			} else {
@@ -57,10 +57,10 @@ func (m *modelExchange) BindDataVals(dvc dataValueChain) {
 					panic("object store meta data mismatch")
 				}
 				m.Dest.StructFieldByName("ID").Set(dv.PK.Value())
-				m.Dest.StructFieldByName(dataKey).Set(reflect.ValueOf(dv.Data))
+				m.Dest.StructFieldByRole("bulkTelem").Set(reflect.ValueOf(dv.Data))
 			}
 		} else {
-			rfl.StructFieldByName(dataKey).Set(reflect.ValueOf(dv.Data))
+			rfl.StructFieldByRole("bulkTelem").Set(reflect.ValueOf(dv.Data))
 		}
 	}
 }

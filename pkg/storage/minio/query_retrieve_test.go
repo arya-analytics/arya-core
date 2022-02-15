@@ -2,7 +2,7 @@ package minio_test
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/storage"
-	"github.com/arya-analytics/aryacore/pkg/storage/mock"
+	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -17,7 +17,7 @@ var _ = Describe("QueryRetrieve", func() {
 		bytes = []byte("randomstring")
 		channelChunk = &storage.ChannelChunkReplica{
 			ID:    uuid.New(),
-			Telem: mock.NewObject(bytes),
+			Telem: telem.NewBulk(bytes),
 		}
 	})
 	JustBeforeEach(func() {
@@ -36,10 +36,7 @@ var _ = Describe("QueryRetrieve", func() {
 				err := engine.NewRetrieve(adapter).Model(resChannelChunk).WherePK(channelChunk.ID).Exec(ctx)
 				Expect(err).To(BeNil())
 				Expect(resChannelChunk.Telem).ToNot(BeNil())
-				resBytes := make([]byte, resChannelChunk.Telem.Size())
-				_, err = resChannelChunk.Telem.Read(resBytes)
-				Expect(err.Error()).To(Equal("EOF"))
-				Expect(resBytes).To(Equal(bytes))
+				Expect(resChannelChunk.Telem.Bytes()).To(Equal([]byte("randomstring")))
 			})
 		})
 		Describe("Retrieve multiple items", func() {
@@ -47,7 +44,7 @@ var _ = Describe("QueryRetrieve", func() {
 			BeforeEach(func() {
 				channelChunkTwo = &storage.ChannelChunkReplica{
 					ID:    uuid.New(),
-					Telem: mock.NewObject([]byte("model two")),
+					Telem: telem.NewBulk([]byte("model two")),
 				}
 			})
 			JustBeforeEach(func() {

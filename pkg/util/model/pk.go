@@ -20,7 +20,7 @@ import (
 	"strconv"
 )
 
-// ||| PK |||
+// ||| PKC |||
 
 // PK wraps the primary key of a model,
 // and provides a variety of utilities for manipulating it.
@@ -129,6 +129,13 @@ func NewPKChain(pks interface{}) (pkc PKChain) {
 func (pkc PKChain) Raw() (pks []interface{}) {
 	for _, pk := range pkc {
 		pks = append(pks, pk.Raw())
+	}
+	return pks
+}
+
+func (pkc PKChain) Strings() (pks []string) {
+	for _, pk := range pkc {
+		pks = append(pks, pk.String())
 	}
 	return pks
 }

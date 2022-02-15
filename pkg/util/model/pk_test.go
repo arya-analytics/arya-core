@@ -10,8 +10,8 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 )
 
-var _ = Describe("PK", func() {
-	Describe("Single PK", func() {
+var _ = Describe("PKC", func() {
+	Describe("Single PKC", func() {
 		Describe("Stringifying", func() {
 			It("Should return a UUID as a string", func() {
 				id := uuid.New()

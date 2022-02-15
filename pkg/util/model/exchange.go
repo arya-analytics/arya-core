@@ -87,7 +87,7 @@ func (m *Exchange) execCustomHandlers(fldName string, sourceRfl, destRfl *Reflec
 }
 
 func exchangeNested(fld, modelValue reflect.Value) reflect.Value {
-	fldRfl, vRfl := newRflNilOrNonPointer(fld.Interface()), newRflNilOrNonPointer(modelValue.Interface())
+	fldRfl, vRfl := newReflectNilNonPtr(fld.Interface()), newReflectNilNonPtr(modelValue.Interface())
 	NewExchange(vRfl.Pointer(), fldRfl.Pointer()).ToDest()
 	// If our model is a chain (i.e a slice),
 	// we want to get the slice itself, not the pointer to the slice.
@@ -97,7 +97,7 @@ func exchangeNested(fld, modelValue reflect.Value) reflect.Value {
 	return fldRfl.PointerValue()
 }
 
-func newRflNilOrNonPointer(v interface{}) *Reflect {
+func newReflectNilNonPtr(v interface{}) *Reflect {
 	rfl := UnsafeNewReflect(v)
 	// If v isn't a pointer, we need to create a pointer to it,
 	// so we can manipulate its values. This is always necessary with slice fields.

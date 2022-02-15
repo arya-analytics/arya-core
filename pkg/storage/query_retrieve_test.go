@@ -61,19 +61,19 @@ var _ = Describe("QueryRetrieve", func() {
 			//			}
 			//		})
 			//		JustBeforeEach(func() {
-			//			err := store.NewCreate().Model(channelChunk).Exec(ctx)
+			//			err := store.NewCreate().Model(channelChunk).Send(ctx)
 			//			Expect(err).To(BeNil())
 			//		})
 			//		JustAfterEach(func() {
 			//			err := store.NewDelete().Model(channelChunk).WherePK(
-			//				channelChunk.ID).Exec(ctx)
+			//				channelChunk.ID).Send(ctx)
 			//			Expect(err).To(BeNil())
 			//		})
 			//		Describe("Retrieve a channel chunk", func() {
 			//			It("Should retrieve the correct item", func() {
 			//				resChannelChunk := &storage.ChannelChunk{}
 			//				err := store.NewRetrieve().Model(resChannelChunk).WherePK(
-			//					channelChunk.ID).Exec(ctx)
+			//					channelChunk.ID).Send(ctx)
 			//				Expect(err).To(BeNil())
 			//				Expect(resChannelChunk.ID).To(Equal(channelChunk.ID))
 			//				Expect(resChannelChunk.Telem).ToNot(BeNil())

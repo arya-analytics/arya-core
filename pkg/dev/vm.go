@@ -28,7 +28,7 @@ type VM interface {
 	// Transfer copies a file from the source path to the destination path.
 	// If the transfer direction is set to TransferTo, destPath represents the path on
 	// the virtual machine. If the transfer direction is set ot TransferFrom,
-	// destPath represents the path on the local machine.
+	// destPath represents the path on the localstorage machine.
 	Transfer(direction TransferDirection, srcPath string, destPath string) error
 }
 

@@ -2,7 +2,7 @@ package minio_test
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/storage"
-	"github.com/arya-analytics/aryacore/pkg/storage/mock"
+	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -14,7 +14,7 @@ var _ = Describe("QueryDelete", func() {
 		BeforeEach(func() {
 			channelChunk = &storage.ChannelChunkReplica{
 				ID:    uuid.New(),
-				Telem: mock.NewObject([]byte("randomstring")),
+				Telem: telem.NewBulk([]byte("randomstring")),
 			}
 		})
 		JustBeforeEach(func() {
@@ -40,7 +40,7 @@ var _ = Describe("QueryDelete", func() {
 			BeforeEach(func() {
 				channelChunkTwo = &storage.ChannelChunkReplica{
 					ID:    uuid.New(),
-					Telem: mock.NewObject([]byte("mock bytes")),
+					Telem: telem.NewBulk([]byte("mock bytes")),
 				}
 			})
 			JustBeforeEach(func() {

@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"github.com/google/uuid"
 	"time"
 )
@@ -62,7 +63,7 @@ type ChannelChunkReplica struct {
 	ChannelChunkID uuid.UUID
 	RangeReplica   *RangeReplica
 	RangeReplicaID uuid.UUID
-	Telem          Object `storage:"re:object,role:bulkTelem"`
+	Telem          *telem.Bulk `storage:"re:object," model:"role:bulkTelem,"`
 }
 
 type ChannelSample struct {
