@@ -160,15 +160,16 @@ var _ = Describe("Service", func() {
 			Expect(svc.CanHandle(chunkCreateQR)).To(BeTrue())
 			Expect(svc.Exec(ctx, chunkCreateQR)).To(BeNil())
 		})
-		//JustAfterEach(func() {
-		//	deleteQR := cluster.NewQueryRequest(
-		//		cluster.QueryVariantDelete,
-		//		model.NewReflect(channelChunk),
-		//	)
-		//	cluster.NewPKQueryOpt(deleteQR, channelChunk.ID)
-		//	Expect(svc.CanHandle(deleteQR)).To(BeTrue())
-		//	Expect(svc.Exec(ctx, deleteQR)).To(BeNil())
-		//})
+		JustAfterEach(func() {
+			deleteQR := cluster.NewQueryRequest(
+				cluster.QueryVariantDelete,
+				model.NewReflect(channelChunk),
+			)
+			cluster.NewPKQueryOpt(deleteQR, channelChunk.ID)
+			Expect(svc.CanHandle(deleteQR)).To(BeTrue())
+			err := svc.Exec(ctx, deleteQR)
+			Expect(err).To(BeNil())
+		})
 		DescribeTable("Should Create + Retrieve + Delete the chunk replica correctly",
 			func(cc interface{}, resCC interface{}) {
 				rfl, resRfl := model.NewReflect(cc), model.NewReflect(resCC)

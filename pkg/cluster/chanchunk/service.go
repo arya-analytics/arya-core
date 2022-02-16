@@ -7,6 +7,7 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/util/batch"
 	"github.com/arya-analytics/aryacore/pkg/util/errutil"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
+	log "github.com/sirupsen/logrus"
 	"reflect"
 )
 
@@ -36,6 +37,7 @@ func (s *Service) CanHandle(q *cluster.QueryRequest) bool {
 }
 
 func (s *Service) Exec(ctx context.Context, qr *cluster.QueryRequest) error {
+	s.catcher = &errutil.Catcher{}
 	switch qr.Variant {
 	case cluster.QueryVariantCreate:
 		s.switchModel(ctx, qr, s.createChunk, s.createReplica)
@@ -81,6 +83,7 @@ func (s *Service) retrieveChunk(ctx context.Context, qr *cluster.QueryRequest) {
 }
 
 func (s *Service) deleteChunk(ctx context.Context, qr *cluster.QueryRequest) {
+	log.Info("Deleting Chunk")
 	PKC, ok := cluster.PKQueryOpt(qr)
 	if !ok {
 		panic("delete queries require a primary key!")
