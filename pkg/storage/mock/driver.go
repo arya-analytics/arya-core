@@ -49,7 +49,10 @@ func (d *DriverRoach) Connect() (*bun.DB, error) {
 		testserver.RootPasswordOpt("testpass"),
 	)
 
-	ts.WaitForInit()
+	wErr := ts.WaitForInit()
+	if wErr != nil {
+		return nil, wErr
+	}
 	d.servers = append(d.servers, ts)
 	if err != nil {
 		return nil, err
@@ -65,6 +68,7 @@ func (d *DriverRoach) Connect() (*bun.DB, error) {
 		return nil, err
 	}
 	bunDB := bun.NewDB(sqlDB, pgdialect.New())
+	//bunDB.AddQueryHook(bundebug.NewQueryHook(bundebug.WithVerbose(true)))
 	return bunDB, nil
 }
 

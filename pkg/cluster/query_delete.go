@@ -18,12 +18,12 @@ func (q *QueryDelete) Model(m interface{}) *QueryDelete {
 }
 
 func (q *QueryDelete) WherePK(pk interface{}) *QueryDelete {
-	newPkQueryOpt(q.baseQueryRequest(), pk)
+	NewPKQueryOpt(q.baseQueryRequest(), pk)
 	return q
 }
 
-func (q *QueryDelete) WherePKs(pks ...interface{}) *QueryDelete {
-	newPkQueryOpt(q.baseQueryRequest(), pks...)
+func (q *QueryDelete) WherePKs(pks interface{}) *QueryDelete {
+	NewPKQueryOpt(q.baseQueryRequest(), pks)
 	return q
 }
 

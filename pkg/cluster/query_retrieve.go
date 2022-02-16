@@ -18,17 +18,17 @@ func (q *QueryRetrieve) Model(m interface{}) *QueryRetrieve {
 }
 
 func (q *QueryRetrieve) WherePK(pk interface{}) *QueryRetrieve {
-	newPkQueryOpt(q.baseQueryRequest(), pk)
+	NewPKQueryOpt(q.baseQueryRequest(), []interface{}{pk})
 	return q
 }
 
-func (q *QueryRetrieve) WherePKs(pks ...interface{}) *QueryRetrieve {
-	newPkQueryOpt(q.baseQueryRequest(), pks...)
+func (q *QueryRetrieve) WherePKs(pks interface{}) *QueryRetrieve {
+	NewPKQueryOpt(q.baseQueryRequest(), pks)
 	return q
 }
 
 func (q *QueryRetrieve) WhereFields(flds Fields) *QueryRetrieve {
-	newFieldQueryOpts(q.baseQueryRequest(), flds)
+	NewFieldsQueryOpt(q.baseQueryRequest(), flds)
 	return q
 }
 

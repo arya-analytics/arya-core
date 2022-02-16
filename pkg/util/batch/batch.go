@@ -19,7 +19,8 @@ func (m *Model) Exec(key string) map[interface{}]*model.Reflect {
 		fldV := rfl.StructFieldByName(key).Interface()
 		v, ok := b[fldV]
 		if !ok {
-			b[fldV] = rfl.NewChain()
+			v = rfl.NewChain()
+			b[fldV] = v
 		}
 		v.ChainAppend(rfl)
 	})

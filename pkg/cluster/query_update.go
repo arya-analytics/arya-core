@@ -18,7 +18,7 @@ func (q *QueryUpdate) Model(m interface{}) *QueryUpdate {
 }
 
 func (q *QueryUpdate) WherePK(pk interface{}) *QueryUpdate {
-	newPkQueryOpt(q.baseQueryRequest(), pk)
+	NewPKQueryOpt(q.baseQueryRequest(), pk)
 	return q
 }
 

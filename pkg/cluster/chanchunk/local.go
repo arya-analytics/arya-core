@@ -8,22 +8,48 @@ import (
 
 // |||| INTERFACE ||||
 
+type LocalChunkRetrieveOpts struct {
+	PKC model.PKChain
+}
+
+type LocalChunkDeleteOpts struct {
+	PKC model.PKChain
+}
+
+type LocalReplicaRetrieveOpts struct {
+	PKC       model.PKChain
+	OmitBulk  bool
+	Relations bool
+}
+
+type LocalReplicaDeleteOpts struct {
+	PKC model.PKChain
+}
+
+type LocalRangeReplicaRetrieveOpts struct {
+	PKC model.PKChain
+}
+
 type ServiceLocal interface {
 	// |||| CHUNK ||||
 
-	Create(ctx context.Context, cc *model.Reflect) error
-	Retrieve(ctx context.Context, cc *model.Reflect, ccPKC model.PKChain) error
-	Delete(ctx context.Context, ccPKC model.PKChain) error
+	CreateChunk(ctx context.Context, chunk interface{}) error
+
+	RetrieveChunk(ctx context.Context, chunk interface{}, opts LocalChunkRetrieveOpts) error
+
+	DeleteChunk(ctx context.Context, opts LocalChunkDeleteOpts) error
 
 	// |||| REPLICA ||||
 
-	CreateReplicas(ctx context.Context, ccr *model.Reflect) error
-	RetrieveReplicas(ctx context.Context, ccr *model.Reflect, ccrPKC model.PKChain, omitBulk bool) error
-	DeleteReplicas(ctx context.Context, ccrPKC model.PKChain) error
+	CreateReplica(ctx context.Context, chunkReplica interface{}) error
+
+	RetrieveReplica(ctx context.Context, chunkReplica interface{}, opts LocalReplicaRetrieveOpts) error
+
+	DeleteReplica(ctx context.Context, opts LocalReplicaDeleteOpts) error
 
 	// |||| RANGE REPLICA ||||
 
-	RetrieveRangeReplicas(ctx context.Context, rr *model.Reflect, rrPKC model.PKChain) error
+	RetrieveRangeReplica(ctx context.Context, rangeReplica interface{}, opts LocalRangeReplicaRetrieveOpts) error
 }
 
 // |||| LOCAL STORAGE IMPLEMENTATION ||||
@@ -38,38 +64,60 @@ func NewServiceLocalStorage(storage storage.Storage) ServiceLocal {
 
 // |||| CHUNK ||||
 
-func (s *ServiceLocalStorage) Create(ctx context.Context, cc *model.Reflect) error {
-	return s.storage.NewCreate().Model(cc.Pointer()).Exec(ctx)
+func (s *ServiceLocalStorage) CreateChunk(ctx context.Context, chunk interface{}) error {
+	return s.storage.NewCreate().Model(chunk).Exec(ctx)
 }
 
-func (s *ServiceLocalStorage) Retrieve(ctx context.Context, cc *model.Reflect, pkC model.PKChain) error {
-	return s.storage.NewRetrieve().Model(cc.Pointer()).WherePKs(pkC.Raw()).Exec(ctx)
+func (s *ServiceLocalStorage) RetrieveChunk(ctx context.Context, chunk interface{}, opts LocalChunkRetrieveOpts) error {
+	q := s.storage.NewRetrieve().Model(chunk)
+	if opts.PKC != nil {
+		q = q.WherePKs(opts.PKC.Raw())
+	}
+	return q.Exec(ctx)
 }
 
-func (s *ServiceLocalStorage) Delete(ctx context.Context, ccPKC model.PKChain) error {
-	return s.storage.NewDelete().Model(&storage.ChannelChunk{}).WherePKs(ccPKC.Raw()).Exec(ctx)
+func (s *ServiceLocalStorage) DeleteChunk(ctx context.Context, opts LocalChunkDeleteOpts) error {
+	q := s.storage.NewDelete().Model(&storage.ChannelChunk{})
+	if opts.PKC != nil {
+		q = q.WherePKs(opts.PKC.Raw())
+	}
+	return q.Exec(ctx)
 }
 
 // |||| REPLICA ||||
 
-func (s *ServiceLocalStorage) CreateReplicas(ctx context.Context, ccr *model.Reflect) error {
-	return s.storage.NewCreate().Model(ccr.Pointer()).Exec(ctx)
+func (s *ServiceLocalStorage) CreateReplica(ctx context.Context, chunkReplica interface{}) error {
+	return s.storage.NewCreate().Model(chunkReplica).Exec(ctx)
 }
 
-func (s *ServiceLocalStorage) RetrieveReplicas(ctx context.Context, ccr *model.Reflect, ccrPKC model.PKChain, omitBulk bool) error {
-	return s.storage.NewRetrieve().Model(ccr.Pointer()).WherePKs(ccrPKC.Raw()).Exec(ctx)
+func (s *ServiceLocalStorage) RetrieveReplica(ctx context.Context, chunkReplica interface{}, opts LocalReplicaRetrieveOpts) error {
+	q := s.storage.NewRetrieve().Model(chunkReplica)
+	if opts.PKC != nil {
+		q = q.WherePKs(opts.PKC.Raw())
+	}
+	if opts.Relations {
+		q = q.Relation("RangeReplica", "id").
+			Relation("RangeReplica.Node", "id", "address", "is_host")
+	}
+	return q.Exec(ctx)
 }
 
-func (s *ServiceLocalStorage) DeleteReplicas(ctx context.Context, ccrPKC model.PKChain) error {
-	return s.storage.NewDelete().Model(&storage.ChannelChunkReplica{}).WherePKs(ccrPKC.Raw()).Exec(ctx)
+func (s *ServiceLocalStorage) DeleteReplica(ctx context.Context, opts LocalReplicaDeleteOpts) error {
+	q := s.storage.NewDelete().Model(&storage.ChannelChunkReplica{})
+	if opts.PKC != nil {
+		q = q.WherePKs(opts.PKC.Raw())
+	}
+	return q.Exec(ctx)
 }
 
 // |||| RANGE REPLICA ||||
 
-func (s *ServiceLocalStorage) RetrieveRangeReplicas(ctx context.Context, rr *model.Reflect, rrPKC model.PKChain) error {
-	return s.storage.NewRetrieve().
-		Model(rr.Pointer()).
-		WherePKs(rrPKC.Raw()).
-		Relation("Node", "id", "address", "is_host").
-		Exec(ctx)
+func (s *ServiceLocalStorage) RetrieveRangeReplica(ctx context.Context, rangeReplica interface{}, opts LocalRangeReplicaRetrieveOpts) error {
+	q := s.storage.NewRetrieve().
+		Model(rangeReplica).
+		Relation("Node", "id", "address", "is_host")
+	if opts.PKC != nil {
+		q = q.WherePKs(opts.PKC.Raw())
+	}
+	return q.Exec(ctx)
 }

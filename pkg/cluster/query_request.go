@@ -3,6 +3,7 @@ package cluster
 import (
 	"fmt"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
+	"reflect"
 )
 
 // |||| REQUEST ||||
@@ -11,6 +12,14 @@ type QueryRequest struct {
 	Variant QueryVariant
 	Model   *model.Reflect
 	opts    map[string]interface{}
+}
+
+func NewQueryRequest(variant QueryVariant, model *model.Reflect) *QueryRequest {
+	return &QueryRequest{
+		Variant: variant,
+		Model:   model,
+		opts:    map[string]interface{}{},
+	}
 }
 
 // |||| VARIANT ||||
@@ -51,9 +60,16 @@ type pkQueryOpt struct {
 	PKChain model.PKChain
 }
 
-func newPkQueryOpt(q *QueryRequest, args ...interface{}) {
+func NewPKQueryOpt(q *QueryRequest, args ...interface{}) {
 	panicWhenAlreadySpecified(q, pkQueryOptKey)
-	qo := pkQueryOpt{model.NewPKChain(args)}
+
+	// Handling a single vs multi PK query
+	pks := args[0]
+	if reflect.TypeOf(args[0]).Kind() != reflect.Slice {
+		pks = args
+	}
+
+	qo := pkQueryOpt{model.NewPKChain(pks)}
 	q.opts[pkQueryOptKey] = qo
 }
 
@@ -71,7 +87,7 @@ func FieldsQueryOpt(q *QueryRequest) Fields {
 	return qo.(Fields)
 }
 
-func newFieldQueryOpts(q *QueryRequest, ops Fields) {
+func NewFieldsQueryOpt(q *QueryRequest, ops Fields) {
 	panicWhenAlreadySpecified(q, fieldQueryOptKey)
 	q.opts[fieldQueryOptKey] = ops
 }

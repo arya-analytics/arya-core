@@ -140,6 +140,16 @@ func (pkc PKChain) Strings() (pks []string) {
 	return pks
 }
 
+func (pkc PKChain) AllZero() bool {
+	allZero := true
+	for _, pk := range pkc {
+		if !pk.IsZero() {
+			allZero = false
+		}
+	}
+	return allZero
+}
+
 func isPKStructTag(t StructTag) bool {
 	return t.Match(TagCat, RoleKey, PKRole)
 }

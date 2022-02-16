@@ -207,24 +207,24 @@ var _ = Describe("Model Exchange", func() {
 						Expect(source[1].RefObj.ID).To(Equal(720))
 					})
 				})
-				Context("Pre-populated dest", func() {
+				Context("Performing an update", func() {
 					BeforeEach(func() {
 						source = []*mock.ModelA{
 							&mock.ModelA{
-								ID:     22,
+								ID:     25,
 								Name:   "Hello",
 								RefObj: refObj,
 							},
 							&mock.ModelA{
-								ID:     24,
-								Name:   "Hello 24",
+								ID:     26,
+								Name:   "Hello",
 								RefObj: refObj,
 							},
 						}
 						dest = []*mock.ModelB{
 							&mock.ModelB{
 								ID:     25,
-								Name:   "Hello",
+								Name:   "Hello 25",
 								RefObj: refObj,
 							},
 							&mock.ModelB{
@@ -234,12 +234,12 @@ var _ = Describe("Model Exchange", func() {
 							},
 						}
 					})
-					It("Should override the values in dest", func() {
+					It("Should set the correct values in source", func() {
 						me := model.NewExchange(&source, &dest)
-						me.ToDest()
+						me.ToSource()
 						Expect(dest).To(HaveLen(2))
-						Expect(dest[0].ID).To(Equal(22))
-						Expect(dest[1].ID).To(Equal(24))
+						Expect(dest[0].Name).To(Equal("Hello 25"))
+						Expect(dest[1].Name).To(Equal("Hello 26"))
 					})
 				})
 				Context("Multiple nested models", func() {

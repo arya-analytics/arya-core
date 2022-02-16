@@ -44,7 +44,7 @@ var _ = Describe("QueryDelete", func() {
 		Context("WherePKs", func() {
 			It("Should bind the correct PKs", func() {
 				pks := model.NewPKChain([]uuid.UUID{uuid.New(), uuid.New()})
-				Expect(clus.NewDelete().Model(m).WherePKs(pks.Raw()...).Exec(ctx))
+				Expect(clus.NewDelete().Model(m).WherePKs(pks.Raw()).Exec(ctx))
 				pkOpt, ok := cluster.PKQueryOpt(svc.QueryRequest)
 				Expect(ok).To(BeTrue())
 				Expect(pkOpt).To(Equal(pks))

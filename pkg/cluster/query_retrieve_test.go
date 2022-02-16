@@ -45,7 +45,7 @@ var _ = Describe("QueryRetrieve", func() {
 		Context("WherePKs", func() {
 			It("Should bind the correct PKs", func() {
 				pks := model.NewPKChain([]uuid.UUID{uuid.New(), uuid.New()})
-				Expect(clus.NewRetrieve().Model(m).WherePKs(pks.Raw()...).Exec(ctx))
+				Expect(clus.NewRetrieve().Model(m).WherePKs(pks.Raw()).Exec(ctx))
 				pkOpt, ok := cluster.PKQueryOpt(svc.QueryRequest)
 				Expect(ok).To(BeTrue())
 				Expect(pkOpt).To(Equal(pks))

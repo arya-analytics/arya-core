@@ -2,7 +2,6 @@ package chanchunk_test
 
 import (
 	"context"
-	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/storage/mock"
 	"testing"
 
@@ -12,13 +11,17 @@ import (
 
 var (
 	ctx   = context.Background()
-	store storage.Storage
+	store *mock.Storage
 )
 
 var _ = BeforeSuite(func() {
 	store = mock.NewStorage()
 	err := store.NewMigrate().Exec(ctx)
 	Expect(err).To(BeNil())
+})
+
+var _ = AfterSuite(func() {
+	store.Stop()
 })
 
 func TestChanchunk(t *testing.T) {

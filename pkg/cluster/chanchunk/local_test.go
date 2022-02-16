@@ -65,32 +65,44 @@ var _ = Describe("Local", func() {
 	Describe("Local storage", func() {
 		Context("Channel Chunk", func() {
 			JustBeforeEach(func() {
-				ccErr := localSvc.Create(ctx, model.NewReflect(channelChunk))
+				ccErr := localSvc.CreateChunk(ctx, channelChunk)
 				Expect(ccErr).To(BeNil())
 			})
 			It("Should create the correct chunk", func() {
 				resCC := &storage.ChannelChunk{}
-				err := localSvc.Retrieve(ctx, model.NewReflect(resCC), model.NewPKChain([]uuid.UUID{channelChunk.ID}))
+				opts := chanchunk.LocalChunkRetrieveOpts{
+					PKC: model.NewPKChain([]uuid.UUID{channelChunk.ID}),
+				}
+				err := localSvc.RetrieveChunk(ctx, resCC, opts)
 				Expect(err).To(BeNil())
 				Expect(resCC.ID).To(Equal(channelChunk.ID))
 			})
 		})
 		Context("Channel Chunk Replica", func() {
 			JustBeforeEach(func() {
-				ccErr := localSvc.Create(ctx, model.NewReflect(channelChunk))
+				ccErr := localSvc.CreateChunk(ctx, channelChunk)
 				Expect(ccErr).To(BeNil())
-				ccrErr := localSvc.CreateReplicas(ctx, model.NewReflect(channelChunkReplica))
+				ccrErr := localSvc.CreateReplica(ctx, channelChunkReplica)
 				Expect(ccrErr).To(BeNil())
 			})
 			JustAfterEach(func() {
-				ccErr := localSvc.Delete(ctx, model.NewReflect(channelChunk).PKChain())
+				ccOpts := chanchunk.LocalChunkDeleteOpts{
+					PKC: model.NewPKChain([]uuid.UUID{channelChunk.ID}),
+				}
+				ccErr := localSvc.DeleteChunk(ctx, ccOpts)
 				Expect(ccErr).To(BeNil())
-				ccrErr := localSvc.DeleteReplicas(ctx, model.NewReflect(channelChunkReplica).PKChain())
+				ccrOpts := chanchunk.LocalReplicaDeleteOpts{
+					PKC: model.NewPKChain([]uuid.UUID{channelChunk.ID}),
+				}
+				ccrErr := localSvc.DeleteReplica(ctx, ccrOpts)
 				Expect(ccrErr).To(BeNil())
 			})
 			It("Should create the  replica correctly", func() {
 				resCCR := &storage.ChannelChunkReplica{}
-				err := localSvc.RetrieveReplicas(ctx, model.NewReflect(resCCR), model.NewPKChain([]uuid.UUID{channelChunkReplica.ID}), false)
+				opts := chanchunk.LocalReplicaRetrieveOpts{
+					PKC: model.NewPKChain([]uuid.UUID{channelChunkReplica.ID}),
+				}
+				err := localSvc.RetrieveReplica(ctx, resCCR, opts)
 				Expect(err).To(BeNil())
 				Expect(resCCR.ID).To(Equal(channelChunkReplica.ID))
 			})
@@ -98,7 +110,10 @@ var _ = Describe("Local", func() {
 		Context("Retrieve Range Replicas", func() {
 			It("Should retrieve the node information correctly", func() {
 				resRR := &storage.RangeReplica{}
-				err := localSvc.RetrieveRangeReplicas(ctx, model.NewReflect(resRR), model.NewPKChain([]uuid.UUID{rangeReplica.ID}))
+				opts := chanchunk.LocalRangeReplicaRetrieveOpts{
+					PKC: model.NewPKChain([]uuid.UUID{rangeReplica.ID}),
+				}
+				err := localSvc.RetrieveRangeReplica(ctx, resRR, opts)
 				Expect(err).To(BeNil())
 				Expect(resRR.Node.ID).To(Equal(1))
 			})

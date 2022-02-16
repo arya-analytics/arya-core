@@ -1,6 +1,7 @@
 package model
 
 import (
+	log "github.com/sirupsen/logrus"
 	"reflect"
 )
 
@@ -32,13 +33,41 @@ func (m *Exchange) ToDest() {
 }
 
 func (m *Exchange) exchange(fromRfl, toRfl *Reflect) {
+	update := exchangeIsUpdate(toRfl)
 	fromRfl.ForEach(func(nFromRfl *Reflect, i int) {
-		nToRfl := toRfl
-		if toRfl.IsChain() {
-			nToRfl = toRfl.ChainValueByIndexOrNew(i)
-		}
-		m.bindToSource(nToRfl, nFromRfl)
+		m.bindToSource(nToRfl(toRfl, nFromRfl, i, update), nFromRfl)
 	})
+}
+
+/// |||| RETRIEVE UTILITIES ||||
+
+func exchangeIsUpdate(toRfl *Reflect) bool {
+	return toRfl.IsChain() && toRfl.ChainValue().Len() > 0 && !toRfl.PKChain().AllZero()
+}
+
+func warnBadUpdate(toRfl, nFromRfl *Reflect) {
+	log.WithFields(log.Fields{
+		"exchangingFrom": nFromRfl.Type().Name(),
+		"fromPK":         nFromRfl.PK(),
+		"exchangingTo":   toRfl.Type().Name(),
+	}).Warn("model exchange doing update, but appears PK does not exist in dest. This may lead to strange bugs.")
+}
+
+func nToRfl(toRfl, nFromRfl *Reflect, index int, update bool) *Reflect {
+	if !toRfl.IsChain() {
+		return toRfl
+	}
+	if update {
+		if !nFromRfl.PK().IsZero() {
+			rfl, ok := toRfl.ValueByPK(nFromRfl.PK())
+			if ok {
+				return rfl
+			} else {
+				warnBadUpdate(toRfl, nFromRfl)
+			}
+		}
+	}
+	return toRfl.ChainValueByIndexOrNew(index)
 }
 
 // |||| BINDING UTILITIES ||||
