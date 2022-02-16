@@ -47,7 +47,7 @@ func (s *ServiceLocalStorage) Retrieve(ctx context.Context, cc *model.Reflect, p
 }
 
 func (s *ServiceLocalStorage) Delete(ctx context.Context, ccPKC model.PKChain) error {
-	return s.storage.NewDelete().Model(&storage.ChannelChunk{}).WherePK(ccPKC.Raw()).Exec(ctx)
+	return s.storage.NewDelete().Model(&storage.ChannelChunk{}).WherePKs(ccPKC.Raw()).Exec(ctx)
 }
 
 // |||| REPLICA ||||
