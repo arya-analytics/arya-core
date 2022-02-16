@@ -16,7 +16,7 @@ service ChannelChunkService {
 // |||| MODEL ||||
 
 message ChannelChunkReplica {
-  string id = 1 [(tagger.tags) = "model:\"role:pk,\""];
+  string ID = 1 [(tagger.tags) = "model:\"role:pk,\""];
   bytes telem = 2 [(tagger.tags) = "model:\"role:bulkTelem,\""];
 }
 

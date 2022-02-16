@@ -4,14 +4,15 @@ import (
 	"context"
 	api "github.com/arya-analytics/aryacore/pkg/cluster/gen/proto/go/chanchunk"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
+	"github.com/google/uuid"
 	"google.golang.org/grpc"
 	"io"
 )
 
 type Server struct {
 	api.UnimplementedChannelChunkServiceServer
-	CreatedChunks *model.Reflect
-	DeletedChunks model.PKChain
+	CreatedChunks       *model.Reflect
+	DeletedChunkPKChain model.PKChain
 }
 
 func NewServer() *Server {
@@ -42,9 +43,9 @@ func (s *Server) CreateReplicas(stream api.ChannelChunkService_CreateReplicasSer
 }
 
 func (s *Server) RetrieveReplicas(req *api.ChannelChunkServiceRetrieveReplicasRequest, stream api.ChannelChunkService_RetrieveReplicasServer) error {
-	for _, pk := range req.Id {
+	for _, id := range req.Id {
 		if err := stream.Send(&api.ChannelChunkServiceRetrieveReplicasResponse{Chunk: &api.ChannelChunkReplica{
-			Id:    pk,
+			ID:    id,
 			Telem: []byte{1, 2, 3, 4},
 		}}); err != nil {
 			return err
@@ -54,6 +55,14 @@ func (s *Server) RetrieveReplicas(req *api.ChannelChunkServiceRetrieveReplicasRe
 }
 
 func (s *Server) DeleteReplicas(ctx context.Context, req *api.ChannelChunkServiceDeleteReplicasRequest) (*api.ChannelChunkServiceDeleteReplicasResponse, error) {
-	s.DeletedChunks = append(s.DeletedChunks, model.NewPKChain(req.Id)...)
+	pkC := model.NewPKChain([]uuid.UUID{})
+	for _, id := range req.Id {
+		pk, err := model.NewPK(uuid.New()).NewFromString(id)
+		if err != nil {
+			panic(err)
+		}
+		pkC = append(pkC, pk)
+	}
+	s.DeletedChunkPKChain = append(s.DeletedChunkPKChain, pkC...)
 	return &api.ChannelChunkServiceDeleteReplicasResponse{}, nil
 }
