@@ -68,7 +68,7 @@ var _ = Describe("Local", func() {
 	//			ChannelChunkID: channelChunk.ID,
 	//			Telem:          blk,
 	//		}
-	//		q := &cluster.Query{
+	//		q := &cluster.QueryRequest{
 	//			Model:   model.NewReflect(createCCR),
 	//			Variant: cluster.QueryVariantCreate,
 	//		}

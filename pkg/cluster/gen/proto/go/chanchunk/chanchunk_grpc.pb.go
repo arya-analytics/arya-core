@@ -32,7 +32,7 @@ func NewChannelChunkServiceClient(cc grpc.ClientConnInterface) ChannelChunkServi
 }
 
 func (c *channelChunkServiceClient) CreateReplicas(ctx context.Context, opts ...grpc.CallOption) (ChannelChunkService_CreateReplicasClient, error) {
-	stream, err := c.cc.NewStream(ctx, &ChannelChunkService_ServiceDesc.Streams[0], "/chanchunk.v1.ChannelChunkService/CreateReplicas", opts...)
+	stream, err := c.cc.NewStream(ctx, &ChannelChunkService_ServiceDesc.Streams[0], "/chanchunk.v1.ChannelChunkService/createReplicas", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +66,7 @@ func (x *channelChunkServiceCreateReplicasClient) CloseAndRecv() (*ChannelChunkS
 }
 
 func (c *channelChunkServiceClient) RetrieveReplicas(ctx context.Context, in *ChannelChunkServiceRetrieveReplicasRequest, opts ...grpc.CallOption) (ChannelChunkService_RetrieveReplicasClient, error) {
-	stream, err := c.cc.NewStream(ctx, &ChannelChunkService_ServiceDesc.Streams[1], "/chanchunk.v1.ChannelChunkService/RetrieveReplicas", opts...)
+	stream, err := c.cc.NewStream(ctx, &ChannelChunkService_ServiceDesc.Streams[1], "/chanchunk.v1.ChannelChunkService/retrieveReplicas", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -120,10 +120,10 @@ type UnimplementedChannelChunkServiceServer struct {
 }
 
 func (UnimplementedChannelChunkServiceServer) CreateReplicas(ChannelChunkService_CreateReplicasServer) error {
-	return status.Errorf(codes.Unimplemented, "method CreateReplicas not implemented")
+	return status.Errorf(codes.Unimplemented, "method createReplicas not implemented")
 }
 func (UnimplementedChannelChunkServiceServer) RetrieveReplicas(*ChannelChunkServiceRetrieveReplicasRequest, ChannelChunkService_RetrieveReplicasServer) error {
-	return status.Errorf(codes.Unimplemented, "method RetrieveReplicas not implemented")
+	return status.Errorf(codes.Unimplemented, "method retrieveReplicas not implemented")
 }
 func (UnimplementedChannelChunkServiceServer) DeleteReplicas(context.Context, *ChannelChunkServiceDeleteReplicasRequest) (*ChannelChunkServiceDeleteReplicasResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteReplicas not implemented")
@@ -219,12 +219,12 @@ var ChannelChunkService_ServiceDesc = grpc.ServiceDesc{
 	},
 	Streams: []grpc.StreamDesc{
 		{
-			StreamName:    "CreateReplicas",
+			StreamName:    "createReplicas",
 			Handler:       _ChannelChunkService_CreateReplicas_Handler,
 			ClientStreams: true,
 		},
 		{
-			StreamName:    "RetrieveReplicas",
+			StreamName:    "retrieveReplicas",
 			Handler:       _ChannelChunkService_RetrieveReplicas_Handler,
 			ServerStreams: true,
 		},

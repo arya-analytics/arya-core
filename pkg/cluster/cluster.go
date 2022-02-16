@@ -2,41 +2,40 @@ package cluster
 
 import (
 	"context"
-	"github.com/arya-analytics/aryacore/pkg/storage"
-	"github.com/arya-analytics/aryacore/pkg/util/model"
 )
 
 type Service interface {
-	CanHandle(q *Query) bool
-	Exec(ctx context.Context, q *Query) error
+	CanHandle(q *QueryRequest) bool
+	Exec(ctx context.Context, q *QueryRequest) error
 }
 
-type QueryVariant int
-
-const (
-	QueryVariantCreate = iota
-)
-
-type QueryOpt func() interface{}
-
-type QueryOpts map[string]QueryOpt
-
-func (qp QueryOpts) Retrieve(key string) (QueryOpt, bool) {
-	q, ok := qp[key]
-	return q, ok
+type Cluster interface {
+	NewCreate() *QueryCreate
+	NewRetrieve() *QueryRetrieve
+	NewUpdate() *QueryUpdate
+	NewDelete() *QueryDelete
 }
 
-type Query struct {
-	Variant QueryVariant
-	Model   *model.Reflect
-	Params  QueryOpts
+type cluster struct {
+	svc ServiceChain
 }
 
-type Cluster struct {
-	storage  storage.Storage
-	services []Service
+func New(svc ServiceChain) Cluster {
+	return &cluster{svc}
 }
 
-func New(storage storage.Storage) *Cluster {
-	return &Cluster{storage: storage}
+func (c *cluster) NewCreate() *QueryCreate {
+	return newCreate(c.svc)
+}
+
+func (c *cluster) NewRetrieve() *QueryRetrieve {
+	return newRetrieve(c.svc)
+}
+
+func (c *cluster) NewUpdate() *QueryUpdate {
+	return newUpdate(c.svc)
+}
+
+func (c *cluster) NewDelete() *QueryDelete {
+	return newDelete(c.svc)
 }

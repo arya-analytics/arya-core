@@ -71,19 +71,19 @@ func catalog() model.Catalog {
 	}
 }
 
-func (s *Service) CanHandle(q *cluster.Query) bool {
+func (s *Service) CanHandle(q *cluster.QueryRequest) bool {
 	return catalog().Contains(q.Model)
 }
 
-func (s *Service) Exec(ctx context.Context, q *cluster.Query) error {
+func (s *Service) Exec(ctx context.Context, q *cluster.QueryRequest) error {
 	switch q.Variant {
 	case cluster.QueryVariantCreate:
-		s.CreateReplicas(ctx, q)
+		s.createReplicas(ctx, q)
 	}
 	return s.catcher.Error()
 }
 
-func (s *Service) CreateReplicas(ctx context.Context, q *cluster.Query) {
+func (s *Service) createReplicas(ctx context.Context, q *cluster.QueryRequest) {
 	rrPKs := model.NewPKChain(q.Model.FieldsByName("RangeReplicaID").Raw())
 	rrS := q.Model.FieldsByName("RangeReplica").ToReflect()
 	s.catcher.Exec(func() error {
@@ -101,6 +101,16 @@ func (s *Service) CreateReplicas(ctx context.Context, q *cluster.Query) {
 		})
 	}
 }
+
+//func (s *Service) retrieveReplicas(ctx context.Context, q *cluster.QueryRequest) {
+//	if !ok {
+//		panic("replica retrieve queries require a PK")
+//	}
+//	ccrPKC := model.NewPKChain(pkOpt())
+//	s.catcher.Exec(func() error {
+//		s.local.RetrieveReplicas(ctx, q.Model, ccrPKC, false)
+//	})
+//}
 
 func buildRemoteCreateParams(remoteCC *model.Reflect) (qp []RemoteReplicaCreateParams) {
 	addrMap := batch.NewModel(remoteCC).Exec("RangeReplica.Node.Address")

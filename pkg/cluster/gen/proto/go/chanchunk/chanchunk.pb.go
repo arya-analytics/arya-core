@@ -448,11 +448,11 @@ var file_chanchunk_chanchunk_proto_goTypes = []interface{}{
 var file_chanchunk_chanchunk_proto_depIdxs = []int32{
 	0, // 0: chanchunk.v1.ChannelChunkServiceCreateReplicasRequest.chunk:type_name -> chanchunk.v1.ChannelChunkReplica
 	0, // 1: chanchunk.v1.ChannelChunkServiceRetrieveReplicasResponse.chunk:type_name -> chanchunk.v1.ChannelChunkReplica
-	1, // 2: chanchunk.v1.ChannelChunkService.CreateReplicas:input_type -> chanchunk.v1.ChannelChunkServiceCreateReplicasRequest
-	4, // 3: chanchunk.v1.ChannelChunkService.RetrieveReplicas:input_type -> chanchunk.v1.ChannelChunkServiceRetrieveReplicasRequest
+	1, // 2: chanchunk.v1.ChannelChunkService.createReplicas:input_type -> chanchunk.v1.ChannelChunkServiceCreateReplicasRequest
+	4, // 3: chanchunk.v1.ChannelChunkService.retrieveReplicas:input_type -> chanchunk.v1.ChannelChunkServiceRetrieveReplicasRequest
 	5, // 4: chanchunk.v1.ChannelChunkService.DeleteReplicas:input_type -> chanchunk.v1.ChannelChunkServiceDeleteReplicasRequest
-	2, // 5: chanchunk.v1.ChannelChunkService.CreateReplicas:output_type -> chanchunk.v1.ChannelChunkServiceCreateReplicasResponse
-	3, // 6: chanchunk.v1.ChannelChunkService.RetrieveReplicas:output_type -> chanchunk.v1.ChannelChunkServiceRetrieveReplicasResponse
+	2, // 5: chanchunk.v1.ChannelChunkService.createReplicas:output_type -> chanchunk.v1.ChannelChunkServiceCreateReplicasResponse
+	3, // 6: chanchunk.v1.ChannelChunkService.retrieveReplicas:output_type -> chanchunk.v1.ChannelChunkServiceRetrieveReplicasResponse
 	6, // 7: chanchunk.v1.ChannelChunkService.DeleteReplicas:output_type -> chanchunk.v1.ChannelChunkServiceDeleteReplicasResponse
 	5, // [5:8] is the sub-list for method output_type
 	2, // [2:5] is the sub-list for method input_type
