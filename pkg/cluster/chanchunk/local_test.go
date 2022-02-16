@@ -6,7 +6,7 @@ import (
 
 var _ = Describe("Local", func() {
 	//var (
-	//	svc                 *chanchunk.ServiceLocal
+	//	svc                 *chanchunk.ServiceLocalStorage
 	//	local               localstorage.Local
 	//	items               []interface{}
 	//	channelConfig       *storage.ChannelConfig
@@ -20,7 +20,7 @@ var _ = Describe("Local", func() {
 	//	local = &local.LocalStorage{
 	//		Storage: chanchunk.store,
 	//	}
-	//	svc = &chanchunk.ServiceLocal{
+	//	svc = &chanchunk.ServiceLocalStorage{
 	//		Local:   local,
 	//		Catcher: &errutil.Catcher{},
 	//	}

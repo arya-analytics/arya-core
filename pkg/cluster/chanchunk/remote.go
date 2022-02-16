@@ -8,30 +8,56 @@ import (
 	"io"
 )
 
-func catalogRemote() model.Catalog {
+/// |||| INTERFACE ||||
+
+type ServiceRemote interface {
+	// |||| REPLICA ||||
+
+	RetrieveReplicas(ctx context.Context, ccr *model.Reflect, qp []RemoteReplicaRetrieveParams) error
+	CreateReplicas(ctx context.Context, qp []RemoteReplicaCreateParams) error
+	DeleteReplicas(ctx context.Context, qp []RemoteReplicaDeleteParams) error
+}
+
+type RemoteReplicaRetrieveParams struct {
+	Addr string
+	PKC  model.PKChain
+}
+
+type RemoteReplicaCreateParams struct {
+	Addr  string
+	Model *model.Reflect
+}
+
+type RemoteReplicaDeleteParams struct {
+	Addr string
+	PKC  model.PKChain
+}
+
+// |||| RPC IMPLEMENTATION ||||
+
+func catalogRemoteRPC() model.Catalog {
 	return model.Catalog{
 		&api.ChannelChunkReplica{},
 	}
 
 }
-
 func newExchange(m *model.Reflect) *model.Exchange {
-	return rpc.NewModelExchange(m.Pointer(), catalogRemote().New(m.Pointer()))
+	return rpc.NewModelExchange(m.Pointer(), catalogRemoteRPC().New(m.Pointer()))
 }
 
-type ServiceRemote struct {
+type ServiceRemoteRPC struct {
 	pool rpc.Pool
 }
 
-func NewServiceRemote(pool rpc.Pool) *ServiceRemote {
-	return &ServiceRemote{pool: pool}
+func NewServiceRemoteRPC(pool rpc.Pool) ServiceRemote {
+	return &ServiceRemoteRPC{pool: pool}
 }
 
-func (s *ServiceRemote) client(addr string) api.ChannelChunkServiceClient {
+func (s *ServiceRemoteRPC) client(addr string) api.ChannelChunkServiceClient {
 	return api.NewChannelChunkServiceClient(s.pool.Retrieve(addr))
 }
 
-func (s *ServiceRemote) RetrieveReplicas(ctx context.Context, ccr *model.Reflect, qp []RemoteReplicaRetrieveParams) error {
+func (s *ServiceRemoteRPC) RetrieveReplicas(ctx context.Context, ccr *model.Reflect, qp []RemoteReplicaRetrieveParams) error {
 	exc := newExchange(ccr)
 	for _, params := range qp {
 		rq := &api.ChannelChunkServiceRetrieveReplicasRequest{Id: params.PKC.Strings()}
@@ -55,7 +81,7 @@ func (s *ServiceRemote) RetrieveReplicas(ctx context.Context, ccr *model.Reflect
 	return nil
 }
 
-func (s *ServiceRemote) CreateReplicas(ctx context.Context, qp []RemoteReplicaCreateParams) error {
+func (s *ServiceRemoteRPC) CreateReplicas(ctx context.Context, qp []RemoteReplicaCreateParams) error {
 	for _, params := range qp {
 		exc := newExchange(params.Model)
 		exc.ToDest()
@@ -84,7 +110,7 @@ func (s *ServiceRemote) CreateReplicas(ctx context.Context, qp []RemoteReplicaCr
 	return nil
 }
 
-func (s *ServiceRemote) DeleteReplicas(ctx context.Context, qp []RemoteReplicaDeleteParams) error {
+func (s *ServiceRemoteRPC) DeleteReplicas(ctx context.Context, qp []RemoteReplicaDeleteParams) error {
 	for _, params := range qp {
 		req := &api.ChannelChunkServiceDeleteReplicasRequest{Id: params.PKC.Strings()}
 		_, err := s.client(params.Addr).DeleteReplicas(ctx, req)

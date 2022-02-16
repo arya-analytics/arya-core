@@ -1,6 +1,9 @@
 package cluster
 
-import "github.com/arya-analytics/aryacore/pkg/util/model"
+import (
+	"fmt"
+	"github.com/arya-analytics/aryacore/pkg/util/model"
+)
 
 // |||| REQUEST ||||
 
@@ -23,14 +26,21 @@ const (
 
 // |||| QUERY OPTS ||||
 
-type queryOptFunc func(q *QueryRequest, args ...interface{})
+// || UTILITIES ||
+
+func panicWhenQueryOptSpecified(q *QueryRequest, optKey string) {
+	_, ok := q.opts[optKey]
+	if ok {
+		panic(fmt.Sprintf("%s already specified. There must be a duplicate method call in your query!", optKey))
+	}
+}
 
 // || PK ||
 
-const wherePKKey = "PK"
+const pkQueryOptKey = "PK Query Opt"
 
 func PKQueryOpt(q *QueryRequest) (model.PKChain, bool) {
-	qo, ok := q.opts[wherePKKey]
+	qo, ok := q.opts[pkQueryOptKey]
 	if !ok {
 		return model.PKChain{}, false
 	}
@@ -42,18 +52,19 @@ type pkQueryOpt struct {
 }
 
 func newPkQueryOpt(q *QueryRequest, args ...interface{}) {
+	panicWhenQueryOptSpecified(q, pkQueryOptKey)
 	qo := pkQueryOpt{model.NewPKChain(args)}
-	q.opts[wherePKKey] = qo
+	q.opts[pkQueryOptKey] = qo
 }
 
 // || FIELDS ||
 
-const whereFieldsKey = "Field"
+const fieldQueryOptKey = "Field Query Opt"
 
 type Fields map[string]interface{}
 
 func FieldsQueryOpt(q *QueryRequest) Fields {
-	qo, ok := q.opts[whereFieldsKey]
+	qo, ok := q.opts[fieldQueryOptKey]
 	if !ok {
 		return Fields{}
 	}
@@ -61,5 +72,6 @@ func FieldsQueryOpt(q *QueryRequest) Fields {
 }
 
 func newFieldQueryOpts(q *QueryRequest, ops Fields) {
-	q.opts[whereFieldsKey] = ops
+	panicWhenQueryOptSpecified(q, fieldQueryOptKey)
+	q.opts[fieldQueryOptKey] = ops
 }

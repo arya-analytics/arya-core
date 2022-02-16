@@ -10,58 +10,17 @@ import (
 )
 
 type Service struct {
-	remote  ClientRemote
-	local   ClientLocal
+	remote  ServiceRemote
+	local   ServiceLocal
 	catcher *errutil.Catcher
 }
 
-func NewService(local ClientLocal, remote ClientRemote) *Service {
+func NewService(local ServiceLocal, remote ServiceRemote) *Service {
 	return &Service{
 		remote:  remote,
 		local:   local,
 		catcher: &errutil.Catcher{},
 	}
-}
-
-type RemoteReplicaRetrieveParams struct {
-	Addr string
-	PKC  model.PKChain
-}
-
-type RemoteReplicaCreateParams struct {
-	Addr  string
-	Model *model.Reflect
-}
-
-type RemoteReplicaDeleteParams struct {
-	Addr string
-	PKC  model.PKChain
-}
-
-type ClientRemote interface {
-	// |||| REPLICA ||||
-
-	RetrieveReplicas(ctx context.Context, ccr *model.Reflect, qp []RemoteReplicaRetrieveParams) error
-	CreateReplicas(ctx context.Context, qp []RemoteReplicaCreateParams) error
-	DeleteReplicas(ctx context.Context, qp []RemoteReplicaDeleteParams) error
-}
-
-type ClientLocal interface {
-	// |||| CHUNK ||||
-
-	Create(ctx context.Context, cc *model.Reflect) error
-	Retrieve(ctx context.Context, cc *model.Reflect, ccPKC model.PKChain) error
-	Delete(ctx context.Context, ccPKC model.PKChain) error
-
-	// |||| REPLICA ||||
-
-	CreateReplicas(ctx context.Context, ccr *model.Reflect) error
-	RetrieveReplicas(ctx context.Context, ccr *model.Reflect, ccrPKC model.PKChain, omitBulk bool) error
-	DeleteReplicas(ctx context.Context, ccrPKC model.PKChain) error
-
-	// |||| RANGE REPLICA ||||
-
-	RetrieveRangeReplicas(ctx context.Context, rr *model.Reflect, rrPKC model.PKChain) error
 }
 
 func catalog() model.Catalog {

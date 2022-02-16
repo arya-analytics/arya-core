@@ -16,11 +16,11 @@ import (
 	"net"
 )
 
-var _ = Describe("ServiceRemote", func() {
+var _ = Describe("ServiceRemoteRPC", func() {
 	var (
 		ctx        context.Context
 		pool       rpc.Pool
-		svc        *chanchunk.ServiceRemote
+		svc        *chanchunk.ServiceRemoteRPC
 		server     *mock.Server
 		grpcServer *grpc.Server
 		addr       net.Addr
@@ -29,7 +29,7 @@ var _ = Describe("ServiceRemote", func() {
 	BeforeEach(func() {
 		ctx = context.Background()
 		pool = rpcmock.NewPool()
-		svc = chanchunk.NewServiceRemote(pool)
+		svc = chanchunk.NewServiceRemoteRPC(pool)
 		server = mock.NewServer()
 		grpcServer = grpc.NewServer()
 		server.BindTo(grpcServer)
