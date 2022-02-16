@@ -37,7 +37,7 @@ func panicWhenAlreadySpecified(q *QueryRequest, optKey string) {
 
 // || PK ||
 
-const pkQueryOptKey = "PK Query Opt"
+const pkQueryOptKey = "PKQueryOpt"
 
 func PKQueryOpt(q *QueryRequest) (model.PKChain, bool) {
 	qo, ok := q.opts[pkQueryOptKey]
@@ -59,7 +59,7 @@ func newPkQueryOpt(q *QueryRequest, args ...interface{}) {
 
 // || FIELDS ||
 
-const fieldQueryOptKey = "Field Query Opt"
+const fieldQueryOptKey = "FieldQueryOpt"
 
 type Fields map[string]interface{}
 
