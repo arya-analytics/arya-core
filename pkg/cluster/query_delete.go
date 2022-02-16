@@ -22,8 +22,8 @@ func (q *QueryDelete) WherePK(pk interface{}) *QueryDelete {
 	return q
 }
 
-func (q *QueryDelete) WherePKs(pks interface{}) *QueryDelete {
-	newPkQueryOpt(q.baseQueryRequest(), pks)
+func (q *QueryDelete) WherePKs(pks ...interface{}) *QueryDelete {
+	newPkQueryOpt(q.baseQueryRequest(), pks...)
 	return q
 }
 

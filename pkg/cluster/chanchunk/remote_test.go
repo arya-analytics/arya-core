@@ -20,7 +20,7 @@ var _ = Describe("ServiceRemoteRPC", func() {
 	var (
 		ctx        context.Context
 		pool       rpc.Pool
-		svc        *chanchunk.ServiceRemoteRPC
+		svc        chanchunk.ServiceRemote
 		server     *mock.Server
 		grpcServer *grpc.Server
 		addr       net.Addr

@@ -12,7 +12,7 @@ type queryBase struct {
 
 func (q *queryBase) baseInit(serviceChain ServiceChain, variant QueryVariant) {
 	q._svc = serviceChain
-	q._qr = &QueryRequest{Variant: variant}
+	q._qr = &QueryRequest{Variant: variant, opts: map[string]interface{}{}}
 }
 
 func (q *queryBase) baseModel(m interface{}) {

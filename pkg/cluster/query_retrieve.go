@@ -23,7 +23,7 @@ func (q *QueryRetrieve) WherePK(pk interface{}) *QueryRetrieve {
 }
 
 func (q *QueryRetrieve) WherePKs(pks ...interface{}) *QueryRetrieve {
-	newPkQueryOpt(q.baseQueryRequest(), pks)
+	newPkQueryOpt(q.baseQueryRequest(), pks...)
 	return q
 }
 
