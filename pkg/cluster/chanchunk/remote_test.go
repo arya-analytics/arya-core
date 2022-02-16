@@ -1,7 +1,6 @@
 package chanchunk_test
 
 import (
-	"context"
 	"github.com/arya-analytics/aryacore/pkg/cluster/chanchunk"
 	"github.com/arya-analytics/aryacore/pkg/cluster/chanchunk/mock"
 	"github.com/arya-analytics/aryacore/pkg/rpc"
@@ -18,7 +17,6 @@ import (
 
 var _ = Describe("ServiceRemoteRPC", func() {
 	var (
-		ctx                          context.Context
 		pool                         rpc.Pool
 		svc                          chanchunk.ServiceRemote
 		serverOne, serverTwo         *mock.Server
@@ -27,8 +25,7 @@ var _ = Describe("ServiceRemoteRPC", func() {
 		serverErr                    error
 	)
 	BeforeEach(func() {
-		ctx = context.Background()
-		pool = rpcmock.NewPool()
+		pool = rpcmock.NewPool(0)
 		svc = chanchunk.NewServiceRemoteRPC(pool)
 		serverOne, serverTwo = mock.NewServer(), mock.NewServer()
 		grpcServerOne, grpcServerTwo = grpc.NewServer(), grpc.NewServer()
