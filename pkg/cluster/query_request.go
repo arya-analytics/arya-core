@@ -28,7 +28,7 @@ const (
 
 // || UTILITIES ||
 
-func panicWhenQueryOptSpecified(q *QueryRequest, optKey string) {
+func panicWhenAlreadySpecified(q *QueryRequest, optKey string) {
 	_, ok := q.opts[optKey]
 	if ok {
 		panic(fmt.Sprintf("%s already specified. There must be a duplicate method call in your query!", optKey))
@@ -52,7 +52,7 @@ type pkQueryOpt struct {
 }
 
 func newPkQueryOpt(q *QueryRequest, args ...interface{}) {
-	panicWhenQueryOptSpecified(q, pkQueryOptKey)
+	panicWhenAlreadySpecified(q, pkQueryOptKey)
 	qo := pkQueryOpt{model.NewPKChain(args)}
 	q.opts[pkQueryOptKey] = qo
 }
@@ -72,6 +72,6 @@ func FieldsQueryOpt(q *QueryRequest) Fields {
 }
 
 func newFieldQueryOpts(q *QueryRequest, ops Fields) {
-	panicWhenQueryOptSpecified(q, fieldQueryOptKey)
+	panicWhenAlreadySpecified(q, fieldQueryOptKey)
 	q.opts[fieldQueryOptKey] = ops
 }

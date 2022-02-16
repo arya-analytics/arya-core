@@ -26,7 +26,7 @@ type ChannelChunkReplica struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Id    string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty" model:"role:pk"`
+	ID    string `protobuf:"bytes,1,opt,name=ID,proto3" json:"ID,omitempty" model:"role:pk"`
 	Telem []byte `protobuf:"bytes,2,opt,name=telem,proto3" json:"telem,omitempty" model:"role:bulkTelem"`
 }
 
@@ -62,9 +62,9 @@ func (*ChannelChunkReplica) Descriptor() ([]byte, []int) {
 	return file_chanchunk_chanchunk_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *ChannelChunkReplica) GetId() string {
+func (x *ChannelChunkReplica) GetID() string {
 	if x != nil {
-		return x.Id
+		return x.ID
 	}
 	return ""
 }
@@ -348,9 +348,9 @@ var file_chanchunk_chanchunk_proto_rawDesc = []byte{
 	0x6e, 0x63, 0x68, 0x75, 0x6e, 0x6b, 0x2e, 0x76, 0x31, 0x1a, 0x13, 0x74, 0x61, 0x67, 0x67, 0x65,
 	0x72, 0x2f, 0x74, 0x61, 0x67, 0x67, 0x65, 0x72, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x70,
 	0x0a, 0x13, 0x43, 0x68, 0x61, 0x6e, 0x6e, 0x65, 0x6c, 0x43, 0x68, 0x75, 0x6e, 0x6b, 0x52, 0x65,
-	0x70, 0x6c, 0x69, 0x63, 0x61, 0x12, 0x25, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x70, 0x6c, 0x69, 0x63, 0x61, 0x12, 0x25, 0x0a, 0x02, 0x49, 0x44, 0x18, 0x01, 0x20, 0x01, 0x28,
 	0x09, 0x42, 0x15, 0x9a, 0x84, 0x9e, 0x03, 0x10, 0x6d, 0x6f, 0x64, 0x65, 0x6c, 0x3a, 0x22, 0x72,
-	0x6f, 0x6c, 0x65, 0x3a, 0x70, 0x6b, 0x2c, 0x22, 0x52, 0x02, 0x69, 0x64, 0x12, 0x32, 0x0a, 0x05,
+	0x6f, 0x6c, 0x65, 0x3a, 0x70, 0x6b, 0x2c, 0x22, 0x52, 0x02, 0x49, 0x44, 0x12, 0x32, 0x0a, 0x05,
 	0x74, 0x65, 0x6c, 0x65, 0x6d, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0c, 0x42, 0x1c, 0x9a, 0x84, 0x9e,
 	0x03, 0x17, 0x6d, 0x6f, 0x64, 0x65, 0x6c, 0x3a, 0x22, 0x72, 0x6f, 0x6c, 0x65, 0x3a, 0x62, 0x75,
 	0x6c, 0x6b, 0x54, 0x65, 0x6c, 0x65, 0x6d, 0x2c, 0x22, 0x52, 0x05, 0x74, 0x65, 0x6c, 0x65, 0x6d,
@@ -448,11 +448,11 @@ var file_chanchunk_chanchunk_proto_goTypes = []interface{}{
 var file_chanchunk_chanchunk_proto_depIdxs = []int32{
 	0, // 0: chanchunk.v1.ChannelChunkServiceCreateReplicasRequest.chunk:type_name -> chanchunk.v1.ChannelChunkReplica
 	0, // 1: chanchunk.v1.ChannelChunkServiceRetrieveReplicasResponse.chunk:type_name -> chanchunk.v1.ChannelChunkReplica
-	1, // 2: chanchunk.v1.ChannelChunkService.createReplicas:input_type -> chanchunk.v1.ChannelChunkServiceCreateReplicasRequest
-	4, // 3: chanchunk.v1.ChannelChunkService.retrieveReplicas:input_type -> chanchunk.v1.ChannelChunkServiceRetrieveReplicasRequest
+	1, // 2: chanchunk.v1.ChannelChunkService.CreateReplicas:input_type -> chanchunk.v1.ChannelChunkServiceCreateReplicasRequest
+	4, // 3: chanchunk.v1.ChannelChunkService.RetrieveReplicas:input_type -> chanchunk.v1.ChannelChunkServiceRetrieveReplicasRequest
 	5, // 4: chanchunk.v1.ChannelChunkService.DeleteReplicas:input_type -> chanchunk.v1.ChannelChunkServiceDeleteReplicasRequest
-	2, // 5: chanchunk.v1.ChannelChunkService.createReplicas:output_type -> chanchunk.v1.ChannelChunkServiceCreateReplicasResponse
-	3, // 6: chanchunk.v1.ChannelChunkService.retrieveReplicas:output_type -> chanchunk.v1.ChannelChunkServiceRetrieveReplicasResponse
+	2, // 5: chanchunk.v1.ChannelChunkService.CreateReplicas:output_type -> chanchunk.v1.ChannelChunkServiceCreateReplicasResponse
+	3, // 6: chanchunk.v1.ChannelChunkService.RetrieveReplicas:output_type -> chanchunk.v1.ChannelChunkServiceRetrieveReplicasResponse
 	6, // 7: chanchunk.v1.ChannelChunkService.DeleteReplicas:output_type -> chanchunk.v1.ChannelChunkServiceDeleteReplicasResponse
 	5, // [5:8] is the sub-list for method output_type
 	2, // [2:5] is the sub-list for method input_type
