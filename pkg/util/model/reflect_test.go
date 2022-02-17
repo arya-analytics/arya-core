@@ -192,6 +192,12 @@ var _ = Describe("Reflect", func() {
 		It("Should return the correct pointer value", func() {
 			Expect(rfl.PointerValue()).To(Equal(reflect.ValueOf(&m)))
 		})
+		It("Should return the correct fields by index", func() {
+			Expect(rfl.Fields(0).Raw()[0]).To(Equal(22))
+		})
+		It("Should return the correct fields by name", func() {
+			Expect(rfl.FieldsByName("ID").Raw()[0]).To(Equal(22))
+		})
 		Describe("Appending to a chain", func() {
 			It("Should append to the chain correctly", func() {
 				mTwo := &mock.ModelA{ID: 1}

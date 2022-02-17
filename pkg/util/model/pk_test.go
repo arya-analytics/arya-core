@@ -12,27 +12,17 @@ import (
 
 var _ = Describe("PKC", func() {
 	Describe("Single PKC", func() {
+		var uuidPk = uuid.New()
 		Describe("Stringifying", func() {
-			It("Should return a UUID as a string", func() {
-				id := uuid.New()
-				Expect(model.NewPK(id).String()).To(Equal(id.String()))
-			})
-			It("Should return an int as a string", func() {
-				i := 1
-				Expect(model.NewPK(i).String()).To(Equal(strconv.Itoa(int(i))))
-			})
-			It("Should return an int32 as a string", func() {
-				var id32 int32 = 1
-				Expect(model.NewPK(id32).String()).To(Equal(strconv.Itoa(int(id32))))
-			})
-			It("Should return an int64 as a string", func() {
-				var id64 int64 = 1
-				Expect(model.NewPK(id64).String()).To(Equal(strconv.Itoa(int(id64))))
-			})
-			It("Should return a string as a string", func() {
-				s := "Hello"
-				Expect(model.NewPK(s).String()).To(Equal(s))
-			})
+			DescribeTable("Standard Usage", func(pk interface{}, expected interface{}) {
+				Expect(model.NewPK(pk).String()).To(Equal(expected))
+			},
+				Entry("UUID", uuidPk, uuidPk.String()),
+				Entry("int", 1, strconv.Itoa(1)),
+				Entry("int32", int32(2), strconv.Itoa(2)),
+				Entry("int64", int64(2), strconv.Itoa(2)),
+				Entry("string", "hello", "hello"),
+			)
 			It("Should panic with an unknown pk type", func() {
 				Expect(func() {
 					_ = model.NewPK(123.2).String()
@@ -85,7 +75,7 @@ var _ = Describe("PKC", func() {
 			})
 		})
 	})
-	Describe("Multiple PKS", func() {
+	Describe("PK Chain", func() {
 		Describe("Standard usage", func() {
 			rawPks := []uuid.UUID{uuid.New(), uuid.New()}
 			pks := model.NewPKChain(rawPks)
@@ -95,6 +85,19 @@ var _ = Describe("PKC", func() {
 			It("Should return the correct interface value", func() {
 				Expect(pks.Raw()[0]).To(Equal(rawPks[0]))
 				Expect(pks.Raw()[1]).To(Equal(rawPks[1]))
+			})
+			It("Should return the correct PKS as strings", func() {
+				Expect(pks.Strings()[0]).To(Equal(rawPks[0].String()))
+				Expect(pks.Strings()[1]).To(Equal(rawPks[1].String()))
+			})
+			Context("All Zero", func() {
+				It("Should return false when a pk is not zero", func() {
+					Expect(pks.AllZero()).To(BeFalse())
+				})
+				It("Should return true when all pks are zero", func() {
+					newPks := model.NewPKChain([]uuid.UUID{{}, {}})
+					Expect(newPks.AllZero()).To(BeTrue())
+				})
 			})
 		})
 		Describe("Edge cases + errors", func() {

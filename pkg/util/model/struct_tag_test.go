@@ -31,6 +31,10 @@ var _ = Describe("StructTag", func() {
 				_, ok := tags.Retrieve("randomcat", "random", "lalala")
 				Expect(ok).To(BeFalse())
 			})
+			It("Should retrieve the correct tag by role", func() {
+				_, ok := tags.RetrieveByFieldRole(model.PKRole)
+				Expect(ok).To(BeTrue())
+			})
 		})
 	})
 	Describe("Edge cases + errors", func() {

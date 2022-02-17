@@ -133,6 +133,7 @@ func (pkc PKChain) Raw() (pks []interface{}) {
 	return pks
 }
 
+// Strings returns the PK.String values of all PK in the PKChain
 func (pkc PKChain) Strings() (pks []string) {
 	for _, pk := range pkc {
 		pks = append(pks, pk.String())
@@ -140,6 +141,7 @@ func (pkc PKChain) Strings() (pks []string) {
 	return pks
 }
 
+// AllZero checks if all the PK in PKChain are the zero value
 func (pkc PKChain) AllZero() bool {
 	allZero := true
 	for _, pk := range pkc {

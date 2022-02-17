@@ -95,6 +95,7 @@ func (s StructTagChain) RetrieveByFieldName(fldName string) (StructTag, bool) {
 	return StructTag{}, false
 }
 
+// RetrieveByFieldRole retrieves a field by its role struct tag.
 func (s StructTagChain) RetrieveByFieldRole(role string) (StructTag, bool) {
 	return s.Retrieve(TagCat, RoleKey, role)
 }

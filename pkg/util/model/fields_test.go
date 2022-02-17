@@ -9,6 +9,16 @@ import (
 )
 
 var _ = Describe("Fields", func() {
+	Describe("Checking for all non zero", func() {
+		var m *mock.ModelA
+		BeforeEach(func() {
+			m = &mock.ModelA{InnerModel: &mock.ModelB{ID: 96}}
+		})
+		It("Should return false when the fields are nonZero", func() {
+			Expect(model.NewReflect(m).FieldsByName("ID").AllNonZero()).To(BeFalse())
+		})
+
+	})
 	Describe("Creating a new reflect from fields", func() {
 		Context("Inner model is not nil", func() {
 			var m *mock.ModelA
@@ -33,6 +43,12 @@ var _ = Describe("Fields", func() {
 				newRfl := baseRfl.FieldsByName("InnerModel").ToReflect()
 				newRfl.ChainValueByIndex(0).StructFieldByName("ID").Set(reflect.ValueOf(98))
 				Expect(m.InnerModel.ID).To(Equal(98))
+			})
+			It("Should panic on a non-existent field", func() {
+				baseRfl := model.NewReflect(m)
+				Expect(func() {
+					baseRfl.FieldsByName("NonExistentfield").ToReflect()
+				}).To(Panic())
 			})
 		})
 		Context("Inner model is nil", func() {

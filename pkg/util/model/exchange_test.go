@@ -241,6 +241,17 @@ var _ = Describe("Model Exchange", func() {
 						Expect(dest[0].Name).To(Equal("Hello 25"))
 						Expect(dest[1].Name).To(Equal("Hello 26"))
 					})
+					Context("Bad Update", func() {
+						It("Should warn the caller", func() {
+							source[0].ID = 22
+							source[1].ID = 28
+							me := model.NewExchange(&source, &dest)
+							me.ToSource()
+							Expect(dest).To(HaveLen(2))
+							Expect(dest[0].Name).To(Equal("Hello 25"))
+							Expect(dest[1].Name).To(Equal("Hello 26"))
+						})
+					})
 				})
 				Context("Multiple nested models", func() {
 					var chainInnerModel []*mock.ModelB
