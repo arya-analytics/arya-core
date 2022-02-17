@@ -169,7 +169,7 @@ func (r *Reflect) ChainValueByIndexOrNew(i int) *Reflect {
 
 // |||| FIELD ACCESSORS ||||
 
-// Fields returns all fields in the reflect object at the struct index i
+// Fields returns all fields in the reflect object at the struct index i.
 func (r *Reflect) Fields(i int) *Fields {
 	var rawFlds []reflect.Value
 	r.ForEach(func(rfl *Reflect, i int) {
