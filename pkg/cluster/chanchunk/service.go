@@ -19,11 +19,7 @@ type Service struct {
 }
 
 func NewService(local ServiceLocal, remote ServiceRemote) *Service {
-	return &Service{
-		remote:  remote,
-		local:   local,
-		catcher: &errutil.Catcher{},
-	}
+	return &Service{remote: remote, local: local, catcher: &errutil.Catcher{}}
 }
 
 func (s *Service) CanHandle(q *internal.QueryRequest) bool {
@@ -96,9 +92,10 @@ const (
 
 func (s *Service) createReplica(ctx context.Context, qr *internal.QueryRequest) {
 	rrPKs := model.NewPKChain(qr.Model.FieldsByName(RangeReplicaIDField).Raw())
-	opts := LocalRangeReplicaRetrieveOpts{PKC: rrPKs}
 	rrS := qr.Model.FieldsByName(RangeReplicaField).ToReflect()
-	s.catchExec(func() error { return s.local.RetrieveRangeReplica(ctx, rrS.Pointer(), opts) })
+	s.catchExec(func() error {
+		return s.local.RetrieveRangeReplica(ctx, rrS.Pointer(), LocalRangeReplicaRetrieveOpts{PKC: rrPKs})
+	})
 	replicaIsHostSwitch(
 		qr.Model,
 		func(_ bool, m *model.Reflect) {
@@ -189,8 +186,5 @@ func buildRemoteReplicaDeleteOpts(remoteCCR *model.Reflect) (qp []RemoteReplicaD
 // |||| CATALOG ||||
 
 func catalog() model.Catalog {
-	return model.Catalog{
-		&storage.ChannelChunk{},
-		&storage.ChannelChunkReplica{},
-	}
+	return model.Catalog{&storage.ChannelChunk{}, &storage.ChannelChunkReplica{}}
 }
