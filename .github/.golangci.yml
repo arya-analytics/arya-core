@@ -21,7 +21,6 @@ linters:
     - errcheck
     - govet
     - staticcheck
-    - typecheck
     - nilerr
     # COMPLEXITY
     - gocognit
