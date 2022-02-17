@@ -11,13 +11,22 @@ permissions:
   pull-requests: read
 jobs:
   golangci:
-    name: lint
+    name: golanci-lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: golangci-lint
+      - name: lint
         uses: golangci/golangci-lint-action@v2
         with:
           args: --config .github/.golangci.yml
     env:
       GITHUB_TOKEN: ${{ secrets.GOLANGCI_LINT_TOKEN }}
+  buf:
+    name: buf-lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: bufbuild/buf-setup-action@v0.6.0
+      - uses: bufbuild/buf-lint-action@v1
+        with:
+          input: pkg/cluster/
