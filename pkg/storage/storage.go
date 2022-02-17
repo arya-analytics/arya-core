@@ -13,7 +13,7 @@
 // Engines (Engine) can fulfill one of three roles:
 //
 // EngineMD - Reads and writes lightweight, strongly consistent data to storage.
-// EngineObject - Saves bulk data to node local data storage.
+// EngineObject - Saves bulk data to node localstorage data storage.
 // EngineCache - High speed cache that can read and write time series data.
 //
 // Initialization
@@ -70,8 +70,8 @@ type Storage interface {
 }
 
 type storage struct {
-	cfg    Config
-	pooler *pooler
+	cfg  Config
+	pool *pool
 }
 
 // New creates a new Storage based on the provided Config.
@@ -85,7 +85,7 @@ type storage struct {
 // Storage cannot operate without Config.EngineMD,
 // as it relies on this engine to maintain consistency with other engines.
 func New(cfg Config) Storage {
-	return &storage{cfg: cfg, pooler: newPooler()}
+	return &storage{cfg: cfg, pool: newPool()}
 }
 
 // NewMigrate opens a new QueryMigrate.
@@ -130,7 +130,7 @@ func (s *storage) NewTasks(opts ...tasks.SchedulerOpt) tasks.Scheduler {
 }
 
 func (s *storage) adapter(e Engine) (a Adapter) {
-	return s.pooler.retrieve(e)
+	return s.pool.retrieve(e)
 }
 
 func (s *storage) config() Config {

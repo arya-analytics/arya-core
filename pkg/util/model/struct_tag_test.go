@@ -1,8 +1,8 @@
 package model_test
 
 import (
-	"github.com/arya-analytics/aryacore/pkg/storage/mock"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
+	"github.com/arya-analytics/aryacore/pkg/util/model/mock"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"reflect"
@@ -30,6 +30,10 @@ var _ = Describe("StructTag", func() {
 			It("Should return false if the tag doesnt exist", func() {
 				_, ok := tags.Retrieve("randomcat", "random", "lalala")
 				Expect(ok).To(BeFalse())
+			})
+			It("Should retrieve the correct tag by role", func() {
+				_, ok := tags.RetrieveByFieldRole(model.PKRole)
+				Expect(ok).To(BeTrue())
 			})
 		})
 	})

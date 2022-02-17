@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+import "tagger/tagger.proto";
+
+
+package chanchunk.v1;
+
+// |||| SVC ||||
+
+service ChannelChunkService {
+  rpc CreateReplicas(stream ChannelChunkServiceCreateReplicasRequest) returns (ChannelChunkServiceCreateReplicasResponse);
+  rpc RetrieveReplicas(ChannelChunkServiceRetrieveReplicasRequest) returns (stream ChannelChunkServiceRetrieveReplicasResponse);
+  rpc DeleteReplicas(ChannelChunkServiceDeleteReplicasRequest) returns (ChannelChunkServiceDeleteReplicasResponse);
+}
+
+// |||| MODEL ||||
+
+message ChannelChunkReplica {
+  string ID = 1 [(tagger.tags) = "model:\"role:pk,\""];
+  bytes telem = 2 [(tagger.tags) = "model:\"role:bulkTelem,\""];
+}
+
+// |||| CREATE ||||
+
+message ChannelChunkServiceCreateReplicasRequest {
+  ChannelChunkReplica chunk = 1;
+}
+
+message ChannelChunkServiceCreateReplicasResponse {}
+
+// |||| RETRIEVE ||||
+
+message ChannelChunkServiceRetrieveReplicasResponse {
+  ChannelChunkReplica chunk = 1;
+}
+
+message ChannelChunkServiceRetrieveReplicasRequest {
+  repeated string id = 1;
+}
+
+// |||| DELETE ||||
+
+message ChannelChunkServiceDeleteReplicasRequest {
+  repeated string id = 1;
+}
+
+message ChannelChunkServiceDeleteReplicasResponse {}
+
+

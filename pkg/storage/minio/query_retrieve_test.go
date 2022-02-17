@@ -2,7 +2,7 @@ package minio_test
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/storage"
-	"github.com/arya-analytics/aryacore/pkg/storage/mock"
+	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -10,14 +10,14 @@ import (
 
 var _ = Describe("QueryRetrieve", func() {
 	var (
-		channelChunk *storage.ChannelChunk
+		channelChunk *storage.ChannelChunkReplica
 		bytes        []byte
 	)
 	BeforeEach(func() {
 		bytes = []byte("randomstring")
-		channelChunk = &storage.ChannelChunk{
-			ID:   uuid.New(),
-			Data: mock.NewObject(bytes),
+		channelChunk = &storage.ChannelChunkReplica{
+			ID:    uuid.New(),
+			Telem: telem.NewBulk(bytes),
 		}
 	})
 	JustBeforeEach(func() {
@@ -32,22 +32,19 @@ var _ = Describe("QueryRetrieve", func() {
 	Describe("Standard Usage", func() {
 		Describe("Retrieve an item", func() {
 			It("Should retrieve the correct item", func() {
-				resChannelChunk := &storage.ChannelChunk{}
+				resChannelChunk := &storage.ChannelChunkReplica{}
 				err := engine.NewRetrieve(adapter).Model(resChannelChunk).WherePK(channelChunk.ID).Exec(ctx)
 				Expect(err).To(BeNil())
-				Expect(resChannelChunk.Data).ToNot(BeNil())
-				resBytes := make([]byte, resChannelChunk.Data.Size())
-				_, err = resChannelChunk.Data.Read(resBytes)
-				Expect(err.Error()).To(Equal("EOF"))
-				Expect(resBytes).To(Equal(bytes))
+				Expect(resChannelChunk.Telem).ToNot(BeNil())
+				Expect(resChannelChunk.Telem.Bytes()).To(Equal([]byte("randomstring")))
 			})
 		})
 		Describe("Retrieve multiple items", func() {
-			var channelChunkTwo *storage.ChannelChunk
+			var channelChunkTwo *storage.ChannelChunkReplica
 			BeforeEach(func() {
-				channelChunkTwo = &storage.ChannelChunk{
-					ID:   uuid.New(),
-					Data: mock.NewObject([]byte("model two")),
+				channelChunkTwo = &storage.ChannelChunkReplica{
+					ID:    uuid.New(),
+					Telem: telem.NewBulk([]byte("model two")),
 				}
 			})
 			JustBeforeEach(func() {
@@ -56,7 +53,7 @@ var _ = Describe("QueryRetrieve", func() {
 				Expect(err).To(BeNil())
 			})
 			It("Should retrieve the correct items", func() {
-				var models []*storage.ChannelChunk
+				var models []*storage.ChannelChunkReplica
 				err := engine.NewRetrieve(adapter).Model(&models).WherePKs([]uuid.
 					UUID{channelChunk.ID, channelChunkTwo.ID}).Exec(ctx)
 				Expect(err).To(BeNil())

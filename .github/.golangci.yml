@@ -2,6 +2,7 @@ run:
   timeout: 10m
   skip-dirs:
     - pkg/util/emoji
+    - pkg/util/route
 linters:
   disable-all: true
   enable:
@@ -21,8 +22,8 @@ linters:
     - errcheck
     - govet
     - staticcheck
-    - typecheck
     - nilerr
+    - typecheck
     # COMPLEXITY
     - gocognit
     # TEST

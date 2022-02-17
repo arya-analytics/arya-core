@@ -13,16 +13,16 @@ type queryDelete struct {
 
 func newDelete(db *bun.DB) *queryDelete {
 	q := &queryDelete{q: db.NewDelete()}
-	q.baseInit()
+	q.baseInit(db)
 	return q
 }
 
 func (q *queryDelete) WherePK(pk interface{}) storage.QueryMDDelete {
-	return q.Where(pkEqualsSQL, pk)
+	return q.Where(q.baseSQL().pk(), pk)
 }
 
 func (q *queryDelete) WherePKs(pks interface{}) storage.QueryMDDelete {
-	return q.Where(pkChainInSQL, bun.In(pks))
+	return q.Where(q.baseSQL().pks(), bun.In(pks))
 }
 
 func (q *queryDelete) Where(query string, args ...interface{}) storage.QueryMDDelete {
@@ -31,7 +31,8 @@ func (q *queryDelete) Where(query string, args ...interface{}) storage.QueryMDDe
 }
 
 func (q *queryDelete) Model(m interface{}) storage.QueryMDDelete {
-	q.q = q.q.Model(q.baseModel(m).Pointer())
+	q.baseModel(m)
+	q.q = q.q.Model(q.Dest().Pointer())
 	return q
 }
 

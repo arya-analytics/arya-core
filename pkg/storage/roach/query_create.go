@@ -14,17 +14,17 @@ type queryCreate struct {
 
 func newCreate(db *bun.DB) *queryCreate {
 	q := &queryCreate{q: db.NewInsert()}
-	q.baseInit()
+	q.baseInit(db)
 	return q
 }
 
 // Model implements storage.QueryMDCreate.
 func (q *queryCreate) Model(m interface{}) storage.QueryMDCreate {
-	rm := q.baseModel(m)
+	q.baseModel(m)
 	q.baseExchangeToDest()
 	q.catcher.Exec(func() error {
-		beforeInsertSetUUID(rm)
-		q.q = q.q.Model(rm.Pointer())
+		beforeInsertSetUUID(q.Dest())
+		q.q = q.q.Model(q.Dest().Pointer())
 		return nil
 	})
 	// We set default values, so we want to exchange back to source.

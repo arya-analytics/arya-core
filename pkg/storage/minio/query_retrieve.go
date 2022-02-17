@@ -3,6 +3,7 @@ package minio
 import (
 	"context"
 	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"github.com/arya-analytics/aryacore/pkg/util/validate"
 	"github.com/minio/minio-go/v7"
 )
@@ -36,7 +37,7 @@ func (q *queryRetrieve) WherePK(pk interface{}) storage.QueryObjectRetrieve {
 }
 
 func (q *queryRetrieve) Exec(ctx context.Context) error {
-	q.whereBaseValidateReq()
+	q.baseValidateReq()
 	for _, pk := range q.pkChain {
 		var resObj *minio.Object
 		q.baseExec(func() (err error) {
@@ -49,7 +50,13 @@ func (q *queryRetrieve) Exec(ctx context.Context) error {
 			return err
 		})
 		q.validateRes(resObj)
-		q.appendToDVC(&dataValue{PK: pk, Data: &object{resObj}})
+		bulk := telem.NewBulk([]byte{})
+		q.baseExec(func() error {
+			_, err := bulk.ReadFrom(resObj)
+			return err
+
+		})
+		q.appendToDVC(&dataValue{PK: pk, Data: bulk})
 	}
 	q.baseBindVals(q.dvc)
 	q.baseExchangeToSource()

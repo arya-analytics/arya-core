@@ -13,19 +13,19 @@ type queryUpdate struct {
 
 func newUpdate(db *bun.DB) *queryUpdate {
 	q := &queryUpdate{q: db.NewUpdate()}
-	q.baseInit()
+	q.baseInit(db)
 	return q
 }
 
 func (q *queryUpdate) Model(m interface{}) storage.QueryMDUpdate {
-	rm := q.baseModel(m)
+	q.baseModel(m)
 	q.baseExchangeToDest()
-	q.q = q.q.Model(rm.Pointer())
+	q.q = q.q.Model(q.Dest().Pointer())
 	return q
 }
 
 func (q *queryUpdate) WherePK(pk interface{}) storage.QueryMDUpdate {
-	return q.Where(pkEqualsSQL, pk)
+	return q.Where(q.baseSQL().pk(), pk)
 }
 
 func (q *queryUpdate) Where(query string, args ...interface{}) storage.QueryMDUpdate {

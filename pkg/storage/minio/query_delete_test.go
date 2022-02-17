@@ -2,19 +2,19 @@ package minio_test
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/storage"
-	"github.com/arya-analytics/aryacore/pkg/storage/mock"
+	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("QueryDelete", func() {
-	var channelChunk *storage.ChannelChunk
+	var channelChunk *storage.ChannelChunkReplica
 	Describe("Standard Usage", func() {
 		BeforeEach(func() {
-			channelChunk = &storage.ChannelChunk{
-				ID:   uuid.New(),
-				Data: mock.NewObject([]byte("randomstring")),
+			channelChunk = &storage.ChannelChunkReplica{
+				ID:    uuid.New(),
+				Telem: telem.NewBulk([]byte("randomstring")),
 			}
 		})
 		JustBeforeEach(func() {
@@ -36,11 +36,11 @@ var _ = Describe("QueryDelete", func() {
 			})
 		})
 		Describe("Delete multiple Items", func() {
-			var channelChunkTwo *storage.ChannelChunk
+			var channelChunkTwo *storage.ChannelChunkReplica
 			BeforeEach(func() {
-				channelChunkTwo = &storage.ChannelChunk{
-					ID:   uuid.New(),
-					Data: mock.NewObject([]byte("mock bytes")),
+				channelChunkTwo = &storage.ChannelChunkReplica{
+					ID:    uuid.New(),
+					Telem: telem.NewBulk([]byte("mock bytes")),
 				}
 			})
 			JustBeforeEach(func() {
@@ -51,7 +51,7 @@ var _ = Describe("QueryDelete", func() {
 				Expect(dErr).To(BeNil())
 			})
 			It("Should not be able to be re-queried after delete", func() {
-				var models []*storage.ChannelChunk
+				var models []*storage.ChannelChunkReplica
 				e := engine.NewRetrieve(adapter).Model(&models).WherePKs(
 					[]uuid.UUID{channelChunkTwo.ID, channelChunk.ID}).Exec(ctx)
 				Expect(e).ToNot(BeNil())

@@ -47,6 +47,16 @@ func (q *QueryRetrieve) WherePKs(pks interface{}) *QueryRetrieve {
 	return q
 }
 
+func (q *QueryRetrieve) Relation(rel string, fields ...string) *QueryRetrieve {
+	q.setMDQuery(q.mdQuery().Relation(rel, fields...))
+	return q
+}
+
+func (q *QueryRetrieve) Field(fields ...string) *QueryRetrieve {
+	q.setMDQuery(q.mdQuery().Field(fields...))
+	return q
+}
+
 // Exec executes the query with the provided context. Returns a storage.Error.
 func (q *QueryRetrieve) Exec(ctx context.Context) error {
 	q.baseExec(func() error { return q.mdQuery().Exec(ctx) })

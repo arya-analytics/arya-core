@@ -7,7 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Update Query", func() {
+var _ = Describe("Update QueryRequest", func() {
 	var (
 		channelConfig *storage.ChannelConfig
 		node          *storage.Node

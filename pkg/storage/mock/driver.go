@@ -43,13 +43,24 @@ func (d *DriverRoach) Connect() (*bun.DB, error) {
 	if d.WithHTTP {
 		d.HTTPPort = availHTTPPort()
 	}
-	ts, err := testserver.NewTestServer(testserver.HTTPPortOpt(d.HTTPPort),
-		testserver.SecureOpt(), testserver.RootPasswordOpt("testpass"))
+	ts, err := testserver.NewTestServer(
+		testserver.HTTPPortOpt(d.HTTPPort),
+		testserver.SecureOpt(),
+		testserver.RootPasswordOpt("testpass"),
+	)
+
+	wErr := ts.WaitForInit()
+	if wErr != nil {
+		return nil, wErr
+	}
 	d.servers = append(d.servers, ts)
 	if err != nil {
 		return nil, err
 	}
-	sqlDB, err := sql.Open("postgres", ts.PGURL().String())
+	sqlDB, sErr := sql.Open("postgres", ts.PGURL().String())
+	if sErr != nil {
+		return nil, sErr
+	}
 	if cErr := d.bindConnProperties(ts.PGURL()); cErr != nil {
 		return nil, cErr
 	}

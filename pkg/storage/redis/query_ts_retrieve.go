@@ -98,7 +98,7 @@ func validatePKProvided(v interface{}) error {
 	if (len(q.PKChain)) == 0 {
 		return storage.Error{
 			Type:    storage.ErrorTypeInvalidArgs,
-			Message: "no PK provided to ts retrieve query",
+			Message: "no PKC provided to ts retrieve query",
 		}
 	}
 	return nil

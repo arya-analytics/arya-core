@@ -1,15 +1,15 @@
 package redis
 
 import (
-	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/google/uuid"
 	"time"
 )
 
 // |||| CATALOG ||||
 
-func catalog() storage.ModelCatalog {
-	return storage.ModelCatalog{
+func catalog() model.Catalog {
+	return model.Catalog{
 		&channelConfig{},
 		&channelSample{},
 	}

@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"github.com/arya-analytics/aryacore/pkg/util/validate"
 	"reflect"
+	"strings"
 )
 
 const (
-	tagCat  = "model"
-	roleKey = "role"
-	pkRole  = "pk"
+	TagCat  = "model"
+	RoleKey = "role"
+	PKRole  = "pk"
 )
 
 // Reflect wraps a model object and provides utilities for accessing and manipulating
@@ -101,11 +102,21 @@ func (r *Reflect) StructValue() reflect.Value {
 // StructFieldByRole retrieves the field from the model object by its role.
 // Panics if the field can't be found.
 func (r *Reflect) StructFieldByRole(role string) reflect.Value {
-	tag, ok := r.StructTagChain().Retrieve(tagCat, roleKey, role)
+	tag, ok := r.StructTagChain().Retrieve(TagCat, RoleKey, role)
 	if !ok {
 		panic(fmt.Sprintf("could not find field with role %s", role))
 	}
 	return r.StructValue().FieldByIndex(tag.Field.Index)
+}
+
+// StructFieldByName retrieves the struct field from the model object by its name.
+func (r *Reflect) StructFieldByName(name string) reflect.Value {
+	splitNames := strings.Split(name, ".")
+	var fld = r.StructValue().FieldByName(splitNames[0])
+	for _, splitName := range splitNames[1:] {
+		fld = fld.Elem().FieldByName(splitName)
+	}
+	return fld
 }
 
 // || CHAIN METHODS ||
@@ -154,6 +165,27 @@ func (r *Reflect) ChainValueByIndexOrNew(i int) *Reflect {
 		r.ChainAppend(rfl)
 		return rfl
 	}
+}
+
+// |||| FIELD ACCESSORS ||||
+
+// Fields returns all fields in the reflect object at the struct index i.
+func (r *Reflect) Fields(i int) *Fields {
+	var rawFlds []reflect.Value
+	r.ForEach(func(rfl *Reflect, i int) {
+		rawFlds = append(rawFlds, rfl.StructValue().Field(i))
+	})
+	t := r.Type().Field(i)
+	return &Fields{fldName: t.Name, source: r}
+}
+
+// FieldsByName returns all fields in the reflect object with the provided name.
+func (r *Reflect) FieldsByName(name string) *Fields {
+	var rawFlds []reflect.Value
+	r.ForEach(func(rfl *Reflect, i int) {
+		rawFlds = append(rawFlds, rfl.StructFieldByName(name))
+	})
+	return &Fields{fldName: name, source: r}
 }
 
 // || FINDING VALUES ||
@@ -227,12 +259,12 @@ func (r *Reflect) ToNewPointer() *Reflect {
 	return NewReflect(p.Interface())
 }
 
-// || PK ||
+// || PKC ||
 
 // PKField returns the primary key field of the model object (ie assigned role:pk).
 // Panics if the field does not exist, or if the Reflect model object is a chain.
 func (r *Reflect) PKField() reflect.Value {
-	return r.StructFieldByRole(pkRole)
+	return r.StructFieldByRole(PKRole)
 }
 
 // PK returns new PK representing the primary key of the model.
@@ -304,7 +336,7 @@ func (r *Reflect) panicIfStruct() {
 func validateSliceOrStruct(v interface{}) error {
 	r := v.(*Reflect)
 	if !r.IsStruct() && !r.IsChain() {
-		return fmt.Errorf("model validation failed, is %s must be struct or slice",
+		return fmt.Errorf("model validation failed - is %s, must be struct or slice",
 			r.Type().Kind())
 	}
 	return nil
@@ -313,15 +345,16 @@ func validateSliceOrStruct(v interface{}) error {
 func validateIsPointer(v interface{}) error {
 	r := v.(*Reflect)
 	if r.PointerType().Kind() != reflect.Ptr {
-		return fmt.Errorf("model validation failed. model is not a pointer")
+		return fmt.Errorf("model validation failed - model is not a pointer")
 	}
 	return nil
+
 }
 
 func validateNonZero(v interface{}) error {
 	r := v.(*Reflect)
 	if r.PointerValue().IsZero() {
-		return fmt.Errorf("model validation failed. model is nil")
+		return fmt.Errorf("model validation failed - model is nil")
 	}
 	return nil
 }

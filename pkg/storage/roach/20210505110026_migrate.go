@@ -15,13 +15,14 @@ const (
 	crdbSchema         = "crdb_internal"
 	crdbGossipNodes    = crdbSchema + ".gossip_nodes"
 	crdbGossipLiveness = crdbSchema + ".gossip_liveness"
+	crdNodeRuntimeInfo = crdbSchema + ".node_runtime_info"
 )
 
 var (
 	/* If we're using DriverPG, we expect two CRDB internal tables that provide
 	information on Node identity and status. This logic creates a view so that this
 	info can be accessed by the ORM. */
-	nodesViewSQL = fmt.Sprintf(`CREATE VIEW %s AS SELECT n.id,
+	nodesViewSQL = fmt.Sprintf(`CREATE VIEW %s AS SELECT DISTINCT n.id,
 									gn.address, 
 									gn.is_live, 
 									gn.started_at, 
@@ -29,13 +30,17 @@ var (
 									gv.draining, 
 									gv.decommissioning, 
 									gv.membership, 
-									gv.updated_at 
+									gv.updated_at,
+									n.id = nri.node_id is_host
 									FROM nodes n 
-									JOIN %s gn ON n.id =
-									gn.node_id LEFT JOIN %s gv ON gv.node_id=n.id`,
+									JOIN %s gn ON n.id = gn.node_id 
+									LEFT JOIN %s gv ON gv.node_id=n.id
+									LEFT JOIN %s nri ON nri.node_id=n.id`,
 		nodesGossip,
 		crdbGossipNodes,
-		crdbGossipLiveness)
+		crdbGossipLiveness,
+		crdNodeRuntimeInfo,
+	)
 )
 
 // |||| CATCHER ||||
@@ -59,33 +64,57 @@ func (m *migrateCatcher) execMigration(execFunc migrationExecFunc) {
 func migrateUpFunc(d Driver) migrate.MigrationFunc {
 	return func(ctx context.Context, db *bun.DB) error {
 		c := &migrateCatcher{Catcher: &errutil.Catcher{}, ctx: ctx}
-		// Binds the many-to-many relationship the bun ORM,
-		// so we can properly run queries against it.
-		db.RegisterModel((*rangeReplicaToNode)(nil))
+
+		// |||| NODE ||||
+
 		c.execMigration(db.NewCreateTable().Model((*Node)(nil)).Exec)
 		c.Exec(func() error {
 			_, err := db.Exec(nodesViewSQL)
 			return err
 		})
+
+		// |||| RANGE ||||
+		c.execMigration(db.NewCreateTable().
+			Model((*Range)(nil)).
+			Exec,
+		)
+		c.execMigration(db.NewCreateTable().
+			Model((*RangeReplica)(nil)).
+			ForeignKey(`("node_id") REFERENCES "nodes" ("id") ON DELETE CASCADE`).
+			ForeignKey(`("range_id") REFERENCES "ranges" ("id") ON DELETE CASCADE`).
+			Exec,
+		)
+		c.execMigration(db.NewCreateTable().
+			Model((*RangeLease)(nil)).
+			ForeignKey(`("range_replica_id") REFERENCES "range_replicas" ("id") ON DELETE CASCADE`).
+			Exec,
+		)
+		c.Exec(func() error {
+			_, err := db.Exec(`ALTER TABLE "ranges" ADD CONSTRAINT fk_range_lease_id_ref_range_leases 
+									FOREIGN KEY ("range_lease_id") REFERENCES "range_leases" ("id") ON DELETE CASCADE`)
+			return err
+		})
+
+		// |||| CHANNEL ||||
+
 		c.execMigration(db.NewCreateTable().
 			Model((*ChannelConfig)(nil)).
 			ForeignKey(`("node_id") REFERENCES "nodes" ("id") ON DELETE CASCADE`).
-			Exec)
-		c.execMigration(db.NewCreateTable().
-			Model((*Range)(nil)).
-			ForeignKey(`("lease_holder_node_id") REFERENCES "nodes" (
-						"id") ON DELETE CASCADE`).
-			Exec)
-		c.execMigration(db.NewCreateTable().
-			Model((*rangeReplicaToNode)(nil)).
-			ForeignKey(`("node_id") REFERENCES "nodes" ("id") ON DELETE CASCADE`).
-			ForeignKey(`("range_id") REFERENCES "ranges" ("id") ON DELETE CASCADE`).
-			Exec)
+			Exec,
+		)
 		c.execMigration(db.NewCreateTable().
 			Model((*ChannelChunk)(nil)).
-			ForeignKey(`("channel_config_id") REFERENCES "channel_configs" ("id") 
-						ON DELETE CASCADE`).
-			Exec)
+			ForeignKey(`("channel_config_id") REFERENCES "channel_configs" ("id") ON DELETE CASCADE`).
+			ForeignKey(`("range_id") REFERENCES "ranges" ("id") ON DELETE CASCADE`).
+			Exec,
+		)
+		c.execMigration(db.NewCreateTable().
+			Model((*ChannelChunkReplica)(nil)).
+			ForeignKey(`("channel_chunk_id") REFERENCES channel_chunks ("id") ON DELETE CASCADE`).
+			ForeignKey(`("range_replica_id") REFERENCES range_replicas ("id") ON DELETE CASCADE`).
+			Exec,
+		)
+
 		return c.Error()
 	}
 }

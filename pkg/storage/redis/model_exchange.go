@@ -1,7 +1,6 @@
 package redis
 
 import (
-	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/storage/redis/timeseries"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/google/uuid"
@@ -15,10 +14,10 @@ const (
 )
 
 type modelExchange struct {
-	*storage.ModelExchange
+	*model.Exchange
 }
 
-func newWrappedModelExchange(sma *storage.ModelExchange) *modelExchange {
+func newWrappedModelExchange(sma *model.Exchange) *modelExchange {
 	return &modelExchange{sma}
 }
 

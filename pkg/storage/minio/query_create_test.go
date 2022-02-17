@@ -2,18 +2,18 @@ package minio_test
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/storage"
-	"github.com/arya-analytics/aryacore/pkg/storage/mock"
+	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("QueryCreate", func() {
-	var channelChunk *storage.ChannelChunk
+	var channelChunk *storage.ChannelChunkReplica
 	BeforeEach(func() {
-		channelChunk = &storage.ChannelChunk{
-			ID:   uuid.New(),
-			Data: mock.NewObject([]byte("randomstring")),
+		channelChunk = &storage.ChannelChunkReplica{
+			ID:    uuid.New(),
+			Telem: telem.NewBulk([]byte("randomstring")),
 		}
 	})
 	JustBeforeEach(func() {
@@ -26,14 +26,11 @@ var _ = Describe("QueryCreate", func() {
 		Expect(err).To(BeNil())
 	})
 	It("Should be created correctly", func() {
-		mockModelTwo := &storage.ChannelChunk{}
+		mockModelTwo := &storage.ChannelChunkReplica{}
 		err := engine.NewRetrieve(adapter).Model(mockModelTwo).WherePK(channelChunk.ID).
 			Exec(ctx)
 		Expect(err).To(BeNil())
-		Expect(mockModelTwo.Data).ToNot(BeNil())
-		b := make([]byte, channelChunk.Data.Size())
-		_, err = mockModelTwo.Data.Read(b)
-		Expect(err.Error()).To(Equal("EOF"))
-		Expect(b).To(Equal([]byte("randomstring")))
+		Expect(mockModelTwo.Telem).ToNot(BeNil())
+		Expect(mockModelTwo.Telem.Bytes()).To(Equal([]byte("randomstring")))
 	})
 })

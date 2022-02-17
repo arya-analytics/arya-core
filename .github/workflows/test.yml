@@ -23,7 +23,8 @@ jobs:
       - name: Set Up Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.17
+          go-version: 1.18.0-beta1
+          stable: false
 
       - name: Set Up Tests
         run: |
@@ -33,8 +34,7 @@ jobs:
           go install github.com/onsi/ginkgo/v2/ginkgo
 
       - name: Run Tests
-        run: ginkgo -r --covermode=atomic --coverprofile=coverage.txt -covermode=atomic
-          --skip-package=dev
+        run: ginkgo -r --covermode=atomic --coverprofile=coverage.txt -covermode=atomic --skip-package=dev
 
       - name: Upload Coverage
         uses: codecov/codecov-action@v2

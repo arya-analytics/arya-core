@@ -1,6 +1,7 @@
 package model_test
 
 import (
+	"fmt"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -9,32 +10,49 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 )
 
-var _ = Describe("PK", func() {
-	Describe("Single PK", func() {
+var _ = Describe("PKC", func() {
+	Describe("Single PKC", func() {
+		var uuidPk = uuid.New()
 		Describe("Stringifying", func() {
-			It("Should return a UUID as a string", func() {
-				id := uuid.New()
-				Expect(model.NewPK(id).String()).To(Equal(id.String()))
-			})
-			It("Should return an int as a string", func() {
-				i := 1
-				Expect(model.NewPK(i).String()).To(Equal(strconv.Itoa(int(i))))
-			})
-			It("Should return an int32 as a string", func() {
-				var id32 int32 = 1
-				Expect(model.NewPK(id32).String()).To(Equal(strconv.Itoa(int(id32))))
-			})
-			It("Should return an int64 as a string", func() {
-				var id64 int64 = 1
-				Expect(model.NewPK(id64).String()).To(Equal(strconv.Itoa(int(id64))))
-			})
-			It("Should return a string as a string", func() {
-				s := "Hello"
-				Expect(model.NewPK(s).String()).To(Equal(s))
-			})
+			DescribeTable("Standard Usage", func(pk interface{}, expected interface{}) {
+				Expect(model.NewPK(pk).String()).To(Equal(expected))
+			},
+				Entry("UUID", uuidPk, uuidPk.String()),
+				Entry("int", 1, strconv.Itoa(1)),
+				Entry("int32", int32(2), strconv.Itoa(2)),
+				Entry("int64", int64(2), strconv.Itoa(2)),
+				Entry("string", "hello", "hello"),
+			)
 			It("Should panic with an unknown pk type", func() {
 				Expect(func() {
 					_ = model.NewPK(123.2).String()
+				}).To(Panic())
+			})
+		})
+		Describe("Setting from a string", func() {
+			DescribeTable("Normal usage",
+				func(rawSource interface{}, rawDest interface{}) {
+					sourcePK, destPK := model.NewPK(rawSource), model.NewPK(rawDest)
+					newPK, err := destPK.NewFromString(sourcePK.String())
+					Expect(err).To(BeNil())
+					Expect(newPK.Type()).To(Equal(destPK.Type()))
+					Expect(newPK.String()).To(Equal(sourcePK.String()))
+				},
+				Entry("Set UUID from string", uuid.New().String(), uuid.UUID{}),
+				Entry("Set string from UUID", uuid.New(), ""),
+				Entry("Set int from string", "123", 0),
+				Entry("Set string from int", 123, ""),
+				Entry("Set int32 from string", "123", int32(0)),
+				Entry("Set string from int32", int32(123), ""),
+				Entry("Set int64 from string", "123", int64(0)),
+				Entry("Set string from int64", int64(123), ""),
+			)
+			It("Should panic when an unknown type is provided", func() {
+				pk := model.NewPK(123.2)
+				Expect(func() {
+					newPK, _ := pk.NewFromString("123")
+					// Just here so we don't get a compiler error
+					fmt.Println(newPK)
 				}).To(Panic())
 			})
 		})
@@ -57,7 +75,7 @@ var _ = Describe("PK", func() {
 			})
 		})
 	})
-	Describe("Multiple PKS", func() {
+	Describe("PK Chain", func() {
 		Describe("Standard usage", func() {
 			rawPks := []uuid.UUID{uuid.New(), uuid.New()}
 			pks := model.NewPKChain(rawPks)
@@ -67,6 +85,19 @@ var _ = Describe("PK", func() {
 			It("Should return the correct interface value", func() {
 				Expect(pks.Raw()[0]).To(Equal(rawPks[0]))
 				Expect(pks.Raw()[1]).To(Equal(rawPks[1]))
+			})
+			It("Should return the correct PKS as strings", func() {
+				Expect(pks.Strings()[0]).To(Equal(rawPks[0].String()))
+				Expect(pks.Strings()[1]).To(Equal(rawPks[1].String()))
+			})
+			Context("All Zero", func() {
+				It("Should return false when a pk is not zero", func() {
+					Expect(pks.AllZero()).To(BeFalse())
+				})
+				It("Should return true when all pks are zero", func() {
+					newPks := model.NewPKChain([]uuid.UUID{{}, {}})
+					Expect(newPks.AllZero()).To(BeTrue())
+				})
 			})
 		})
 		Describe("Edge cases + errors", func() {

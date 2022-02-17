@@ -85,6 +85,21 @@ func (s StructTagChain) Retrieve(cat string, key string, value string) (StructTa
 	return StructTag{}, false
 }
 
+// RetrieveByFieldName retrieves the struct tag in the StructTagChain by its field name.
+func (s StructTagChain) RetrieveByFieldName(fldName string) (StructTag, bool) {
+	for _, st := range s {
+		if st.Field.Name == fldName {
+			return st, true
+		}
+	}
+	return StructTag{}, false
+}
+
+// RetrieveByFieldRole retrieves a field by its role struct tag.
+func (s StructTagChain) RetrieveByFieldRole(role string) (StructTag, bool) {
+	return s.Retrieve(TagCat, RoleKey, role)
+}
+
 const (
 	kvPairSeparator  = ":"
 	kvChainSeparator = ","

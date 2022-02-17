@@ -3,6 +3,7 @@ package minio_test
 import (
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/storage/mock"
+	mock2 "github.com/arya-analytics/aryacore/pkg/util/model/mock"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -48,12 +49,12 @@ var _ = Describe("Minio Engine", func() {
 		Describe("Contains", func() {
 			Context("Model in catalog", func() {
 				It("Should return true", func() {
-					Expect(engine.InCatalog(&storage.ChannelChunk{})).To(BeTrue())
+					Expect(engine.InCatalog(&storage.ChannelChunkReplica{})).To(BeTrue())
 				})
 			})
 			Context("Model not in catalog", func() {
 				It("Should return false", func() {
-					Expect(engine.InCatalog(&mock.ModelB{})).To(BeFalse())
+					Expect(engine.InCatalog(&mock2.ModelB{})).To(BeFalse())
 				})
 			})
 		})
