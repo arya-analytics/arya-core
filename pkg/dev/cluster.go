@@ -192,7 +192,7 @@ func (a *AryaCluster) Exists() bool {
 	return len(a.Nodes()) > 0
 }
 
-// Delete Deletes an existing Cluster and purges all of its data.
+// Delete an existing Cluster and purge all of its data.
 func (a *AryaCluster) Delete() error {
 	for _, node := range a.Nodes() {
 		if err := node.VM.Delete(); err != nil {

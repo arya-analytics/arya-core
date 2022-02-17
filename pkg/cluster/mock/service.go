@@ -2,22 +2,22 @@ package mock
 
 import (
 	"context"
-	"github.com/arya-analytics/aryacore/pkg/cluster"
+	"github.com/arya-analytics/aryacore/pkg/cluster/internal"
 )
 
 type Service struct {
-	QueryRequest *cluster.QueryRequest
+	QueryRequest *internal.QueryRequest
 }
 
 func NewService() *Service {
 	return &Service{}
 }
 
-func (s *Service) CanHandle(q *cluster.QueryRequest) bool {
+func (s *Service) CanHandle(q *internal.QueryRequest) bool {
 	return true
 }
 
-func (s *Service) Exec(ctx context.Context, q *cluster.QueryRequest) error {
+func (s *Service) Exec(ctx context.Context, q *internal.QueryRequest) error {
 	s.QueryRequest = q
 	return nil
 }

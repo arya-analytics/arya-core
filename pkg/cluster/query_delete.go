@@ -1,6 +1,9 @@
 package cluster
 
-import "context"
+import (
+	"context"
+	"github.com/arya-analytics/aryacore/pkg/cluster/internal"
+)
 
 type QueryDelete struct {
 	queryBase
@@ -8,22 +11,22 @@ type QueryDelete struct {
 
 func newDelete(svc ServiceChain) *QueryDelete {
 	q := &QueryDelete{}
-	q.baseInit(svc, QueryVariantDelete)
+	q.baseInit(svc)
 	return q
 }
 
 func (q *QueryDelete) Model(m interface{}) *QueryDelete {
-	q.baseModel(m)
+	q.baseModel(internal.QueryVariantDelete, m)
 	return q
 }
 
 func (q *QueryDelete) WherePK(pk interface{}) *QueryDelete {
-	NewPKQueryOpt(q.baseQueryRequest(), pk)
+	internal.NewPKQueryOpt(q.baseQueryRequest(), pk)
 	return q
 }
 
 func (q *QueryDelete) WherePKs(pks interface{}) *QueryDelete {
-	NewPKQueryOpt(q.baseQueryRequest(), pks)
+	internal.NewPKQueryOpt(q.baseQueryRequest(), pks)
 	return q
 }
 

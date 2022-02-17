@@ -2,6 +2,7 @@ package cluster_test
 
 import (
 	"context"
+	"github.com/arya-analytics/aryacore/pkg/cluster/internal"
 	"github.com/arya-analytics/aryacore/pkg/cluster/mock"
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
@@ -37,7 +38,7 @@ var _ = Describe("QueryRetrieve", func() {
 			It("Should bind the correct PK", func() {
 				pk := uuid.New()
 				Expect(clus.NewRetrieve().Model(m).WherePK(pk).Exec(ctx))
-				pkOpt, ok := cluster.PKQueryOpt(svc.QueryRequest)
+				pkOpt, ok := internal.PKQueryOpt(svc.QueryRequest)
 				Expect(ok).To(BeTrue())
 				Expect(pkOpt).To(Equal(model.NewPKChain([]uuid.UUID{pk})))
 			})
@@ -46,16 +47,16 @@ var _ = Describe("QueryRetrieve", func() {
 			It("Should bind the correct PKs", func() {
 				pks := model.NewPKChain([]uuid.UUID{uuid.New(), uuid.New()})
 				Expect(clus.NewRetrieve().Model(m).WherePKs(pks.Raw()).Exec(ctx))
-				pkOpt, ok := cluster.PKQueryOpt(svc.QueryRequest)
+				pkOpt, ok := internal.PKQueryOpt(svc.QueryRequest)
 				Expect(ok).To(BeTrue())
 				Expect(pkOpt).To(Equal(pks))
 			})
 		})
 		Context("WhereFields", func() {
 			It("Should set the correct fields", func() {
-				flds := cluster.Fields{"key": "value"}
+				flds := internal.Fields{"key": "value"}
 				Expect(clus.NewRetrieve().Model(m).WhereFields(flds).Exec(ctx))
-				fldOpt := cluster.FieldsQueryOpt(svc.QueryRequest)
+				fldOpt := internal.FieldsQueryOpt(svc.QueryRequest)
 				Expect(fldOpt).To(Equal(flds))
 			})
 		})

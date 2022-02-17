@@ -2,24 +2,24 @@ package cluster
 
 import (
 	"context"
+	"github.com/arya-analytics/aryacore/pkg/cluster/internal"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 )
 
 type queryBase struct {
 	_svc ServiceChain
-	_qr  *QueryRequest
+	_qr  *internal.QueryRequest
 }
 
-func (q *queryBase) baseInit(serviceChain ServiceChain, variant QueryVariant) {
+func (q *queryBase) baseInit(serviceChain ServiceChain) {
 	q._svc = serviceChain
-	q._qr = &QueryRequest{Variant: variant, opts: map[string]interface{}{}}
 }
 
-func (q *queryBase) baseModel(m interface{}) {
-	q._qr.Model = model.NewReflect(m)
+func (q *queryBase) baseModel(variant internal.QueryVariant, m interface{}) {
+	q._qr = internal.NewQueryRequest(variant, model.NewReflect(m))
 }
 
-func (q *queryBase) baseQueryRequest() *QueryRequest {
+func (q *queryBase) baseQueryRequest() *internal.QueryRequest {
 	return q._qr
 }
 

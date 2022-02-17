@@ -18,6 +18,10 @@ func (c *Catcher) Exec(actionFunc ActionFunc) {
 	}
 }
 
+func (c *Catcher) Reset() {
+	c.err = nil
+}
+
 func (c *Catcher) Error() error {
 	return c.err
 }

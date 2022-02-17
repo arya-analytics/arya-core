@@ -3,6 +3,7 @@ package cluster_test
 import (
 	"context"
 	"github.com/arya-analytics/aryacore/pkg/cluster"
+	"github.com/arya-analytics/aryacore/pkg/cluster/internal"
 	"github.com/arya-analytics/aryacore/pkg/cluster/mock"
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/google/uuid"
@@ -35,7 +36,7 @@ var _ = Describe("QueryCreate", func() {
 			Expect(svc.QueryRequest.Model.Pointer().(*storage.ChannelChunkReplica).ID).To(Equal(m.ID))
 		})
 		It("Should have the correct query variant", func() {
-			Expect(svc.QueryRequest.Variant).To(Equal(cluster.QueryVariantCreate))
+			Expect(svc.QueryRequest.Variant).To(Equal(internal.QueryVariantCreate))
 		})
 	})
 })

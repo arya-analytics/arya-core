@@ -1,6 +1,9 @@
 package cluster
 
-import "context"
+import (
+	"context"
+	"github.com/arya-analytics/aryacore/pkg/cluster/internal"
+)
 
 type QueryUpdate struct {
 	queryBase
@@ -8,17 +11,17 @@ type QueryUpdate struct {
 
 func newUpdate(svc ServiceChain) *QueryUpdate {
 	q := &QueryUpdate{}
-	q.baseInit(svc, QueryVariantUpdate)
+	q.baseInit(svc)
 	return q
 }
 
 func (q *QueryUpdate) Model(m interface{}) *QueryUpdate {
-	q.baseModel(m)
+	q.baseModel(internal.QueryVariantUpdate, m)
 	return q
 }
 
 func (q *QueryUpdate) WherePK(pk interface{}) *QueryUpdate {
-	NewPKQueryOpt(q.baseQueryRequest(), pk)
+	internal.NewPKQueryOpt(q.baseQueryRequest(), pk)
 	return q
 }
 

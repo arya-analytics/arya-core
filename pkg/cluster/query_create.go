@@ -1,6 +1,9 @@
 package cluster
 
-import "context"
+import (
+	"context"
+	"github.com/arya-analytics/aryacore/pkg/cluster/internal"
+)
 
 type QueryCreate struct {
 	queryBase
@@ -8,12 +11,12 @@ type QueryCreate struct {
 
 func newCreate(svc ServiceChain) *QueryCreate {
 	q := &QueryCreate{}
-	q.baseInit(svc, QueryVariantCreate)
+	q.baseInit(svc)
 	return q
 }
 
 func (q *QueryCreate) Model(m interface{}) *QueryCreate {
-	q.baseModel(m)
+	q.baseModel(internal.QueryVariantCreate, m)
 	return q
 }
 

@@ -1,9 +1,9 @@
 package chanchunk_test
 
 import (
-	"github.com/arya-analytics/aryacore/pkg/cluster"
 	"github.com/arya-analytics/aryacore/pkg/cluster/chanchunk"
 	"github.com/arya-analytics/aryacore/pkg/cluster/chanchunk/mock"
+	"github.com/arya-analytics/aryacore/pkg/cluster/internal"
 	"github.com/arya-analytics/aryacore/pkg/rpc"
 	rpcmock "github.com/arya-analytics/aryacore/pkg/rpc/mock"
 	"github.com/arya-analytics/aryacore/pkg/storage"
@@ -97,8 +97,8 @@ var _ = Describe("Service", func() {
 		DescribeTable("Should Create + Retrieve + Delete correctly",
 			func(cc interface{}, resCC interface{}) {
 				rfl, resRfl := model.NewReflect(cc), model.NewReflect(resCC)
-				createQR := &cluster.QueryRequest{
-					Variant: cluster.QueryVariantCreate,
+				createQR := &internal.QueryRequest{
+					Variant: internal.QueryVariantCreate,
 					Model:   rfl,
 				}
 				By("Being able to handle the create query")
@@ -106,11 +106,11 @@ var _ = Describe("Service", func() {
 				By("Being able to execute the create query")
 				Expect(svc.Exec(ctx, createQR)).To(BeNil())
 
-				retrieveQR := cluster.NewQueryRequest(
-					cluster.QueryVariantRetrieve,
+				retrieveQR := internal.NewQueryRequest(
+					internal.QueryVariantRetrieve,
 					model.NewReflect(resCC),
 				)
-				cluster.NewPKQueryOpt(retrieveQR, rfl.PKChain().Raw())
+				internal.NewPKQueryOpt(retrieveQR, rfl.PKChain().Raw())
 				By("Being able to handle the retrieve query")
 				Expect(svc.CanHandle(retrieveQR)).To(BeTrue())
 
@@ -120,11 +120,11 @@ var _ = Describe("Service", func() {
 				By("Retrieving the correct item")
 				Expect(resRfl.PKChain()).To(Equal(rfl.PKChain()))
 
-				deleteQR := cluster.NewQueryRequest(
-					cluster.QueryVariantDelete,
+				deleteQR := internal.NewQueryRequest(
+					internal.QueryVariantDelete,
 					resRfl,
 				)
-				cluster.NewPKQueryOpt(deleteQR, rfl.PKChain().Raw())
+				internal.NewPKQueryOpt(deleteQR, rfl.PKChain().Raw())
 
 				By("Being able to handle the delete query")
 				Expect(svc.CanHandle(deleteQR)).To(BeTrue())
@@ -133,11 +133,11 @@ var _ = Describe("Service", func() {
 				Expect(svc.Exec(ctx, deleteQR)).To(BeNil())
 
 				resCCTwo := &storage.ChannelChunk{}
-				retrieveQRTwo := cluster.NewQueryRequest(
-					cluster.QueryVariantRetrieve,
+				retrieveQRTwo := internal.NewQueryRequest(
+					internal.QueryVariantRetrieve,
 					model.NewReflect(resCCTwo),
 				)
-				cluster.NewPKQueryOpt(retrieveQRTwo, rfl.PKChain()[0].Raw())
+				internal.NewPKQueryOpt(retrieveQRTwo, rfl.PKChain()[0].Raw())
 
 				By("Not being able to be re-retrieved")
 				rTwoErr := svc.Exec(ctx, retrieveQR)
@@ -153,19 +153,19 @@ var _ = Describe("Service", func() {
 	})
 	Describe("Channel Chunk Replica", func() {
 		JustBeforeEach(func() {
-			chunkCreateQR := cluster.NewQueryRequest(
-				cluster.QueryVariantCreate,
+			chunkCreateQR := internal.NewQueryRequest(
+				internal.QueryVariantCreate,
 				model.NewReflect(channelChunk),
 			)
 			Expect(svc.CanHandle(chunkCreateQR)).To(BeTrue())
 			Expect(svc.Exec(ctx, chunkCreateQR)).To(BeNil())
 		})
 		JustAfterEach(func() {
-			deleteQR := cluster.NewQueryRequest(
-				cluster.QueryVariantDelete,
+			deleteQR := internal.NewQueryRequest(
+				internal.QueryVariantDelete,
 				model.NewReflect(channelChunk),
 			)
-			cluster.NewPKQueryOpt(deleteQR, channelChunk.ID)
+			internal.NewPKQueryOpt(deleteQR, channelChunk.ID)
 			Expect(svc.CanHandle(deleteQR)).To(BeTrue())
 			err := svc.Exec(ctx, deleteQR)
 			Expect(err).To(BeNil())
@@ -173,8 +173,8 @@ var _ = Describe("Service", func() {
 		DescribeTable("Should Create + Retrieve + Delete the chunk replica correctly",
 			func(cc interface{}, resCC interface{}) {
 				rfl, resRfl := model.NewReflect(cc), model.NewReflect(resCC)
-				createQR := &cluster.QueryRequest{
-					Variant: cluster.QueryVariantCreate,
+				createQR := &internal.QueryRequest{
+					Variant: internal.QueryVariantCreate,
 					Model:   rfl,
 				}
 				By("Being able to handle the create query")
@@ -182,11 +182,11 @@ var _ = Describe("Service", func() {
 				By("Being able to execute the create query")
 				Expect(svc.Exec(ctx, createQR)).To(BeNil())
 
-				retrieveQR := cluster.NewQueryRequest(
-					cluster.QueryVariantRetrieve,
+				retrieveQR := internal.NewQueryRequest(
+					internal.QueryVariantRetrieve,
 					model.NewReflect(resCC),
 				)
-				cluster.NewPKQueryOpt(retrieveQR, rfl.PKChain().Raw())
+				internal.NewPKQueryOpt(retrieveQR, rfl.PKChain().Raw())
 				By("Being able to handle the retrieve query")
 				Expect(svc.CanHandle(retrieveQR)).To(BeTrue())
 
@@ -196,11 +196,11 @@ var _ = Describe("Service", func() {
 				By("Retrieving the correct item")
 				Expect(resRfl.PKChain()).To(Equal(rfl.PKChain()))
 
-				deleteQR := cluster.NewQueryRequest(
-					cluster.QueryVariantDelete,
+				deleteQR := internal.NewQueryRequest(
+					internal.QueryVariantDelete,
 					resRfl,
 				)
-				cluster.NewPKQueryOpt(deleteQR, rfl.PKChain().Raw())
+				internal.NewPKQueryOpt(deleteQR, rfl.PKChain().Raw())
 
 				By("Being able to handle the delete query")
 				Expect(svc.CanHandle(deleteQR)).To(BeTrue())
@@ -209,11 +209,11 @@ var _ = Describe("Service", func() {
 				Expect(svc.Exec(ctx, deleteQR)).To(BeNil())
 
 				resCCTwo := &storage.ChannelChunkReplica{}
-				retrieveQRTwo := cluster.NewQueryRequest(
-					cluster.QueryVariantRetrieve,
+				retrieveQRTwo := internal.NewQueryRequest(
+					internal.QueryVariantRetrieve,
 					model.NewReflect(resCCTwo),
 				)
-				cluster.NewPKQueryOpt(retrieveQRTwo, rfl.PKChain()[0].Raw())
+				internal.NewPKQueryOpt(retrieveQRTwo, rfl.PKChain()[0].Raw())
 
 				By("Not being able to be re-retrieved")
 				rTwoErr := svc.Exec(ctx, retrieveQR)

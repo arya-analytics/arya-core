@@ -2,14 +2,15 @@ package chanchunk
 
 import (
 	"context"
-	"github.com/arya-analytics/aryacore/pkg/cluster"
+	"github.com/arya-analytics/aryacore/pkg/cluster/internal"
 	"github.com/arya-analytics/aryacore/pkg/storage"
-	"github.com/arya-analytics/aryacore/pkg/util/batch"
 	"github.com/arya-analytics/aryacore/pkg/util/errutil"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
-	log "github.com/sirupsen/logrus"
+	"github.com/arya-analytics/aryacore/pkg/util/route"
 	"reflect"
 )
+
+// ||||
 
 type Service struct {
 	remote  ServiceRemote
@@ -25,38 +26,32 @@ func NewService(local ServiceLocal, remote ServiceRemote) *Service {
 	}
 }
 
-func catalog() model.Catalog {
-	return model.Catalog{
-		&storage.ChannelChunk{},
-		&storage.ChannelChunkReplica{},
-	}
-}
-
-func (s *Service) CanHandle(q *cluster.QueryRequest) bool {
+func (s *Service) CanHandle(q *internal.QueryRequest) bool {
 	return catalog().Contains(q.Model.Pointer())
 }
 
-func (s *Service) Exec(ctx context.Context, qr *cluster.QueryRequest) error {
-	s.catcher = &errutil.Catcher{}
-	switch qr.Variant {
-	case cluster.QueryVariantCreate:
-		s.switchModel(ctx, qr, s.createChunk, s.createReplica)
-	case cluster.QueryVariantRetrieve:
-		s.switchModel(ctx, qr, s.retrieveChunk, s.retrieveReplica)
-	case cluster.QueryVariantDelete:
-		s.switchModel(ctx, qr, s.deleteChunk, s.deleteReplica)
+func (s *Service) Exec(ctx context.Context, qr *internal.QueryRequest) error {
+	s.catcher.Reset()
+	switch qr.Model.Type() {
+	case reflect.TypeOf(storage.ChannelChunk{}):
+		s.switchVariant(ctx, qr, s.createChunk, s.retrieveChunk, s.deleteChunk)
+	case reflect.TypeOf(storage.ChannelChunkReplica{}):
+		s.switchVariant(ctx, qr, s.createReplica, s.retrieveReplica, s.deleteReplica)
 	}
 	return s.error()
 }
 
-type serviceOperation func(ctx context.Context, qr *cluster.QueryRequest)
-
-func (s *Service) switchModel(ctx context.Context, qr *cluster.QueryRequest, soChunk, soReplica serviceOperation) {
-	switch qr.Model.Type() {
-	case reflect.TypeOf(storage.ChannelChunk{}):
-		soChunk(ctx, qr)
-	case reflect.TypeOf(storage.ChannelChunkReplica{}):
-		soReplica(ctx, qr)
+func (s *Service) switchVariant(
+	ctx context.Context,
+	qr *internal.QueryRequest,
+	createOp, retrieveOp, deleteOp internal.ServiceOperation) {
+	switch qr.Variant {
+	case internal.QueryVariantCreate:
+		createOp(ctx, qr)
+	case internal.QueryVariantRetrieve:
+		retrieveOp(ctx, qr)
+	case internal.QueryVariantDelete:
+		deleteOp(ctx, qr)
 	}
 }
 
@@ -70,21 +65,20 @@ func (s *Service) error() error {
 
 // |||| CHUNK ||||
 
-func (s *Service) createChunk(ctx context.Context, qr *cluster.QueryRequest) {
+func (s *Service) createChunk(ctx context.Context, qr *internal.QueryRequest) {
 	s.catchExec(func() error { return s.local.CreateChunk(ctx, qr.Model.Pointer()) })
 }
 
-func (s *Service) retrieveChunk(ctx context.Context, qr *cluster.QueryRequest) {
-	PKC, ok := cluster.PKQueryOpt(qr)
+func (s *Service) retrieveChunk(ctx context.Context, qr *internal.QueryRequest) {
+	PKC, ok := internal.PKQueryOpt(qr)
 	if !ok {
 		panic("retrieve queries require a primary key!")
 	}
 	s.catchExec(func() error { return s.local.RetrieveChunk(ctx, qr.Model.Pointer(), LocalChunkRetrieveOpts{PKC: PKC}) })
 }
 
-func (s *Service) deleteChunk(ctx context.Context, qr *cluster.QueryRequest) {
-	log.Info("Deleting Chunk")
-	PKC, ok := cluster.PKQueryOpt(qr)
+func (s *Service) deleteChunk(ctx context.Context, qr *internal.QueryRequest) {
+	PKC, ok := internal.PKQueryOpt(qr)
 	if !ok {
 		panic("delete queries require a primary key!")
 	}
@@ -93,94 +87,110 @@ func (s *Service) deleteChunk(ctx context.Context, qr *cluster.QueryRequest) {
 
 // |||| REPLICA ||||
 
-func (s *Service) createReplica(ctx context.Context, qr *cluster.QueryRequest) {
-	rrPKs := model.NewPKChain(qr.Model.FieldsByName("RangeReplicaID").Raw())
+const (
+	RangeReplicaIDField = "RangeReplicaID"
+	RangeReplicaField   = "RangeReplica"
+	NodeIsHostField     = "RangeReplica.Node.IsHost"
+	NodeAddressField    = "RangeReplica.Node.Address"
+)
+
+func (s *Service) createReplica(ctx context.Context, qr *internal.QueryRequest) {
+	rrPKs := model.NewPKChain(qr.Model.FieldsByName(RangeReplicaIDField).Raw())
 	opts := LocalRangeReplicaRetrieveOpts{PKC: rrPKs}
-	rrS := qr.Model.FieldsByName("RangeReplica").ToReflect()
+	rrS := qr.Model.FieldsByName(RangeReplicaField).ToReflect()
 	s.catchExec(func() error { return s.local.RetrieveRangeReplica(ctx, rrS.Pointer(), opts) })
-	s.replicaExec(
+	replicaIsHostSwitch(
 		qr.Model,
-		func(m *model.Reflect) error { return s.local.CreateReplica(ctx, m.Pointer()) },
-		func(m *model.Reflect) error { return s.remote.CreateReplica(ctx, buildRemoteReplicaCreateOpts(m)) },
+		func(_ bool, m *model.Reflect) {
+			s.catchExec(func() error { return s.local.CreateReplica(ctx, m.Pointer()) })
+		},
+		func(_ bool, m *model.Reflect) {
+			s.catchExec(func() error { return s.remote.CreateReplica(ctx, buildRemoteReplicaCreateOpts(m)) })
+		},
 	)
 }
 
-func (s *Service) retrieveReplica(ctx context.Context, qr *cluster.QueryRequest) {
-	PKC, ok := cluster.PKQueryOpt(qr)
+func (s *Service) retrieveReplica(ctx context.Context, qr *internal.QueryRequest) {
+	PKC, ok := internal.PKQueryOpt(qr)
 	if !ok {
 		panic("retrieve queries require a primary key!")
 	}
 	opts := LocalReplicaRetrieveOpts{PKC: PKC, OmitBulk: true, Relations: true}
 	s.catchExec(func() error { return s.local.RetrieveReplica(ctx, qr.Model.Pointer(), opts) })
-	s.replicaExec(
+	replicaIsHostSwitch(
 		qr.Model,
-		func(m *model.Reflect) error {
-			return s.local.RetrieveReplica(ctx, m.Pointer(), LocalReplicaRetrieveOpts{PKC: m.PKChain()})
+		func(_ bool, m *model.Reflect) {
+			s.catchExec(func() error {
+				return s.local.RetrieveReplica(ctx, m.Pointer(), LocalReplicaRetrieveOpts{PKC: m.PKChain()})
+			})
 		},
-		func(m *model.Reflect) error {
-			return s.remote.RetrieveReplica(ctx, m.Pointer(), buildRemoteReplicaRetrieveOpts(m))
+		func(_ bool, m *model.Reflect) {
+			s.catchExec(func() error {
+				return s.remote.RetrieveReplica(ctx, m.Pointer(), buildRemoteReplicaRetrieveOpts(m))
+			})
 		},
 	)
 }
 
-func (s *Service) deleteReplica(ctx context.Context, qr *cluster.QueryRequest) {
-	PKC, ok := cluster.PKQueryOpt(qr)
+func (s *Service) deleteReplica(ctx context.Context, qr *internal.QueryRequest) {
+	PKC, ok := internal.PKQueryOpt(qr)
 	if !ok {
 		panic("delete queries require a primary key!")
 	}
-	s.catcher.Exec(func() error {
+	s.catchExec(func() error {
 		return s.local.RetrieveReplica(ctx, qr.Model.Pointer(), LocalReplicaRetrieveOpts{PKC: PKC})
 	})
-	s.replicaExec(
+	replicaIsHostSwitch(
 		qr.Model,
-		func(m *model.Reflect) error { return s.local.DeleteReplica(ctx, LocalReplicaDeleteOpts{m.PKChain()}) },
-		func(m *model.Reflect) error { return s.remote.DeleteReplica(ctx, buildRemoteReplicaDeleteOpts(m)) },
+		func(_ bool, m *model.Reflect) {
+			s.catchExec(func() error { return s.local.DeleteReplica(ctx, LocalReplicaDeleteOpts{m.PKChain()}) })
+		},
+		func(_ bool, m *model.Reflect) {
+			s.catchExec(func() error { return s.remote.DeleteReplica(ctx, buildRemoteReplicaDeleteOpts(m)) })
+		},
 	)
 }
 
-func (s *Service) replicaExec(
-	mRfl *model.Reflect,
-	localF func(m *model.Reflect) error,
-	remoteF func(m *model.Reflect) error) {
-	isLocal := batch.NewModel(mRfl).Exec("RangeReplica.Node.IsHost")
-	if localCCR, ok := isLocal[true]; ok {
-		s.catchExec(func() error { return localF(localCCR) })
-	}
-	if remoteCCr, ok := isLocal[false]; ok {
-		s.catchExec(func() error { return remoteF(remoteCCr) })
-	}
+// |||| ROUTING ||||
+
+func replicaIsHostSwitch(mRfl *model.Reflect, localF, remoteF func(_ bool, m *model.Reflect)) {
+	route.ModelSwitchBoolean(mRfl, NodeIsHostField, localF, remoteF)
 
 }
 
+func replicaAddrSwitch(rfl *model.Reflect, action func(addr string, rfl *model.Reflect)) {
+	route.ModelSwitchIter(rfl, NodeAddressField, action)
+}
+
+/// |||| REMOTE OPTION BUILDING ||||
+
 func buildRemoteReplicaRetrieveOpts(remoteCCR *model.Reflect) (qp []RemoteReplicaRetrieveOpts) {
-	addrMap := batch.NewModel(remoteCCR).Exec("RangeReplica.Node.Address")
-	for addr, m := range addrMap {
-		qp = append(qp, RemoteReplicaRetrieveOpts{
-			Addr: addr.(string),
-			PKC:  m.PKChain(),
-		})
-	}
+	replicaAddrSwitch(remoteCCR, func(addr string, m *model.Reflect) {
+		qp = append(qp, RemoteReplicaRetrieveOpts{Addr: addr, PKC: m.PKChain()})
+	})
 	return qp
+
 }
 
 func buildRemoteReplicaCreateOpts(remoteCCR *model.Reflect) (qp []RemoterReplicaCreateOpts) {
-	addrMap := batch.NewModel(remoteCCR).Exec("RangeReplica.Node.Address")
-	for addr, m := range addrMap {
-		qp = append(qp, RemoterReplicaCreateOpts{
-			Addr:         addr.(string),
-			ChunkReplica: m.Pointer(),
-		})
-	}
+	replicaAddrSwitch(remoteCCR, func(addr string, m *model.Reflect) {
+		qp = append(qp, RemoterReplicaCreateOpts{Addr: addr, ChunkReplica: m.Pointer()})
+	})
 	return qp
 }
 
 func buildRemoteReplicaDeleteOpts(remoteCCR *model.Reflect) (qp []RemoteReplicaDeleteOpts) {
-	addrMap := batch.NewModel(remoteCCR).Exec("RangeReplica.Node.Address")
-	for addr, m := range addrMap {
-		qp = append(qp, RemoteReplicaDeleteOpts{
-			Addr: addr.(string),
-			PKC:  m.PKChain(),
-		})
-	}
+	replicaAddrSwitch(remoteCCR, func(addr string, m *model.Reflect) {
+		qp = append(qp, RemoteReplicaDeleteOpts{Addr: addr, PKC: m.PKChain()})
+	})
 	return qp
+}
+
+// |||| CATALOG ||||
+
+func catalog() model.Catalog {
+	return model.Catalog{
+		&storage.ChannelChunk{},
+		&storage.ChannelChunkReplica{},
+	}
 }

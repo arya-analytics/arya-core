@@ -2,11 +2,12 @@ package cluster
 
 import (
 	"context"
+	"github.com/arya-analytics/aryacore/pkg/cluster/internal"
 )
 
 type Service interface {
-	CanHandle(q *QueryRequest) bool
-	Exec(ctx context.Context, q *QueryRequest) error
+	CanHandle(q *internal.QueryRequest) bool
+	Exec(ctx context.Context, q *internal.QueryRequest) error
 }
 
 type Cluster interface {
