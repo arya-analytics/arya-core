@@ -229,5 +229,5 @@ var ChannelChunkService_ServiceDesc = grpc.ServiceDesc{
 			ServerStreams: true,
 		},
 	},
-	Metadata: "chanchunk/chanchunk.proto",
+	Metadata: "chanchunk/v1/chanchunk.proto",
 }

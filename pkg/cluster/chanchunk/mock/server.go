@@ -2,7 +2,7 @@ package mock
 
 import (
 	"context"
-	api "github.com/arya-analytics/aryacore/pkg/cluster/gen/proto/go/chanchunk"
+	api "github.com/arya-analytics/aryacore/pkg/cluster/gen/proto/go/chanchunk/v1"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/google/uuid"
 	"google.golang.org/grpc"

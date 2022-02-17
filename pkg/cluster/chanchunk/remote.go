@@ -2,7 +2,7 @@ package chanchunk
 
 import (
 	"context"
-	api "github.com/arya-analytics/aryacore/pkg/cluster/gen/proto/go/chanchunk"
+	api "github.com/arya-analytics/aryacore/pkg/cluster/gen/proto/go/chanchunk/v1"
 	"github.com/arya-analytics/aryacore/pkg/rpc"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"io"
