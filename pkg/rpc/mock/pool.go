@@ -4,6 +4,7 @@ import (
 	"fmt"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 type Pool struct {
@@ -31,7 +32,7 @@ func (p *Pool) Retrieve(addr string) *grpc.ClientConn {
 }
 
 func (p *Pool) newConn(addr string) *grpc.ClientConn {
-	conn, err := grpc.Dial(addr, grpc.WithInsecure())
+	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalln(err)
 	}

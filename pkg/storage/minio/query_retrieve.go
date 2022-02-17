@@ -51,7 +51,10 @@ func (q *queryRetrieve) Exec(ctx context.Context) error {
 		})
 		q.validateRes(resObj)
 		bulk := telem.NewBulk([]byte{})
-		bulk.ReadFrom(resObj)
+		_, err := bulk.ReadFrom(resObj)
+		if err != nil {
+			return err
+		}
 		q.appendToDVC(&dataValue{PK: pk, Data: bulk})
 	}
 	q.baseBindVals(q.dvc)

@@ -82,7 +82,7 @@ type ChannelChunk struct {
 
 type ChannelChunkReplica struct {
 	ID             uuid.UUID     `bun:"type:UUID,pk" model:"role:pk,"`
-	ChannelChunk   *ChannelChunk `bun:"rel:belongs-to,join:channel_chunk_id=id,"'`
+	ChannelChunk   *ChannelChunk `bun:"rel:belongs-to,join:channel_chunk_id=id,"`
 	ChannelChunkID uuid.UUID     `bun:"type:UUID,"`
 	RangeReplica   *RangeReplica `bun:"rel:belongs-to,join:range_replica_id=id,"`
 	RangeReplicaID uuid.UUID     `bun:"type:UUID,"`
