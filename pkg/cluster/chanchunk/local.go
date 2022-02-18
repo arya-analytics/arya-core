@@ -16,6 +16,10 @@ type LocalChunkDeleteOpts struct {
 	PKC model.PKChain
 }
 
+type LocalChunkUpdateOpts struct {
+	PK model.PK
+}
+
 type LocalReplicaRetrieveOpts struct {
 	PKC       model.PKChain
 	OmitBulk  bool
@@ -36,6 +40,8 @@ type ServiceLocal interface {
 	CreateChunk(ctx context.Context, chunk interface{}) error
 
 	RetrieveChunk(ctx context.Context, chunk interface{}, opts LocalChunkRetrieveOpts) error
+
+	UpdateChunk(ctx context.Context, chunk interface{}, opts LocalChunkUpdateOpts) error
 
 	DeleteChunk(ctx context.Context, opts LocalChunkDeleteOpts) error
 
@@ -80,6 +86,14 @@ func (s *ServiceLocalStorage) DeleteChunk(ctx context.Context, opts LocalChunkDe
 	q := s.storage.NewDelete().Model(&storage.ChannelChunk{})
 	if opts.PKC != nil {
 		q = q.WherePKs(opts.PKC.Raw())
+	}
+	return q.Exec(ctx)
+}
+
+func (s *ServiceLocalStorage) UpdateChunk(ctx context.Context, chunk interface{}, opts LocalChunkUpdateOpts) error {
+	q := s.storage.NewUpdate().Model(chunk)
+	if !opts.PK.IsZero() {
+		q = q.WherePK(opts.PK.Raw())
 	}
 	return q.Exec(ctx)
 }

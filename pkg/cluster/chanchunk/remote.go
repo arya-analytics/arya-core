@@ -8,11 +8,7 @@ import (
 	"io"
 )
 
-/// |||| INTERFACE ||||
-
 type ServiceRemote interface {
-	// |||| REPLICA ||||
-
 	RetrieveReplica(ctx context.Context, chunkReplica interface{}, qp []RemoteReplicaRetrieveOpts) error
 	CreateReplica(ctx context.Context, qp []RemoterReplicaCreateOpts) error
 	DeleteReplica(ctx context.Context, qp []RemoteReplicaDeleteOpts) error
@@ -113,8 +109,7 @@ func (s *ServiceRemoteRPC) CreateReplica(ctx context.Context, qp []RemoterReplic
 func (s *ServiceRemoteRPC) DeleteReplica(ctx context.Context, qp []RemoteReplicaDeleteOpts) error {
 	for _, params := range qp {
 		req := &api.ChannelChunkServiceDeleteReplicasRequest{Id: params.PKC.Strings()}
-		_, err := s.client(params.Addr).DeleteReplicas(ctx, req)
-		if err != nil {
+		if _, err := s.client(params.Addr).DeleteReplicas(ctx, req); err != nil {
 			return err
 		}
 	}

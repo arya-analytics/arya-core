@@ -32,6 +32,10 @@ func (f *Fields) Raw() (rawFlds []interface{}) {
 	return rawFlds
 }
 
+func (f *Fields) ToPKChain() PKChain {
+	return NewPKChain(f.Raw())
+}
+
 func (f *Fields) ToReflect() *Reflect {
 	t, ok := f.source.Type().FieldByName(f.fldName)
 	if !ok {

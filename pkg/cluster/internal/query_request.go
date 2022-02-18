@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"context"
 	"fmt"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"reflect"
@@ -26,6 +27,7 @@ func NewQueryRequest(variant QueryVariant, model *model.Reflect) *QueryRequest {
 
 type QueryVariant int
 
+//go:generate stringer -type=QueryVariant
 const (
 	QueryVariantCreate QueryVariant = iota
 	QueryVariantRetrieve
@@ -90,4 +92,14 @@ func FieldsQueryOpt(q *QueryRequest) Fields {
 func NewFieldsQueryOpt(q *QueryRequest, ops Fields) {
 	panicWhenAlreadySpecified(q, fieldQueryOptKey)
 	q.opts[fieldQueryOptKey] = ops
+}
+
+type QueryRequestVariantOperations map[QueryVariant]ServiceOperation
+
+func SwitchQueryRequestVariant(ctx context.Context, qr *QueryRequest, qrvo QueryRequestVariantOperations) error {
+	op, ok := qrvo[qr.Variant]
+	if !ok {
+		panic(fmt.Sprintf("%s not supported for model %s", qr.Variant, qr.Model.Type().Name()))
+	}
+	return op(ctx, qr)
 }

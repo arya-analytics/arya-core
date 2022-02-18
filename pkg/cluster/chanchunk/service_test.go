@@ -216,7 +216,7 @@ var _ = Describe("Service", func() {
 				internal.NewPKQueryOpt(retrieveQRTwo, rfl.PKChain()[0].Raw())
 
 				By("Not being able to be re-retrieved")
-				rTwoErr := svc.Exec(ctx, retrieveQR)
+				rTwoErr := svc.Exec(ctx, retrieveQRTwo)
 				if rTwoErr != nil {
 					Expect(rTwoErr.(storage.Error).Type).To(Equal(storage.ErrorTypeItemNotFound))
 				} else {
