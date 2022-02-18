@@ -11,3 +11,4 @@
 ![test](https://github.com/arya-analytics/arya-core/actions/workflows/test.yml/badge.svg)
 ![build](https://github.com/arya-analytics/arya-core/actions/workflows/build.yml/badge.svg)
 ![build](https://github.com/arya-analytics/arya-core/actions/workflows/lint.yml/badge.svg)
+![go-report](https://img.shields.io/badge/go%20report-A-green.svg?style=flat)
