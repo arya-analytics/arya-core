@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/arya-analytics/aryacore/pkg/util/validate"
 	"reflect"
-	"strings"
 )
 
 const (
@@ -111,9 +110,9 @@ func (r *Reflect) StructFieldByRole(role string) reflect.Value {
 
 // StructFieldByName retrieves the struct field from the model object by its name.
 func (r *Reflect) StructFieldByName(name string) reflect.Value {
-	splitNames := strings.Split(name, ".")
-	var fld = r.StructValue().FieldByName(splitNames[0])
-	for _, splitName := range splitNames[1:] {
+	sn := SplitFieldNames(name)
+	var fld = r.StructValue().FieldByName(sn[0])
+	for _, splitName := range sn[1:] {
 		fld = fld.Elem().FieldByName(splitName)
 	}
 	return fld

@@ -20,7 +20,7 @@ var _sqlErrors = map[string]storage.ErrorType{
 	"sql: no rows in result set":                  storage.ErrorTypeItemNotFound,
 	"constraint failed: UNIQUE constraint failed": storage.ErrorTypeUniqueViolation,
 	"SQL logic errutil: no such table":            storage.ErrorTypeMigration,
-	"bun: Update and Delete queries require at least one Where": storage.
+	"bun: Update and Delete queries require at least one where": storage.
 		ErrorTypeInvalidArgs,
 }
 

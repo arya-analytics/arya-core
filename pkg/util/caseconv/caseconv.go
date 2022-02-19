@@ -13,3 +13,9 @@ func PascalToKebab(str string) string {
 	snake = matchAllCap.ReplaceAllString(snake, "${1}-${2}")
 	return strings.ToLower(snake)
 }
+
+func PascalToSnake(str string) string {
+	snake := matchFirstCap.ReplaceAllString(str, "${1}_${2}")
+	snake = matchAllCap.ReplaceAllString(snake, "${1}_${2}")
+	return strings.ToLower(snake)
+}

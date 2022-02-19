@@ -47,13 +47,22 @@ func (q *QueryRetrieve) WherePKs(pks interface{}) *QueryRetrieve {
 	return q
 }
 
-func (q *QueryRetrieve) Relation(rel string, fields ...string) *QueryRetrieve {
-	q.setMDQuery(q.mdQuery().Relation(rel, fields...))
+// WhereFields queries by a set of key value pairs where the key represents a field name
+// and the value represent a value to match with.
+func (q *QueryRetrieve) WhereFields(flds Fields) *QueryRetrieve {
+	q.setMDQuery(q.mdQuery().WhereFields(flds))
 	return q
 }
 
-func (q *QueryRetrieve) Field(fields ...string) *QueryRetrieve {
-	q.setMDQuery(q.mdQuery().Field(fields...))
+// Relation retrieves the fields flds from the relation rel
+func (q *QueryRetrieve) Relation(rel string, flds ...string) *QueryRetrieve {
+	q.setMDQuery(q.mdQuery().Relation(rel, flds...))
+	return q
+}
+
+// Field retrieves only the fields flds in teh query
+func (q *QueryRetrieve) Field(flds ...string) *QueryRetrieve {
+	q.setMDQuery(q.mdQuery().Fields(flds...))
 	return q
 }
 

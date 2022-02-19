@@ -56,7 +56,7 @@ var _ = Describe("QueryTsRetrieve", func() {
 			It("Should retrieve the correct sample", func() {
 			})
 		})
-		Describe("Retrieving a sample by time range", func() {
+		Describe("Retrieving a sample by time rng", func() {
 			BeforeEach(func() {
 				samples = []*storage.ChannelSample{
 					{

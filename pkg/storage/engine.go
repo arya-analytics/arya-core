@@ -25,6 +25,8 @@ type Engine interface {
 	InCatalog(model interface{}) bool
 }
 
+type Fields map[string]interface{}
+
 // || META DATA ||
 
 // EngineMD or the Metadata Engine is responsible for storing lightweight,
@@ -87,11 +89,11 @@ type QueryMDBase interface {
 type QueryMDRetrieve interface {
 	QueryMDBase
 	Model(model interface{}) QueryMDRetrieve
-	Where(query string, args ...interface{}) QueryMDRetrieve
 	WherePK(pk interface{}) QueryMDRetrieve
 	WherePKs(pks interface{}) QueryMDRetrieve
 	Relation(rel string, fields ...string) QueryMDRetrieve
-	Field(fields ...string) QueryMDRetrieve
+	Fields(fields ...string) QueryMDRetrieve
+	WhereFields(flds Fields) QueryMDRetrieve
 	Count(ctx context.Context) (int, error)
 }
 

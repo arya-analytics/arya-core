@@ -44,13 +44,13 @@ type Node struct {
 // |||| RANGE ||||
 
 type Range struct {
-	ID           uuid.UUID `bun:"type:UUID,pk" model:"role:pk,"`
-	RangeLeaseID uuid.UUID `bun:"type:UUID,nullzero"`
+	ID         uuid.UUID   `bun:"type:UUID,pk" model:"role:pk,"`
+	RangeLease *RangeLease `bun:"rel:has-one,join:id=range_id"`
 }
 
 type RangeLease struct {
 	ID             uuid.UUID     `bun:"type:UUID,pk" model:"role:pk,"`
-	Range          *Range        `bun:"rel:has-one,join:id=range_lease_id"`
+	RangeID        uuid.UUID     `bun:"type:UUID"`
 	RangeReplica   *RangeReplica `bun:"rel:belongs-to,join:range_replica_id=id"`
 	RangeReplicaID uuid.UUID     `bun:"type:UUID,"`
 }

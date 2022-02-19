@@ -1,7 +1,9 @@
 package model
 
 import (
+	log "github.com/sirupsen/logrus"
 	"reflect"
+	"strings"
 )
 
 type Fields struct {
@@ -49,4 +51,15 @@ func (f *Fields) ToReflect() *Reflect {
 		newRfl.ChainAppend(fldRfl)
 	})
 	return newRfl
+}
+
+func SplitFieldNames(name string) []string {
+	return strings.Split(name, ".")
+}
+
+func SplitLastFieldName(name string) (string, string) {
+	sn := SplitFieldNames(name)
+	fn := strings.Join(sn[0:len(sn)-1], ".")
+	log.Info(sn, fn, sn[len(sn)-1])
+	return fn, sn[len(sn)-1]
 }

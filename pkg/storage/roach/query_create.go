@@ -27,7 +27,7 @@ func (q *queryCreate) Model(m interface{}) storage.QueryMDCreate {
 		q.q = q.q.Model(q.Dest().Pointer())
 		return nil
 	})
-	// We set default values, so we want to exchange back to source.
+	// We set base values, so we want to exchange back to source.
 	q.baseExchangeToSource()
 	return q
 }

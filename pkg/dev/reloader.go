@@ -21,7 +21,7 @@ const (
 	DefaultChartRelPath = "/deploy/kubernetes/arya-core"
 )
 
-// DefaultBuildCtxPath returns the default build context for the arya image.
+// DefaultBuildCtxPath returns the base build context for the arya image.
 func DefaultBuildCtxPath() string {
 	ctx, err := filepath.Abs(".")
 	if err != nil {

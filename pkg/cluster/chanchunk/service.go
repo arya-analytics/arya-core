@@ -85,7 +85,7 @@ const (
 )
 
 func (s *Service) createReplica(ctx context.Context, qr *internal.QueryRequest) error {
-	// CLARIFICATION: Retrieves information about the range replicas and nodes model belongs to.
+	// CLARIFICATION: Retrieves information about the rng replicas and nodes model belongs to.
 	// It will bind the results to qr.Model itself.
 	if err := s.local.RetrieveRangeReplica(
 		ctx,
@@ -107,7 +107,7 @@ func (s *Service) retrieveReplica(ctx context.Context, qr *internal.QueryRequest
 	if !ok {
 		panic("retrieve queries require a primary key!")
 	}
-	// CLARIFICATION: Retrieves information about the range replicas and nodes model belongs to.
+	// CLARIFICATION: Retrieves information about the rng replicas and nodes model belongs to.
 	// It will bind the results to qr.Model itself.
 	if err := s.local.RetrieveReplica(
 		ctx,
@@ -132,7 +132,7 @@ func (s *Service) deleteReplica(ctx context.Context, qr *internal.QueryRequest) 
 	if !ok {
 		panic("delete queries require a primary key!")
 	}
-	// CLARIFICATION: Retrieves information about the range replicas and nodes model belongs to.
+	// CLARIFICATION: Retrieves information about the rng replicas and nodes model belongs to.
 	// It will bind the results to qr.Model itself.
 	if err := s.local.RetrieveReplica(ctx, qr.Model.Pointer(), LocalReplicaRetrieveOpts{PKC: PKC}); err != nil {
 		return err

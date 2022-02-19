@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/arya-analytics/aryacore/pkg/util/errutil"
+	log "github.com/sirupsen/logrus"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/migrate"
 )
@@ -87,13 +88,14 @@ func migrateUpFunc(d Driver) migrate.MigrationFunc {
 		c.execMigration(db.NewCreateTable().
 			Model((*RangeLease)(nil)).
 			ForeignKey(`("range_replica_id") REFERENCES "range_replicas" ("id") ON DELETE CASCADE`).
+			ForeignKey(`("range_id") REFERENCES "ranges" ("id") ON DELETE CASCADE`).
 			Exec,
 		)
-		c.Exec(func() error {
-			_, err := db.Exec(`ALTER TABLE "ranges" ADD CONSTRAINT fk_range_lease_id_ref_range_leases 
-									FOREIGN KEY ("range_lease_id") REFERENCES "range_leases" ("id") ON DELETE CASCADE`)
-			return err
-		})
+		//c.Exec(func() error {
+		//	_, err := db.Exec(`ALTER TABLE "range_leases" ADD CONSTRAINT fk_range_id_ref_ranges
+		//							FOREIGN KEY ("range_id") REFERENCES "ranges" ("id") ON DELETE CASCADE`)
+		//	return err
+		//})
 
 		// |||| CHANNEL ||||
 
@@ -114,7 +116,7 @@ func migrateUpFunc(d Driver) migrate.MigrationFunc {
 			ForeignKey(`("range_replica_id") REFERENCES range_replicas ("id") ON DELETE CASCADE`).
 			Exec,
 		)
-
+		log.Info("hello")
 		return c.Error()
 	}
 }

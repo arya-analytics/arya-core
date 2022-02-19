@@ -43,8 +43,9 @@ var _ = Describe("QueryRetrieve", func() {
 			})
 			It("Retrieve a single field", func() {
 				resChannelConfig := &storage.ChannelConfig{}
-				err := engine.NewRetrieve(adapter).Model(resChannelConfig).Field("name").WherePK(channelConfig.
+				err := engine.NewRetrieve(adapter).Model(resChannelConfig).Fields("name").WherePK(channelConfig.
 					ID).Exec(ctx)
+				//time.Sleep(10000 * time.Second)
 				Expect(err).To(BeNil())
 				Expect(resChannelConfig.ID).To(Equal(uuid.UUID{}))
 				Expect(resChannelConfig.Name).To(Equal("Channel Config"))
@@ -77,7 +78,7 @@ var _ = Describe("QueryRetrieve", func() {
 		Describe("Retrieve a related item", func() {
 			It("Should retrieve all of the correct items", func() {
 				resChannelConfig := &storage.ChannelConfig{}
-				err := engine.NewRetrieve(adapter).Model(resChannelConfig).Relation("Node").
+				err := engine.NewRetrieve(adapter).Model(resChannelConfig).Relation("Node", "ID").
 					WherePK(channelConfig.ID).Exec(ctx)
 				Expect(err).To(BeNil())
 				Expect(resChannelConfig.Node.ID).To(Equal(1))
@@ -85,7 +86,7 @@ var _ = Describe("QueryRetrieve", func() {
 		})
 		Describe("Retrieve through multiple levels of relations", func() {
 			var (
-				//rangeLease          *storage.RangeLease
+				//rangeLease          *storage.RangeID
 				rangeX              *storage.Range
 				channelChunkReplica *storage.ChannelChunkReplica
 				rangeReplica        *storage.RangeReplica
@@ -127,6 +128,73 @@ var _ = Describe("QueryRetrieve", func() {
 				Expect(channelChunkReplicaRes.RangeReplica.Node.ID).To(Equal(node.ID))
 
 			})
+		})
+		Describe("Using WhereField", func() {
+			var (
+				rngLease   *storage.RangeLease
+				rng        *storage.Range
+				rngReplica *storage.RangeReplica
+				items      []interface{}
+			)
+			BeforeEach(func() {
+
+				rng = &storage.Range{
+					ID: uuid.New(),
+				}
+				rngLease = &storage.RangeLease{
+					ID:      uuid.New(),
+					RangeID: rng.ID,
+				}
+				rngReplica = &storage.RangeReplica{
+					ID:      uuid.New(),
+					RangeID: rng.ID,
+					NodeID:  node.ID,
+				}
+				rngLease.RangeReplicaID = rngReplica.ID
+				items = []interface{}{
+					rng,
+					rngReplica,
+					rngLease,
+				}
+			})
+			JustBeforeEach(func() {
+				for _, item := range items {
+					err := engine.NewCreate(adapter).Model(item).Exec(ctx)
+					Expect(err).To(BeNil())
+				}
+			})
+			It("Should retrieve by the field correctly", func() {
+				resRngLease := &storage.RangeLease{}
+				err := engine.
+					NewRetrieve(adapter).
+					Model(resRngLease).
+					WhereFields(storage.Fields{"RangeID": rng.ID}).
+					Exec(ctx)
+				Expect(err).To(BeNil())
+				Expect(resRngLease.ID).To(Equal(rngLease.ID))
+			})
+			It("Should return a not found error when no item can be found", func() {
+				resRngLease := &storage.RangeLease{}
+				err := engine.
+					NewRetrieve(adapter).
+					Model(resRngLease).
+					WhereFields(storage.Fields{"RangeID": uuid.UUID{}}).
+					Exec(ctx)
+				Expect(err).ToNot(BeNil())
+				Expect(err.(storage.Error).Type).To(Equal(storage.ErrorTypeItemNotFound))
+			})
+			Context("Nested Relation", func() {
+				It("Should retrieve the nested relation correctly", func() {
+					var resRanges []*storage.Range
+					err := engine.NewRetrieve(adapter).Model(&resRanges).WhereFields(storage.Fields{
+						"RangeLease.RangeReplica.NodeID": 1,
+					}).Exec(ctx)
+					Expect(resRanges).To(HaveLen(1))
+					Expect(resRanges[0].ID).To(Equal(rng.ID))
+					Expect(err).To(BeNil())
+				})
+			})
+
 		})
 	})
 	Describe("Edge cases + errors", func() {

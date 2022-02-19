@@ -50,8 +50,8 @@ func panicWhenAlreadySpecified(q *QueryRequest, optKey string) {
 
 const pkQueryOptKey = "PKQueryOpt"
 
-func PKQueryOpt(q *QueryRequest) (model.PKChain, bool) {
-	qo, ok := q.opts[pkQueryOptKey]
+func PKQueryOpt(qr *QueryRequest) (model.PKChain, bool) {
+	qo, ok := qr.opts[pkQueryOptKey]
 	if !ok {
 		return model.PKChain{}, false
 	}
@@ -62,8 +62,8 @@ type pkQueryOpt struct {
 	PKChain model.PKChain
 }
 
-func NewPKQueryOpt(q *QueryRequest, args ...interface{}) {
-	panicWhenAlreadySpecified(q, pkQueryOptKey)
+func NewPKQueryOpt(qr *QueryRequest, args ...interface{}) {
+	panicWhenAlreadySpecified(qr, pkQueryOptKey)
 
 	// Handling a single vs multi PK query
 	pks := args[0]
@@ -72,7 +72,7 @@ func NewPKQueryOpt(q *QueryRequest, args ...interface{}) {
 	}
 
 	qo := pkQueryOpt{model.NewPKChain(pks)}
-	q.opts[pkQueryOptKey] = qo
+	qr.opts[pkQueryOptKey] = qo
 }
 
 // || FIELDS ||
@@ -81,12 +81,17 @@ const fieldQueryOptKey = "FieldQueryOpt"
 
 type Fields map[string]interface{}
 
-func FieldsQueryOpt(q *QueryRequest) Fields {
-	qo, ok := q.opts[fieldQueryOptKey]
+func (f Fields) Retrieve(fldName string) (interface{}, bool) {
+	fld, ok := f[fldName]
+	return fld, ok
+}
+
+func FieldsQueryOpt(qr *QueryRequest) (Fields, bool) {
+	qo, ok := qr.opts[fieldQueryOptKey]
 	if !ok {
-		return Fields{}
+		return Fields{}, false
 	}
-	return qo.(Fields)
+	return qo.(Fields), true
 }
 
 func NewFieldsQueryOpt(q *QueryRequest, ops Fields) {

@@ -110,8 +110,8 @@ func (s *ServiceLocalStorage) RetrieveReplica(ctx context.Context, chunkReplica 
 		q = q.WherePKs(opts.PKC.Raw())
 	}
 	if opts.Relations {
-		q = q.Relation("RangeReplica", "id").
-			Relation("RangeReplica.Node", "id", "address", "is_host")
+		q = q.Relation("RangeReplica", "ID").
+			Relation("RangeReplica.Node", "ID", "Address", "IsHost")
 	}
 	return q.Exec(ctx)
 }
@@ -129,7 +129,7 @@ func (s *ServiceLocalStorage) DeleteReplica(ctx context.Context, opts LocalRepli
 func (s *ServiceLocalStorage) RetrieveRangeReplica(ctx context.Context, rangeReplica interface{}, opts LocalRangeReplicaRetrieveOpts) error {
 	q := s.storage.NewRetrieve().
 		Model(rangeReplica).
-		Relation("Node", "id", "address", "is_host")
+		Relation("Node", "ID", "Address", "IsHost")
 	if opts.PKC != nil {
 		q = q.WherePKs(opts.PKC.Raw())
 	}
