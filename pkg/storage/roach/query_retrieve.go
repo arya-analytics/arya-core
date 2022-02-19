@@ -40,11 +40,11 @@ func (q *queryRetrieve) WherePKs(pks interface{}) storage.QueryMDRetrieve {
 
 func (q *queryRetrieve) WhereFields(flds models.Fields) storage.QueryMDRetrieve {
 	for fldN, fldV := range flds {
-		relN, baseN := model.SplitLastFieldName(fldN)
+		relN, _ := model.SplitLastFieldName(fldN)
 		if relN != "" {
 			q.bunQ = q.bunQ.Relation(relN)
 		}
-		q.bunQ = q.bunQ.Where(q.baseSQL().relFldEquals(relN, baseN), fldV)
+		q.bunQ = q.bunQ.Where(q.baseSQL().relFldEquals(fldN), fldV)
 	}
 	return q
 }

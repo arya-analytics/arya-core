@@ -46,16 +46,14 @@ func (sg sqlGen) fieldNames(fldNames ...string) (sqlNames []string) {
 	return sqlNames
 }
 
-func (sg sqlGen) fieldEquals(fldName string) string {
-	return fmt.Sprintf("%s = ?", fldName)
-}
-
 func (sg sqlGen) table() *schema.Table {
 	return sg.db.Table(sg.m.Type())
 }
 
-func (sg sqlGen) relFldEquals(relName, fldName string) string {
-	return sg.fieldEquals(sg.bindTableToField(sg.relTableName(relName), sg.fieldName(fldName)))
+func (sg sqlGen) relFldEquals(fldName string) string {
+	relN, baseN := model.SplitLastFieldName(fldName)
+	relFldName := sg.bindTableToField(sg.relTableName(relN), sg.fieldName(baseN))
+	return fmt.Sprintf("%s = ?", relFldName)
 
 }
 
