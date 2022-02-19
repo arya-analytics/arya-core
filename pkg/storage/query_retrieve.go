@@ -55,7 +55,7 @@ func (q *QueryRetrieve) WhereFields(flds models.Fields) *QueryRetrieve {
 	return q
 }
 
-// Relation retrieves the fields flds from the relation rel
+// Relation retrieves the specified fields from the relation.
 func (q *QueryRetrieve) Relation(rel string, flds ...string) *QueryRetrieve {
 	q.setMDQuery(q.mdQuery().Relation(rel, flds...))
 	return q

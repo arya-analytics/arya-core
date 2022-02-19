@@ -313,7 +313,7 @@ func (r *Reflect) RawValue() reflect.Value {
 }
 
 // FieldTypeByName returns the type of the field by its name. Supports
-// nested types such as ChannelConfig.Node;
+// nested types such as ChannelConfig.Node.
 func (r *Reflect) FieldTypeByName(name string) reflect.Type {
 	var fld reflect.Type
 	for i, splitName := range SplitFieldNames(name) {
