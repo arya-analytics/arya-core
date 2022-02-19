@@ -32,8 +32,8 @@ func (q *queryBase) baseExchangeToSource() {
 	q.exchange.ToSource()
 }
 
-func (q *queryBase) baseSQL() SQLGen {
-	return SQLGen{q.db, q.Dest()}
+func (q *queryBase) baseSQL() sqlGen {
+	return sqlGen{q.db, q.Dest()}
 }
 
 func (q *queryBase) baseExchangeToDest() {

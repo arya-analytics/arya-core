@@ -10,16 +10,16 @@ import (
 	"strings"
 )
 
-type SQLGen struct {
+type sqlGen struct {
 	db *bun.DB
 	m  *model.Reflect
 }
 
-func (sg SQLGen) bindTableToField(tableName, fldName string) string {
+func (sg sqlGen) bindTableToField(tableName, fldName string) string {
 	return fmt.Sprintf("%s.%s", tableName, fldName)
 }
 
-func (sg SQLGen) pkField() reflect.StructField {
+func (sg sqlGen) pkField() reflect.StructField {
 	st, ok := sg.m.StructTagChain().RetrieveByFieldRole(model.PKRole)
 	if !ok {
 		panic("model has no pk field!")
@@ -27,45 +27,47 @@ func (sg SQLGen) pkField() reflect.StructField {
 	return st.Field
 }
 
-func (sg SQLGen) pk() string {
+func (sg sqlGen) pk() string {
 	return fmt.Sprintf("%s = ?", sg.bindTableToField(sg.table().ModelName, sg.pkField().Name))
 }
 
-func (sg SQLGen) pks() string {
+func (sg sqlGen) pks() string {
 	return fmt.Sprintf("%s IN (?)", sg.bindTableToField(sg.table().ModelName, sg.pkField().Name))
 }
 
-func (sg SQLGen) fieldName(fldName string) string {
+func (sg sqlGen) fieldName(fldName string) string {
 	return caseconv.PascalToSnake(fldName)
 }
 
-func (sg SQLGen) fieldNames(fldNames ...string) (sqlNames []string) {
+func (sg sqlGen) fieldNames(fldNames ...string) (sqlNames []string) {
 	for _, n := range fldNames {
 		sqlNames = append(sqlNames, sg.fieldName(n))
 	}
 	return sqlNames
 }
 
-func (sg SQLGen) fieldEquals(fldName string) string {
+func (sg sqlGen) fieldEquals(fldName string) string {
 	return fmt.Sprintf("%s = ?", fldName)
 }
 
-func (sg SQLGen) table() *schema.Table {
+func (sg sqlGen) table() *schema.Table {
 	return sg.db.Table(sg.m.Type())
 }
 
-func (sg SQLGen) relFldEquals(relName, fldName string) string {
+func (sg sqlGen) relFldEquals(relName, fldName string) string {
 	return sg.fieldEquals(sg.bindTableToField(sg.relTableName(relName), sg.fieldName(fldName)))
 
 }
 
-func (sg SQLGen) relTableName(relName string) (tableName string) {
+const nestedTableSeparator = "__"
+
+func (sg sqlGen) relTableName(relName string) (tableName string) {
 	sn := model.SplitFieldNames(relName)
 	for i := range sn {
 		nRelName := strings.Join(sn[0:i+1], ".")
 		table := sg.db.Table(sg.m.FieldTypeByName(nRelName))
 		if i != 0 {
-			tableName += "__"
+			tableName += nestedTableSeparator
 		}
 		tableName += table.ModelName
 	}
