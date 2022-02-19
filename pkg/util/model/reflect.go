@@ -312,10 +312,11 @@ func (r *Reflect) RawValue() reflect.Value {
 	return r.PointerValue().Elem()
 }
 
+// FieldTypeByName returns the type of the field by its name. Supports
+// nested types such as ChannelConfig.Node;
 func (r *Reflect) FieldTypeByName(name string) reflect.Type {
-	sn := SplitFieldNames(name)
 	var fld reflect.Type
-	for i, splitName := range sn {
+	for i, splitName := range SplitFieldNames(name) {
 		var (
 			ok        bool
 			structFld reflect.StructField
@@ -326,7 +327,7 @@ func (r *Reflect) FieldTypeByName(name string) reflect.Type {
 			structFld, ok = fld.Elem().FieldByName(splitName)
 		}
 		if !ok {
-			panic(fmt.Sprintf("field %s does not exist on type %s", splitName, fld))
+			panic(fmt.Sprintf("field %s does not exist on type %s", splitName, fld.Elem()))
 		}
 		fld = structFld.Type
 	}
