@@ -3,9 +3,9 @@ package chanchunk_test
 import (
 	"github.com/arya-analytics/aryacore/pkg/cluster/chanchunk"
 	"github.com/arya-analytics/aryacore/pkg/cluster/chanchunk/mock"
+	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/rpc"
 	rpcmock "github.com/arya-analytics/aryacore/pkg/rpc/mock"
-	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"github.com/google/uuid"
@@ -56,7 +56,7 @@ var _ = Describe("ServiceRemoteRPC", func() {
 		cErr := svc.CreateReplica(ctx, []chanchunk.RemoterReplicaCreateOpts{
 			{
 				Addr: addrOne.String(),
-				ChunkReplica: &[]*storage.ChannelChunkReplica{
+				ChunkReplica: &[]*models.ChannelChunkReplica{
 					{
 						ID:    idOne,
 						Telem: telem.NewBulk([]byte{1, 2, 3}),
@@ -65,7 +65,7 @@ var _ = Describe("ServiceRemoteRPC", func() {
 			},
 			{
 				Addr: addrTwo.String(),
-				ChunkReplica: &[]*storage.ChannelChunkReplica{{
+				ChunkReplica: &[]*models.ChannelChunkReplica{{
 					ID:    idTwo,
 					Telem: telem.NewBulk([]byte{3, 4, 5}),
 				},
@@ -91,7 +91,7 @@ var _ = Describe("ServiceRemoteRPC", func() {
 	})
 	It("Should retrieve the replicas correctly", func() {
 		id := uuid.New()
-		var ccr []*storage.ChannelChunkReplica
+		var ccr []*models.ChannelChunkReplica
 		cErr := svc.RetrieveReplica(ctx, &ccr, []chanchunk.RemoteReplicaRetrieveOpts{{Addr: addrOne.String(), PKC: model.NewPKChain([]uuid.UUID{id})}})
 		Expect(cErr).To(BeNil())
 		Expect(ccr).To(HaveLen(1))

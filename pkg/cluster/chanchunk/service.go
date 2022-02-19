@@ -3,7 +3,7 @@ package chanchunk
 import (
 	"context"
 	"github.com/arya-analytics/aryacore/pkg/cluster/internal"
-	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/route"
 	"reflect"
@@ -24,14 +24,14 @@ func (s *Service) CanHandle(q *internal.QueryRequest) bool {
 
 func (s *Service) Exec(ctx context.Context, qr *internal.QueryRequest) error {
 	switch qr.Model.Type() {
-	case reflect.TypeOf(storage.ChannelChunk{}):
+	case reflect.TypeOf(models.ChannelChunk{}):
 		return internal.SwitchQueryRequestVariant(ctx, qr, internal.QueryRequestVariantOperations{
 			internal.QueryVariantCreate:   s.createChunk,
 			internal.QueryVariantRetrieve: s.retrieveChunk,
 			internal.QueryVariantUpdate:   s.updateChunk,
 			internal.QueryVariantDelete:   s.deleteChunk,
 		})
-	case reflect.TypeOf(storage.ChannelChunkReplica{}):
+	case reflect.TypeOf(models.ChannelChunkReplica{}):
 		return internal.SwitchQueryRequestVariant(ctx, qr, internal.QueryRequestVariantOperations{
 			internal.QueryVariantCreate:   s.createReplica,
 			internal.QueryVariantRetrieve: s.retrieveReplica,
@@ -194,5 +194,5 @@ func buildRemoteReplicaDeleteOpts(remoteCCR *model.Reflect) (opts []RemoteReplic
 // |||| CATALOG ||||
 
 func catalog() model.Catalog {
-	return model.Catalog{&storage.ChannelChunk{}, &storage.ChannelChunkReplica{}}
+	return model.Catalog{&models.ChannelChunk{}, &models.ChannelChunkReplica{}}
 }

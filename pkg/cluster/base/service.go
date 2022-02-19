@@ -3,12 +3,17 @@ package base
 import (
 	"context"
 	"github.com/arya-analytics/aryacore/pkg/cluster/internal"
+	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 )
 
 type Service struct {
 	storage storage.Storage
+}
+
+func NewService(s storage.Storage) *Service {
+	return &Service{storage: s}
 }
 
 func (s *Service) CanHandle(qr *internal.QueryRequest) bool {
@@ -38,28 +43,40 @@ func (s *Service) retrieve(ctx context.Context, qr *internal.QueryRequest) error
 	if ok {
 		q.WherePKs(PKC.Raw())
 	}
-	//flds, ok := internal.FieldsQueryOpt()
-	//if ok {
-	//	q.WhereFields(flds)
-	//}
+	flds, ok := internal.FieldsQueryOpt(qr)
+	if ok {
+		q.WhereFields(flds)
+	}
 	return q.Exec(ctx)
 }
 
 func (s *Service) delete(ctx context.Context, qr *internal.QueryRequest) error {
 	q := s.storage.NewDelete().Model(qr.Model.Pointer())
+	PKC, ok := internal.PKQueryOpt(qr)
+	if ok {
+		q.WherePKs(PKC.Raw())
+	}
 	return q.Exec(ctx)
 }
 
 func (s *Service) update(ctx context.Context, qr *internal.QueryRequest) error {
 	q := s.storage.NewUpdate().Model(qr.Model.Pointer())
+	PKC, ok := internal.PKQueryOpt(qr)
+	if len(PKC) > 1 {
+		panic("update queries can't have more than one pk!")
+	}
+	if ok {
+		q.WherePK(PKC[0].Raw())
+	}
 	return q.Exec(ctx)
 }
 
 func catalog() model.Catalog {
 	return model.Catalog{
-		&storage.Node{},
-		&storage.Range{},
-		&storage.RangeLease{},
-		&storage.ChannelConfig{},
+		&models.Node{},
+		&models.Range{},
+		&models.RangeReplica{},
+		&models.RangeLease{},
+		&models.ChannelConfig{},
 	}
 }

@@ -1,6 +1,7 @@
 package storage_test
 
 import (
+	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -8,12 +9,12 @@ import (
 
 var _ = Describe("QueryDelete", func() {
 	var (
-		node          *storage.Node
-		channelConfig *storage.ChannelConfig
+		node          *models.Node
+		channelConfig *models.ChannelConfig
 	)
 	BeforeEach(func() {
-		node = &storage.Node{ID: 1}
-		channelConfig = &storage.ChannelConfig{NodeID: node.ID}
+		node = &models.Node{ID: 1}
+		channelConfig = &models.ChannelConfig{NodeID: node.ID}
 	})
 	JustBeforeEach(func() {
 		nErr := store.NewCreate().Model(node).Exec(ctx)
@@ -41,7 +42,7 @@ var _ = Describe("QueryDelete", func() {
 	Describe("Edge cases + errors", func() {
 		Describe("Providing no where statement to the query", func() {
 			It("Should return an error", func() {
-				err := store.NewDelete().Model(&storage.ChannelConfig{}).Exec(ctx)
+				err := store.NewDelete().Model(&models.ChannelConfig{}).Exec(ctx)
 				Expect(err).ToNot(BeNil())
 				Expect(err.(storage.Error).Type).To(Equal(storage.ErrorTypeInvalidArgs))
 			})

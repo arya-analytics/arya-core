@@ -20,8 +20,8 @@ var _sqlErrors = map[string]storage.ErrorType{
 	"sql: no rows in result set":                  storage.ErrorTypeItemNotFound,
 	"constraint failed: UNIQUE constraint failed": storage.ErrorTypeUniqueViolation,
 	"SQL logic errutil: no such table":            storage.ErrorTypeMigration,
-	"bun: Update and Delete queries require at least one where": storage.
-		ErrorTypeInvalidArgs,
+	"bun: Update and Delete queries require at":   storage.ErrorTypeInvalidArgs,
+	"does not have relation":                      storage.ErrorTypeInvalidArgs,
 }
 
 func errorTypeConverterDefault(err error) (storage.ErrorType, bool) {
@@ -37,6 +37,7 @@ var _pgErrs = map[pg.ErrorType]storage.ErrorType{
 	pg.ErrorTypeUniqueViolation:     storage.ErrorTypeUniqueViolation,
 	pg.ErrorTypeForeignKeyViolation: storage.ErrorTypeRelationshipViolation,
 	pg.ErrorTypeIntegrityConstraint: storage.ErrorTypeInvalidField,
+	pg.ErrorTypeSyntax:              storage.ErrorTypeInvalidArgs,
 }
 
 func errorTypeConverterPGDriver(err error) (storage.ErrorType, bool) {

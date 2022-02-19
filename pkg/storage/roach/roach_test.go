@@ -1,7 +1,7 @@
 package roach_test
 
 import (
-	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/storage/mock"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
@@ -45,12 +45,12 @@ var _ = Describe("Roach", func() {
 		Describe("Contains", func() {
 			Context("Model in catalog", func() {
 				It("Should return true", func() {
-					Expect(engine.InCatalog(&storage.ChannelChunk{})).To(BeTrue())
+					Expect(engine.InCatalog(&models.ChannelChunk{})).To(BeTrue())
 				})
 			})
 			Context("Model not in catalog", func() {
 				It("Should return false", func() {
-					Expect(engine.InCatalog(&storage.ChannelSample{})).To(BeFalse())
+					Expect(engine.InCatalog(&models.ChannelSample{})).To(BeFalse())
 				})
 			})
 		})

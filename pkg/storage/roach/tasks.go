@@ -2,6 +2,7 @@ package roach
 
 import (
 	"context"
+	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/util/errutil"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
@@ -86,7 +87,7 @@ func (sn *syncNodes) createNodeWithPK(pk model.PK) {
 	if !sn.cfg.Silent {
 		log.WithFields(fld).Info("A new node joined the cluster. Creating table entry.")
 	}
-	newNode := &storage.Node{ID: pk.Raw().(int)}
+	newNode := &models.Node{ID: pk.Raw().(int)}
 	sn.catcher.Exec(func() error {
 		if err := newCreate(sn.db).Model(newNode).Exec(sn.ctx); err != nil {
 			sErr, ok := err.(storage.Error)

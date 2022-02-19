@@ -1,6 +1,7 @@
 package storage_test
 
 import (
+	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
@@ -10,12 +11,12 @@ import (
 
 var _ = Describe("QueryTSCreate", func() {
 	var (
-		node          *storage.Node
-		channelConfig *storage.ChannelConfig
+		node          *models.Node
+		channelConfig *models.ChannelConfig
 	)
 	BeforeEach(func() {
-		node = &storage.Node{ID: 1}
-		channelConfig = &storage.ChannelConfig{NodeID: 1, ID: uuid.New()}
+		node = &models.Node{ID: 1}
+		channelConfig = &models.ChannelConfig{NodeID: 1, ID: uuid.New()}
 	})
 	JustBeforeEach(func() {
 		nErr := store.NewCreate().Model(node).Exec(ctx)
@@ -50,9 +51,9 @@ var _ = Describe("QueryTSCreate", func() {
 				}
 			})
 			Context("Single Sample", func() {
-				var sample *storage.ChannelSample
+				var sample *models.ChannelSample
 				BeforeEach(func() {
-					sample = &storage.ChannelSample{
+					sample = &models.ChannelSample{
 						ChannelConfigID: channelConfig.ID,
 						Value:           31.6,
 						Timestamp:       time.Now().UnixNano(),
@@ -61,22 +62,22 @@ var _ = Describe("QueryTSCreate", func() {
 				It("Should create the sample correctly", func() {
 					err := store.NewTSCreate().Sample().Model(sample).Exec(ctx)
 					Expect(err).To(BeNil())
-					resSample := &storage.ChannelSample{}
+					resSample := &models.ChannelSample{}
 					rErr := store.NewTSRetrieve().Model(resSample).WherePK(channelConfig.ID).Exec(ctx)
 					Expect(rErr).To(BeNil())
 					Expect(resSample.Timestamp).To(Equal(sample.Timestamp))
 				})
 			})
 			Context("Multiple Samples", func() {
-				var samples []*storage.ChannelSample
-				var channelConfigTwo *storage.ChannelConfig
+				var samples []*models.ChannelSample
+				var channelConfigTwo *models.ChannelConfig
 				BeforeEach(func() {
-					channelConfigTwo = &storage.ChannelConfig{
+					channelConfigTwo = &models.ChannelConfig{
 						ID:     uuid.New(),
 						Name:   "SG 43",
 						NodeID: node.ID,
 					}
-					samples = []*storage.ChannelSample{
+					samples = []*models.ChannelSample{
 						{
 							ChannelConfigID: channelConfig.ID,
 							Value:           3124.4,
@@ -101,7 +102,7 @@ var _ = Describe("QueryTSCreate", func() {
 					Expect(seriesErr).To(BeNil())
 				})
 				It("The samples should be able to be retrieved after creation", func() {
-					var resSamples []*storage.ChannelSample
+					var resSamples []*models.ChannelSample
 					cErr := store.NewTSCreate().Sample().Model(&samples).Exec(ctx)
 					Expect(cErr).To(BeNil())
 					rErr := store.NewTSRetrieve().Model(&resSamples).WherePKs([]uuid.

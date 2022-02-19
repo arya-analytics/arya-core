@@ -1,7 +1,7 @@
 package storage_test
 
 import (
-	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -9,12 +9,12 @@ import (
 
 var _ = Describe("QueryRetrieve", func() {
 	var (
-		node          *storage.Node
-		channelConfig *storage.ChannelConfig
+		node          *models.Node
+		channelConfig *models.ChannelConfig
 	)
 	BeforeEach(func() {
-		node = &storage.Node{ID: 1}
-		channelConfig = &storage.ChannelConfig{NodeID: node.ID,
+		node = &models.Node{ID: 1}
+		channelConfig = &models.ChannelConfig{NodeID: node.ID,
 			Name: "REALLY_AWESOME_SENSOR", ID: uuid.New()}
 	})
 	JustBeforeEach(func() {
@@ -35,7 +35,7 @@ var _ = Describe("QueryRetrieve", func() {
 			Context("Single item", func() {
 				Describe("Retrieve a channel config", func() {
 					It("Should retrieve the correct item", func() {
-						resChannelConfig := &storage.ChannelConfig{}
+						resChannelConfig := &models.ChannelConfig{}
 						err := store.NewRetrieve().Model(resChannelConfig).WherePK(channelConfig.ID).Exec(ctx)
 						Expect(err).To(BeNil())
 						Expect(resChannelConfig.ID).To(Equal(channelConfig.ID))

@@ -1,6 +1,7 @@
-package clusterapi_test
+package base_test
 
 import (
+	"context"
 	"github.com/arya-analytics/aryacore/pkg/storage/mock"
 	"testing"
 
@@ -8,19 +9,22 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var mockDriver *mock.DriverRoach
+var (
+	ctx   = context.Background()
+	store *mock.Storage
+)
 
 var _ = BeforeSuite(func() {
-	mockDriver = mock.NewDriverRoach(true, false)
-	_, err := mockDriver.Connect()
+	store = mock.NewStorage()
+	err := store.NewMigrate().Exec(ctx)
 	Expect(err).To(BeNil())
 })
 
 var _ = AfterSuite(func() {
-	mockDriver.Stop()
+	store.Stop()
 })
 
-func TestClusterAPI(t *testing.T) {
+func TestBase(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "ClusterAPI Suite")
+	RunSpecs(t, "Base Suite")
 }

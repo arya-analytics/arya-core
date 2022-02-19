@@ -2,6 +2,7 @@ package roach
 
 import (
 	"context"
+	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/uptrace/bun"
@@ -37,16 +38,16 @@ func (q *queryRetrieve) WherePKs(pks interface{}) storage.QueryMDRetrieve {
 	return q.where(q.baseSQL().pks(), bun.In(pks))
 }
 
-func (q *queryRetrieve) WhereFields(flds storage.Fields) storage.QueryMDRetrieve {
-	for fldName, fldValue := range flds {
-		relName, baseFldName := model.SplitLastFieldName(fldName)
-		baseFldSQL := q.baseSQL().fieldEquals(baseFldName)
-		if relName != "" {
-			q.bunQ = q.bunQ.Relation(relName, func(sq *bun.SelectQuery) *bun.SelectQuery {
-				return sq.Where(baseFldSQL, fldValue)
+func (q *queryRetrieve) WhereFields(flds models.Fields) storage.QueryMDRetrieve {
+	for fldN, fldV := range flds {
+		relN, baseN := model.SplitLastFieldName(fldN)
+		if relN != "" {
+			q.bunQ = q.bunQ.Relation(relN, func(sq *bun.SelectQuery) *bun.SelectQuery {
+				return sq.Where(q.baseSQL().relFldEquals(relN, baseN), fldV)
 			})
 		} else {
-			q.bunQ = q.bunQ.Where(baseFldSQL, fldValue)
+			baseSQL := q.baseSQL().fieldEquals(q.baseSQL().fieldName(baseN))
+			q.bunQ = q.bunQ.Where(baseSQL, fldV)
 		}
 	}
 	return q
@@ -55,7 +56,7 @@ func (q *queryRetrieve) WhereFields(flds storage.Fields) storage.QueryMDRetrieve
 func (q *queryRetrieve) Relation(rel string, fields ...string) storage.QueryMDRetrieve {
 	q.bunQ = q.bunQ.Relation(rel, func(sq *bun.SelectQuery) *bun.SelectQuery {
 		return sq.Column(
-			q.baseSQL().fieldNamesToSQL(fields...)...,
+			q.baseSQL().fieldNames(fields...)...,
 		)
 	})
 	return q

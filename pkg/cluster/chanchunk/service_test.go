@@ -4,6 +4,7 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/cluster/chanchunk"
 	"github.com/arya-analytics/aryacore/pkg/cluster/chanchunk/mock"
 	"github.com/arya-analytics/aryacore/pkg/cluster/internal"
+	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/rpc"
 	rpcmock "github.com/arya-analytics/aryacore/pkg/rpc/mock"
 	"github.com/arya-analytics/aryacore/pkg/storage"
@@ -27,22 +28,22 @@ var _ = Describe("Service", func() {
 		server        *mock.Server
 		grpcServer    *grpc.Server
 		lis           net.Listener
-		node          = &storage.Node{ID: 1}
-		channelConfig = &storage.ChannelConfig{NodeID: node.ID, ID: uuid.New()}
-		rangeX        = &storage.Range{
+		node          = &models.Node{ID: 1}
+		channelConfig = &models.ChannelConfig{NodeID: node.ID, ID: uuid.New()}
+		rangeX        = &models.Range{
 			ID: uuid.New(),
 		}
-		rangeReplica = &storage.RangeReplica{
+		rangeReplica = &models.RangeReplica{
 			ID:      uuid.New(),
 			RangeID: rangeX.ID,
 			NodeID:  node.ID,
 		}
-		channelChunk = &storage.ChannelChunk{
+		channelChunk = &models.ChannelChunk{
 			ID:              uuid.New(),
 			RangeID:         rangeX.ID,
 			ChannelConfigID: channelConfig.ID,
 		}
-		channelChunkReplica = &storage.ChannelChunkReplica{
+		channelChunkReplica = &models.ChannelChunkReplica{
 			RangeReplicaID: rangeReplica.ID,
 			ChannelChunkID: channelChunk.ID,
 			Telem:          telem.NewBulk([]byte{}),
@@ -132,7 +133,7 @@ var _ = Describe("Service", func() {
 				By("Executing the delete query")
 				Expect(svc.Exec(ctx, deleteQR)).To(BeNil())
 
-				resCCTwo := &storage.ChannelChunk{}
+				resCCTwo := &models.ChannelChunk{}
 				retrieveQRTwo := internal.NewQueryRequest(
 					internal.QueryVariantRetrieve,
 					model.NewReflect(resCCTwo),
@@ -147,8 +148,8 @@ var _ = Describe("Service", func() {
 					Expect(model.NewPK(resCCTwo.ID).IsZero()).To(BeTrue())
 				}
 			},
-			Entry("Single Chunk", channelChunk, &storage.ChannelChunk{}),
-			Entry("Slice of Chunks", &[]*storage.ChannelChunk{channelChunk}, &[]*storage.ChannelChunk{}),
+			Entry("Single Chunk", channelChunk, &models.ChannelChunk{}),
+			Entry("Slice of Chunks", &[]*models.ChannelChunk{channelChunk}, &[]*models.ChannelChunk{}),
 		)
 	})
 	Describe("Channel Chunk Replica", func() {
@@ -208,7 +209,7 @@ var _ = Describe("Service", func() {
 				By("Executing the delete query")
 				Expect(svc.Exec(ctx, deleteQR)).To(BeNil())
 
-				resCCTwo := &storage.ChannelChunkReplica{}
+				resCCTwo := &models.ChannelChunkReplica{}
 				retrieveQRTwo := internal.NewQueryRequest(
 					internal.QueryVariantRetrieve,
 					model.NewReflect(resCCTwo),
@@ -223,8 +224,8 @@ var _ = Describe("Service", func() {
 					Expect(model.NewPK(resCCTwo.ID).IsZero()).To(BeTrue())
 				}
 			},
-			Entry("Single Chunk Replica", channelChunkReplica, &storage.ChannelChunkReplica{}),
-			Entry("Multiple Chunk Replicas", &[]*storage.ChannelChunkReplica{channelChunkReplica}, &[]*storage.ChannelChunkReplica{}),
+			Entry("Single Chunk Replica", channelChunkReplica, &models.ChannelChunkReplica{}),
+			Entry("Multiple Chunk Replicas", &[]*models.ChannelChunkReplica{channelChunkReplica}, &[]*models.ChannelChunkReplica{}),
 		)
 	})
 })

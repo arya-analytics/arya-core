@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	storage2 "github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/util/tasks"
 	"github.com/google/uuid"
 )
@@ -24,8 +25,6 @@ type Engine interface {
 	IsAdapter(a Adapter) bool
 	InCatalog(model interface{}) bool
 }
-
-type Fields map[string]interface{}
 
 // || META DATA ||
 
@@ -93,7 +92,7 @@ type QueryMDRetrieve interface {
 	WherePKs(pks interface{}) QueryMDRetrieve
 	Relation(rel string, fields ...string) QueryMDRetrieve
 	Fields(fields ...string) QueryMDRetrieve
-	WhereFields(flds Fields) QueryMDRetrieve
+	WhereFields(flds storage2.Fields) QueryMDRetrieve
 	Count(ctx context.Context) (int, error)
 }
 

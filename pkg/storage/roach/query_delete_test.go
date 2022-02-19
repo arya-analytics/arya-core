@@ -1,6 +1,7 @@
 package roach_test
 
 import (
+	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
@@ -8,11 +9,11 @@ import (
 )
 
 var _ = Describe("QueryDelete", func() {
-	var channelConfig *storage.ChannelConfig
-	var node *storage.Node
+	var channelConfig *models.ChannelConfig
+	var node *models.Node
 	BeforeEach(func() {
-		node = &storage.Node{ID: 1}
-		channelConfig = &storage.ChannelConfig{NodeID: node.ID}
+		node = &models.Node{ID: 1}
+		channelConfig = &models.ChannelConfig{NodeID: node.ID}
 	})
 	JustBeforeEach(func() {
 		nErr := engine.NewCreate(adapter).Model(node).Exec(ctx)
@@ -39,9 +40,9 @@ var _ = Describe("QueryDelete", func() {
 		})
 	})
 	Describe("Delete multiple items", func() {
-		var channelConfigTwo *storage.ChannelConfig
+		var channelConfigTwo *models.ChannelConfig
 		BeforeEach(func() {
-			channelConfigTwo = &storage.ChannelConfig{
+			channelConfigTwo = &models.ChannelConfig{
 				ID:     uuid.New(),
 				Name:   "CC 45",
 				NodeID: node.ID,
@@ -53,11 +54,11 @@ var _ = Describe("QueryDelete", func() {
 		})
 		It("Should delete them correctly", func() {
 			pks := []uuid.UUID{channelConfig.ID, channelConfigTwo.ID}
-			err := engine.NewDelete(adapter).Model(&storage.ChannelConfig{}).
+			err := engine.NewDelete(adapter).Model(&models.ChannelConfig{}).
 				WherePKs(pks).
 				Exec(ctx)
 			Expect(err).To(BeNil())
-			var models []*storage.ChannelConfig
+			var models []*models.ChannelConfig
 			e := engine.NewRetrieve(adapter).Model(&models).WherePKs(
 				[]uuid.UUID{channelConfigTwo.ID,
 					channelConfig.ID}).Exec(ctx)

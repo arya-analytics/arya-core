@@ -1,15 +1,15 @@
 package roach_test
 
 import (
-	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/models"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Hook", func() {
-	var node *storage.Node
+	var node *models.Node
 	BeforeEach(func() {
-		node = &storage.Node{ID: 1}
+		node = &models.Node{ID: 1}
 	})
 	JustBeforeEach(func() {
 		nErr := engine.NewCreate(adapter).Model(node).Exec(ctx)
@@ -20,9 +20,9 @@ var _ = Describe("Hook", func() {
 		Expect(nErr).To(BeNil())
 	})
 	Describe("UUID auto-generation", func() {
-		var channelConfig *storage.ChannelConfig
+		var channelConfig *models.ChannelConfig
 		BeforeEach(func() {
-			channelConfig = &storage.ChannelConfig{
+			channelConfig = &models.ChannelConfig{
 				Name:   "Auto-generated UUID",
 				NodeID: node.ID,
 			}
@@ -32,7 +32,7 @@ var _ = Describe("Hook", func() {
 			Expect(err).To(BeNil())
 		})
 		It("Should be able to be re-queried after creation", func() {
-			var retrievedCC = &storage.ChannelConfig{}
+			var retrievedCC = &models.ChannelConfig{}
 			err := engine.NewRetrieve(adapter).
 				Model(retrievedCC).
 				WherePK(channelConfig.ID).Exec(ctx)

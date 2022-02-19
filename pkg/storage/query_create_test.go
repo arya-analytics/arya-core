@@ -1,7 +1,7 @@
 package storage_test
 
 import (
-	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -9,12 +9,12 @@ import (
 
 var _ = Describe("Create", func() {
 	var (
-		node           *storage.Node
-		channelConfig  *storage.ChannelConfig
-		channelConfigs []*storage.ChannelConfig
+		node           *models.Node
+		channelConfig  *models.ChannelConfig
+		channelConfigs []*models.ChannelConfig
 	)
 	BeforeEach(func() {
-		node = &storage.Node{ID: 1}
+		node = &models.Node{ID: 1}
 	})
 	JustBeforeEach(func() {
 		err := store.NewCreate().Model(node).Exec(ctx)
@@ -26,7 +26,7 @@ var _ = Describe("Create", func() {
 	})
 	Describe("Create a  new item", func() {
 		BeforeEach(func() {
-			channelConfig = &storage.ChannelConfig{
+			channelConfig = &models.ChannelConfig{
 				NodeID: node.ID,
 			}
 		})
@@ -38,7 +38,7 @@ var _ = Describe("Create", func() {
 		It("Should create the correct item", func() {
 			err := store.NewCreate().Model(channelConfig).Exec(ctx)
 			Expect(err).To(BeNil())
-			resChannelConfig := &storage.ChannelConfig{}
+			resChannelConfig := &models.ChannelConfig{}
 			rErr := store.NewRetrieve().Model(resChannelConfig).WherePK(channelConfig.
 				ID).Exec(ctx)
 			Expect(rErr).To(BeNil())
@@ -47,7 +47,7 @@ var _ = Describe("Create", func() {
 	})
 	Describe("Create multiple items", func() {
 		BeforeEach(func() {
-			channelConfigs = []*storage.ChannelConfig{
+			channelConfigs = []*models.ChannelConfig{
 				{
 					Name:   "Cool Name 1",
 					NodeID: node.ID,
@@ -64,7 +64,7 @@ var _ = Describe("Create", func() {
 			Expect(err).To(BeNil())
 		})
 		It("Should create the items correctly", func() {
-			var resChannelConfigs []*storage.ChannelConfig
+			var resChannelConfigs []*models.ChannelConfig
 			By("Creating without error")
 			cErr := store.NewCreate().Model(&channelConfigs).Exec(ctx)
 			Expect(cErr).To(BeNil())

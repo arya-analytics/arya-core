@@ -1,4 +1,4 @@
-package storage
+package models
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/util/telem"

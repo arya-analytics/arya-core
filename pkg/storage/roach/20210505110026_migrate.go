@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/arya-analytics/aryacore/pkg/util/errutil"
-	log "github.com/sirupsen/logrus"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/migrate"
 )
@@ -116,7 +115,6 @@ func migrateUpFunc(d Driver) migrate.MigrationFunc {
 			ForeignKey(`("range_replica_id") REFERENCES range_replicas ("id") ON DELETE CASCADE`).
 			Exec,
 		)
-		log.Info("hello")
 		return c.Error()
 	}
 }

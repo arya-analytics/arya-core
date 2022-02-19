@@ -111,9 +111,13 @@ func (r *Reflect) StructFieldByRole(role string) reflect.Value {
 // StructFieldByName retrieves the struct field from the model object by its name.
 func (r *Reflect) StructFieldByName(name string) reflect.Value {
 	sn := SplitFieldNames(name)
-	var fld = r.StructValue().FieldByName(sn[0])
-	for _, splitName := range sn[1:] {
-		fld = fld.Elem().FieldByName(splitName)
+	var fld reflect.Value
+	for i, splitName := range sn {
+		if i == 0 {
+			fld = r.StructValue().FieldByName(splitName)
+		} else {
+			fld = fld.Elem().FieldByName(splitName)
+		}
 	}
 	return fld
 }
@@ -306,6 +310,27 @@ func (r *Reflect) RawType() reflect.Type {
 // RawValue returns the unparsed value of the model object.
 func (r *Reflect) RawValue() reflect.Value {
 	return r.PointerValue().Elem()
+}
+
+func (r *Reflect) FieldTypeByName(name string) reflect.Type {
+	sn := SplitFieldNames(name)
+	var fld reflect.Type
+	for i, splitName := range sn {
+		var (
+			ok        bool
+			structFld reflect.StructField
+		)
+		if i == 0 {
+			structFld, ok = r.Type().FieldByName(splitName)
+		} else {
+			structFld, ok = fld.Elem().FieldByName(splitName)
+		}
+		if !ok {
+			panic(fmt.Sprintf("field %s does not exist on type %s", splitName, fld))
+		}
+		fld = structFld.Type
+	}
+	return fld
 }
 
 // || TAGS ||

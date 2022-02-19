@@ -1,7 +1,6 @@
 package model
 
 import (
-	log "github.com/sirupsen/logrus"
 	"reflect"
 	"strings"
 )
@@ -60,6 +59,5 @@ func SplitFieldNames(name string) []string {
 func SplitLastFieldName(name string) (string, string) {
 	sn := SplitFieldNames(name)
 	fn := strings.Join(sn[0:len(sn)-1], ".")
-	log.Info(sn, fn, sn[len(sn)-1])
 	return fn, sn[len(sn)-1]
 }
