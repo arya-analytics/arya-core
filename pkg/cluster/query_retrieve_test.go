@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/arya-analytics/aryacore/pkg/cluster/internal"
 	"github.com/arya-analytics/aryacore/pkg/cluster/mock"
-	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
@@ -16,7 +16,7 @@ import (
 var _ = Describe("QueryRetrieve", func() {
 	Context("Query Assembly", func() {
 		var (
-			m    *storage.ChannelChunkReplica
+			m    *models.ChannelChunkReplica
 			clus cluster.Cluster
 			svc  *mock.Service
 			ctx  = context.Background()
@@ -26,13 +26,13 @@ var _ = Describe("QueryRetrieve", func() {
 			clus = cluster.New(cluster.ServiceChain{
 				svc,
 			})
-			m = &storage.ChannelChunkReplica{
+			m = &models.ChannelChunkReplica{
 				ID: uuid.New(),
 			}
 		})
 		It("Should bind the correct model", func() {
 			Expect(clus.NewRetrieve().Model(m).Exec(ctx))
-			Expect(svc.QueryRequest.Model.Pointer().(*storage.ChannelChunkReplica).ID).To(Equal(m.ID))
+			Expect(svc.QueryRequest.Model.Pointer().(*models.ChannelChunkReplica).ID).To(Equal(m.ID))
 		})
 		Context("WherePK", func() {
 			It("Should bind the correct PK", func() {
@@ -54,9 +54,10 @@ var _ = Describe("QueryRetrieve", func() {
 		})
 		Context("WhereFields", func() {
 			It("Should set the correct fields", func() {
-				flds := internal.Fields{"key": "value"}
+				flds := models.Fields{"key": "value"}
 				Expect(clus.NewRetrieve().Model(m).WhereFields(flds).Exec(ctx))
-				fldOpt := internal.FieldsQueryOpt(svc.QueryRequest)
+				fldOpt, ok := internal.FieldsQueryOpt(svc.QueryRequest)
+				Expect(ok).To(BeTrue())
 				Expect(fldOpt).To(Equal(flds))
 			})
 		})

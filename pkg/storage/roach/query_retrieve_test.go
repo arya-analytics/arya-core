@@ -1,6 +1,7 @@
 package roach_test
 
 import (
+	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
@@ -8,11 +9,11 @@ import (
 )
 
 var _ = Describe("QueryRetrieve", func() {
-	var channelConfig *storage.ChannelConfig
-	var node *storage.Node
+	var channelConfig *models.ChannelConfig
+	var node *models.Node
 	BeforeEach(func() {
-		node = &storage.Node{ID: 1}
-		channelConfig = &storage.ChannelConfig{NodeID: node.ID, ID: uuid.New(), Name: "Channel Config"}
+		node = &models.Node{ID: 1}
+		channelConfig = &models.ChannelConfig{NodeID: node.ID, ID: uuid.New(), Name: "Channel Config"}
 	})
 	JustBeforeEach(func() {
 		nErr := engine.NewCreate(adapter).Model(node).Exec(ctx)
@@ -30,20 +31,20 @@ var _ = Describe("QueryRetrieve", func() {
 	Describe("Standard Usage", func() {
 		Describe("Retrieve an item", func() {
 			It("Should retrieve it without error", func() {
-				err := engine.NewRetrieve(adapter).Model(&storage.ChannelConfig{}).
+				err := engine.NewRetrieve(adapter).Model(&models.ChannelConfig{}).
 					WherePK(channelConfig.ID).Exec(ctx)
 				Expect(err).To(BeNil())
 			})
 			It("Should retrieve the correct item", func() {
-				resChannelConfig := &storage.ChannelConfig{}
+				resChannelConfig := &models.ChannelConfig{}
 				err := engine.NewRetrieve(adapter).Model(resChannelConfig).WherePK(channelConfig.
 					ID).Exec(ctx)
 				Expect(err).To(BeNil())
 				Expect(resChannelConfig).To(Equal(channelConfig))
 			})
 			It("Retrieve a single field", func() {
-				resChannelConfig := &storage.ChannelConfig{}
-				err := engine.NewRetrieve(adapter).Model(resChannelConfig).Field("name").WherePK(channelConfig.
+				resChannelConfig := &models.ChannelConfig{}
+				err := engine.NewRetrieve(adapter).Model(resChannelConfig).Fields("name").WherePK(channelConfig.
 					ID).Exec(ctx)
 				Expect(err).To(BeNil())
 				Expect(resChannelConfig.ID).To(Equal(uuid.UUID{}))
@@ -51,9 +52,9 @@ var _ = Describe("QueryRetrieve", func() {
 			})
 		})
 		Describe("Retrieve multiple items", func() {
-			var channelConfigTwo *storage.ChannelConfig
+			var channelConfigTwo *models.ChannelConfig
 			BeforeEach(func() {
-				channelConfigTwo = &storage.ChannelConfig{
+				channelConfigTwo = &models.ChannelConfig{
 					ID:     uuid.New(),
 					Name:   "CC 45",
 					NodeID: 1,
@@ -64,7 +65,7 @@ var _ = Describe("QueryRetrieve", func() {
 				Expect(err).To(BeNil())
 			})
 			It("Should retrieve all the correct items", func() {
-				var models []*storage.ChannelConfig
+				var models []*models.ChannelConfig
 				err := engine.NewRetrieve(adapter).Model(&models).WherePKs(
 					[]uuid.UUID{channelConfigTwo.ID,
 						channelConfig.ID}).Exec(ctx)
@@ -76,8 +77,8 @@ var _ = Describe("QueryRetrieve", func() {
 		})
 		Describe("Retrieve a related item", func() {
 			It("Should retrieve all of the correct items", func() {
-				resChannelConfig := &storage.ChannelConfig{}
-				err := engine.NewRetrieve(adapter).Model(resChannelConfig).Relation("Node").
+				resChannelConfig := &models.ChannelConfig{}
+				err := engine.NewRetrieve(adapter).Model(resChannelConfig).Relation("Node", "ID").
 					WherePK(channelConfig.ID).Exec(ctx)
 				Expect(err).To(BeNil())
 				Expect(resChannelConfig.Node.ID).To(Equal(1))
@@ -85,27 +86,27 @@ var _ = Describe("QueryRetrieve", func() {
 		})
 		Describe("Retrieve through multiple levels of relations", func() {
 			var (
-				//rangeLease          *storage.RangeLease
-				rangeX              *storage.Range
-				channelChunkReplica *storage.ChannelChunkReplica
-				rangeReplica        *storage.RangeReplica
-				channelChunk        *storage.ChannelChunk
+				//rangeLease          *storage.RangeID
+				rangeX              *models.Range
+				channelChunkReplica *models.ChannelChunkReplica
+				rangeReplica        *models.RangeReplica
+				channelChunk        *models.ChannelChunk
 			)
 			BeforeEach(func() {
-				rangeX = &storage.Range{
+				rangeX = &models.Range{
 					ID: uuid.New(),
 				}
-				channelChunk = &storage.ChannelChunk{
+				channelChunk = &models.ChannelChunk{
 					ID:              uuid.New(),
 					RangeID:         rangeX.ID,
 					ChannelConfigID: channelConfig.ID,
 				}
-				rangeReplica = &storage.RangeReplica{
+				rangeReplica = &models.RangeReplica{
 					ID:      uuid.New(),
 					RangeID: rangeX.ID,
 					NodeID:  node.ID,
 				}
-				channelChunkReplica = &storage.ChannelChunkReplica{
+				channelChunkReplica = &models.ChannelChunkReplica{
 					RangeReplicaID: rangeReplica.ID,
 					ChannelChunkID: channelChunk.ID,
 				}
@@ -121,19 +122,103 @@ var _ = Describe("QueryRetrieve", func() {
 				Expect(ccRErr).To(BeNil())
 			})
 			It("Should retrieve all of the correct items", func() {
-				channelChunkReplicaRes := &storage.ChannelChunkReplica{}
+				channelChunkReplicaRes := &models.ChannelChunkReplica{}
 				err := engine.NewRetrieve(adapter).Model(channelChunkReplicaRes).WherePK(channelChunkReplica.ID).Relation("RangeReplica.Node").Exec(ctx)
 				Expect(err).To(BeNil())
 				Expect(channelChunkReplicaRes.RangeReplica.Node.ID).To(Equal(node.ID))
 
 			})
 		})
+		Describe("Using WhereField", func() {
+			var (
+				rngLease   *models.RangeLease
+				rng        *models.Range
+				rngReplica *models.RangeReplica
+				items      []interface{}
+			)
+			BeforeEach(func() {
+
+				rng = &models.Range{
+					ID: uuid.New(),
+				}
+				rngLease = &models.RangeLease{
+					ID:      uuid.New(),
+					RangeID: rng.ID,
+				}
+				rngReplica = &models.RangeReplica{
+					ID:      uuid.New(),
+					RangeID: rng.ID,
+					NodeID:  node.ID,
+				}
+				rngLease.RangeReplicaID = rngReplica.ID
+				items = []interface{}{
+					rng,
+					rngReplica,
+					rngLease,
+				}
+			})
+			JustBeforeEach(func() {
+				for _, item := range items {
+					err := engine.NewCreate(adapter).Model(item).Exec(ctx)
+					Expect(err).To(BeNil())
+				}
+			})
+			It("Should retrieve by the field correctly", func() {
+				resRngLease := &models.RangeLease{}
+				err := engine.
+					NewRetrieve(adapter).
+					Model(resRngLease).
+					WhereFields(models.Fields{"RangeID": rng.ID}).
+					Exec(ctx)
+				Expect(err).To(BeNil())
+				Expect(resRngLease.ID).To(Equal(rngLease.ID))
+			})
+			It("Should return a not found error when no item can be found", func() {
+				resRngLease := &models.RangeLease{}
+				err := engine.
+					NewRetrieve(adapter).
+					Model(resRngLease).
+					WhereFields(models.Fields{"RangeID": uuid.UUID{}}).
+					Exec(ctx)
+				Expect(err).ToNot(BeNil())
+				Expect(err.(storage.Error).Type).To(Equal(storage.ErrorTypeItemNotFound))
+			})
+			Context("Nested Relation", func() {
+				It("Should retrieve by a single nested relation correctly", func() {
+					resRange := &models.Range{}
+					err := engine.NewRetrieve(adapter).Model(resRange).WhereFields(models.Fields{
+						"RangeLease.ID": rngLease.ID,
+					}).Exec(ctx)
+					Expect(err).To(BeNil())
+					Expect(resRange.ID).To(Equal(rng.ID))
+
+				})
+				It("Should retrieve by a double nested relation correctly", func() {
+					var resRanges []*models.Range
+					err := engine.NewRetrieve(adapter).Model(&resRanges).WhereFields(models.Fields{
+						"RangeLease.RangeReplica.NodeID": 1,
+					}).Exec(ctx)
+					Expect(err).To(BeNil())
+					Expect(resRanges).To(HaveLen(1))
+					Expect(resRanges[0].ID).To(Equal(rng.ID))
+				})
+				//It("Should return the correct error when an invalid relation is provided", func() {
+				//	var resRanges []*models.Range
+				//	err := engine.NewRetrieve(adapter).Model(&resRanges).WhereFields(models.Fields{
+				//		"RangeLease.BadRel.NodeID": 1,
+				//	}).Exec(ctx)
+				//	Expect(err).ToNot(BeNil())
+				//	Expect(err.(storage.Error).Type).To(Equal(storage.ErrorTypeInvalidArgs))
+				//})
+			})
+
+		})
 	})
 	Describe("Edge cases + errors", func() {
 		Context("Retrieving an item that doesn't exist", func() {
 			It("Should return the correct errutil type", func() {
 				somePKThatDoesntExist := uuid.New()
-				m := &storage.ChannelConfig{}
+				m := &models.ChannelConfig{}
 				err := engine.NewRetrieve(adapter).
 					Model(m).
 					WherePK(somePKThatDoesntExist).

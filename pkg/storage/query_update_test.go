@@ -1,7 +1,7 @@
 package storage_test
 
 import (
-	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -9,12 +9,12 @@ import (
 
 var _ = Describe("Update QueryRequest", func() {
 	var (
-		channelConfig *storage.ChannelConfig
-		node          *storage.Node
+		channelConfig *models.ChannelConfig
+		node          *models.Node
 	)
 	BeforeEach(func() {
-		node = &storage.Node{ID: 1}
-		channelConfig = &storage.ChannelConfig{NodeID: node.ID, ID: uuid.New()}
+		node = &models.Node{ID: 1}
+		channelConfig = &models.ChannelConfig{NodeID: node.ID, ID: uuid.New()}
 	})
 	JustBeforeEach(func() {
 		nErr := store.NewCreate().Model(node).Exec(ctx)
@@ -30,9 +30,9 @@ var _ = Describe("Update QueryRequest", func() {
 		Expect(nErr).To(BeNil())
 	})
 	Describe("Update an item", func() {
-		var updateChannelConfig *storage.ChannelConfig
+		var updateChannelConfig *models.ChannelConfig
 		BeforeEach(func() {
-			updateChannelConfig = &storage.ChannelConfig{
+			updateChannelConfig = &models.ChannelConfig{
 				ID:     channelConfig.ID,
 				Name:   "Cool Name",
 				NodeID: node.ID,
@@ -41,13 +41,18 @@ var _ = Describe("Update QueryRequest", func() {
 		It("Should update it correctly", func() {
 			uErr := store.NewUpdate().Model(updateChannelConfig).WherePK(channelConfig.ID).Exec(ctx)
 			Expect(uErr).To(BeNil())
-			resChannelConfig := &storage.ChannelConfig{}
+			resChannelConfig := &models.ChannelConfig{}
 			rErr := store.NewRetrieve().Model(resChannelConfig).WherePK(
 				updateChannelConfig.ID).Exec(ctx)
 			Expect(rErr).To(BeNil())
 			Expect(resChannelConfig.ID).To(Equal(channelConfig.ID))
 			Expect(resChannelConfig.ID).To(Equal(updateChannelConfig.ID))
 			Expect(resChannelConfig.Name).To(Equal(updateChannelConfig.Name))
+		})
+	})
+	Describe("Edge cases + errors", func() {
+		It("Should panic if a chain of models is provided", func() {
+			Expect(func() { store.NewUpdate().Model(&[]*models.ChannelConfig{}) }).To(Panic())
 		})
 	})
 })

@@ -2,7 +2,7 @@ package chanchunk_test
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/cluster/chanchunk"
-	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"github.com/google/uuid"
@@ -14,31 +14,31 @@ var _ = Describe("Local", func() {
 	var (
 		localSvc            chanchunk.ServiceLocal
 		items               []interface{}
-		channelConfig       *storage.ChannelConfig
-		node                *storage.Node
-		rangeX              *storage.Range
-		channelChunkReplica *storage.ChannelChunkReplica
-		rangeReplica        *storage.RangeReplica
-		channelChunk        *storage.ChannelChunk
+		channelConfig       *models.ChannelConfig
+		node                *models.Node
+		rangeX              *models.Range
+		channelChunkReplica *models.ChannelChunkReplica
+		rangeReplica        *models.RangeReplica
+		channelChunk        *models.ChannelChunk
 	)
 	BeforeEach(func() {
 		localSvc = chanchunk.NewServiceLocalStorage(store)
-		node = &storage.Node{ID: 1}
-		channelConfig = &storage.ChannelConfig{NodeID: node.ID, ID: uuid.New()}
-		rangeX = &storage.Range{
+		node = &models.Node{ID: 1}
+		channelConfig = &models.ChannelConfig{NodeID: node.ID, ID: uuid.New()}
+		rangeX = &models.Range{
 			ID: uuid.New(),
 		}
-		rangeReplica = &storage.RangeReplica{
+		rangeReplica = &models.RangeReplica{
 			ID:      uuid.New(),
 			RangeID: rangeX.ID,
 			NodeID:  node.ID,
 		}
-		channelChunk = &storage.ChannelChunk{
+		channelChunk = &models.ChannelChunk{
 			ID:              uuid.New(),
 			RangeID:         rangeX.ID,
 			ChannelConfigID: channelConfig.ID,
 		}
-		channelChunkReplica = &storage.ChannelChunkReplica{
+		channelChunkReplica = &models.ChannelChunkReplica{
 			RangeReplicaID: rangeReplica.ID,
 			ChannelChunkID: channelChunk.ID,
 			Telem:          telem.NewBulk([]byte{}),
@@ -69,7 +69,7 @@ var _ = Describe("Local", func() {
 				Expect(ccErr).To(BeNil())
 			})
 			It("Should create the correct chunk", func() {
-				resCC := &storage.ChannelChunk{}
+				resCC := &models.ChannelChunk{}
 				opts := chanchunk.LocalChunkRetrieveOpts{
 					PKC: model.NewPKChain([]uuid.UUID{channelChunk.ID}),
 				}
@@ -98,7 +98,7 @@ var _ = Describe("Local", func() {
 				Expect(ccrErr).To(BeNil())
 			})
 			It("Should create the  replica correctly", func() {
-				resCCR := &storage.ChannelChunkReplica{}
+				resCCR := &models.ChannelChunkReplica{}
 				opts := chanchunk.LocalReplicaRetrieveOpts{
 					PKC: model.NewPKChain([]uuid.UUID{channelChunkReplica.ID}),
 				}
@@ -109,7 +109,7 @@ var _ = Describe("Local", func() {
 		})
 		Context("Retrieve Range Replicas", func() {
 			It("Should retrieve the node information correctly", func() {
-				resRR := &storage.RangeReplica{}
+				resRR := &models.RangeReplica{}
 				opts := chanchunk.LocalRangeReplicaRetrieveOpts{
 					PKC: model.NewPKChain([]uuid.UUID{rangeReplica.ID}),
 				}

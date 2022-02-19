@@ -1,14 +1,15 @@
 package roach_test
 
 import (
+	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Create", func() {
-	var channelConfig *storage.ChannelConfig
-	var node *storage.Node
+	var channelConfig *models.ChannelConfig
+	var node *models.Node
 	JustBeforeEach(func() {
 		nErr := engine.NewCreate(adapter).Model(node).Exec(ctx)
 		Expect(nErr).To(BeNil())
@@ -24,14 +25,14 @@ var _ = Describe("Create", func() {
 	})
 	Describe("Create a new Channel Config", func() {
 		BeforeEach(func() {
-			node = &storage.Node{ID: 1}
-			channelConfig = &storage.ChannelConfig{
+			node = &models.Node{ID: 1}
+			channelConfig = &models.ChannelConfig{
 				Name:   "Channel Config",
 				NodeID: node.ID,
 			}
 		})
 		It("Should be able to be re-queried after creation", func() {
-			resChannelConfig := &storage.ChannelConfig{}
+			resChannelConfig := &models.ChannelConfig{}
 			err := engine.NewRetrieve(adapter).Model(resChannelConfig).WherePK(channelConfig.ID).
 				Exec(ctx)
 			Expect(err).To(BeNil())
@@ -41,14 +42,14 @@ var _ = Describe("Create", func() {
 	Describe("Edge cases + errors", func() {
 		Context("Unique Violation", func() {
 			BeforeEach(func() {
-				node = &storage.Node{ID: 1}
-				channelConfig = &storage.ChannelConfig{
+				node = &models.Node{ID: 1}
+				channelConfig = &models.ChannelConfig{
 					Name:   "ChannelConfig",
 					NodeID: node.ID,
 				}
 			})
 			It("Should return the correct errutil type", func() {
-				channelConfigTwo := &storage.ChannelConfig{
+				channelConfigTwo := &models.ChannelConfig{
 					ID:     channelConfig.ID,
 					NodeID: node.ID,
 				}

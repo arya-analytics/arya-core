@@ -1,6 +1,7 @@
 package redis_test
 
 import (
+	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
@@ -10,12 +11,12 @@ import (
 
 var _ = Describe("QueryTsRetrieve", func() {
 	var (
-		series  *storage.ChannelConfig
-		sample  *storage.ChannelSample
-		samples []*storage.ChannelSample
+		series  *models.ChannelConfig
+		sample  *models.ChannelSample
+		samples []*models.ChannelSample
 	)
 	BeforeEach(func() {
-		series = &storage.ChannelConfig{ID: uuid.New()}
+		series = &models.ChannelConfig{ID: uuid.New()}
 	})
 	JustBeforeEach(func() {
 		err := engine.NewTSCreate(adapter).Series().Model(series).Exec(ctx)
@@ -28,7 +29,7 @@ var _ = Describe("QueryTsRetrieve", func() {
 				Expect(sampleErr).To(BeNil())
 			})
 			BeforeEach(func() {
-				sample = &storage.ChannelSample{
+				sample = &models.ChannelSample{
 					ChannelConfigID: series.ID,
 					Value:           123.2,
 					Timestamp:       time.Now().UnixNano(),
@@ -36,7 +37,7 @@ var _ = Describe("QueryTsRetrieve", func() {
 			})
 			Describe("Retrieving the most recent sample", func() {
 				It("Should retrieve the correct item", func() {
-					var resSample = &storage.ChannelSample{}
+					var resSample = &models.ChannelSample{}
 					err := engine.NewTSRetrieve(adapter).Model(resSample).WherePK(
 						series.ID).Exec(ctx)
 					Expect(err).To(BeNil())
@@ -51,7 +52,7 @@ var _ = Describe("QueryTsRetrieve", func() {
 			})
 			Describe("Retrieving all samples", func() {
 				BeforeEach(func() {
-					samples = []*storage.ChannelSample{
+					samples = []*models.ChannelSample{
 						{
 							ChannelConfigID: series.ID,
 							Value:           47.3,
@@ -69,7 +70,7 @@ var _ = Describe("QueryTsRetrieve", func() {
 
 				})
 				It("Should retrieve the correct items", func() {
-					var resSamples []*storage.ChannelSample
+					var resSamples []*models.ChannelSample
 					err := engine.NewTSRetrieve(adapter).Model(&resSamples).WherePK(
 						series.ID).AllTimeRange().Exec(ctx)
 					Expect(err).To(BeNil())
@@ -77,16 +78,16 @@ var _ = Describe("QueryTsRetrieve", func() {
 				})
 			})
 			Describe("Retrieving samples from multiple pks", func() {
-				var seriesTwo *storage.ChannelConfig
+				var seriesTwo *models.ChannelConfig
 				BeforeEach(func() {
-					series = &storage.ChannelConfig{ID: uuid.New()}
-					seriesTwo = &storage.ChannelConfig{
+					series = &models.ChannelConfig{ID: uuid.New()}
+					seriesTwo = &models.ChannelConfig{
 						Name: "SG_03",
 						ID:   uuid.New(),
 					}
 					err := engine.NewTSCreate(adapter).Series().Model(seriesTwo).Exec(ctx)
 					Expect(err).To(BeNil())
-					samples = []*storage.ChannelSample{
+					samples = []*models.ChannelSample{
 						{
 							ChannelConfigID: series.ID,
 							Value:           47.3,
@@ -101,17 +102,17 @@ var _ = Describe("QueryTsRetrieve", func() {
 
 				})
 				It("Should retrieve the correct items", func() {
-					var resSamples []*storage.ChannelSample
+					var resSamples []*models.ChannelSample
 					err := engine.NewTSRetrieve(adapter).Model(&resSamples).WherePKs(
 						[]uuid.UUID{seriesTwo.ID, series.ID}).AllTimeRange().Exec(ctx)
 					Expect(err).To(BeNil())
 					Expect(samples).To(HaveLen(2))
 				})
 			})
-			Describe("Retrieve samples across a time range", func() {
+			Describe("Retrieve samples across a time rng", func() {
 				var err error
 				BeforeEach(func() {
-					samples = []*storage.ChannelSample{
+					samples = []*models.ChannelSample{
 						{
 							ChannelConfigID: series.ID,
 							Timestamp:       time.Now().UnixNano(),
@@ -131,7 +132,7 @@ var _ = Describe("QueryTsRetrieve", func() {
 
 				})
 				It("Should retrieve without error", func() {
-					var resSamples []*storage.ChannelSample
+					var resSamples []*models.ChannelSample
 					toTS := time.Now().Add(3 * time.Second).UnixNano()
 					fromTS := time.Now().Add(-15 * time.Second).UnixNano()
 					err = engine.NewTSRetrieve(adapter).Model(&resSamples).WherePK(
@@ -142,7 +143,7 @@ var _ = Describe("QueryTsRetrieve", func() {
 			})
 		})
 		Describe("Checking if a series exists", func() {
-			BeforeEach(func() { series = &storage.ChannelConfig{ID: uuid.New()} })
+			BeforeEach(func() { series = &models.ChannelConfig{ID: uuid.New()} })
 			Context("The series does not exist", func() {
 				It("Should return false", func() {
 					e, err := engine.NewTSRetrieve(adapter).SeriesExists(ctx, uuid.New())
@@ -154,7 +155,7 @@ var _ = Describe("QueryTsRetrieve", func() {
 	})
 	Describe("Edge cases + errors", func() {
 		BeforeEach(func() {
-			samples = []*storage.ChannelSample{{
+			samples = []*models.ChannelSample{{
 				ChannelConfigID: series.ID,
 				Value:           432.1,
 				Timestamp:       time.Now().UnixNano(),
@@ -166,7 +167,7 @@ var _ = Describe("QueryTsRetrieve", func() {
 			Expect(err).To(BeNil())
 		})
 		Context("Retrieving a sample", func() {
-			s := &storage.ChannelSample{}
+			s := &models.ChannelSample{}
 			Context("No PKC provided", func() {
 				It("Should return the correct storage error", func() {
 					err := engine.NewTSRetrieve(adapter).Model(s).Exec(ctx)

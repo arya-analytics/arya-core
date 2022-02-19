@@ -1,6 +1,7 @@
 package roach_test
 
 import (
+	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/storage/roach"
 	"github.com/arya-analytics/aryacore/pkg/util/tasks"
@@ -19,7 +20,7 @@ const (
 var _ = Describe("NewTasks", func() {
 	Describe("Node Synchronization", func() {
 		AfterEach(func() {
-			err := engine.NewDelete(adapter).Model(&storage.Node{}).WherePK(1).Exec(ctx)
+			err := engine.NewDelete(adapter).Model(&models.Node{}).WherePK(1).Exec(ctx)
 			Expect(err).To(BeNil())
 		})
 		It("Should create the missing nodes", func() {
@@ -38,15 +39,15 @@ var _ = Describe("NewTasks", func() {
 			}()
 			time.Sleep(sleepDuration)
 			tasks.Stop()
-			count, err := engine.NewRetrieve(adapter).Model(&storage.Node{}).Count(ctx)
+			count, err := engine.NewRetrieve(adapter).Model(&models.Node{}).Count(ctx)
 			Expect(err).To(BeNil())
 			Expect(count).To(Equal(1))
 		})
 		Context("Extra nodes", func() {
 			bunDB := roach.UnsafeConn(adapter)
-			var extraNode *storage.Node
+			var extraNode *models.Node
 			BeforeEach(func() {
-				extraNode = &storage.Node{ID: 2}
+				extraNode = &models.Node{ID: 2}
 			})
 			JustBeforeEach(func() {
 				cErr := engine.NewCreate(adapter).Model(extraNode).Exec(ctx)

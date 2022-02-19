@@ -1,7 +1,7 @@
 package storage_test
 
 import (
-	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -10,14 +10,14 @@ import (
 
 var _ = Describe("QueryTsRetrieve", func() {
 	var (
-		node          *storage.Node
-		channelConfig *storage.ChannelConfig
-		sample        *storage.ChannelSample
-		samples       []*storage.ChannelSample
+		node          *models.Node
+		channelConfig *models.ChannelConfig
+		sample        *models.ChannelSample
+		samples       []*models.ChannelSample
 	)
 	BeforeEach(func() {
-		node = &storage.Node{ID: 1}
-		channelConfig = &storage.ChannelConfig{NodeID: node.ID, ID: uuid.New()}
+		node = &models.Node{ID: 1}
+		channelConfig = &models.ChannelConfig{NodeID: node.ID, ID: uuid.New()}
 	})
 	JustBeforeEach(func() {
 		nErr := store.NewCreate().Model(node).Exec(ctx)
@@ -36,7 +36,7 @@ var _ = Describe("QueryTsRetrieve", func() {
 	Describe("Standard usage", func() {
 		Describe("Retrieving a sample", func() {
 			BeforeEach(func() {
-				sample = &storage.ChannelSample{
+				sample = &models.ChannelSample{
 					ChannelConfigID: channelConfig.ID,
 					Value:           124.7,
 					Timestamp:       time.Now().Unix(),
@@ -47,7 +47,7 @@ var _ = Describe("QueryTsRetrieve", func() {
 				Expect(err).To(BeNil())
 			})
 			It("Should retrieve the correct sample", func() {
-				resSample := &storage.ChannelSample{}
+				resSample := &models.ChannelSample{}
 				err := store.NewTSRetrieve().Model(resSample).WherePK(channelConfig.
 					ID).Exec(ctx)
 				Expect(err).To(BeNil())
@@ -56,9 +56,9 @@ var _ = Describe("QueryTsRetrieve", func() {
 			It("Should retrieve the correct sample", func() {
 			})
 		})
-		Describe("Retrieving a sample by time range", func() {
+		Describe("Retrieving a sample by time rng", func() {
 			BeforeEach(func() {
-				samples = []*storage.ChannelSample{
+				samples = []*models.ChannelSample{
 					{
 						ChannelConfigID: channelConfig.ID,
 						Value:           12412.3,
@@ -82,7 +82,7 @@ var _ = Describe("QueryTsRetrieve", func() {
 				Expect(err).To(BeNil())
 			})
 			It("Should retrieve the samples correctly", func() {
-				var resSamples []*storage.ChannelSample
+				var resSamples []*models.ChannelSample
 				sampleTime := time.Unix(0, samples[0].Timestamp)
 				fromTs := sampleTime.Add(-800 * time.Millisecond)
 				toTs := sampleTime.Add(500 * time.Millisecond)

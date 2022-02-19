@@ -2,6 +2,7 @@ package chanchunk
 
 import (
 	"context"
+	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 )
@@ -83,7 +84,7 @@ func (s *ServiceLocalStorage) RetrieveChunk(ctx context.Context, chunk interface
 }
 
 func (s *ServiceLocalStorage) DeleteChunk(ctx context.Context, opts LocalChunkDeleteOpts) error {
-	q := s.storage.NewDelete().Model(&storage.ChannelChunk{})
+	q := s.storage.NewDelete().Model(&models.ChannelChunk{})
 	if opts.PKC != nil {
 		q = q.WherePKs(opts.PKC.Raw())
 	}
@@ -110,14 +111,14 @@ func (s *ServiceLocalStorage) RetrieveReplica(ctx context.Context, chunkReplica 
 		q = q.WherePKs(opts.PKC.Raw())
 	}
 	if opts.Relations {
-		q = q.Relation("RangeReplica", "id").
-			Relation("RangeReplica.Node", "id", "address", "is_host")
+		q = q.Relation("RangeReplica", "ID").
+			Relation("RangeReplica.Node", "ID", "Address", "IsHost")
 	}
 	return q.Exec(ctx)
 }
 
 func (s *ServiceLocalStorage) DeleteReplica(ctx context.Context, opts LocalReplicaDeleteOpts) error {
-	q := s.storage.NewDelete().Model(&storage.ChannelChunkReplica{})
+	q := s.storage.NewDelete().Model(&models.ChannelChunkReplica{})
 	if opts.PKC != nil {
 		q = q.WherePKs(opts.PKC.Raw())
 	}
@@ -129,7 +130,7 @@ func (s *ServiceLocalStorage) DeleteReplica(ctx context.Context, opts LocalRepli
 func (s *ServiceLocalStorage) RetrieveRangeReplica(ctx context.Context, rangeReplica interface{}, opts LocalRangeReplicaRetrieveOpts) error {
 	q := s.storage.NewRetrieve().
 		Model(rangeReplica).
-		Relation("Node", "id", "address", "is_host")
+		Relation("Node", "ID", "Address", "IsHost")
 	if opts.PKC != nil {
 		q = q.WherePKs(opts.PKC.Raw())
 	}

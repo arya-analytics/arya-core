@@ -1,6 +1,7 @@
 package redis_test
 
 import (
+	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
@@ -10,11 +11,11 @@ import (
 
 var _ = Describe("QueryTsCreate", func() {
 	var (
-		series *storage.ChannelConfig
-		sample *storage.ChannelSample
+		series *models.ChannelConfig
+		sample *models.ChannelSample
 	)
 	BeforeEach(func() {
-		series = &storage.ChannelConfig{ID: uuid.New()}
+		series = &models.ChannelConfig{ID: uuid.New()}
 	})
 	JustBeforeEach(func() {
 		err := engine.NewTSCreate(adapter).Series().Model(series).Exec(ctx)
@@ -35,14 +36,14 @@ var _ = Describe("QueryTsCreate", func() {
 					Expect(err).To(BeNil())
 				})
 				BeforeEach(func() {
-					sample = &storage.ChannelSample{
+					sample = &models.ChannelSample{
 						Timestamp:       time.Now().UnixNano(),
 						Value:           123.2,
 						ChannelConfigID: series.ID,
 					}
 				})
 				It("Should be able to re-retrieve the sample after creation", func() {
-					var resSamples []*storage.ChannelSample
+					var resSamples []*models.ChannelSample
 					rErr := engine.NewTSRetrieve(adapter).Model(&resSamples).
 						WherePK(series.ID).Exec(
 						ctx)

@@ -77,4 +77,23 @@ var _ = Describe("Fields", func() {
 			})
 		})
 	})
+	Describe("Working with field names", func() {
+		Describe("SplitFieldNames", func() {
+			It("Should split the field names correctly", func() {
+				Expect(model.SplitFieldNames("RangeReplica.Node.ID")).To(Equal([]string{"RangeReplica", "Node", "ID"}))
+			})
+		})
+		Describe("SplitLastFieldNames", func() {
+			It("Should split the last field name correctly", func() {
+				fn, sn := model.SplitLastFieldName("RangeReplica.Node.ID")
+				Expect(fn).To(Equal("RangeReplica.Node"))
+				Expect(sn).To(Equal("ID"))
+			})
+			It("Should return an empty first string when no separator", func() {
+				fn, sn := model.SplitLastFieldName("ID")
+				Expect(fn).To(Equal(""))
+				Expect(sn).To(Equal("ID"))
+			})
+		})
+	})
 })

@@ -1,18 +1,18 @@
 package roach_test
 
 import (
-	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("QueryUpdate", func() {
-	var channelConfig *storage.ChannelConfig
-	var node *storage.Node
+	var channelConfig *models.ChannelConfig
+	var node *models.Node
 	BeforeEach(func() {
-		node = &storage.Node{ID: 1}
-		channelConfig = &storage.ChannelConfig{NodeID: node.ID, ID: uuid.New()}
+		node = &models.Node{ID: 1}
+		channelConfig = &models.ChannelConfig{NodeID: node.ID, ID: uuid.New()}
 	})
 	JustBeforeEach(func() {
 		nErr := engine.NewCreate(adapter).Model(node).Exec(ctx)
@@ -28,9 +28,9 @@ var _ = Describe("QueryUpdate", func() {
 		Expect(nErr).To(BeNil())
 	})
 	Describe("Update an item", func() {
-		var updatedChannelConfig *storage.ChannelConfig
+		var updatedChannelConfig *models.ChannelConfig
 		BeforeEach(func() {
-			updatedChannelConfig = &storage.ChannelConfig{
+			updatedChannelConfig = &models.ChannelConfig{
 				ID:     channelConfig.ID,
 				Name:   "Cool New Named Name",
 				NodeID: 1,
@@ -42,7 +42,7 @@ var _ = Describe("QueryUpdate", func() {
 			Expect(err).To(BeNil())
 		})
 		It("Should reflect updates when retrieved", func() {
-			resChannelConfig := &storage.ChannelConfig{}
+			resChannelConfig := &models.ChannelConfig{}
 			err := engine.NewRetrieve(adapter).Model(resChannelConfig).WherePK(channelConfig.
 				ID).Exec(ctx)
 			Expect(err).To(BeNil())

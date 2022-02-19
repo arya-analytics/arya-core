@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"github.com/arya-analytics/aryacore/pkg/models"
 )
 
 // QueryRetrieve retrieves a model or set of models depending on the parameters passed.
@@ -47,13 +48,22 @@ func (q *QueryRetrieve) WherePKs(pks interface{}) *QueryRetrieve {
 	return q
 }
 
-func (q *QueryRetrieve) Relation(rel string, fields ...string) *QueryRetrieve {
-	q.setMDQuery(q.mdQuery().Relation(rel, fields...))
+// WhereFields queries by a set of key value pairs where the key represents a field name
+// and the value represent a value to match with.
+func (q *QueryRetrieve) WhereFields(flds models.Fields) *QueryRetrieve {
+	q.setMDQuery(q.mdQuery().WhereFields(flds))
 	return q
 }
 
-func (q *QueryRetrieve) Field(fields ...string) *QueryRetrieve {
-	q.setMDQuery(q.mdQuery().Field(fields...))
+// Relation retrieves the specified fields from the relation.
+func (q *QueryRetrieve) Relation(rel string, flds ...string) *QueryRetrieve {
+	q.setMDQuery(q.mdQuery().Relation(rel, flds...))
+	return q
+}
+
+// Fields retrieves only the fields specified.
+func (q *QueryRetrieve) Fields(flds ...string) *QueryRetrieve {
+	q.setMDQuery(q.mdQuery().Fields(flds...))
 	return q
 }
 

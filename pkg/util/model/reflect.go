@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/arya-analytics/aryacore/pkg/util/validate"
 	"reflect"
-	"strings"
 )
 
 const (
@@ -111,10 +110,14 @@ func (r *Reflect) StructFieldByRole(role string) reflect.Value {
 
 // StructFieldByName retrieves the struct field from the model object by its name.
 func (r *Reflect) StructFieldByName(name string) reflect.Value {
-	splitNames := strings.Split(name, ".")
-	var fld = r.StructValue().FieldByName(splitNames[0])
-	for _, splitName := range splitNames[1:] {
-		fld = fld.Elem().FieldByName(splitName)
+	sn := SplitFieldNames(name)
+	var fld reflect.Value
+	for i, splitName := range sn {
+		if i == 0 {
+			fld = r.StructValue().FieldByName(splitName)
+		} else {
+			fld = fld.Elem().FieldByName(splitName)
+		}
 	}
 	return fld
 }
@@ -307,6 +310,28 @@ func (r *Reflect) RawType() reflect.Type {
 // RawValue returns the unparsed value of the model object.
 func (r *Reflect) RawValue() reflect.Value {
 	return r.PointerValue().Elem()
+}
+
+// FieldTypeByName returns the type of the field by its name. Supports
+// nested types such as ChannelConfig.Node.
+func (r *Reflect) FieldTypeByName(name string) reflect.Type {
+	var fld reflect.Type
+	for i, splitName := range SplitFieldNames(name) {
+		var (
+			ok        bool
+			structFld reflect.StructField
+		)
+		if i == 0 {
+			structFld, ok = r.Type().FieldByName(splitName)
+		} else {
+			structFld, ok = fld.Elem().FieldByName(splitName)
+		}
+		if !ok {
+			panic(fmt.Sprintf("field %s does not exist on type %s", splitName, fld.Elem()))
+		}
+		fld = structFld.Type
+	}
+	return fld
 }
 
 // || TAGS ||

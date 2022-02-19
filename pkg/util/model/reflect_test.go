@@ -88,6 +88,19 @@ var _ = Describe("Reflect", func() {
 			It("Should return the correct pointer value", func() {
 				Expect(rfl.PointerValue()).To(Equal(reflect.ValueOf(m)))
 			})
+			Context("FieldTypeByName", func() {
+				It("Should access the correct field type by name", func() {
+					Expect(rfl.FieldTypeByName("ID")).To(Equal(reflect.TypeOf(1)))
+				})
+				It("Should access the correct nested field type by name", func() {
+					Expect(rfl.FieldTypeByName("InnerModel.ID")).To(Equal(reflect.TypeOf(1)))
+				})
+				It("Should panic when the field doesn't exist", func() {
+					Expect(func() {
+						rfl.FieldTypeByName("InnerModel.NonExistent")
+					}).To(PanicWith("field NonExistent does not exist on type mock.ModelB"))
+				})
+			})
 		})
 		Context("Constructors", func() {
 			Describe("New Chain", func() {

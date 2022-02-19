@@ -1,7 +1,7 @@
 package minio_test
 
 import (
-	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
@@ -10,12 +10,12 @@ import (
 
 var _ = Describe("QueryRetrieve", func() {
 	var (
-		channelChunk *storage.ChannelChunkReplica
+		channelChunk *models.ChannelChunkReplica
 		bytes        []byte
 	)
 	BeforeEach(func() {
 		bytes = []byte("randomstring")
-		channelChunk = &storage.ChannelChunkReplica{
+		channelChunk = &models.ChannelChunkReplica{
 			ID:    uuid.New(),
 			Telem: telem.NewBulk(bytes),
 		}
@@ -32,7 +32,7 @@ var _ = Describe("QueryRetrieve", func() {
 	Describe("Standard Usage", func() {
 		Describe("Retrieve an item", func() {
 			It("Should retrieve the correct item", func() {
-				resChannelChunk := &storage.ChannelChunkReplica{}
+				resChannelChunk := &models.ChannelChunkReplica{}
 				err := engine.NewRetrieve(adapter).Model(resChannelChunk).WherePK(channelChunk.ID).Exec(ctx)
 				Expect(err).To(BeNil())
 				Expect(resChannelChunk.Telem).ToNot(BeNil())
@@ -40,9 +40,9 @@ var _ = Describe("QueryRetrieve", func() {
 			})
 		})
 		Describe("Retrieve multiple items", func() {
-			var channelChunkTwo *storage.ChannelChunkReplica
+			var channelChunkTwo *models.ChannelChunkReplica
 			BeforeEach(func() {
-				channelChunkTwo = &storage.ChannelChunkReplica{
+				channelChunkTwo = &models.ChannelChunkReplica{
 					ID:    uuid.New(),
 					Telem: telem.NewBulk([]byte("model two")),
 				}
@@ -53,7 +53,7 @@ var _ = Describe("QueryRetrieve", func() {
 				Expect(err).To(BeNil())
 			})
 			It("Should retrieve the correct items", func() {
-				var models []*storage.ChannelChunkReplica
+				var models []*models.ChannelChunkReplica
 				err := engine.NewRetrieve(adapter).Model(&models).WherePKs([]uuid.
 					UUID{channelChunk.ID, channelChunkTwo.ID}).Exec(ctx)
 				Expect(err).To(BeNil())

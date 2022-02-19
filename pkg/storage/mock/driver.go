@@ -10,6 +10,7 @@ import (
 	"github.com/minio/minio-go/v7/pkg/credentials"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
+	"github.com/uptrace/bun/extra/bundebug"
 	"net"
 	"net/url"
 	"strconv"
@@ -24,11 +25,12 @@ type DriverRoach struct {
 	HTTPPort int
 	Username string
 	Password string
+	Verbose  bool
 	servers  []testserver.TestServer
 }
 
-func NewDriverRoach(withHTTP bool) *DriverRoach {
-	return &DriverRoach{WithHTTP: withHTTP}
+func NewDriverRoach(withHTTP bool, verbose bool) *DriverRoach {
+	return &DriverRoach{WithHTTP: withHTTP, Verbose: verbose}
 }
 
 func availHTTPPort() int {
@@ -68,7 +70,9 @@ func (d *DriverRoach) Connect() (*bun.DB, error) {
 		return nil, err
 	}
 	bunDB := bun.NewDB(sqlDB, pgdialect.New())
-	//bunDB.AddQueryHook(bundebug.NewQueryHook(bundebug.WithVerbose(true)))
+	if d.Verbose {
+		bunDB.AddQueryHook(bundebug.NewQueryHook(bundebug.WithVerbose(true)))
+	}
 	return bunDB, nil
 }
 

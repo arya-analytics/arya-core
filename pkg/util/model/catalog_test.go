@@ -1,7 +1,7 @@
 package model_test
 
 import (
-	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/models"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
@@ -13,20 +13,20 @@ var _ = Describe("Catalog", func() {
 		Context("Single Model", func() {
 			It("Should return a new model of the correct type", func() {
 				catalog := model.Catalog{
-					&storage.ChannelConfig{},
+					&models.ChannelConfig{},
 				}
-				Expect(model.NewReflect(catalog.New(&storage.ChannelConfig{})).
-					Pointer()).To(Equal(&storage.ChannelConfig{}))
+				Expect(model.NewReflect(catalog.New(&models.ChannelConfig{})).
+					Pointer()).To(Equal(&models.ChannelConfig{}))
 			})
 		})
 		Context("Chain of Models", func() {
 			It("Should return a new chain of models of the correct type",
 				func() {
 					catalog := model.Catalog{
-						&storage.ChannelConfig{},
+						&models.ChannelConfig{},
 					}
-					Expect(model.NewReflect(catalog.New(&[]*storage.ChannelConfig{})).
-						Pointer()).To(Equal(&[]*storage.ChannelConfig{}))
+					Expect(model.NewReflect(catalog.New(&[]*models.ChannelConfig{})).
+						Pointer()).To(Equal(&[]*models.ChannelConfig{}))
 				})
 		})
 	})
@@ -34,35 +34,35 @@ var _ = Describe("Catalog", func() {
 		Context("Catalog contains the model", func() {
 			It("Should return true", func() {
 				catalog := model.Catalog{
-					&storage.ChannelConfig{},
+					&models.ChannelConfig{},
 				}
-				Expect(catalog.Contains(&storage.ChannelConfig{})).To(BeTrue())
+				Expect(catalog.Contains(&models.ChannelConfig{})).To(BeTrue())
 			})
 		})
 		Context("Catalog does not contain th model", func() {
 			It("Should return false", func() {
 				catalog := model.Catalog{
-					&storage.ChannelConfig{},
+					&models.ChannelConfig{},
 				}
-				Expect(catalog.Contains(&storage.ChannelChunk{})).To(BeFalse())
+				Expect(catalog.Contains(&models.ChannelChunk{})).To(BeFalse())
 			})
 		})
 	})
 	Context("Edge cases + errors", func() {
 		It("Should panic when the catalog doesn't contain pointers", func() {
 			catalog := model.Catalog{
-				storage.ChannelConfig{},
+				models.ChannelConfig{},
 			}
 			Expect(func() {
-				catalog.New(storage.ChannelConfig{})
+				catalog.New(models.ChannelConfig{})
 			}).To(Panic())
 		})
 		It("Should panic when the model cannot be found in the catalog", func() {
 			catalog := model.Catalog{
-				&storage.ChannelConfig{},
+				&models.ChannelConfig{},
 			}
 			Expect(func() {
-				catalog.New(&storage.Node{})
+				catalog.New(&models.Node{})
 			}).To(Panic())
 		})
 	})

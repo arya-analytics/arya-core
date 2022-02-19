@@ -5,7 +5,7 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/cluster"
 	"github.com/arya-analytics/aryacore/pkg/cluster/internal"
 	"github.com/arya-analytics/aryacore/pkg/cluster/mock"
-	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
@@ -15,7 +15,7 @@ import (
 var _ = Describe("QueryUpdate", func() {
 	Context("Query Assembly", func() {
 		var (
-			m    *storage.ChannelChunkReplica
+			m    *models.ChannelChunkReplica
 			clus cluster.Cluster
 			svc  *mock.Service
 			ctx  = context.Background()
@@ -25,13 +25,13 @@ var _ = Describe("QueryUpdate", func() {
 			clus = cluster.New(cluster.ServiceChain{
 				svc,
 			})
-			m = &storage.ChannelChunkReplica{
+			m = &models.ChannelChunkReplica{
 				ID: uuid.New(),
 			}
 		})
 		It("Should bind the correct model", func() {
 			Expect(clus.NewUpdate().Model(m).Exec(ctx))
-			Expect(svc.QueryRequest.Model.Pointer().(*storage.ChannelChunkReplica).ID).To(Equal(m.ID))
+			Expect(svc.QueryRequest.Model.Pointer().(*models.ChannelChunkReplica).ID).To(Equal(m.ID))
 		})
 		Context("WherePK", func() {
 			It("Should bind the correct PK", func() {

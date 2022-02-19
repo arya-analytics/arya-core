@@ -1,7 +1,7 @@
 package minio_test
 
 import (
-	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
@@ -9,9 +9,9 @@ import (
 )
 
 var _ = Describe("QueryCreate", func() {
-	var channelChunk *storage.ChannelChunkReplica
+	var channelChunk *models.ChannelChunkReplica
 	BeforeEach(func() {
-		channelChunk = &storage.ChannelChunkReplica{
+		channelChunk = &models.ChannelChunkReplica{
 			ID:    uuid.New(),
 			Telem: telem.NewBulk([]byte("randomstring")),
 		}
@@ -26,7 +26,7 @@ var _ = Describe("QueryCreate", func() {
 		Expect(err).To(BeNil())
 	})
 	It("Should be created correctly", func() {
-		mockModelTwo := &storage.ChannelChunkReplica{}
+		mockModelTwo := &models.ChannelChunkReplica{}
 		err := engine.NewRetrieve(adapter).Model(mockModelTwo).WherePK(channelChunk.ID).
 			Exec(ctx)
 		Expect(err).To(BeNil())

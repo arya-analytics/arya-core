@@ -1,4 +1,4 @@
-package storage
+package models
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
@@ -21,13 +21,13 @@ type Node struct {
 }
 
 type Range struct {
-	ID           uuid.UUID `model:"role:pk,"`
-	RangeLeaseID uuid.UUID
+	ID         uuid.UUID `model:"role:pk,"`
+	RangeLease *RangeLease
 }
 
 type RangeLease struct {
 	ID             uuid.UUID `model:"role:pk,"`
-	Range          *Range
+	RangeID        uuid.UUID
 	RangeReplica   *RangeReplica
 	RangeReplicaID uuid.UUID
 }

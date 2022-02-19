@@ -1,6 +1,7 @@
 package minio_test
 
 import (
+	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"github.com/google/uuid"
@@ -9,10 +10,10 @@ import (
 )
 
 var _ = Describe("QueryDelete", func() {
-	var channelChunk *storage.ChannelChunkReplica
+	var channelChunk *models.ChannelChunkReplica
 	Describe("Standard Usage", func() {
 		BeforeEach(func() {
-			channelChunk = &storage.ChannelChunkReplica{
+			channelChunk = &models.ChannelChunkReplica{
 				ID:    uuid.New(),
 				Telem: telem.NewBulk([]byte("randomstring")),
 			}
@@ -36,9 +37,9 @@ var _ = Describe("QueryDelete", func() {
 			})
 		})
 		Describe("Delete multiple Items", func() {
-			var channelChunkTwo *storage.ChannelChunkReplica
+			var channelChunkTwo *models.ChannelChunkReplica
 			BeforeEach(func() {
-				channelChunkTwo = &storage.ChannelChunkReplica{
+				channelChunkTwo = &models.ChannelChunkReplica{
 					ID:    uuid.New(),
 					Telem: telem.NewBulk([]byte("mock bytes")),
 				}
@@ -51,7 +52,7 @@ var _ = Describe("QueryDelete", func() {
 				Expect(dErr).To(BeNil())
 			})
 			It("Should not be able to be re-queried after delete", func() {
-				var models []*storage.ChannelChunkReplica
+				var models []*models.ChannelChunkReplica
 				e := engine.NewRetrieve(adapter).Model(&models).WherePKs(
 					[]uuid.UUID{channelChunkTwo.ID, channelChunk.ID}).Exec(ctx)
 				Expect(e).ToNot(BeNil())
