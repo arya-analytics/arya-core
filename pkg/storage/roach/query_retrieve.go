@@ -42,22 +42,16 @@ func (q *queryRetrieve) WhereFields(flds models.Fields) storage.QueryMDRetrieve 
 	for fldN, fldV := range flds {
 		relN, baseN := model.SplitLastFieldName(fldN)
 		if relN != "" {
-			q.bunQ = q.bunQ.Relation(relN, func(sq *bun.SelectQuery) *bun.SelectQuery {
-				return sq.Where(q.baseSQL().relFldEquals(relN, baseN), fldV)
-			})
-		} else {
-			baseSQL := q.baseSQL().fieldEquals(q.baseSQL().fieldName(baseN))
-			q.bunQ = q.bunQ.Where(baseSQL, fldV)
+			q.bunQ = q.bunQ.Relation(relN)
 		}
+		q.bunQ = q.bunQ.Where(q.baseSQL().relFldEquals(relN, baseN), fldV)
 	}
 	return q
 }
 
 func (q *queryRetrieve) Relation(rel string, fields ...string) storage.QueryMDRetrieve {
 	q.bunQ = q.bunQ.Relation(rel, func(sq *bun.SelectQuery) *bun.SelectQuery {
-		return sq.Column(
-			q.baseSQL().fieldNames(fields...)...,
-		)
+		return sq.Column(q.baseSQL().fieldNames(fields...)...)
 	})
 	return q
 }

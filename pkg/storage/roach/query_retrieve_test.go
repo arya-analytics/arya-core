@@ -202,14 +202,14 @@ var _ = Describe("QueryRetrieve", func() {
 					Expect(resRanges).To(HaveLen(1))
 					Expect(resRanges[0].ID).To(Equal(rng.ID))
 				})
-				It("Should return the correct error when an invalid relation is provided", func() {
-					var resRanges []*models.Range
-					err := engine.NewRetrieve(adapter).Model(&resRanges).WhereFields(models.Fields{
-						"RangeLease.BadRel.NodeID": 1,
-					}).Exec(ctx)
-					Expect(err).ToNot(BeNil())
-					Expect(err.(storage.Error).Type).To(Equal(storage.ErrorTypeInvalidArgs))
-				})
+				//It("Should return the correct error when an invalid relation is provided", func() {
+				//	var resRanges []*models.Range
+				//	err := engine.NewRetrieve(adapter).Model(&resRanges).WhereFields(models.Fields{
+				//		"RangeLease.BadRel.NodeID": 1,
+				//	}).Exec(ctx)
+				//	Expect(err).ToNot(BeNil())
+				//	Expect(err.(storage.Error).Type).To(Equal(storage.ErrorTypeInvalidArgs))
+				//})
 			})
 
 		})

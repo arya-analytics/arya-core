@@ -63,6 +63,9 @@ const nestedTableSeparator = "__"
 
 func (sg sqlGen) relTableName(relName string) (tableName string) {
 	sn := model.SplitFieldNames(relName)
+	if len(sn) == 1 && sn[0] == "" {
+		return sg.table().ModelName
+	}
 	for i := range sn {
 		nRelName := strings.Join(sn[0:i+1], ".")
 		table := sg.db.Table(sg.m.FieldTypeByName(nRelName))
