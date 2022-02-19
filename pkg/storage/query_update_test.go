@@ -50,4 +50,9 @@ var _ = Describe("Update QueryRequest", func() {
 			Expect(resChannelConfig.Name).To(Equal(updateChannelConfig.Name))
 		})
 	})
+	Describe("Edge cases + errors", func() {
+		It("Should panic if a chain of models is provided", func() {
+			Expect(func() { store.NewUpdate().Model(&[]*models.ChannelConfig{}) }).To(Panic())
+		})
+	})
 })

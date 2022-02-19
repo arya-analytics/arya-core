@@ -57,7 +57,7 @@ func (q *queryRetrieve) Relation(rel string, fields ...string) storage.QueryMDRe
 }
 
 func (q *queryRetrieve) Fields(flds ...string) storage.QueryMDRetrieve {
-	q.bunQ = q.bunQ.Column(flds...)
+	q.bunQ = q.bunQ.Column(q.baseSQL().fieldNames(flds...)...)
 	return q
 }
 

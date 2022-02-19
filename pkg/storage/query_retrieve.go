@@ -61,8 +61,8 @@ func (q *QueryRetrieve) Relation(rel string, flds ...string) *QueryRetrieve {
 	return q
 }
 
-// Field retrieves only the fields flds in teh query
-func (q *QueryRetrieve) Field(flds ...string) *QueryRetrieve {
+// Fields retrieves only the fields specified.
+func (q *QueryRetrieve) Fields(flds ...string) *QueryRetrieve {
 	q.setMDQuery(q.mdQuery().Fields(flds...))
 	return q
 }
