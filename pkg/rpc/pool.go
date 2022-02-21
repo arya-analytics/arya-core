@@ -13,18 +13,14 @@ func NewPool(DialOpts ...grpc.DialOption) *Pool {
 	return &Pool{dialOpts: DialOpts, conns: map[string]*grpc.ClientConn{}}
 }
 
-func (p *Pool) Retrieve(target string) (*grpc.ClientConn, error) {
-	conn, ok := p.conns[target]
-	if ok {
-		return conn, nil
-	}
+func (p *Pool) Retrieve(target string) (conn *grpc.ClientConn, err error) {
+	var ok bool
+	conn, ok = p.conns[target]
 	if !ok {
-		var err error
 		conn, err = p.newConn(target)
 		p.conns[target] = conn
-		return conn, err
 	}
-	return conn, nil
+	return conn, err
 }
 
 func (p *Pool) newConn(addr string) (*grpc.ClientConn, error) {
