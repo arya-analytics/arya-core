@@ -47,8 +47,8 @@ func (d *DriverRoach) Connect() (*bun.DB, error) {
 	}
 	ts, err := testserver.NewTestServer(
 		testserver.HTTPPortOpt(d.HTTPPort),
-		//testserver.SecureOpt(),
-		//testserver.RootPasswordOpt("testpass"),
+		testserver.SecureOpt(),
+		testserver.RootPasswordOpt("testpass"),
 	)
 
 	wErr := ts.WaitForInit()
