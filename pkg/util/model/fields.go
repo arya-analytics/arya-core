@@ -61,3 +61,5 @@ func SplitLastFieldName(name string) (string, string) {
 	fn := strings.Join(sn[0:len(sn)-1], ".")
 	return fn, sn[len(sn)-1]
 }
+
+type WhereFields map[string]interface{}

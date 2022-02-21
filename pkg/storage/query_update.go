@@ -16,7 +16,7 @@ type QueryUpdate struct {
 
 func newUpdate(s Storage) *QueryUpdate {
 	q := &QueryUpdate{}
-	q.baseInit(s)
+	q.baseInit(s, q)
 	return q
 }
 
@@ -41,7 +41,9 @@ func (q *QueryUpdate) WherePK(pk interface{}) *QueryUpdate {
 
 // Exec execute the query with the provided context. Returns a storage.Error.
 func (q *QueryUpdate) Exec(ctx context.Context) error {
+	q.baseRunBeforeHooks(ctx)
 	q.baseExec(func() error { return q.mdQuery().Exec(ctx) })
+	q.baseRunAfterHooks(ctx)
 	return q.baseErr()
 }
 

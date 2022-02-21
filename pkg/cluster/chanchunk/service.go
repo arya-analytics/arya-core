@@ -81,7 +81,7 @@ const (
 	RangeReplicaIDField = "RangeReplicaID"
 	RangeReplicaField   = "RangeReplica"
 	NodeIsHostField     = "RangeReplica.Node.IsHost"
-	NodeAddressField    = "RangeReplica.Node.Address"
+	NodeField           = "RangeReplica.Node"
 )
 
 func (s *Service) createReplica(ctx context.Context, qr *internal.QueryRequest) error {
@@ -163,30 +163,30 @@ func replicaNodeIsHostSwitch(mRfl *model.Reflect, localF, remoteF func(m *model.
 	return err
 }
 
-func replicaNodeAddressSwitch(rfl *model.Reflect, action func(addr string, rfl *model.Reflect)) {
-	route.ModelSwitchIter(rfl, NodeAddressField, action)
+func replicaNodeSwitch(rfl *model.Reflect, action func(node *models.Node, rfl *model.Reflect)) {
+	route.ModelSwitchIter(rfl, NodeField, action)
 }
 
 /// |||| REMOTE OPTION BUILDING ||||
 
 func buildRemoteReplicaRetrieveOpts(remoteCCR *model.Reflect) (opts []RemoteReplicaRetrieveOpts) {
-	replicaNodeAddressSwitch(remoteCCR, func(addr string, m *model.Reflect) {
-		opts = append(opts, RemoteReplicaRetrieveOpts{Addr: addr, PKC: m.PKChain()})
+	replicaNodeSwitch(remoteCCR, func(node *models.Node, m *model.Reflect) {
+		opts = append(opts, RemoteReplicaRetrieveOpts{Node: node, PKC: m.PKChain()})
 	})
 	return opts
 
 }
 
 func buildRemoteReplicaCreateOpts(remoteCCR *model.Reflect) (opts []RemoterReplicaCreateOpts) {
-	replicaNodeAddressSwitch(remoteCCR, func(addr string, m *model.Reflect) {
-		opts = append(opts, RemoterReplicaCreateOpts{Addr: addr, ChunkReplica: m.Pointer()})
+	replicaNodeSwitch(remoteCCR, func(node *models.Node, m *model.Reflect) {
+		opts = append(opts, RemoterReplicaCreateOpts{Node: node, ChunkReplica: m.Pointer()})
 	})
 	return opts
 }
 
 func buildRemoteReplicaDeleteOpts(remoteCCR *model.Reflect) (opts []RemoteReplicaDeleteOpts) {
-	replicaNodeAddressSwitch(remoteCCR, func(addr string, m *model.Reflect) {
-		opts = append(opts, RemoteReplicaDeleteOpts{Addr: addr, PKC: m.PKChain()})
+	replicaNodeSwitch(remoteCCR, func(node *models.Node, m *model.Reflect) {
+		opts = append(opts, RemoteReplicaDeleteOpts{Node: node, PKC: m.PKChain()})
 	})
 	return opts
 }

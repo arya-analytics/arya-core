@@ -130,7 +130,7 @@ func (s *ServiceLocalStorage) DeleteReplica(ctx context.Context, opts LocalRepli
 func (s *ServiceLocalStorage) RetrieveRangeReplica(ctx context.Context, rangeReplica interface{}, opts LocalRangeReplicaRetrieveOpts) error {
 	q := s.storage.NewRetrieve().
 		Model(rangeReplica).
-		Relation("Node", "ID", "Address", "IsHost")
+		Relation("Node", "ID", "Address", "IsHost", "RPCPort")
 	if opts.PKC != nil {
 		q = q.WherePKs(opts.PKC.Raw())
 	}

@@ -45,7 +45,7 @@ var _ = Describe("QueryRetrieve", func() {
 					})
 					It("Should retrieve the channel config by a relation", func() {
 						resChannelConfig := &models.ChannelConfig{}
-						err := store.NewRetrieve().Model(resChannelConfig).WhereFields(models.Fields{
+						err := store.NewRetrieve().Model(resChannelConfig).WhereFields(model.WhereFields{
 							"Node.ID": 1,
 						}).Exec(ctx)
 						Expect(err).To(BeNil())
@@ -54,7 +54,7 @@ var _ = Describe("QueryRetrieve", func() {
 					})
 					It("Should retrieve the correct relation", func() {
 						resChannelConfig := &models.ChannelConfig{}
-						err := store.NewRetrieve().Model(resChannelConfig).Relation("Node", "id").WhereFields(models.Fields{
+						err := store.NewRetrieve().Model(resChannelConfig).Relation("Node", "id").WhereFields(model.WhereFields{
 							"Node.ID": 1,
 						}).Exec(ctx)
 						Expect(err).To(BeNil())

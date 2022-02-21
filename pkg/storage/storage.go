@@ -64,14 +64,17 @@ type Storage interface {
 	NewTSRetrieve() *QueryTSRetrieve
 	NewTSCreate() *QueryTSCreate
 	NewMigrate() *QueryMigrate
+	AddQueryHook(hook QueryHook)
 	NewTasks(opts ...tasks.SchedulerOpt) tasks.Scheduler
+	hooks() []QueryHook
 	config() Config
 	adapter(e Engine) Adapter
 }
 
 type storage struct {
-	cfg  Config
-	pool *pool
+	cfg        Config
+	pool       *pool
+	queryHooks []QueryHook
 }
 
 // New creates a new Storage based on the provided Config.
@@ -127,6 +130,14 @@ func (s *storage) NewTasks(opts ...tasks.SchedulerOpt) tasks.Scheduler {
 	return tasks.NewBatchScheduler(
 		s.cfg.EngineMD.NewTasks(s.adapter(s.cfg.EngineMD), opts...),
 	)
+}
+
+func (s *storage) AddQueryHook(hook QueryHook) {
+	s.queryHooks = append(s.queryHooks, hook)
+}
+
+func (s *storage) hooks() []QueryHook {
+	return s.queryHooks
 }
 
 func (s *storage) adapter(e Engine) (a Adapter) {

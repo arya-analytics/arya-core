@@ -29,6 +29,7 @@ type Node struct {
 	// Select key MUST match nodesGossip table in migrations file.
 	bun.BaseModel   `bun:"select:nodes_gossip,table:nodes"`
 	ID              int       `bun:",pk" model:"role:pk,"`
+	RPCPort         int       `bun:"rpc_port"`
 	Address         string    `bun:"type:text,scanonly"`
 	IsHost          bool      `bun:"type:boolean,scanonly"`
 	StartedAt       time.Time `bun:"type:timestamp,scanonly"`

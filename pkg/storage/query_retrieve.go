@@ -2,7 +2,7 @@ package storage
 
 import (
 	"context"
-	"github.com/arya-analytics/aryacore/pkg/models"
+	"github.com/arya-analytics/aryacore/pkg/util/model"
 )
 
 // QueryRetrieve retrieves a model or set of models depending on the parameters passed.
@@ -19,7 +19,7 @@ type QueryRetrieve struct {
 
 func newRetrieve(s Storage) *QueryRetrieve {
 	q := &QueryRetrieve{}
-	q.baseInit(s)
+	q.baseInit(s, q)
 	return q
 }
 
@@ -50,7 +50,7 @@ func (q *QueryRetrieve) WherePKs(pks interface{}) *QueryRetrieve {
 
 // WhereFields queries by a set of key value pairs where the key represents a field name
 // and the value represent a value to match with.
-func (q *QueryRetrieve) WhereFields(flds models.Fields) *QueryRetrieve {
+func (q *QueryRetrieve) WhereFields(flds model.WhereFields) *QueryRetrieve {
 	q.setMDQuery(q.mdQuery().WhereFields(flds))
 	return q
 }
@@ -69,12 +69,14 @@ func (q *QueryRetrieve) Fields(flds ...string) *QueryRetrieve {
 
 // Exec executes the query with the provided context. Returns a storage.Error.
 func (q *QueryRetrieve) Exec(ctx context.Context) error {
+	q.baseRunBeforeHooks(ctx)
 	q.baseExec(func() error { return q.mdQuery().Exec(ctx) })
 	mp := q.modelRfl.Pointer()
 	if q.baseObjEngine().InCatalog(mp) {
 		pks := q.modelRfl.PKChain().Raw()
 		q.baseExec(func() error { return q.objQuery().Model(mp).WherePKs(pks).Exec(ctx) })
 	}
+	q.baseRunAfterHooks(ctx)
 	return q.baseErr()
 }
 

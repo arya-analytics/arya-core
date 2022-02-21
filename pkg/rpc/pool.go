@@ -1,30 +1,32 @@
 package rpc
 
 import (
-	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 )
 
-type Pool interface {
-	Retrieve(addr string) *grpc.ClientConn
+type Pool struct {
+	dialOpts []grpc.DialOption
+	conns    map[string]*grpc.ClientConn
 }
 
-type PoolImpl struct {
-	conns map[string]*grpc.ClientConn
+func NewPool(dialOpts ...grpc.DialOption) *Pool {
+	return &Pool{dialOpts: dialOpts, conns: map[string]*grpc.ClientConn{}}
 }
 
-func (p *PoolImpl) Retrieve(addr string) *grpc.ClientConn {
-	conn, ok := p.conns[addr]
+func (p *Pool) Retrieve(target string) (conn *grpc.ClientConn, err error) {
+	var ok bool
+	conn, ok = p.conns[target]
 	if !ok {
-		conn = p.newConn(addr)
+		conn, err = p.newConn(target)
+		p.addConn(target, conn)
 	}
-	return conn
+	return conn, err
 }
 
-func (p *PoolImpl) newConn(addr string) *grpc.ClientConn {
-	conn, err := grpc.Dial(addr)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	return conn
+func (p *Pool) newConn(addr string) (*grpc.ClientConn, error) {
+	return grpc.Dial(addr, p.dialOpts...)
+}
+
+func (p *Pool) addConn(target string, conn *grpc.ClientConn) {
+	p.conns[target] = conn
 }

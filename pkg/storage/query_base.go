@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"context"
 	"github.com/arya-analytics/aryacore/pkg/util/errutil"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 )
@@ -8,14 +9,16 @@ import (
 type queryBase struct {
 	storage         Storage
 	modelRfl        *model.Reflect
+	_query          Query
 	_baseMDQuery    QueryMDBase
 	_baseObjQuery   QueryObjectBase
 	_baseCacheQuery QueryCacheBase
 	_catcher        *errutil.Catcher
 }
 
-func (q *queryBase) baseInit(s Storage) {
+func (q *queryBase) baseInit(s Storage, query Query) {
 	q.storage = s
+	q._query = query
 	q._catcher = &errutil.Catcher{}
 }
 
@@ -89,4 +92,22 @@ func (q *queryBase) baseExec(actionFunc errutil.ActionFunc) {
 
 func (q *queryBase) baseErr() error {
 	return q._catcher.Error()
+}
+
+// |||| HOOK EXECUTION ||||
+
+func (q *queryBase) baseRunBeforeHooks(ctx context.Context) {
+	for _, hook := range q.storage.hooks() {
+		q.baseExec(func() error {
+			return hook.BeforeQuery(ctx, &QueryEvent{Model: q.modelRfl, Query: q._query})
+		})
+	}
+}
+
+func (q *queryBase) baseRunAfterHooks(ctx context.Context) {
+	for _, hook := range q.storage.hooks() {
+		q.baseExec(func() error {
+			return hook.AfterQuery(ctx, &QueryEvent{Model: q.modelRfl, Query: q._query})
+		})
+	}
 }

@@ -3,6 +3,7 @@ package roach_test
 import (
 	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -168,7 +169,7 @@ var _ = Describe("QueryRetrieve", func() {
 				err := engine.
 					NewRetrieve(adapter).
 					Model(resRngLease).
-					WhereFields(models.Fields{"RangeID": rng.ID}).
+					WhereFields(model.WhereFields{"RangeID": rng.ID}).
 					Exec(ctx)
 				Expect(err).To(BeNil())
 				Expect(resRngLease.ID).To(Equal(rngLease.ID))
@@ -178,7 +179,7 @@ var _ = Describe("QueryRetrieve", func() {
 				err := engine.
 					NewRetrieve(adapter).
 					Model(resRngLease).
-					WhereFields(models.Fields{"RangeID": uuid.UUID{}}).
+					WhereFields(model.WhereFields{"RangeID": uuid.UUID{}}).
 					Exec(ctx)
 				Expect(err).ToNot(BeNil())
 				Expect(err.(storage.Error).Type).To(Equal(storage.ErrorTypeItemNotFound))
@@ -186,7 +187,7 @@ var _ = Describe("QueryRetrieve", func() {
 			Context("Nested Relation", func() {
 				It("Should retrieve by a single nested relation correctly", func() {
 					resRange := &models.Range{}
-					err := engine.NewRetrieve(adapter).Model(resRange).WhereFields(models.Fields{
+					err := engine.NewRetrieve(adapter).Model(resRange).WhereFields(model.WhereFields{
 						"RangeLease.ID": rngLease.ID,
 					}).Exec(ctx)
 					Expect(err).To(BeNil())
@@ -195,7 +196,7 @@ var _ = Describe("QueryRetrieve", func() {
 				})
 				It("Should retrieve by a double nested relation correctly", func() {
 					var resRanges []*models.Range
-					err := engine.NewRetrieve(adapter).Model(&resRanges).WhereFields(models.Fields{
+					err := engine.NewRetrieve(adapter).Model(&resRanges).WhereFields(model.WhereFields{
 						"RangeLease.RangeReplica.NodeID": 1,
 					}).Exec(ctx)
 					Expect(err).To(BeNil())
@@ -204,7 +205,7 @@ var _ = Describe("QueryRetrieve", func() {
 				})
 				//It("Should return the correct error when an invalid relation is provided", func() {
 				//	var resRanges []*models.Range
-				//	err := engine.NewRetrieve(adapter).Model(&resRanges).WhereFields(models.Fields{
+				//	err := engine.NewRetrieve(adapter).Model(&resRanges).WhereFields(model.WhereFields{
 				//		"RangeLease.BadRel.NodeID": 1,
 				//	}).Exec(ctx)
 				//	Expect(err).ToNot(BeNil())

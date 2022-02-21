@@ -1,12 +1,12 @@
 package chanchunk_test
 
 import (
+	"github.com/arya-analytics/aryacore/pkg/cluster"
 	"github.com/arya-analytics/aryacore/pkg/cluster/chanchunk"
 	"github.com/arya-analytics/aryacore/pkg/cluster/chanchunk/mock"
 	"github.com/arya-analytics/aryacore/pkg/cluster/internal"
+	clustermock "github.com/arya-analytics/aryacore/pkg/cluster/mock"
 	"github.com/arya-analytics/aryacore/pkg/models"
-	"github.com/arya-analytics/aryacore/pkg/rpc"
-	rpcmock "github.com/arya-analytics/aryacore/pkg/rpc/mock"
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
@@ -24,7 +24,7 @@ var _ = Describe("Service", func() {
 		remoteSvc     chanchunk.ServiceRemote
 		localSvc      chanchunk.ServiceLocal
 		svc           *chanchunk.Service
-		pool          rpc.Pool
+		pool          *cluster.NodeRPCPool
 		server        *mock.Server
 		grpcServer    *grpc.Server
 		lis           net.Listener
@@ -61,7 +61,8 @@ var _ = Describe("Service", func() {
 		Expect(lisErr).To(BeNil())
 		port, pErr := strconv.Atoi(strings.Split(lis.Addr().String(), ":")[1])
 		Expect(pErr).To(BeNil())
-		pool = rpcmock.NewPool(port)
+		node.RPCPort = port
+		pool = clustermock.NewNodeRPCPool()
 		remoteSvc = chanchunk.NewServiceRemoteRPC(pool)
 		server = mock.NewServer()
 		grpcServer = grpc.NewServer()

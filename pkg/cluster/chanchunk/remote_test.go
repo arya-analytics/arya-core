@@ -1,11 +1,11 @@
 package chanchunk_test
 
 import (
+	"github.com/arya-analytics/aryacore/pkg/cluster"
 	"github.com/arya-analytics/aryacore/pkg/cluster/chanchunk"
 	"github.com/arya-analytics/aryacore/pkg/cluster/chanchunk/mock"
+	clustermock "github.com/arya-analytics/aryacore/pkg/cluster/mock"
 	"github.com/arya-analytics/aryacore/pkg/models"
-	"github.com/arya-analytics/aryacore/pkg/rpc"
-	rpcmock "github.com/arya-analytics/aryacore/pkg/rpc/mock"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"github.com/google/uuid"
@@ -13,19 +13,27 @@ import (
 	. "github.com/onsi/gomega"
 	"google.golang.org/grpc"
 	"net"
+	"strconv"
+	"strings"
 )
+
+func lisPort(lis net.Listener) int {
+	port, pErr := strconv.Atoi(strings.Split(lis.Addr().String(), ":")[1])
+	Expect(pErr).To(BeNil())
+	return port
+}
 
 var _ = Describe("ServiceRemoteRPC", func() {
 	var (
-		pool                         rpc.Pool
+		pool                         *cluster.NodeRPCPool
 		svc                          chanchunk.ServiceRemote
 		serverOne, serverTwo         *mock.Server
 		grpcServerOne, grpcServerTwo *grpc.Server
-		addrOne, addrTwo             net.Addr
+		nodeOne, nodeTwo             *models.Node
 		serverErr                    error
 	)
 	BeforeEach(func() {
-		pool = rpcmock.NewPool(0)
+		pool = clustermock.NewNodeRPCPool()
 		svc = chanchunk.NewServiceRemoteRPC(pool)
 		serverOne, serverTwo = mock.NewServer(), mock.NewServer()
 		grpcServerOne, grpcServerTwo = grpc.NewServer(), grpc.NewServer()
@@ -36,8 +44,19 @@ var _ = Describe("ServiceRemoteRPC", func() {
 		lisOne, err := net.Listen("tcp", "localhost:0")
 		Expect(err).To(BeNil())
 		lisTwo, err := net.Listen("tcp", "localhost:0")
+
+		nodeOne = &models.Node{
+			ID:      1,
+			RPCPort: lisPort(lisOne),
+			Address: lisOne.Addr().String(),
+		}
+		nodeTwo = &models.Node{
+			ID:      1,
+			RPCPort: lisPort(lisTwo),
+			Address: lisTwo.Addr().String(),
+		}
+
 		Expect(err).To(BeNil())
-		addrOne, addrTwo = lisOne.Addr(), lisTwo.Addr()
 		go func() {
 			if err := grpcServerOne.Serve(lisOne); err != nil {
 				serverErr = err
@@ -55,7 +74,7 @@ var _ = Describe("ServiceRemoteRPC", func() {
 		idOne, idTwo := uuid.New(), uuid.New()
 		cErr := svc.CreateReplica(ctx, []chanchunk.RemoterReplicaCreateOpts{
 			{
-				Addr: addrOne.String(),
+				Node: nodeOne,
 				ChunkReplica: &[]*models.ChannelChunkReplica{
 					{
 						ID:    idOne,
@@ -64,7 +83,7 @@ var _ = Describe("ServiceRemoteRPC", func() {
 				},
 			},
 			{
-				Addr: addrTwo.String(),
+				Node: nodeTwo,
 				ChunkReplica: &[]*models.ChannelChunkReplica{{
 					ID:    idTwo,
 					Telem: telem.NewBulk([]byte{3, 4, 5}),
@@ -82,7 +101,7 @@ var _ = Describe("ServiceRemoteRPC", func() {
 		pkC := model.NewPKChain([]uuid.UUID{uuid.New()})
 		cErr := svc.DeleteReplica(ctx, []chanchunk.RemoteReplicaDeleteOpts{
 			{
-				Addr: addrOne.String(),
+				Node: nodeOne,
 				PKC:  pkC,
 			},
 		})
@@ -92,7 +111,7 @@ var _ = Describe("ServiceRemoteRPC", func() {
 	It("Should retrieve the replicas correctly", func() {
 		id := uuid.New()
 		var ccr []*models.ChannelChunkReplica
-		cErr := svc.RetrieveReplica(ctx, &ccr, []chanchunk.RemoteReplicaRetrieveOpts{{Addr: addrOne.String(), PKC: model.NewPKChain([]uuid.UUID{id})}})
+		cErr := svc.RetrieveReplica(ctx, &ccr, []chanchunk.RemoteReplicaRetrieveOpts{{Node: nodeTwo, PKC: model.NewPKChain([]uuid.UUID{id})}})
 		Expect(cErr).To(BeNil())
 		Expect(ccr).To(HaveLen(1))
 		Expect(ccr[0].ID).To(Equal(id))

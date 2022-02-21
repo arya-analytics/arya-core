@@ -14,7 +14,7 @@ type QueryDelete struct {
 
 func newDelete(s Storage) *QueryDelete {
 	q := &QueryDelete{}
-	q.baseInit(s)
+	q.baseInit(s, q)
 	return q
 }
 
@@ -44,12 +44,14 @@ func (q *QueryDelete) WherePKs(pks interface{}) *QueryDelete {
 
 // Exec executes the query with the provided context. Returns a storage.Error.
 func (q *QueryDelete) Exec(ctx context.Context) error {
+	q.baseRunBeforeHooks(ctx)
 	q.baseExec(func() error { return q.mdQuery().Exec(ctx) })
 	if q.baseObjEngine().InCatalog(q.modelRfl.Pointer()) {
 		q.baseExec(func() error {
 			return q.objQuery().Model(q.modelRfl.Pointer()).WherePKs(q.modelRfl.PKChain().Raw()).Exec(ctx)
 		})
 	}
+	q.baseRunAfterHooks(ctx)
 	return q.baseErr()
 }
 

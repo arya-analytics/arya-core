@@ -10,7 +10,7 @@ type QueryTSRetrieve struct {
 
 func newTSRetrieve(s Storage) *QueryTSRetrieve {
 	q := &QueryTSRetrieve{}
-	q.baseInit(s)
+	q.baseInit(s, q)
 	return q
 }
 
@@ -52,7 +52,9 @@ func (q *QueryTSRetrieve) SeriesExists(ctx context.Context,
 }
 
 func (q *QueryTSRetrieve) Exec(ctx context.Context) error {
+	q.baseRunBeforeHooks(ctx)
 	q.baseExec(func() error { return q.cacheQuery().Exec(ctx) })
+	q.baseRunAfterHooks(ctx)
 	return q.baseErr()
 }
 

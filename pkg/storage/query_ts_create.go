@@ -8,7 +8,7 @@ type QueryTSCreate struct {
 
 func newTSCreate(s Storage) *QueryTSCreate {
 	q := &QueryTSCreate{}
-	q.baseInit(s)
+	q.baseInit(s, q)
 	return q
 }
 
@@ -29,7 +29,9 @@ func (q *QueryTSCreate) Sample() *QueryTSCreate {
 }
 
 func (q *QueryTSCreate) Exec(ctx context.Context) error {
+	q.baseRunBeforeHooks(ctx)
 	q.baseExec(func() error { return q.cacheQuery().Exec(ctx) })
+	q.baseRunAfterHooks(ctx)
 	return q.baseErr()
 }
 

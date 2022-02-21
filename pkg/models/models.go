@@ -3,22 +3,7 @@ package models
 import (
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"github.com/google/uuid"
-	"time"
 )
-
-type Node struct {
-	ID              int `model:"role:pk"`
-	Address         string
-	StartedAt       time.Time
-	IsLive          bool
-	IsHost          bool
-	Epoch           int
-	Expiration      string
-	Draining        bool
-	Decommissioning bool
-	Membership      string
-	UpdatedAt       time.Time
-}
 
 type Range struct {
 	ID         uuid.UUID `model:"role:pk,"`
