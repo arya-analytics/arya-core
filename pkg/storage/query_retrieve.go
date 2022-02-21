@@ -19,7 +19,7 @@ type QueryRetrieve struct {
 
 func newRetrieve(s Storage) *QueryRetrieve {
 	q := &QueryRetrieve{}
-	q.baseInit(s)
+	q.baseInit(s, s.config().Hooks.BeforeRetrieve)
 	return q
 }
 

@@ -14,7 +14,7 @@ type QueryDelete struct {
 
 func newDelete(s Storage) *QueryDelete {
 	q := &QueryDelete{}
-	q.baseInit(s)
+	q.baseInit(s, s.config().Hooks.BeforeDelete)
 	return q
 }
 

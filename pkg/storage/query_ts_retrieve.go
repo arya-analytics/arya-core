@@ -10,7 +10,7 @@ type QueryTSRetrieve struct {
 
 func newTSRetrieve(s Storage) *QueryTSRetrieve {
 	q := &QueryTSRetrieve{}
-	q.baseInit(s)
+	q.baseInit(s, s.config().Hooks.BeforeTSRetrieve)
 	return q
 }
 

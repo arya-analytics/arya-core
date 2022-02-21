@@ -26,6 +26,7 @@
 package storage
 
 import (
+	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/tasks"
 )
 
@@ -145,4 +146,17 @@ type Config struct {
 	EngineMD     EngineMD
 	EngineObject EngineObject
 	EngineCache  EngineCache
+	Hooks        HooksConfig
+}
+
+type Hook func(rfl *model.Reflect) error
+
+type HooksConfig struct {
+	BeforeCreate     Hook
+	BeforeRetrieve   Hook
+	BeforeUpdate     Hook
+	BeforeDelete     Hook
+	BeforeTSRetrieve Hook
+	BeforeTSCreate   Hook
+	BeforeMigrate    Hook
 }

@@ -8,7 +8,8 @@ import (
 
 type Node struct {
 	ID              int `model:"role:pk"`
-	Address         string
+	RoachAddress    string
+	GRPCPort        int `model:"role:grpc_port"`
 	StartedAt       time.Time
 	IsLive          bool
 	IsHost          bool

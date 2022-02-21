@@ -1,6 +1,7 @@
 package mock
 
 import (
+	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/storage/minio"
 	"github.com/arya-analytics/aryacore/pkg/storage/redis"
@@ -45,6 +46,9 @@ func NewStorage(opts ...StorageOpt) *Storage {
 			EngineMD:     roach.New(driverRoach),
 			EngineCache:  redis.New(driverRedis),
 			EngineObject: minio.New(driverMinio),
+			Hooks: storage.HooksConfig{
+				BeforeCreate: models.BeforeCreate,
+			},
 		}),
 		DriverRoach: driverRoach,
 		DriverMinio: driverMinio,

@@ -8,14 +8,16 @@ import (
 type queryBase struct {
 	storage         Storage
 	modelRfl        *model.Reflect
+	hook            Hook
 	_baseMDQuery    QueryMDBase
 	_baseObjQuery   QueryObjectBase
 	_baseCacheQuery QueryCacheBase
 	_catcher        *errutil.Catcher
 }
 
-func (q *queryBase) baseInit(s Storage) {
+func (q *queryBase) baseInit(s Storage, hook Hook) {
 	q.storage = s
+	q.hook = hook
 	q._catcher = &errutil.Catcher{}
 }
 
@@ -89,4 +91,15 @@ func (q *queryBase) baseExec(actionFunc errutil.ActionFunc) {
 
 func (q *queryBase) baseErr() error {
 	return q._catcher.Error()
+}
+
+// |||| HOOK EXECUTION ||||
+
+func (q *queryBase) baseRunHook() {
+	q.baseExec(func() error {
+		if q.hook != nil {
+			return q.hook(q.modelRfl)
+		}
+		return nil
+	})
 }

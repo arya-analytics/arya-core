@@ -16,7 +16,7 @@ type QueryUpdate struct {
 
 func newUpdate(s Storage) *QueryUpdate {
 	q := &QueryUpdate{}
-	q.baseInit(s)
+	q.baseInit(s, s.config().Hooks.BeforeUpdate)
 	return q
 }
 

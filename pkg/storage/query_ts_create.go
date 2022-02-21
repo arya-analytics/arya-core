@@ -8,7 +8,7 @@ type QueryTSCreate struct {
 
 func newTSCreate(s Storage) *QueryTSCreate {
 	q := &QueryTSCreate{}
-	q.baseInit(s)
+	q.baseInit(s, s.config().Hooks.BeforeTSCreate)
 	return q
 }
 

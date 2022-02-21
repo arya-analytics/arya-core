@@ -10,7 +10,7 @@ type QueryMigrate struct {
 
 func newMigrate(s Storage) *QueryMigrate {
 	q := &QueryMigrate{}
-	q.baseInit(s)
+	q.baseInit(s, s.config().Hooks.BeforeMigrate)
 	return q
 }
 

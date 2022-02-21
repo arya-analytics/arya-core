@@ -10,7 +10,7 @@ import (
 
 func beforeInsertSetUUID(rfl *model.Reflect) *model.Reflect {
 	rfl.ForEach(func(nRfl *model.Reflect, i int) {
-		pkf := nRfl.StructFieldByRole("pk")
+		pkf := nRfl.PKField()
 		if pkf.IsZero() {
 			switch pkf.Interface().(type) {
 			case uuid.UUID:

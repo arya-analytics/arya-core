@@ -13,7 +13,7 @@ type QueryCreate struct {
 
 func newCreate(s Storage) *QueryCreate {
 	c := &QueryCreate{}
-	c.baseInit(s)
+	c.baseInit(s, s.config().Hooks.BeforeCreate)
 	return c
 }
 
@@ -24,6 +24,7 @@ func newCreate(s Storage) *QueryCreate {
 // The model must contain all necessary values and satisfy any relationships.
 func (c *QueryCreate) Model(m interface{}) *QueryCreate {
 	c.baseBindModel(m)
+	c.baseRunHook()
 	c.setMDQuery(c.mdQuery().Model(c.modelRfl.Pointer()))
 	return c
 }
