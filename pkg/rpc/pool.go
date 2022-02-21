@@ -27,6 +27,6 @@ func (p *Pool) newConn(addr string) (*grpc.ClientConn, error) {
 	return grpc.Dial(addr, p.dialOpts...)
 }
 
-func (p *Pool) addConn(target string, conn *grpc.ClientConn) func() {
+func (p *Pool) addConn(target string, conn *grpc.ClientConn) {
 	p.conns[target] = conn
 }
