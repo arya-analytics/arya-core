@@ -41,17 +41,16 @@ func NewStorage(opts ...StorageOpt) *Storage {
 	driverMinio := DriverMinio{}
 	driverRedis := DriverRedis{}
 
-	return &Storage{
+	s := &Storage{
 		Storage: storage.New(storage.Config{
 			EngineMD:     roach.New(driverRoach),
 			EngineCache:  redis.New(driverRedis),
 			EngineObject: minio.New(driverMinio),
-			Hooks: storage.HooksConfig{
-				BeforeCreate: models.BeforeCreate,
-			},
 		}),
 		DriverRoach: driverRoach,
 		DriverMinio: driverMinio,
 		DriverRedis: driverRedis,
 	}
+	models.BindHooks(s)
+	return s
 }

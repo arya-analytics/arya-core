@@ -26,7 +26,6 @@
 package storage
 
 import (
-	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/tasks"
 )
 
@@ -65,14 +64,17 @@ type Storage interface {
 	NewTSRetrieve() *QueryTSRetrieve
 	NewTSCreate() *QueryTSCreate
 	NewMigrate() *QueryMigrate
+	AddQueryHook(hook QueryHook)
 	NewTasks(opts ...tasks.SchedulerOpt) tasks.Scheduler
+	hooks() []QueryHook
 	config() Config
 	adapter(e Engine) Adapter
 }
 
 type storage struct {
-	cfg  Config
-	pool *pool
+	cfg        Config
+	pool       *pool
+	queryHooks []QueryHook
 }
 
 // New creates a new Storage based on the provided Config.
@@ -130,6 +132,14 @@ func (s *storage) NewTasks(opts ...tasks.SchedulerOpt) tasks.Scheduler {
 	)
 }
 
+func (s *storage) AddQueryHook(hook QueryHook) {
+	s.queryHooks = append(s.queryHooks, hook)
+}
+
+func (s *storage) hooks() []QueryHook {
+	return s.queryHooks
+}
+
 func (s *storage) adapter(e Engine) (a Adapter) {
 	return s.pool.retrieve(e)
 }
@@ -146,17 +156,4 @@ type Config struct {
 	EngineMD     EngineMD
 	EngineObject EngineObject
 	EngineCache  EngineCache
-	Hooks        HooksConfig
-}
-
-type Hook func(rfl *model.Reflect) error
-
-type HooksConfig struct {
-	BeforeCreate     Hook
-	BeforeRetrieve   Hook
-	BeforeUpdate     Hook
-	BeforeDelete     Hook
-	BeforeTSRetrieve Hook
-	BeforeTSCreate   Hook
-	BeforeMigrate    Hook
 }

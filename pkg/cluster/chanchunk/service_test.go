@@ -61,7 +61,7 @@ var _ = Describe("Service", func() {
 		Expect(lisErr).To(BeNil())
 		port, pErr := strconv.Atoi(strings.Split(lis.Addr().String(), ":")[1])
 		Expect(pErr).To(BeNil())
-		node.GRPCPort = port
+		node.RPCPort = port
 		pool = clustermock.NewNodeRPCPool()
 		remoteSvc = chanchunk.NewServiceRemoteRPC(pool)
 		server = mock.NewServer()

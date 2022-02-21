@@ -2,7 +2,6 @@ package roach
 
 import (
 	"context"
-	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/uptrace/bun"
@@ -38,7 +37,7 @@ func (q *queryRetrieve) WherePKs(pks interface{}) storage.QueryMDRetrieve {
 	return q.where(q.baseSQL().pks(), bun.In(pks))
 }
 
-func (q *queryRetrieve) WhereFields(flds models.Fields) storage.QueryMDRetrieve {
+func (q *queryRetrieve) WhereFields(flds model.WhereFields) storage.QueryMDRetrieve {
 	for fldN, fldV := range flds {
 		relN, _ := model.SplitLastFieldName(fldN)
 		if relN != "" {

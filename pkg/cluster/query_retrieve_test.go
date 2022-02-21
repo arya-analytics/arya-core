@@ -54,7 +54,7 @@ var _ = Describe("QueryRetrieve", func() {
 		})
 		Context("WhereFields", func() {
 			It("Should set the correct fields", func() {
-				flds := models.Fields{"key": "value"}
+				flds := model.WhereFields{"key": "value"}
 				Expect(clus.NewRetrieve().Model(m).WhereFields(flds).Exec(ctx))
 				fldOpt, ok := internal.FieldsQueryOpt(svc.QueryRequest)
 				Expect(ok).To(BeTrue())

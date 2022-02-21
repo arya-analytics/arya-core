@@ -31,7 +31,7 @@ var (
 									gv.decommissioning, 
 									gv.membership, 
 									gv.updated_at,
-									n.grpc_port,
+									n.rpc_port,
 									n.id = nri.node_id is_host
 									FROM nodes n 
 									JOIN %s gn ON n.id = gn.node_id 

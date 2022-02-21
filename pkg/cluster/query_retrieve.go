@@ -3,7 +3,7 @@ package cluster
 import (
 	"context"
 	"github.com/arya-analytics/aryacore/pkg/cluster/internal"
-	"github.com/arya-analytics/aryacore/pkg/models"
+	"github.com/arya-analytics/aryacore/pkg/util/model"
 )
 
 type QueryRetrieve struct {
@@ -31,7 +31,7 @@ func (q *QueryRetrieve) WherePKs(pks interface{}) *QueryRetrieve {
 	return q
 }
 
-func (q *QueryRetrieve) WhereFields(flds models.Fields) *QueryRetrieve {
+func (q *QueryRetrieve) WhereFields(flds model.WhereFields) *QueryRetrieve {
 	internal.NewFieldsQueryOpt(q.baseQueryRequest(), flds)
 	return q
 }

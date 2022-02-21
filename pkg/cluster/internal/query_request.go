@@ -3,7 +3,6 @@ package internal
 import (
 	"context"
 	"fmt"
-	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"reflect"
 )
@@ -80,15 +79,15 @@ func NewPKQueryOpt(qr *QueryRequest, args ...interface{}) {
 
 const fieldQueryOptKey = "FieldQueryOpt"
 
-func FieldsQueryOpt(qr *QueryRequest) (models.Fields, bool) {
+func FieldsQueryOpt(qr *QueryRequest) (model.WhereFields, bool) {
 	qo, ok := qr.opts[fieldQueryOptKey]
 	if !ok {
-		return models.Fields{}, false
+		return model.WhereFields{}, false
 	}
-	return qo.(models.Fields), true
+	return qo.(model.WhereFields), true
 }
 
-func NewFieldsQueryOpt(q *QueryRequest, ops models.Fields) {
+func NewFieldsQueryOpt(q *QueryRequest, ops model.WhereFields) {
 	panicWhenAlreadySpecified(q, fieldQueryOptKey)
 	q.opts[fieldQueryOptKey] = ops
 }

@@ -11,7 +11,7 @@ type NodeRPCPool struct {
 }
 
 func (np *NodeRPCPool) Retrieve(node *models.Node) (*grpc.ClientConn, error) {
-	addr, err := node.GRPCAddress()
+	addr, err := node.RPCAddress()
 	if err != nil {
 		return nil, err
 	}

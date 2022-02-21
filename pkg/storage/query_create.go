@@ -13,7 +13,7 @@ type QueryCreate struct {
 
 func newCreate(s Storage) *QueryCreate {
 	c := &QueryCreate{}
-	c.baseInit(s, s.config().Hooks.BeforeCreate)
+	c.baseInit(s, c)
 	return c
 }
 
@@ -24,18 +24,19 @@ func newCreate(s Storage) *QueryCreate {
 // The model must contain all necessary values and satisfy any relationships.
 func (c *QueryCreate) Model(m interface{}) *QueryCreate {
 	c.baseBindModel(m)
-	c.baseRunHook()
 	c.setMDQuery(c.mdQuery().Model(c.modelRfl.Pointer()))
 	return c
 }
 
 // Exec executes the query with the provided context. Returns a storage.Error.
 func (c *QueryCreate) Exec(ctx context.Context) error {
+	c.baseRunBeforeHooks(ctx)
 	c.baseExec(func() error { return c.mdQuery().Exec(ctx) })
 	mp := c.modelRfl.Pointer()
 	if c.baseObjEngine().InCatalog(mp) {
 		c.baseExec(func() error { return c.objQuery().Model(mp).Exec(ctx) })
 	}
+	c.baseRunAfterHooks(ctx)
 	return c.baseErr()
 }
 

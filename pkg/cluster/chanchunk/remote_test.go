@@ -46,14 +46,14 @@ var _ = Describe("ServiceRemoteRPC", func() {
 		lisTwo, err := net.Listen("tcp", "localhost:0")
 
 		nodeOne = &models.Node{
-			ID:       1,
-			GRPCPort: lisPort(lisOne),
-			Address:  lisOne.Addr().String(),
+			ID:      1,
+			RPCPort: lisPort(lisOne),
+			Address: lisOne.Addr().String(),
 		}
 		nodeTwo = &models.Node{
-			ID:       1,
-			GRPCPort: lisPort(lisTwo),
-			Address:  lisTwo.Addr().String(),
+			ID:      1,
+			RPCPort: lisPort(lisTwo),
+			Address: lisTwo.Addr().String(),
 		}
 
 		Expect(err).To(BeNil())
