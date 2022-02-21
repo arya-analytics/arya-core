@@ -9,8 +9,8 @@ type Pool struct {
 	conns    map[string]*grpc.ClientConn
 }
 
-func NewPool(DialOpts ...grpc.DialOption) *Pool {
-	return &Pool{dialOpts: DialOpts, conns: map[string]*grpc.ClientConn{}}
+func NewPool(dialOpts ...grpc.DialOption) *Pool {
+	return &Pool{dialOpts: dialOpts, conns: map[string]*grpc.ClientConn{}}
 }
 
 func (p *Pool) Retrieve(target string) (conn *grpc.ClientConn, err error) {
