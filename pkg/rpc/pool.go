@@ -18,11 +18,15 @@ func (p *Pool) Retrieve(target string) (conn *grpc.ClientConn, err error) {
 	conn, ok = p.conns[target]
 	if !ok {
 		conn, err = p.newConn(target)
-		p.conns[target] = conn
+		p.addConn(target, conn)
 	}
 	return conn, err
 }
 
 func (p *Pool) newConn(addr string) (*grpc.ClientConn, error) {
 	return grpc.Dial(addr, p.dialOpts...)
+}
+
+func (p *Pool) addConn(target string, conn *grpc.ClientConn) func() {
+	p.conns[target] = conn
 }
