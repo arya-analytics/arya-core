@@ -27,6 +27,8 @@ type Node struct {
 	UpdatedAt       time.Time
 }
 
+// |||| VALUE ACCESSORS ||||
+
 func (n *Node) Host() string {
 	sn := strings.Split(n.Address, ":")
 	return sn[0]
@@ -38,6 +40,8 @@ func (n *Node) RPCAddress() (string, error) {
 	}
 	return fmt.Sprintf("%s:%v", n.Host(), n.RPCPort), nil
 }
+
+// |||| QUERY HOOK ||||
 
 type NodeQueryHook struct{}
 
