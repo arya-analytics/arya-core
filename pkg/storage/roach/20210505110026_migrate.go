@@ -23,7 +23,7 @@ var (
 	information on Node identity and status. This logic creates a view so that this
 	info can be accessed by the ORM. */
 	nodesViewSQL = fmt.Sprintf(`CREATE VIEW %s AS SELECT DISTINCT n.id,
-									gn.address as roach_address, 
+									gn.address,
 									gn.is_live, 
 									gn.started_at, 
 									gv.epoch, 

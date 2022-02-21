@@ -1,14 +1,17 @@
 package models
 
 import (
+	"errors"
+	"fmt"
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"github.com/google/uuid"
+	"strings"
 	"time"
 )
 
 type Node struct {
 	ID              int `model:"role:pk"`
-	RoachAddress    string
+	Address         string
 	GRPCPort        int `model:"role:grpc_port"`
 	StartedAt       time.Time
 	IsLive          bool
@@ -19,6 +22,18 @@ type Node struct {
 	Decommissioning bool
 	Membership      string
 	UpdatedAt       time.Time
+}
+
+func (n *Node) Host() string {
+	sn := strings.Split(n.Address, ":")
+	return sn[0]
+}
+
+func (n *Node) GRPCAddress() (string, error) {
+	if n.Host() == "" || n.GRPCPort == 0 {
+		return "", errors.New("node provided no address or grpc port")
+	}
+	return fmt.Sprintf("%s:%v", n.Host(), n.GRPCPort), nil
 }
 
 type Range struct {

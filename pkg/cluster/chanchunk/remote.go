@@ -2,7 +2,9 @@ package chanchunk
 
 import (
 	"context"
+	"github.com/arya-analytics/aryacore/pkg/cluster"
 	api "github.com/arya-analytics/aryacore/pkg/cluster/gen/proto/go/chanchunk/v1"
+	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/rpc"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"io"
@@ -15,17 +17,17 @@ type ServiceRemote interface {
 }
 
 type RemoteReplicaRetrieveOpts struct {
-	Addr string
+	Node *models.Node
 	PKC  model.PKChain
 }
 
 type RemoterReplicaCreateOpts struct {
-	Addr         string
+	Node         *models.Node
 	ChunkReplica interface{}
 }
 
 type RemoteReplicaDeleteOpts struct {
-	Addr string
+	Node *models.Node
 	PKC  model.PKChain
 }
 
@@ -42,22 +44,30 @@ func newExchange(m interface{}) *model.Exchange {
 }
 
 type ServiceRemoteRPC struct {
-	pool rpc.Pool
+	pool *cluster.NodeRPCPool
 }
 
-func NewServiceRemoteRPC(pool rpc.Pool) ServiceRemote {
+func NewServiceRemoteRPC(pool *cluster.NodeRPCPool) ServiceRemote {
 	return &ServiceRemoteRPC{pool: pool}
 }
 
-func (s *ServiceRemoteRPC) client(addr string) api.ChannelChunkServiceClient {
-	return api.NewChannelChunkServiceClient(s.pool.Retrieve(addr))
+func (s *ServiceRemoteRPC) client(node *models.Node) (api.ChannelChunkServiceClient, error) {
+	conn, err := s.pool.Retrieve(node)
+	if err != nil {
+		return nil, err
+	}
+	return api.NewChannelChunkServiceClient(conn), nil
 }
 
 func (s *ServiceRemoteRPC) RetrieveReplica(ctx context.Context, chunkReplica interface{}, qp []RemoteReplicaRetrieveOpts) error {
 	exc := newExchange(chunkReplica)
 	for _, params := range qp {
 		rq := &api.ChannelChunkServiceRetrieveReplicasRequest{Id: params.PKC.Strings()}
-		stream, err := s.client(params.Addr).RetrieveReplicas(ctx, rq)
+		client, err := s.client(params.Node)
+		if err != nil {
+			return err
+		}
+		stream, err := client.RetrieveReplicas(ctx, rq)
 		if err != nil {
 			return err
 		}
@@ -81,8 +91,11 @@ func (s *ServiceRemoteRPC) CreateReplica(ctx context.Context, qp []RemoterReplic
 	for _, params := range qp {
 		exc := newExchange(params.ChunkReplica)
 		exc.ToDest()
-
-		stream, err := s.client(params.Addr).CreateReplicas(ctx)
+		client, err := s.client(params.Node)
+		if err != nil {
+			return err
+		}
+		stream, err := client.CreateReplicas(ctx)
 		if err != nil {
 			return err
 		}
@@ -109,7 +122,11 @@ func (s *ServiceRemoteRPC) CreateReplica(ctx context.Context, qp []RemoterReplic
 func (s *ServiceRemoteRPC) DeleteReplica(ctx context.Context, qp []RemoteReplicaDeleteOpts) error {
 	for _, params := range qp {
 		req := &api.ChannelChunkServiceDeleteReplicasRequest{Id: params.PKC.Strings()}
-		if _, err := s.client(params.Addr).DeleteReplicas(ctx, req); err != nil {
+		client, err := s.client(params.Node)
+		if err != nil {
+			return err
+		}
+		if _, err := client.DeleteReplicas(ctx, req); err != nil {
 			return err
 		}
 	}
