@@ -61,7 +61,13 @@ type pkQueryOpt struct {
 	PKChain model.PKChain
 }
 
-func NewPKQueryOpt(qr *QueryRequest, pks interface{}) {
+func NewPKQueryOpt(qr *QueryRequest, pk interface{}) {
+	panicWhenAlreadySpecified(qr, pkQueryOptKey)
+	qo := pkQueryOpt{model.NewPKChain([]interface{}{pk})}
+	qr.opts[pkQueryOptKey] = qo
+}
+
+func NewPKsQueryOpt(qr *QueryRequest, pks interface{}) {
 	panicWhenAlreadySpecified(qr, pkQueryOptKey)
 	qo := pkQueryOpt{model.NewPKChain(pks)}
 	qr.opts[pkQueryOptKey] = qo

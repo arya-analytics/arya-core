@@ -53,6 +53,7 @@ var _ = Describe("Service", func() {
 			channelConfig,
 			rangeX,
 			rangeReplica,
+			channelChunk,
 		}
 	)
 	BeforeEach(func() {
@@ -95,83 +96,7 @@ var _ = Describe("Service", func() {
 			Expect(err).To(BeNil())
 		}
 	})
-	Describe("Channel Chunk", func() {
-		DescribeTable("Should Create + Retrieve + Delete correctly",
-			func(cc interface{}, resCC interface{}) {
-				rfl, resRfl := model.NewReflect(cc), model.NewReflect(resCC)
-				createQR := &internal.QueryRequest{
-					Variant: internal.QueryVariantCreate,
-					Model:   rfl,
-				}
-				By("Being able to handle the create query")
-				Expect(svc.CanHandle(createQR)).To(BeTrue())
-				By("Being able to execute the create query")
-				Expect(svc.Exec(ctx, createQR)).To(BeNil())
-
-				retrieveQR := internal.NewQueryRequest(
-					internal.QueryVariantRetrieve,
-					model.NewReflect(resCC),
-				)
-				internal.NewPKQueryOpt(retrieveQR, rfl.PKChain().Raw())
-				By("Being able to handle the retrieve query")
-				Expect(svc.CanHandle(retrieveQR)).To(BeTrue())
-
-				By("Executing the retrieve query")
-				Expect(svc.Exec(ctx, retrieveQR)).To(BeNil())
-
-				By("Retrieving the correct item")
-				Expect(resRfl.PKChain()).To(Equal(rfl.PKChain()))
-
-				deleteQR := internal.NewQueryRequest(
-					internal.QueryVariantDelete,
-					resRfl,
-				)
-				internal.NewPKQueryOpt(deleteQR, rfl.PKChain().Raw())
-
-				By("Being able to handle the delete query")
-				Expect(svc.CanHandle(deleteQR)).To(BeTrue())
-
-				By("Executing the delete query")
-				Expect(svc.Exec(ctx, deleteQR)).To(BeNil())
-
-				resCCTwo := &models.ChannelChunk{}
-				retrieveQRTwo := internal.NewQueryRequest(
-					internal.QueryVariantRetrieve,
-					model.NewReflect(resCCTwo),
-				)
-				internal.NewPKQueryOpt(retrieveQRTwo, rfl.PKChain()[0].Raw())
-
-				By("Not being able to be re-retrieved")
-				rTwoErr := svc.Exec(ctx, retrieveQR)
-				if rTwoErr != nil {
-					Expect(rTwoErr.(storage.Error).Type).To(Equal(storage.ErrorTypeItemNotFound))
-				} else {
-					Expect(model.NewPK(resCCTwo.ID).IsZero()).To(BeTrue())
-				}
-			},
-			Entry("Single Chunk", channelChunk, &models.ChannelChunk{}),
-			Entry("Slice of Chunks", &[]*models.ChannelChunk{channelChunk}, &[]*models.ChannelChunk{}),
-		)
-	})
 	Describe("Channel Chunk Replica", func() {
-		JustBeforeEach(func() {
-			chunkCreateQR := internal.NewQueryRequest(
-				internal.QueryVariantCreate,
-				model.NewReflect(channelChunk),
-			)
-			Expect(svc.CanHandle(chunkCreateQR)).To(BeTrue())
-			Expect(svc.Exec(ctx, chunkCreateQR)).To(BeNil())
-		})
-		JustAfterEach(func() {
-			deleteQR := internal.NewQueryRequest(
-				internal.QueryVariantDelete,
-				model.NewReflect(channelChunk),
-			)
-			internal.NewPKQueryOpt(deleteQR, channelChunk.ID)
-			Expect(svc.CanHandle(deleteQR)).To(BeTrue())
-			err := svc.Exec(ctx, deleteQR)
-			Expect(err).To(BeNil())
-		})
 		DescribeTable("Should Create + Retrieve + Delete the chunk replica correctly",
 			func(cc interface{}, resCC interface{}) {
 				rfl, resRfl := model.NewReflect(cc), model.NewReflect(resCC)

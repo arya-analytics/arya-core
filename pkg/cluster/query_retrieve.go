@@ -22,12 +22,12 @@ func (q *QueryRetrieve) Model(m interface{}) *QueryRetrieve {
 }
 
 func (q *QueryRetrieve) WherePK(pk interface{}) *QueryRetrieve {
-	internal.NewPKQueryOpt(q.baseQueryRequest(), []interface{}{pk})
+	internal.NewPKQueryOpt(q.baseQueryRequest(), pk)
 	return q
 }
 
 func (q *QueryRetrieve) WherePKs(pks interface{}) *QueryRetrieve {
-	internal.NewPKQueryOpt(q.baseQueryRequest(), pks)
+	internal.NewPKsQueryOpt(q.baseQueryRequest(), pks)
 	return q
 }
 

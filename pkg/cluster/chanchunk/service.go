@@ -6,7 +6,6 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/route"
-	"reflect"
 )
 
 type Service struct {
@@ -23,56 +22,11 @@ func (s *Service) CanHandle(q *internal.QueryRequest) bool {
 }
 
 func (s *Service) Exec(ctx context.Context, qr *internal.QueryRequest) error {
-	switch qr.Model.Type() {
-	case reflect.TypeOf(models.ChannelChunk{}):
-		return internal.SwitchQueryRequestVariant(ctx, qr, internal.QueryRequestVariantOperations{
-			internal.QueryVariantCreate:   s.createChunk,
-			internal.QueryVariantRetrieve: s.retrieveChunk,
-			internal.QueryVariantUpdate:   s.updateChunk,
-			internal.QueryVariantDelete:   s.deleteChunk,
-		})
-	case reflect.TypeOf(models.ChannelChunkReplica{}):
-		return internal.SwitchQueryRequestVariant(ctx, qr, internal.QueryRequestVariantOperations{
-			internal.QueryVariantCreate:   s.createReplica,
-			internal.QueryVariantRetrieve: s.retrieveReplica,
-			internal.QueryVariantDelete:   s.deleteReplica,
-		})
-	default:
-		panic("channel chunk service received an unknown model type!")
-	}
-}
-
-// |||| CHUNK ||||
-
-func (s *Service) createChunk(ctx context.Context, qr *internal.QueryRequest) error {
-	return s.local.CreateChunk(ctx, qr.Model.Pointer())
-}
-
-func (s *Service) retrieveChunk(ctx context.Context, qr *internal.QueryRequest) error {
-	PKC, ok := internal.PKQueryOpt(qr)
-	if !ok {
-		panic("retrieve queries require a primary key!")
-	}
-	return s.local.RetrieveChunk(ctx, qr.Model.Pointer(), LocalChunkRetrieveOpts{PKC: PKC})
-}
-
-func (s *Service) updateChunk(ctx context.Context, qr *internal.QueryRequest) error {
-	PKC, ok := internal.PKQueryOpt(qr)
-	if !ok {
-		panic("update queries require a primary key!")
-	}
-	if len(PKC) > 1 {
-		panic("update query cannot have more than one primary key!")
-	}
-	return s.local.UpdateChunk(ctx, qr.Model.Pointer(), LocalChunkUpdateOpts{PK: PKC[0]})
-}
-
-func (s *Service) deleteChunk(ctx context.Context, qr *internal.QueryRequest) error {
-	PKC, ok := internal.PKQueryOpt(qr)
-	if !ok {
-		panic("delete queries require a primary key!")
-	}
-	return s.local.DeleteChunk(ctx, LocalChunkDeleteOpts{PKC: PKC})
+	return internal.SwitchQueryRequestVariant(ctx, qr, internal.QueryRequestVariantOperations{
+		internal.QueryVariantCreate:   s.createReplica,
+		internal.QueryVariantRetrieve: s.retrieveReplica,
+		internal.QueryVariantDelete:   s.deleteReplica,
+	})
 }
 
 // |||| REPLICA ||||
