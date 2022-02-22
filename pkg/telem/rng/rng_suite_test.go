@@ -14,14 +14,10 @@ var (
 	clust *mock.Cluster
 )
 
-var _ = BeforeSuite(func() {
-	//var err error
-	//clust, err = mock.New(ctx)
-	//Expect(err).To(BeNil())
-})
-
 var _ = AfterSuite(func() {
-	//clust.Stop()
+	if clust != nil {
+		clust.Stop()
+	}
 })
 
 func TestRng(t *testing.T) {
