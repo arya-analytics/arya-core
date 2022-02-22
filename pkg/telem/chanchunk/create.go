@@ -1,4 +1,4 @@
-package bulk
+package chanchunk
 
 type Create struct {
 }

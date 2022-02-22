@@ -31,6 +31,11 @@ func (q *QueryRetrieve) WherePKs(pks interface{}) *QueryRetrieve {
 	return q
 }
 
+func (q *QueryRetrieve) Relation(rel string, fields ...string) *QueryRetrieve {
+	internal.NewRelationQueryOpt(q.baseQueryRequest(), rel, fields...)
+	return q
+}
+
 func (q *QueryRetrieve) WhereFields(flds model.WhereFields) *QueryRetrieve {
 	internal.NewFieldsQueryOpt(q.baseQueryRequest(), flds)
 	return q

@@ -21,7 +21,7 @@ func (q *QueryUpdate) Model(m interface{}) *QueryUpdate {
 }
 
 func (q *QueryUpdate) WherePK(pk interface{}) *QueryUpdate {
-	internal.NewPKQueryOpt(q.baseQueryRequest(), pk)
+	internal.NewPKQueryOpt(q.baseQueryRequest(), []interface{}{pk})
 	return q
 }
 

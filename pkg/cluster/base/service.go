@@ -39,14 +39,27 @@ func (s *Service) create(ctx context.Context, qr *internal.QueryRequest) error {
 
 func (s *Service) retrieve(ctx context.Context, qr *internal.QueryRequest) error {
 	q := s.storage.NewRetrieve().Model(qr.Model.Pointer())
+
+	// PK
+
 	PKC, ok := internal.PKQueryOpt(qr)
 	if ok {
 		q.WherePKs(PKC.Raw())
 	}
+
+	// FIELDS
+
 	flds, ok := internal.FieldsQueryOpt(qr)
 	if ok {
 		q.WhereFields(flds)
 	}
+
+	// RELATIONS
+
+	for _, rel := range internal.RelationQueryOpts(qr) {
+		q.Relation(rel.Rel, rel.Fields...)
+	}
+
 	return q.Exec(ctx)
 }
 
@@ -78,5 +91,6 @@ func catalog() model.Catalog {
 		&models.RangeReplica{},
 		&models.RangeLease{},
 		&models.ChannelConfig{},
+		&models.ChannelChunk{},
 	}
 }

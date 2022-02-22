@@ -194,5 +194,5 @@ func buildRemoteReplicaDeleteOpts(remoteCCR *model.Reflect) (opts []RemoteReplic
 // |||| CATALOG ||||
 
 func catalog() model.Catalog {
-	return model.Catalog{&models.ChannelChunk{}, &models.ChannelChunkReplica{}}
+	return model.Catalog{&models.ChannelChunkReplica{}}
 }

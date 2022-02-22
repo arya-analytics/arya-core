@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
-	"reflect"
 )
 
 // |||| REQUEST ||||
@@ -62,15 +61,8 @@ type pkQueryOpt struct {
 	PKChain model.PKChain
 }
 
-func NewPKQueryOpt(qr *QueryRequest, args ...interface{}) {
+func NewPKQueryOpt(qr *QueryRequest, pks interface{}) {
 	panicWhenAlreadySpecified(qr, pkQueryOptKey)
-
-	// Handling a single vs multi PK query
-	pks := args[0]
-	if reflect.TypeOf(args[0]).Kind() != reflect.Slice {
-		pks = args
-	}
-
 	qo := pkQueryOpt{model.NewPKChain(pks)}
 	qr.opts[pkQueryOptKey] = qo
 }
@@ -100,4 +92,31 @@ func SwitchQueryRequestVariant(ctx context.Context, qr *QueryRequest, qrvo Query
 		panic(fmt.Sprintf("%s not supported for model %s", qr.Variant, qr.Model.Type().Name()))
 	}
 	return op(ctx, qr)
+}
+
+// || RELATION ||
+
+type RelationQueryOpt struct {
+	Rel    string
+	Fields []string
+}
+
+const relationQueryOptKey = "RelationQueryOpt"
+
+func NewRelationQueryOpt(qr *QueryRequest, rel string, fields ...string) {
+	rq := RelationQueryOpt{rel, fields}
+	_, ok := qr.opts[relationQueryOptKey]
+	if !ok {
+		qr.opts[relationQueryOptKey] = []RelationQueryOpt{rq}
+	} else {
+		qr.opts[relationQueryOptKey] = append(qr.opts[relationQueryOptKey].([]RelationQueryOpt), rq)
+	}
+}
+
+func RelationQueryOpts(qr *QueryRequest) []RelationQueryOpt {
+	opts, ok := qr.opts[relationQueryOptKey]
+	if !ok {
+		return []RelationQueryOpt{}
+	}
+	return opts.([]RelationQueryOpt)
 }

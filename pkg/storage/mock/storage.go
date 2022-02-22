@@ -15,7 +15,7 @@ type Storage struct {
 	DriverMinio DriverMinio
 }
 
-func (s Storage) Stop() {
+func (s *Storage) Stop() {
 	s.DriverRoach.Stop()
 }
 

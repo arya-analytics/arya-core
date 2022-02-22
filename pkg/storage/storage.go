@@ -13,7 +13,7 @@
 // Engines (Engine) can fulfill one of three roles:
 //
 // EngineMD - Reads and writes lightweight, strongly consistent data to storage.
-// EngineObject - Saves bulk data to node localstorage data storage.
+// EngineObject - Saves chanchunk data to node localstorage data storage.
 // EngineCache - High speed cache that can read and write time series data.
 //
 // Initialization

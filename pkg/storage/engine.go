@@ -47,7 +47,7 @@ type EngineMD interface {
 
 // || OBJECT ||
 
-// EngineObject is responsible for storing bulk data to node localstorage data storage.
+// EngineObject is responsible for storing chanchunk data to node localstorage data storage.
 type EngineObject interface {
 	Engine
 	// NewRetrieve opens a new QueryObjectRetrieve.

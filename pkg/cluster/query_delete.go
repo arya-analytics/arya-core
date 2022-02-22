@@ -21,7 +21,7 @@ func (q *QueryDelete) Model(m interface{}) *QueryDelete {
 }
 
 func (q *QueryDelete) WherePK(pk interface{}) *QueryDelete {
-	internal.NewPKQueryOpt(q.baseQueryRequest(), pk)
+	internal.NewPKQueryOpt(q.baseQueryRequest(), []interface{}{pk})
 	return q
 }
 
