@@ -1,6 +1,7 @@
 package storage_test
 
 import (
+	"errors"
 	"fmt"
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	. "github.com/onsi/ginkgo/v2"
@@ -10,8 +11,8 @@ import (
 var _ = Describe("errChan", func() {
 	Context("Error string", func() {
 		It("Should return the correct string", func() {
-			err := storage.Error{Type: storage.ErrorTypeUnknown, Message: "Unknown Error"}
-			Expect(err.Error()).To(Equal("storage: ErrorTypeUnknown - Unknown Error"))
+			err := storage.Error{Type: storage.ErrorTypeUnknown, Message: "Unknown Error", Base: errors.New("unknown error")}
+			Expect(err.Error()).To(Equal("storage: ErrorTypeUnknown - Unknown Error - unknown error"))
 		})
 	})
 	Context("Error FieldHandlers", func() {
