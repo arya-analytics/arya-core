@@ -3,6 +3,7 @@ package internal
 import (
 	"context"
 	"fmt"
+	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 )
 
@@ -147,6 +148,30 @@ func RelationQueryOpts(qr *QueryRequest) []RelationQueryOpt {
 		return []RelationQueryOpt{}
 	}
 	return opts.([]RelationQueryOpt)
+}
+
+// || CALCULATE ||
+
+const calculateOptKey = "CalculateQueryOpt"
+
+type CalculateQueryOpt struct {
+	C       storage.Calculate
+	FldName string
+	Into    interface{}
+}
+
+func NewCalculateQueryOpt(qr *QueryRequest, c storage.Calculate, fldName string, into interface{}) {
+	panicWhenAlreadySpecified(qr, calculateOptKey)
+	qo := CalculateQueryOpt{C: c, FldName: fldName, Into: into}
+	qr.opts[calculateOptKey] = qo
+}
+
+func RetrieveCalculateQueryOpt(qr *QueryRequest) (CalculateQueryOpt, bool) {
+	qo, ok := qr.opts[calculateOptKey]
+	if !ok {
+		return CalculateQueryOpt{}, false
+	}
+	return qo.(CalculateQueryOpt), true
 }
 
 type QueryRequestVariantOperations map[QueryVariant]ServiceOperation

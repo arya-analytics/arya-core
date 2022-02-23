@@ -5,6 +5,7 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/cluster/internal"
 	"github.com/arya-analytics/aryacore/pkg/cluster/mock"
 	"github.com/arya-analytics/aryacore/pkg/models"
+	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
@@ -77,6 +78,16 @@ var _ = Describe("QueryRetrieve", func() {
 				Expect(ok).To(BeTrue())
 				Expect(fldOpt).To(Equal(internal.FieldsQueryOpt{"ID", "RandomField"}))
 
+			})
+		})
+		Context("Calculations", func() {
+			It("Should set the correct calculations", func() {
+				Expect(clus.NewRetrieve().Model(m).Calculate(storage.CalculateAVG, "ID", 0).Exec(ctx)).To(BeNil())
+				calcOpt, ok := internal.RetrieveCalculateQueryOpt(svc.QueryRequest)
+				Expect(ok).To(BeTrue())
+				Expect(calcOpt.Into).To(Equal(0))
+				Expect(calcOpt.FldName).To(Equal("ID"))
+				Expect(calcOpt.C).To(Equal(storage.CalculateAVG))
 			})
 		})
 	})

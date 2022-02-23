@@ -67,6 +67,13 @@ func (s *Service) retrieve(ctx context.Context, qr *internal.QueryRequest) error
 		q.Relation(rel.Rel, rel.Fields...)
 	}
 
+	// CALCULATIONS
+
+	calc, ok := internal.RetrieveCalculateQueryOpt(qr)
+	if ok {
+		q.Calculate(calc.C, calc.FldName, calc.Into)
+	}
+
 	return q.Exec(ctx)
 }
 

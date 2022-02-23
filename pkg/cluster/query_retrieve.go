@@ -3,6 +3,7 @@ package cluster
 import (
 	"context"
 	"github.com/arya-analytics/aryacore/pkg/cluster/internal"
+	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 )
 
@@ -33,6 +34,11 @@ func (q *QueryRetrieve) WherePKs(pks interface{}) *QueryRetrieve {
 
 func (q *QueryRetrieve) Fields(flds ...string) *QueryRetrieve {
 	internal.NewFieldsQueryOpt(q.baseQueryRequest(), flds...)
+	return q
+}
+
+func (q *QueryRetrieve) Calculate(c storage.Calculate, fldName string, into interface{}) *QueryRetrieve {
+	internal.NewCalculateQueryOpt(q.baseQueryRequest(), c, fldName, into)
 	return q
 }
 
