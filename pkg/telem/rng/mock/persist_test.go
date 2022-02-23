@@ -90,6 +90,7 @@ var _ = Describe("Persist", func() {
 				repls, err := op.RetrieveRangeReplicas(ctx, rngID)
 				Expect(err).To(BeNil())
 				Expect(len(repls)).To(BeNumerically(">", 0))
+				Expect(repls[0].NodeID).To(BeNumerically(">", 0))
 
 			})
 		})

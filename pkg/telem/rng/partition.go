@@ -64,8 +64,9 @@ func (p *Partition) Exec(ctx context.Context) ([]*models.Range, error) {
 				newRR = &models.RangeReplica{ID: uuid.New(), RangeID: newRange.ID, NodeID: rr.NodeID}
 				newRangeReplicas = append(newRangeReplicas, newRR)
 				reallocatedChunkReplicas[newRR.ID] = []uuid.UUID{ccr.ID}
+			} else {
+				reallocatedChunkReplicas[newRR.ID] = append(reallocatedChunkReplicas[newRR.ID], ccr.ID)
 			}
-			reallocatedChunkReplicas[newRR.ID] = append(reallocatedChunkReplicas[newRR.ID], ccr.ID)
 		}
 	}
 

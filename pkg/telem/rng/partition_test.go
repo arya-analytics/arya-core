@@ -13,18 +13,32 @@ import (
 var _ = Describe("Partition", func() {
 	Context("Over allocated range", func() {
 		var (
-			p                rng.Persist
-			rngId            uuid.UUID
-			part             *rng.Partition
-			newRanges        []*models.Range
-			sourceChunkCount int
+			p                         rng.Persist
+			rngId                     uuid.UUID
+			part                      *rng.Partition
+			newRanges                 []*models.Range
+			sourceChunkReplicaNodeIDs map[uuid.UUID]int
+			sourceChunkCount          int
+			sourceChunkReplicaCount   int
 		)
 		BeforeEach(func() {
+			sourceChunkReplicaNodeIDs = map[uuid.UUID]int{}
 			p, rngId = mock.NewPersistOverallocatedRange()
 			part = &rng.Partition{RangeID: rngId, Persist: p}
 			chunks, err := p.RetrieveRangeChunks(ctx, rngId)
 			Expect(err).To(BeNil())
+			rangeReplicas, err := p.RetrieveRangeReplicas(ctx, rngId)
+			Expect(err).To(BeNil())
 			sourceChunkCount = len(chunks)
+			chunkReplicas, err := p.RetrieveRangeChunkReplicas(ctx, rngId)
+			Expect(len(chunkReplicas)).To(BeNumerically(">", 0))
+			for _, ccr := range chunkReplicas {
+				rr, ok := findRangeReplica(ccr.RangeReplicaID, rangeReplicas)
+				Expect(ok).To(BeTrue())
+				sourceChunkReplicaNodeIDs[ccr.ID] = rr.NodeID
+			}
+			Expect(err).To(BeNil())
+			sourceChunkReplicaCount = len(chunkReplicas)
 			newRanges, err = part.Exec(ctx)
 			Expect(err).To(BeNil())
 
@@ -81,6 +95,21 @@ var _ = Describe("Partition", func() {
 				newReplicas, err := p.RetrieveRangeReplicas(ctx, newRanges[0].ID)
 				Expect(len(newReplicas)).To(Equal(len(sourceReplicas)))
 			})
+			Specify("The node ID of each new range replica must the same as the original replica", func() {
+				sourceReplicas, err := p.RetrieveRangeReplicas(ctx, rngId)
+				Expect(err).To(BeNil())
+				newReplicas, err := p.RetrieveRangeReplicas(ctx, newRanges[0].ID)
+				Expect(err).To(BeNil())
+				for _, newRR := range newReplicas {
+					match := false
+					for _, sourceRR := range sourceReplicas {
+						if newRR.NodeID == sourceRR.NodeID {
+							match = true
+						}
+					}
+					Expect(match).To(BeTrue())
+				}
+			})
 		})
 		Context("Reallocated chunks", func() {
 			Specify("The amount of chunks in the source range and the new range should equal the total chunks", func() {
@@ -91,5 +120,37 @@ var _ = Describe("Partition", func() {
 				Expect(len(sourceChunks) + len(newChunks)).To(Equal(sourceChunkCount))
 			})
 		})
+		Context("Reallocated Chunk Replicas", func() {
+			Specify("The amount of chunk replicas should remain the same", func() {
+				sourceCCRs, err := p.RetrieveRangeChunkReplicas(ctx, rngId)
+				Expect(err).To(BeNil())
+				newCCRs, err := p.RetrieveRangeChunkReplicas(ctx, newRanges[0].ID)
+				Expect(len(sourceCCRs)).To(BeNumerically("<", sourceChunkReplicaCount))
+				Expect(len(sourceCCRs) + len(newCCRs)).To(Equal(sourceChunkReplicaCount))
+			})
+			Specify("Each reallocated chunk replica should belong to the same node as it did before realloc", func() {
+				newReplicas, err := p.RetrieveRangeReplicas(ctx, newRanges[0].ID)
+				Expect(err).To(BeNil())
+				newCCRs, err := p.RetrieveRangeChunkReplicas(ctx, newRanges[0].ID)
+				Expect(err).To(BeNil())
+				for _, newCCR := range newCCRs {
+					repl, ok := findRangeReplica(newCCR.RangeReplicaID, newReplicas)
+					Expect(ok).To(BeTrue())
+					sourceNodeID, ok := sourceChunkReplicaNodeIDs[newCCR.ID]
+					Expect(ok).To(BeTrue())
+					Expect(repl.NodeID).To(Equal(sourceNodeID))
+				}
+			})
+
+		})
 	})
 })
+
+func findRangeReplica(rangeReplicaID uuid.UUID, rangeReplicas []*models.RangeReplica) (*models.RangeReplica, bool) {
+	for _, rr := range rangeReplicas {
+		if rr.ID == rangeReplicaID {
+			return rr, true
+		}
+	}
+	return nil, false
+}
