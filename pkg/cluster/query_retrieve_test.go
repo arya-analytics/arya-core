@@ -75,7 +75,7 @@ var _ = Describe("QueryRetrieve", func() {
 				Expect(clus.NewRetrieve().Model(m).Fields("ID", "RandomField").Exec(ctx)).To(BeNil())
 				fldOpt, ok := internal.RetrieveFieldsQueryOpt(svc.QueryRequest)
 				Expect(ok).To(BeTrue())
-				Expect(fldOpt).To(Equal([]string{"ID", "RandomField"}))
+				Expect(fldOpt).To(Equal(internal.FieldsQueryOpt{"ID", "RandomField"}))
 
 			})
 		})
