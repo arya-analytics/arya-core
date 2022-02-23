@@ -63,11 +63,12 @@ var _ = Describe("Persist", func() {
 			op    *mock.Persist
 		)
 		BeforeEach(func() {
-			rngID, op = mock.NewPersistOverallocatedRange()
+			op, rngID = mock.NewPersistOverallocatedRange()
 		})
 		Describe("Retrieve Range Size", func() {
 			It("Should retrieve the correct range size", func() {
 				Expect(op.RetrieveRangeSize(ctx, rngID)).To(BeNumerically(">", models.MaxRangeSize))
+				Expect(op.RetrieveRangeSize(ctx, rngID)).To(BeNumerically("<", float64(models.MaxRangeSize)*1.28))
 			})
 		})
 		Describe("Retrieve Range Chunks", func() {
@@ -101,6 +102,8 @@ var _ = Describe("Persist", func() {
 				reChunks, err := op.RetrieveRangeChunks(ctx, newRng.ID)
 				Expect(len(reChunks)).To(Equal(len(orChunks)))
 				Expect(reChunks[0].RangeID).To(Equal(newRng.ID))
+				size, err := op.RetrieveRangeSize(ctx, rngID)
+				Expect(size).To(BeNumerically("<", models.MaxRangeSize))
 			})
 		})
 		Describe("Reallocate Chunk Replicas", func() {
@@ -115,6 +118,7 @@ var _ = Describe("Persist", func() {
 				Expect(err).To(BeNil())
 				reReplicas, err := op.RetrieveRangeChunkReplicas(ctx, newRng.ID)
 				Expect(len(reReplicas)).To(Equal(len(orChunkReplicas)))
+
 			})
 		})
 	})

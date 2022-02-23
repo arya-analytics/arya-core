@@ -83,7 +83,7 @@ func (p *Persist) RetrieveRange(ctx context.Context, ID uuid.UUID) (*models.Rang
 }
 
 func (p *Persist) RetrieveRangeSize(ctx context.Context, ID uuid.UUID) (int64, error) {
-	var size int64
+	var size int64 = 0
 	for _, cc := range p.Chunks {
 		if cc.RangeID == ID {
 			size += cc.Size
@@ -159,7 +159,7 @@ func (p *Persist) RetrieveRangeReplicas(ctx context.Context, rngID uuid.UUID) ([
 	return rangeReplicas, nil
 }
 
-func NewPersistOverallocatedRange() (uuid.UUID, *Persist) {
+func NewPersistOverallocatedRange() (*Persist, uuid.UUID) {
 	rng := &models.Range{
 		ID: uuid.New(),
 	}
@@ -185,12 +185,16 @@ func NewPersistOverallocatedRange() (uuid.UUID, *Persist) {
 	var chunks []*models.ChannelChunk
 	var chunkReplicas []*models.ChannelChunkReplica
 	for float64(size) < float64(models.MaxRangeSize)*1.25 {
-		chunkSize := rand.Int63n(int64(float64(models.MaxRangeSize) * 0.02))
+		chunkSize := rand.Int63n(models.MaxChunkSize)
+		//log.Info(chunkSize)
+		//log.Info(size)
+		//log.Info(models.MaxRangeSize)
+		//log.Info(size < models.MaxRangeSize)
 		size += chunkSize
 		chunk := &models.ChannelChunk{
 			ID:      uuid.New(),
 			RangeID: rng.ID,
-			Size:    size,
+			Size:    chunkSize,
 		}
 		for i := 0; i < 3; i++ {
 			chunkReplicas = append(chunkReplicas,
@@ -211,5 +215,5 @@ func NewPersistOverallocatedRange() (uuid.UUID, *Persist) {
 		ChunkReplicas: chunkReplicas,
 		RangeLeases:   []*models.RangeLease{lease},
 	}
-	return rng.ID, p
+	return p, rng.ID
 }

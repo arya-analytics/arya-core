@@ -7,31 +7,15 @@ import (
 )
 
 type Partition struct {
-	Persist Persist
-	RangeID uuid.UUID
+	Persist   Persist
+	RangeID   uuid.UUID
+	NewRanges []*models.Range
 }
 
-/* Order of opts
-
-1. Retrieve the size of the leaseholder range replica
-
-// If we need to partition
-
-2. Retrieve all chunks belonging to the leaseholder range
-
-3. For all chunks
-	1. Reassign the chunk to the new range
-
-3. Retrieve all chunk replicas belonging to the reassigned chunk
-	2. Reassing teh chunk replicas to the new range replicas
-
-4. save everything and return values
-*/
-
-func (p *Partition) Exec(ctx context.Context) (*models.Range, error) {
+func (p *Partition) Exec(ctx context.Context) ([]*models.Range, error) {
 	size, err := p.Persist.RetrieveRangeSize(ctx, p.RangeID)
 	if size < models.MaxRangeSize || err != nil {
-		return nil, nil
+		return p.NewRanges, nil
 	}
 
 	sourceRange, err := p.Persist.RetrieveRange(ctx, p.RangeID)
@@ -45,7 +29,10 @@ func (p *Partition) Exec(ctx context.Context) (*models.Range, error) {
 	}
 
 	var reallocatedChunkIDS []uuid.UUID
-	for i := 0; size > models.MaxRangeSize; i++ {
+	for i := 0; i < len(chunks); i++ {
+		if size < models.MaxRangeSize {
+			break
+		}
 		c := chunks[i]
 		reallocatedChunkIDS = append(reallocatedChunkIDS, c.ID)
 		size -= c.Size
@@ -64,7 +51,7 @@ func (p *Partition) Exec(ctx context.Context) (*models.Range, error) {
 		return nil, err
 	}
 
-	var reallocatedChunkReplicas map[uuid.UUID][]uuid.UUID
+	reallocatedChunkReplicas := map[uuid.UUID][]uuid.UUID{}
 	for _, ID := range reallocatedChunkIDS {
 		ccrs := findChunkReplicas(ID, chunkReplicas)
 		for _, ccr := range ccrs {
@@ -95,7 +82,7 @@ func (p *Partition) Exec(ctx context.Context) (*models.Range, error) {
 	if err := p.Persist.CreateRange(ctx, newRange); err != nil {
 		return nil, err
 	}
-	if err := p.Persist.CreateRangeReplica(ctx, newRangeReplicas); err != nil {
+	if err := p.Persist.CreateRangeReplica(ctx, &newRangeReplicas); err != nil {
 		return nil, err
 	}
 	if err := p.Persist.CreateRangeLease(ctx, newLease); err != nil {
@@ -112,7 +99,9 @@ func (p *Partition) Exec(ctx context.Context) (*models.Range, error) {
 
 	newLease.RangeReplica = newLeaseReplica
 	newRange.RangeLease = newLease
-	return newRange, nil
+	p.NewRanges = append(p.NewRanges, newRange)
+	nextP := &Partition{Persist: p.Persist, RangeID: newRange.ID, NewRanges: p.NewRanges}
+	return nextP.Exec(ctx)
 }
 
 func (p *Partition) rangeExceedsMaxSize(ctx context.Context) (bool, error) {
