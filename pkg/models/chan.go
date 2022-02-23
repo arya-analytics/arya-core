@@ -13,6 +13,8 @@ type ChannelConfig struct {
 	DataRate int
 }
 
+const MaxChunkSize = 2e7
+
 type ChannelChunk struct {
 	ID              uuid.UUID `model:"role:pk,"`
 	Range           *Range
