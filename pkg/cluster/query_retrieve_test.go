@@ -73,7 +73,7 @@ var _ = Describe("QueryRetrieve", func() {
 		Context("Fields", func() {
 			It("Should set the correct fields", func() {
 				Expect(clus.NewRetrieve().Model(m).Fields("ID", "RandomField").Exec(ctx)).To(BeNil())
-				fldOpt, ok := internal.FieldsQueryOpt(svc.QueryRequest)
+				fldOpt, ok := internal.RetrieveFieldsQueryOpt(svc.QueryRequest)
 				Expect(ok).To(BeTrue())
 				Expect(fldOpt).To(Equal([]string{"ID", "RandomField"}))
 

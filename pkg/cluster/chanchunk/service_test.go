@@ -46,7 +46,6 @@ var _ = Describe("Service", func() {
 		channelChunkReplica = &models.ChannelChunkReplica{
 			RangeReplicaID: rangeReplica.ID,
 			ChannelChunkID: channelChunk.ID,
-			Telem:          telem.NewBulk([]byte{}),
 		}
 		items = []interface{}{
 			node,
@@ -57,6 +56,7 @@ var _ = Describe("Service", func() {
 		}
 	)
 	BeforeEach(func() {
+		channelChunkReplica.Telem = telem.NewBulk([]byte("randomdata"))
 		var lisErr error
 		lis, lisErr = net.Listen("tcp", "localhost:0")
 		Expect(lisErr).To(BeNil())
@@ -122,6 +122,9 @@ var _ = Describe("Service", func() {
 
 				By("Retrieving the correct item")
 				Expect(resRfl.PKChain()).To(Equal(rfl.PKChain()))
+				resRflItem, ok := resRfl.ValueByPK(resRfl.PKChain()[0])
+				Expect(ok).To(BeTrue())
+				Expect(resRflItem.Pointer().(*models.ChannelChunkReplica).Telem.Bytes()).To(Equal([]byte("randomdata")))
 
 				deleteQR := internal.NewQueryRequest(
 					internal.QueryVariantDelete,

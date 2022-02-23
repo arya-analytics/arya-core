@@ -92,24 +92,34 @@ func NewWhereFieldsQueryOpt(q *QueryRequest, ops model.WhereFields) {
 
 // || FIELDS ||
 
-const fieldsQueryOptkey = "FieldsQueryOpt"
+const fieldsQueryOptkey = "RetrieveFieldsQueryOpt"
 
-type fieldsQueryOpt struct {
-	Fields []string
+type FieldsQueryOpt []string
+
+func (fqo FieldsQueryOpt) ContainsAny(flds ...string) (contains bool) {
+	for _, qFld := range flds {
+		for _, fld := range fqo {
+			if qFld == fld {
+				contains = true
+			}
+		}
+	}
+	return contains
 }
 
 func NewFieldsQueryOpt(qr *QueryRequest, flds ...string) {
 	panicWhenAlreadySpecified(qr, fieldsQueryOptkey)
-	qo := fieldsQueryOpt{Fields: flds}
+	qo := FieldsQueryOpt{}
+	qo = append(qo, flds...)
 	qr.opts[fieldsQueryOptkey] = qo
 }
 
-func FieldsQueryOpt(qr *QueryRequest) ([]string, bool) {
+func RetrieveFieldsQueryOpt(qr *QueryRequest) (FieldsQueryOpt, bool) {
 	qo, ok := qr.opts[fieldsQueryOptkey]
 	if !ok {
-		return []string{}, false
+		return FieldsQueryOpt{}, false
 	}
-	return qo.(fieldsQueryOpt).Fields, true
+	return qo.(FieldsQueryOpt), true
 }
 
 // || RELATION ||

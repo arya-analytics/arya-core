@@ -56,7 +56,7 @@ func (s *Service) retrieve(ctx context.Context, qr *internal.QueryRequest) error
 
 	// FIELDS
 
-	flds, ok := internal.FieldsQueryOpt(qr)
+	flds, ok := internal.RetrieveFieldsQueryOpt(qr)
 	if ok {
 		q.Fields(flds...)
 	}

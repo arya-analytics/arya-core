@@ -56,6 +56,8 @@ func (s *Service) createReplica(ctx context.Context, qr *internal.QueryRequest) 
 	)
 }
 
+const BulkTelemField = "Telem"
+
 func (s *Service) retrieveReplica(ctx context.Context, qr *internal.QueryRequest) error {
 	PKC, ok := internal.PKQueryOpt(qr)
 	if !ok {
@@ -69,6 +71,16 @@ func (s *Service) retrieveReplica(ctx context.Context, qr *internal.QueryRequest
 		LocalReplicaRetrieveOpts{PKC: PKC, OmitBulk: true, Relations: true}); err != nil {
 		return err
 	}
+
+	// CLARIFICATION: If we specified a fields query opt, and it doesn't contain the telem field, we don't
+	// need to fetch bulk, so we can just return here.
+	fldsOpt, ok := internal.RetrieveFieldsQueryOpt(qr)
+	if ok {
+		if !fldsOpt.ContainsAny(BulkTelemField) {
+			return nil
+		}
+	}
+
 	// CLARIFICATION: Now that we have the RangeReplica.Node.IsHost field populated, we can switch on it.
 	return replicaNodeIsHostSwitch(
 		qr.Model,
