@@ -9,24 +9,24 @@ import (
 
 type queryMigrate struct {
 	queryBase
-	db         *bun.DB
-	migrations *bunMigrate.Migrations
-	driver     Driver
+	db     *bun.DB
+	bunQ   *bunMigrate.Migrations
+	driver Driver
 }
 
 func newMigrate(db *bun.DB, driver Driver) *queryMigrate {
 	q := &queryMigrate{
-		db:         db,
-		migrations: bunMigrate.NewMigrations(),
-		driver:     driver,
+		db:     db,
+		bunQ:   bunMigrate.NewMigrations(),
+		driver: driver,
 	}
 	q.baseInit(db)
-	bindMigrations(q.migrations, q.driver)
+	bindMigrations(q.bunQ, q.driver)
 	return q
 }
 
 func (q *queryMigrate) bunMigrator() *bunMigrate.Migrator {
-	return bunMigrate.NewMigrator(q.db, q.migrations)
+	return bunMigrate.NewMigrator(q.db, q.bunQ)
 }
 
 func (q *queryMigrate) init(ctx context.Context) {
@@ -42,7 +42,7 @@ func (q *queryMigrate) Exec(ctx context.Context) error {
 	})
 	q.catcher.Exec(func() error {
 		if group.ID == 0 {
-			log.Info("No new migrations to run.")
+			log.Info("No new bunQ to run.")
 		}
 		log.Infof("Migrated to group %s \n", group)
 		return nil

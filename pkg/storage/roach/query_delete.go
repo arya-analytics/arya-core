@@ -8,11 +8,11 @@ import (
 
 type queryDelete struct {
 	queryBase
-	q *bun.DeleteQuery
+	bunQ *bun.DeleteQuery
 }
 
 func newDelete(db *bun.DB) *queryDelete {
-	q := &queryDelete{q: db.NewDelete()}
+	q := &queryDelete{bunQ: db.NewDelete()}
 	q.baseInit(db)
 	return q
 }
@@ -26,19 +26,19 @@ func (q *queryDelete) WherePKs(pks interface{}) storage.QueryMDDelete {
 }
 
 func (q *queryDelete) Where(query string, args ...interface{}) storage.QueryMDDelete {
-	q.q = q.q.Where(query, args...)
+	q.bunQ = q.bunQ.Where(query, args...)
 	return q
 }
 
 func (q *queryDelete) Model(m interface{}) storage.QueryMDDelete {
 	q.baseModel(m)
-	q.q = q.q.Model(q.Dest().Pointer())
+	q.bunQ = q.bunQ.Model(q.Dest().Pointer())
 	return q
 }
 
 func (q *queryDelete) Exec(ctx context.Context) error {
 	q.baseExec(func() error {
-		_, err := q.q.Exec(ctx)
+		_, err := q.bunQ.Exec(ctx)
 		return err
 	})
 	return q.baseErr()
