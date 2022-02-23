@@ -12,9 +12,7 @@ type Persist interface {
 	// |||| RANGE ||||
 
 	NewRange(ctx context.Context, nodeID int) (*models.Range, error)
-	CreateRange(ctx context.Context, rng interface{}) error
-	CreateRangeLease(ctx context.Context, rngLease interface{}) error
-	CreateRangeReplica(ctx context.Context, rngReplica interface{}) error
+	NewRangeReplica(ctx context.Context, rangeID uuid.UUID, nodeID int) (*models.RangeReplica, error)
 
 	RetrieveRange(ctx context.Context, ID uuid.UUID) (*models.Range, error)
 	RetrieveRangeSize(ctx context.Context, ID uuid.UUID) (int64, error)

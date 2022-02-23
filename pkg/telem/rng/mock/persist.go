@@ -52,25 +52,14 @@ func (p *Persist) NewRange(ctx context.Context, nodeID int) (*models.Range, erro
 	return r, nil
 }
 
-func (p *Persist) CreateRange(ctx context.Context, rng interface{}) error {
-	model.NewReflect(rng).ForEach(func(rfl *model.Reflect, i int) {
-		p.Ranges = append(p.Ranges, rfl.Pointer().(*models.Range))
-	})
-	return nil
-}
-
-func (p *Persist) CreateRangeLease(ctx context.Context, rngLease interface{}) error {
-	model.NewReflect(rngLease).ForEach(func(rfl *model.Reflect, i int) {
-		p.RangeLeases = append(p.RangeLeases, rfl.Pointer().(*models.RangeLease))
-	})
-	return nil
-}
-
-func (p *Persist) CreateRangeReplica(ctx context.Context, rngReplica interface{}) error {
-	model.NewReflect(rngReplica).ForEach(func(rfl *model.Reflect, i int) {
-		p.RangeReplicas = append(p.RangeReplicas, rfl.Pointer().(*models.RangeReplica))
-	})
-	return nil
+func (p *Persist) NewRangeReplica(ctx context.Context, rangeID uuid.UUID, nodeID int) (*models.RangeReplica, error) {
+	rr := &models.RangeReplica{
+		ID:      uuid.New(),
+		RangeID: rangeID,
+		NodeID:  nodeID,
+	}
+	p.RangeReplicas = append(p.RangeReplicas, rr)
+	return rr, nil
 }
 
 func (p *Persist) RetrieveRange(ctx context.Context, ID uuid.UUID) (*models.Range, error) {

@@ -26,25 +26,14 @@ var _ = Describe("Persist", func() {
 			Expect(rng.RangeLease.RangeReplica.NodeID).To(Equal(1))
 		})
 	})
-	Describe("Create Range", func() {
-		It("Should add the range to the the list of ranges", func() {
-			err := p.CreateRange(ctx, &models.Range{ID: uuid.New()})
+	Describe("New Range Replica", func() {
+		It("Should create a new range replica", func() {
+			rng, err := p.NewRange(ctx, 1)
 			Expect(err).To(BeNil())
-			Expect(p.Ranges).To(HaveLen(1))
-		})
-	})
-	Describe("Create Range Lease", func() {
-		It("Should add the lease to the list of leases", func() {
-			err := p.CreateRangeLease(ctx, &models.RangeLease{})
+			rr, err := p.NewRangeReplica(ctx, rng.ID, 2)
 			Expect(err).To(BeNil())
-			Expect(p.RangeLeases).To(HaveLen(1))
-		})
-	})
-	Describe("Create Range Replica", func() {
-		It("Should add the replica to the list of replicas", func() {
-			err := p.CreateRangeReplica(ctx, &[]*models.RangeReplica{{}, {}, {}})
-			Expect(err).To(BeNil())
-			Expect(p.RangeReplicas).To(HaveLen(3))
+			Expect(rr.NodeID).To(Equal(2))
+
 		})
 	})
 	Describe("Retrieve Range", func() {
