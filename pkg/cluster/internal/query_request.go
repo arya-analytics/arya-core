@@ -73,31 +73,43 @@ func NewPKsQueryOpt(qr *QueryRequest, pks interface{}) {
 	qr.opts[pkQueryOptKey] = qo
 }
 
-// || FIELDS ||
+// || WHERE FIELDS ||
 
-const fieldQueryOptKey = "FieldQueryOpt"
+const whereFieldsQueryOptKey = "WhereFieldsQueryOpt"
 
-func FieldsQueryOpt(qr *QueryRequest) (model.WhereFields, bool) {
-	qo, ok := qr.opts[fieldQueryOptKey]
+func WhereFieldsQueryOpt(qr *QueryRequest) (model.WhereFields, bool) {
+	qo, ok := qr.opts[whereFieldsQueryOptKey]
 	if !ok {
 		return model.WhereFields{}, false
 	}
 	return qo.(model.WhereFields), true
 }
 
-func NewFieldsQueryOpt(q *QueryRequest, ops model.WhereFields) {
-	panicWhenAlreadySpecified(q, fieldQueryOptKey)
-	q.opts[fieldQueryOptKey] = ops
+func NewWhereFieldsQueryOpt(q *QueryRequest, ops model.WhereFields) {
+	panicWhenAlreadySpecified(q, whereFieldsQueryOptKey)
+	q.opts[whereFieldsQueryOptKey] = ops
 }
 
-type QueryRequestVariantOperations map[QueryVariant]ServiceOperation
+// || FIELDS ||
 
-func SwitchQueryRequestVariant(ctx context.Context, qr *QueryRequest, qrvo QueryRequestVariantOperations) error {
-	op, ok := qrvo[qr.Variant]
+const fieldsQueryOptkey = "FieldsQueryOpt"
+
+type fieldsQueryOpt struct {
+	Fields []string
+}
+
+func NewFieldsQueryOpt(qr *QueryRequest, flds ...string) {
+	panicWhenAlreadySpecified(qr, fieldsQueryOptkey)
+	qo := fieldsQueryOpt{Fields: flds}
+	qr.opts[fieldsQueryOptkey] = qo
+}
+
+func FieldsQueryOpt(qr *QueryRequest) ([]string, bool) {
+	qo, ok := qr.opts[fieldsQueryOptkey]
 	if !ok {
-		panic(fmt.Sprintf("%s not supported for model %s", qr.Variant, qr.Model.Type().Name()))
+		return []string{}, false
 	}
-	return op(ctx, qr)
+	return qo.(fieldsQueryOpt).Fields, true
 }
 
 // || RELATION ||
@@ -109,8 +121,8 @@ type RelationQueryOpt struct {
 
 const relationQueryOptKey = "RelationQueryOpt"
 
-func NewRelationQueryOpt(qr *QueryRequest, rel string, fields ...string) {
-	rq := RelationQueryOpt{rel, fields}
+func NewRelationQueryOpt(qr *QueryRequest, rel string, flds ...string) {
+	rq := RelationQueryOpt{rel, flds}
 	_, ok := qr.opts[relationQueryOptKey]
 	if !ok {
 		qr.opts[relationQueryOptKey] = []RelationQueryOpt{rq}
@@ -125,4 +137,14 @@ func RelationQueryOpts(qr *QueryRequest) []RelationQueryOpt {
 		return []RelationQueryOpt{}
 	}
 	return opts.([]RelationQueryOpt)
+}
+
+type QueryRequestVariantOperations map[QueryVariant]ServiceOperation
+
+func SwitchQueryRequestVariant(ctx context.Context, qr *QueryRequest, qrvo QueryRequestVariantOperations) error {
+	op, ok := qrvo[qr.Variant]
+	if !ok {
+		panic(fmt.Sprintf("%s not supported for model %s", qr.Variant, qr.Model.Type().Name()))
+	}
+	return op(ctx, qr)
 }
