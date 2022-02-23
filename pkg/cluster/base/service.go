@@ -47,11 +47,18 @@ func (s *Service) retrieve(ctx context.Context, qr *internal.QueryRequest) error
 		q.WherePKs(PKC.Raw())
 	}
 
+	// WHERE FIELDS
+
+	wFlds, ok := internal.WhereFieldsQueryOpt(qr)
+	if ok {
+		q.WhereFields(wFlds)
+	}
+
 	// FIELDS
 
 	flds, ok := internal.FieldsQueryOpt(qr)
 	if ok {
-		q.WhereFields(flds)
+		q.Fields(flds...)
 	}
 
 	// RELATIONS
