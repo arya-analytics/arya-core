@@ -36,6 +36,17 @@ var _ = Describe("StructTag", func() {
 				Expect(ok).To(BeTrue())
 			})
 		})
+		Describe("HasAnyFields", func() {
+			DescribeTable("Should return the correct boolean", func(expected bool, flds ...string) {
+				Expect(tags.HasAnyFields(flds...)).To(Equal(expected))
+			},
+				Entry("false for an empty field", false, ""),
+				Entry("false for a field that doesn't exist on the model", false, "RandomField"),
+				Entry("false for a nested field that doesn't exist on the model", false, "Field.Field"),
+				Entry("true for a nested field whose first field exists on the model", true, "ID.RandomField"),
+				Entry("true for a nested field whose field exists on the model", true, "InnerModel.ID"),
+			)
+		})
 	})
 	Describe("Edge cases + errors", func() {
 		Context("No category provided", func() {

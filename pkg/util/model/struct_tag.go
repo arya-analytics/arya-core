@@ -100,6 +100,18 @@ func (s StructTagChain) RetrieveByFieldRole(role string) (StructTag, bool) {
 	return s.Retrieve(TagCat, RoleKey, role)
 }
 
+// HasAnyFields determines if the chain contains and struct fields with a name in the provided WhereFields.
+func (s StructTagChain) HasAnyFields(flds ...string) bool {
+	for _, st := range s {
+		for _, fld := range flds {
+			if SplitFirstFieldName(fld) == st.Field.Name {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 const (
 	kvPairSeparator  = ":"
 	kvChainSeparator = ","

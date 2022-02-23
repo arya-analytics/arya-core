@@ -62,4 +62,21 @@ func SplitLastFieldName(name string) (string, string) {
 	return fn, sn[len(sn)-1]
 }
 
+func SplitFirstFieldName(name string) string {
+	return SplitFieldNames(name)[0]
+}
+
 type WhereFields map[string]interface{}
+
+func (wf WhereFields) Names(filterNames ...string) (names []string) {
+out:
+	for n, _ := range wf {
+		for _, fn := range filterNames {
+			if n == fn {
+				break out
+			}
+		}
+		names = append(names, n)
+	}
+	return names
+}
