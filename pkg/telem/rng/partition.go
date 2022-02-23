@@ -104,11 +104,6 @@ func (p *Partition) Exec(ctx context.Context) ([]*models.Range, error) {
 	return nextP.Exec(ctx)
 }
 
-func (p *Partition) rangeExceedsMaxSize(ctx context.Context) (bool, error) {
-	size, err := p.Persist.RetrieveRangeSize(ctx, p.RangeID)
-	return size > models.MaxRangeSize, err
-}
-
 func findChunkReplicas(chunkID uuid.UUID, chunkReplicas []*models.ChannelChunkReplica) (results []*models.ChannelChunkReplica) {
 	for _, ccr := range chunkReplicas {
 		if ccr.ChannelChunkID == chunkID {

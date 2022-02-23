@@ -186,10 +186,6 @@ func NewPersistOverallocatedRange() (*Persist, uuid.UUID) {
 	var chunkReplicas []*models.ChannelChunkReplica
 	for float64(size) < float64(models.MaxRangeSize)*1.25 {
 		chunkSize := rand.Int63n(models.MaxChunkSize)
-		//log.Info(chunkSize)
-		//log.Info(size)
-		//log.Info(models.MaxRangeSize)
-		//log.Info(size < models.MaxRangeSize)
 		size += chunkSize
 		chunk := &models.ChannelChunk{
 			ID:      uuid.New(),

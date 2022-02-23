@@ -104,6 +104,8 @@ var _ = Describe("Persist", func() {
 				Expect(reChunks[0].RangeID).To(Equal(newRng.ID))
 				size, err := op.RetrieveRangeSize(ctx, rngID)
 				Expect(size).To(BeNumerically("<", models.MaxRangeSize))
+				newSourceChunks, err := op.RetrieveRangeChunks(ctx, rngID)
+				Expect(len(newSourceChunks)).To(Equal(0))
 			})
 		})
 		Describe("Reallocate Chunk Replicas", func() {
