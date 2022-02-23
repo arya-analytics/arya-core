@@ -7,8 +7,8 @@ const MaxRangeSize int64 = 512e7
 type RangeStatus int
 
 const (
-	RangeStatusOpen RangeStatus = iota + 1
-	RangeStatusClosed
+	RangeStatusClosed RangeStatus = iota + 1
+	RangeStatusOpen
 	RangeStatusPartition
 )
 

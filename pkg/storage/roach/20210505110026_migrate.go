@@ -74,10 +74,18 @@ func migrateUpFunc(d Driver) migrate.MigrationFunc {
 		})
 
 		// |||| RANGE ||||
+
 		c.Exec(db.NewCreateTable().
 			Model((*Range)(nil)).
 			Exec,
 		)
+		c.Exec(db.NewCreateIndex().
+			Model((*Range)(nil)).
+			Column("id").
+			Where("status > 1").
+			Exec,
+		)
+
 		c.Exec(db.NewCreateTable().
 			Model((*RangeReplica)(nil)).
 			ForeignKey(`("node_id") REFERENCES "nodes" ("id") ON DELETE CASCADE`).
