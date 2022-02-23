@@ -11,6 +11,18 @@ type Adapter interface {
 	ID() uuid.UUID
 }
 
+// |||| CALCULATIONS ||||
+
+type Calculate int
+
+const (
+	CalculateSum Calculate = iota
+	CalculateMax
+	CalculateMin
+	CalculateCount
+	CalculateAVG
+)
+
 // |||| ENGINE ||||
 
 // Engine is a set of general interfaces that each engine variant must meet.
@@ -92,6 +104,7 @@ type QueryMDRetrieve interface {
 	WherePKs(pks interface{}) QueryMDRetrieve
 	Relation(rel string, fields ...string) QueryMDRetrieve
 	Fields(fields ...string) QueryMDRetrieve
+	Calculate(c Calculate, fldName string, into interface{}) QueryMDRetrieve
 	WhereFields(flds model.WhereFields) QueryMDRetrieve
 	Count(ctx context.Context) (int, error)
 }

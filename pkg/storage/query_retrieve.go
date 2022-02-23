@@ -62,6 +62,13 @@ func (q *QueryRetrieve) Relation(rel string, flds ...string) *QueryRetrieve {
 	return q
 }
 
+// Calculate executes a calculation on the specified field. It binds the calculation
+// into the argument 'into'. See Calculate for available calculations.
+func (q *QueryRetrieve) Calculate(c Calculate, fldName string, into interface{}) *QueryRetrieve {
+	q.setMDQuery(q.mdQuery().Calculate(c, fldName, into))
+	return q
+}
+
 // Fields retrieves only the fields specified.
 func (q *QueryRetrieve) Fields(flds ...string) *QueryRetrieve {
 	q._flds = flds

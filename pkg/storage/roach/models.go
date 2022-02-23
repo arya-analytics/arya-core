@@ -93,5 +93,4 @@ type ChannelChunkReplica struct {
 	ChannelChunkID uuid.UUID     `bun:"type:UUID,"`
 	RangeReplica   *RangeReplica `bun:"rel:belongs-to,join:range_replica_id=id,"`
 	RangeReplicaID uuid.UUID     `bun:"type:UUID,"`
-	Size           int64
 }

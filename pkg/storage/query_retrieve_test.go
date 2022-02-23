@@ -2,6 +2,7 @@ package storage_test
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/models"
+	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"github.com/google/uuid"
@@ -33,7 +34,7 @@ var _ = Describe("QueryRetrieve", func() {
 		Expect(nErr).To(BeNil())
 	})
 	Describe("Standard usage", func() {
-		Context("Meta Telem Only", func() {
+		Context("Meta Data Only", func() {
 			Context("Single item", func() {
 				Describe("Retrieve a channel config", func() {
 					It("Should retrieve the correct item", func() {
@@ -68,6 +69,17 @@ var _ = Describe("QueryRetrieve", func() {
 						Expect(err).To(BeNil())
 						Expect(resChannelConfig.ID).To(Equal(channelConfig.ID))
 						Expect(resChannelConfig.Name).ToNot(Equal(channelConfig.Name))
+					})
+					It("Should run a max calculation", func() {
+						max := 0
+						resChannelConfig := &models.ChannelConfig{}
+						err := store.NewRetrieve().
+							Model(resChannelConfig).
+							WherePK(channelConfig.ID).
+							Calculate(storage.CalculateMax, "NodeID", &max).
+							Exec(ctx)
+						Expect(err).To(BeNil())
+						Expect(max).To(Equal(1))
 					})
 				})
 			})

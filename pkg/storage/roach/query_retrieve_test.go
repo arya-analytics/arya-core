@@ -22,7 +22,7 @@ var _ = Describe("QueryRetrieve", func() {
 		ccErr := engine.NewCreate(adapter).Model(channelConfig).Exec(ctx)
 		Expect(ccErr).To(BeNil())
 	})
-	AfterEach(func() {
+	JustAfterEach(func() {
 		ccErr := engine.NewDelete(adapter).Model(channelConfig).WherePK(channelConfig.
 			ID).Exec(ctx)
 		Expect(ccErr).To(BeNil())
@@ -213,6 +213,76 @@ var _ = Describe("QueryRetrieve", func() {
 				//})
 			})
 
+		})
+		Describe("Using Calculate", func() {
+			var (
+				size   int64 = 30
+				count        = 10
+				rng    *models.Range
+				chunks []*models.ChannelChunk
+			)
+			BeforeEach(func() {
+				rng = &models.Range{ID: uuid.New()}
+				chunks = []*models.ChannelChunk{}
+				for i := 0; i < count; i++ {
+					chunks = append(chunks, &models.ChannelChunk{
+						ID:              uuid.New(),
+						RangeID:         rng.ID,
+						ChannelConfigID: channelConfig.ID,
+						Size:            size,
+					})
+				}
+			})
+			JustBeforeEach(func() {
+				Expect(engine.NewCreate(adapter).Model(rng).Exec(ctx)).To(BeNil())
+				Expect(engine.NewCreate(adapter).Model(&chunks).Exec(ctx)).To(BeNil())
+			})
+			JustAfterEach(func() {
+				Expect(engine.NewDelete(adapter).Model(rng).WherePK(rng.ID).Exec(ctx)).To(BeNil())
+				Expect(engine.NewDelete(adapter).Model(&chunks).WherePKs(model.NewReflect(&chunks).PKChain().Raw()).Exec(ctx)).To(BeNil())
+			})
+			Describe("Calculations", func() {
+				It("Should calculate the correct sum", func() {
+					into := 0
+					err := engine.NewRetrieve(adapter).
+						Model(&models.ChannelChunk{}).
+						Calculate(storage.CalculateSum, "Size", &into).
+						WherePKs(model.NewReflect(&chunks).PKChain().Raw()).
+						Exec(ctx)
+					Expect(err).To(BeNil())
+					Expect(into).To(Equal(30 * 10))
+				})
+				It("Should calculate the correct max", func() {
+					into := 0
+					err := engine.NewRetrieve(adapter).
+						Model(&models.ChannelChunk{}).
+						Calculate(storage.CalculateMax, "Size", &into).
+						WherePKs(model.NewReflect(&chunks).PKChain().Raw()).
+						Exec(ctx)
+					Expect(err).To(BeNil())
+					Expect(into).To(Equal(30))
+				})
+				It("Should calculate the correct min", func() {
+					into := 0
+					err := engine.NewRetrieve(adapter).
+						Model(&models.ChannelChunk{}).
+						Calculate(storage.CalculateMin, "Size", &into).
+						WherePKs(model.NewReflect(&chunks).PKChain().Raw()).
+						Exec(ctx)
+					Expect(err).To(BeNil())
+					Expect(into).To(Equal(30))
+				})
+				It("Should calculate the correct count", func() {
+					into := 0
+					err := engine.NewRetrieve(adapter).
+						Model(&models.ChannelChunk{}).
+						Calculate(storage.CalculateCount, "Size", &into).
+						WherePKs(model.NewReflect(&chunks).PKChain().Raw()).
+						Exec(ctx)
+					Expect(err).To(BeNil())
+					Expect(into).To(Equal(10))
+				})
+			})
 		})
 	})
 	Describe("Edge cases + errors", func() {
