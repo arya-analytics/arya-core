@@ -33,7 +33,7 @@ func (c *QueryCreate) Exec(ctx context.Context) error {
 	c.baseRunBeforeHooks(ctx)
 	c.baseExec(func() error { return c.mdQuery().Exec(ctx) })
 	mp := c.modelRfl.Pointer()
-	if c.baseObjEngine().InCatalog(mp) {
+	if c.baseObjEngine().ShouldHandle(mp) {
 		c.baseExec(func() error { return c.objQuery().Model(mp).Exec(ctx) })
 	}
 	c.baseRunAfterHooks(ctx)

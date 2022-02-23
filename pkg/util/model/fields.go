@@ -67,16 +67,3 @@ func SplitFirstFieldName(name string) string {
 }
 
 type WhereFields map[string]interface{}
-
-func (wf WhereFields) Names(filterNames ...string) (names []string) {
-out:
-	for n, _ := range wf {
-		for _, fn := range filterNames {
-			if n == fn {
-				break out
-			}
-		}
-		names = append(names, n)
-	}
-	return names
-}

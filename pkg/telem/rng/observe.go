@@ -12,6 +12,7 @@ type Observe interface {
 	Add(or ObservedRange)
 	Retrieve(q ObservedRange) (ObservedRange, bool)
 	RetrieveAll() []ObservedRange
+	RetrieveFilter(q ObservedRange) []ObservedRange
 }
 
 type ObservedRange struct {
@@ -43,10 +44,9 @@ func (o *ObserveMem) Add(or ObservedRange) {
 }
 
 func (o *ObserveMem) Retrieve(q ObservedRange) (ObservedRange, bool) {
-	for _, or := range o.ranges {
-		if matchObservedRangeQuery(q, or) {
-			return or, true
-		}
+	matches := o.RetrieveFilter(q)
+	if len(matches) > 0 {
+		return matches[0], true
 	}
 	return ObservedRange{}, false
 }
@@ -57,6 +57,15 @@ func (o *ObserveMem) RetrieveAll() (ranges []ObservedRange) {
 		ranges = append(ranges, v)
 	}
 	return ranges
+}
+
+func (o *ObserveMem) RetrieveFilter(q ObservedRange) (matches []ObservedRange) {
+	for _, or := range o.ranges {
+		if matchObservedRangeQuery(q, or) {
+			matches = append(matches, or)
+		}
+	}
+	return matches
 }
 
 func matchObservedRangeQuery(q ObservedRange, or ObservedRange) bool {

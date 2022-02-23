@@ -1,6 +1,9 @@
 package minio
 
-import "github.com/arya-analytics/aryacore/pkg/storage"
+import (
+	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/util/model"
+)
 
 type Engine struct {
 	driver Driver
@@ -19,8 +22,14 @@ func (e *Engine) IsAdapter(a storage.Adapter) bool {
 	return ok
 }
 
-func (e *Engine) InCatalog(m interface{}) bool {
-	return catalog().Contains(m)
+func (e *Engine) ShouldHandle(m interface{}, flds ...string) bool {
+	if !catalog().Contains(m) {
+		return false
+	}
+	if len(flds) == 0 {
+		return true
+	}
+	return model.NewReflect(catalog().New(m)).StructTagChain().HasAnyFields(flds...)
 }
 
 func (e *Engine) NewCreate(a storage.Adapter) storage.QueryObjectCreate {

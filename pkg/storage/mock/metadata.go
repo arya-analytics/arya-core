@@ -21,7 +21,7 @@ func (e *MDEngine) IsAdapter(a storage.Adapter) bool {
 	return ok
 }
 
-func (e *MDEngine) InCatalog(m interface{}) bool {
+func (e *MDEngine) CanHandle(m interface{}) bool {
 	return true
 }
 

@@ -2,13 +2,14 @@ package models
 
 import "github.com/google/uuid"
 
-const RangeSize int64 = 512e7
+const MaxRangeSize int64 = 512e7
 
 type RangeStatus int
 
 const (
 	RangeStatusOpen RangeStatus = iota + 1
 	RangeStatusClosed
+	RangeStatusPartition
 )
 
 type Range struct {

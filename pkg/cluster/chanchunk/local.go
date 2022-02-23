@@ -114,6 +114,9 @@ func (s *ServiceLocalStorage) RetrieveReplica(ctx context.Context, chunkReplica 
 		q = q.Relation("RangeReplica", "ID").
 			Relation("RangeReplica.Node", "ID", "Address", "IsHost")
 	}
+	if opts.OmitBulk {
+		q = q.Fields("ID", "ChannelChunkID", "RangeReplicaID")
+	}
 	return q.Exec(ctx)
 }
 

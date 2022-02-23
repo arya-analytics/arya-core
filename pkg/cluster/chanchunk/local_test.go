@@ -41,7 +41,7 @@ var _ = Describe("Local", func() {
 		channelChunkReplica = &models.ChannelChunkReplica{
 			RangeReplicaID: rangeReplica.ID,
 			ChannelChunkID: channelChunk.ID,
-			Telem:          telem.NewBulk([]byte{}),
+			Telem:          telem.NewBulk([]byte("randomdata")),
 		}
 		items = []interface{}{
 			node,
@@ -97,7 +97,7 @@ var _ = Describe("Local", func() {
 				ccrErr := localSvc.DeleteReplica(ctx, ccrOpts)
 				Expect(ccrErr).To(BeNil())
 			})
-			It("Should create the  replica correctly", func() {
+			It("Should create the replica correctly", func() {
 				resCCR := &models.ChannelChunkReplica{}
 				opts := chanchunk.LocalReplicaRetrieveOpts{
 					PKC: model.NewPKChain([]uuid.UUID{channelChunkReplica.ID}),
@@ -105,6 +105,18 @@ var _ = Describe("Local", func() {
 				err := localSvc.RetrieveReplica(ctx, resCCR, opts)
 				Expect(err).To(BeNil())
 				Expect(resCCR.ID).To(Equal(channelChunkReplica.ID))
+				Expect(resCCR.Telem.Bytes()).To(Equal([]byte("randomdata")))
+			})
+			It("Should omit bulk data when option specified", func() {
+				resCCR := &models.ChannelChunkReplica{}
+				opts := chanchunk.LocalReplicaRetrieveOpts{
+					PKC:      model.NewPKChain([]uuid.UUID{channelChunkReplica.ID}),
+					OmitBulk: true,
+				}
+				err := localSvc.RetrieveReplica(ctx, resCCR, opts)
+				Expect(err).To(BeNil())
+				Expect(resCCR.ID).To(Equal(channelChunkReplica.ID))
+				Expect(resCCR.Telem).To(BeNil())
 			})
 		})
 		Context("Retrieve Range Replicas", func() {

@@ -35,7 +35,7 @@ func (e *Engine) IsAdapter(a storage.Adapter) bool {
 	return ok
 }
 
-func (e *Engine) InCatalog(m interface{}) bool {
+func (e *Engine) ShouldHandle(m interface{}, _ ...string) bool {
 	return catalog().Contains(m)
 }
 

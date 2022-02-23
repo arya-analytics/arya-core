@@ -13,6 +13,7 @@ import (
 // and should instead be opened using Storage.NewRetrieve().
 type QueryRetrieve struct {
 	queryBase
+	_flds []string
 }
 
 // |||| CONSTRUCTOR ||||
@@ -63,8 +64,23 @@ func (q *QueryRetrieve) Relation(rel string, flds ...string) *QueryRetrieve {
 
 // Fields retrieves only the fields specified.
 func (q *QueryRetrieve) Fields(flds ...string) *QueryRetrieve {
+	q._flds = flds
 	q.setMDQuery(q.mdQuery().Fields(flds...))
 	return q
+}
+
+func (q *QueryRetrieve) fields() (flds []string) {
+	shouldHandleOmitFields := []string{"ID"}
+out:
+	for _, fld := range q._flds {
+		for _, omit := range shouldHandleOmitFields {
+			if fld == omit {
+				continue out
+			}
+		}
+		flds = append(flds, fld)
+	}
+	return flds
 }
 
 // Exec executes the query with the provided context. Returns a storage.Error.
@@ -72,7 +88,7 @@ func (q *QueryRetrieve) Exec(ctx context.Context) error {
 	q.baseRunBeforeHooks(ctx)
 	q.baseExec(func() error { return q.mdQuery().Exec(ctx) })
 	mp := q.modelRfl.Pointer()
-	if q.baseObjEngine().InCatalog(mp) {
+	if q.baseObjEngine().ShouldHandle(mp, q.fields()...) {
 		pks := q.modelRfl.PKChain().Raw()
 		q.baseExec(func() error { return q.objQuery().Model(mp).WherePKs(pks).Exec(ctx) })
 	}

@@ -23,7 +23,7 @@ type Adapter interface {
 type Engine interface {
 	NewAdapter() Adapter
 	IsAdapter(a Adapter) bool
-	InCatalog(model interface{}) bool
+	ShouldHandle(model interface{}, flds ...string) bool
 }
 
 // || META DATA ||
