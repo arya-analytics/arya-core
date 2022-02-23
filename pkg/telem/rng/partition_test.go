@@ -10,7 +10,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = FDescribe("Partition", func() {
+var _ = Describe("Partition", func() {
 	Context("Over allocated range", func() {
 		var (
 			p                rng.Persist
