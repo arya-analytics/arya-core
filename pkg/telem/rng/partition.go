@@ -187,12 +187,9 @@ func (p *PartitionExecute) retrievePartitionInfo() (sourceRng *models.Range, sou
 	return sourceRng, sourceRR, cc, ccr
 }
 
-func excessChunkReplicas(
-	rrC []*models.RangeReplica,
-	ccrC []*models.ChannelChunkReplica,
-	excessCC []uuid.UUID) map[int][]uuid.UUID {
+func excessChunkReplicas(rrC []*models.RangeReplica, ccrC []*models.ChannelChunkReplica, excCC []uuid.UUID) map[int][]uuid.UUID {
 	excessCCR := map[int][]uuid.UUID{}
-	for _, ID := range excessCC {
+	for _, ID := range excCC {
 		for _, ccr := range findChunkReplicas(ID, ccrC) {
 			rr, ok := findRangeReplica(ccr.RangeReplicaID, rrC)
 			if !ok {
