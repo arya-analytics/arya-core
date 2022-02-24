@@ -9,12 +9,12 @@ import (
 
 type Partition struct {
 	Persist   Persist
-	RangeID   uuid.UUID
+	RangePK   uuid.UUID
 	NewRanges []*models.Range
 }
 
 func (p *Partition) Exec(ctx context.Context) ([]*models.Range, error) {
-	size, err := p.Persist.RetrieveRangeSize(ctx, p.RangeID)
+	size, err := p.Persist.RetrieveRangeSize(ctx, p.RangePK)
 	if size < models.MaxRangeSize || err != nil {
 		return p.NewRanges, nil
 	}
@@ -36,23 +36,31 @@ func (p *Partition) Exec(ctx context.Context) ([]*models.Range, error) {
 		return nil, cErr
 	}
 
-	for nodeID, chunkReplicaIDS := range excCCR {
-		newReplicaID := newRange.RangeLease.RangeReplicaID
-		if nodeID != newRange.RangeLease.RangeReplica.NodeID {
-			newRR, nRRErr := p.Persist.NewRangeReplica(ctx, newRange.ID, nodeID)
-			if nRRErr != nil {
-				return nil, nRRErr
-			}
-			newReplicaID = newRR.ID
+	for nodePK, ccrPKs := range excCCR {
+		newReplicaID, err := p.newReplicaID(ctx, newRange.RangeLease.RangeReplica, nodePK)
+		if err != nil {
+			return nil, err
 		}
-		if ccrErr := p.Persist.ReallocateChunkReplicas(ctx, chunkReplicaIDS, newReplicaID); ccrErr != nil {
+		if ccrErr := p.Persist.ReallocateChunkReplicas(ctx, ccrPKs, newReplicaID); ccrErr != nil {
 			return nil, ccrErr
 		}
 	}
 
 	p.NewRanges = append(p.NewRanges, newRange)
-	nextP := &Partition{Persist: p.Persist, RangeID: newRange.ID, NewRanges: p.NewRanges}
+	nextP := &Partition{Persist: p.Persist, RangePK: newRange.ID, NewRanges: p.NewRanges}
 	return nextP.Exec(ctx)
+}
+
+func (p *Partition) newReplicaID(ctx context.Context, leaseRR *models.RangeReplica, nodeID int) (uuid.UUID, error) {
+	newReplicaID := leaseRR.ID
+	if nodeID != leaseRR.NodeID {
+		newRR, nRRErr := p.Persist.NewRangeReplica(ctx, leaseRR.RangeID, nodeID)
+		if nRRErr != nil {
+			return uuid.UUID{}, nRRErr
+		}
+		newReplicaID = newRR.ID
+	}
+	return newReplicaID, nil
 }
 
 func (p *Partition) retrievePartitionInfo(ctx context.Context) (sourceRng *models.Range,
@@ -61,19 +69,19 @@ func (p *Partition) retrievePartitionInfo(ctx context.Context) (sourceRng *model
 	ccr []*models.ChannelChunkReplica, err error) {
 	c := &errutil.Catcher{}
 	c.Exec(func() (cErr error) {
-		sourceRng, cErr = p.Persist.RetrieveRange(ctx, p.RangeID)
+		sourceRng, cErr = p.Persist.RetrieveRange(ctx, p.RangePK)
 		return cErr
 	})
 	c.Exec(func() (cErr error) {
-		cc, cErr = p.Persist.RetrieveRangeChunks(ctx, p.RangeID)
+		cc, cErr = p.Persist.RetrieveRangeChunks(ctx, p.RangePK)
 		return cErr
 	})
 	c.Exec(func() (cErr error) {
-		sourceRR, cErr = p.Persist.RetrieveRangeReplicas(ctx, p.RangeID)
+		sourceRR, cErr = p.Persist.RetrieveRangeReplicas(ctx, p.RangePK)
 		return cErr
 	})
 	c.Exec(func() (cErr error) {
-		ccr, cErr = p.Persist.RetrieveRangeChunkReplicas(ctx, p.RangeID)
+		ccr, cErr = p.Persist.RetrieveRangeChunkReplicas(ctx, p.RangePK)
 		return cErr
 	})
 	return sourceRng, sourceRR, cc, ccr, c.Error()
