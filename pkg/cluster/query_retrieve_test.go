@@ -70,6 +70,20 @@ var _ = Describe("QueryRetrieve", func() {
 				Expect(relOpts[0].Rel).To(Equal("rel"))
 				Expect(relOpts[0].Fields).To(Equal([]string{"fldOne"}))
 			})
+			It("Should allow for multiple relations", func() {
+				Expect(clus.NewRetrieve().
+					Model(m).
+					Relation("rel", "fldOne").
+					Relation("relTwo", "fldTwo").
+					Exec(ctx),
+				).To(BeNil())
+				relOpts := internal.RelationQueryOpts(svc.QueryRequest)
+				Expect(relOpts).To(HaveLen(2))
+				Expect(relOpts[0].Rel).To(Equal("rel"))
+				Expect(relOpts[0].Fields).To(Equal([]string{"fldOne"}))
+				Expect(relOpts[1].Rel).To(Equal("relTwo"))
+				Expect(relOpts[1].Fields).To(Equal([]string{"fldTwo"}))
+			})
 		})
 		Context("Fields", func() {
 			It("Should set the correct fields", func() {
