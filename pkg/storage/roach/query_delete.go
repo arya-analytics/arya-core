@@ -3,6 +3,7 @@ package roach
 import (
 	"context"
 	"github.com/arya-analytics/aryacore/pkg/storage"
+	log "github.com/sirupsen/logrus"
 	"github.com/uptrace/bun"
 )
 
@@ -18,6 +19,7 @@ func newDelete(db *bun.DB) *queryDelete {
 }
 
 func (q *queryDelete) WherePK(pk interface{}) storage.QueryMDDelete {
+	log.Info(pk)
 	return q.Where(q.baseSQL().pk(), pk)
 }
 

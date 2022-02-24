@@ -5,6 +5,7 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/util/caseconv"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
+	log "github.com/sirupsen/logrus"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/schema"
 	"reflect"
@@ -23,6 +24,7 @@ func (sg sqlGen) pkField() reflect.StructField {
 	if !ok {
 		panic("model has no pk field!")
 	}
+	log.Info(st.Field.Name)
 	return st.Field
 }
 

@@ -113,7 +113,7 @@ func (sn *syncNodes) deleteNodeWithPK(pk model.PK) {
 	sn.catcher.Exec(func() error {
 		_, err := sn.db.NewDelete().
 			Table(nodesTable).
-			Where("PK = ?", pk.Raw()).
+			Where("ID = ?", pk.Raw()).
 			Exec(sn.ctx)
 		return err
 	})
