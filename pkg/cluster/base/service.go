@@ -99,6 +99,13 @@ func (s *Service) update(ctx context.Context, qr *internal.QueryRequest) error {
 		q = q.WherePK(PKC[0].Raw())
 	}
 
+	// FIELDS
+
+	flds, ok := internal.RetrieveFieldsQueryOpt(qr)
+	if ok {
+		q = q.Fields(flds...)
+	}
+
 	// BULK
 
 	bulkOpt := internal.BulkUpdateQueryOpt(qr)

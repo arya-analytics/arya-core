@@ -10,12 +10,12 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Partition", func() {
+var _ = Describe("PartitionExecute", func() {
 	Context("Over allocated range", func() {
 		var (
 			p                         rng.Persist
 			rngId                     uuid.UUID
-			part                      *rng.Partition
+			part                      *rng.PartitionExecute
 			newRanges                 []*models.Range
 			sourceChunkReplicaNodeIDs map[uuid.UUID]int
 			sourceChunkCount          int
@@ -24,7 +24,7 @@ var _ = Describe("Partition", func() {
 		BeforeEach(func() {
 			sourceChunkReplicaNodeIDs = map[uuid.UUID]int{}
 			p, rngId = mock.NewPersistOverallocatedRange()
-			part = &rng.Partition{RangePK: rngId, Persist: p}
+			part = rng.NewPartitionExecute(ctx, p, rngId)
 			chunks, err := p.RetrieveRangeChunks(ctx, rngId)
 			Expect(err).To(BeNil())
 			rangeReplicas, err := p.RetrieveRangeReplicas(ctx, rngId)
@@ -39,7 +39,7 @@ var _ = Describe("Partition", func() {
 			}
 			Expect(err).To(BeNil())
 			sourceChunkReplicaCount = len(chunkReplicas)
-			newRanges, err = part.Exec(ctx)
+			newRanges, err = part.Exec()
 			Expect(err).To(BeNil())
 
 		})
@@ -95,7 +95,7 @@ var _ = Describe("Partition", func() {
 				newReplicas, err := p.RetrieveRangeReplicas(ctx, newRanges[0].ID)
 				Expect(len(newReplicas)).To(Equal(len(sourceReplicas)))
 			})
-			Specify("The node ID of each new range replica must the same as the original replica", func() {
+			Specify("The node PK of each new range replica must the same as the original replica", func() {
 				sourceReplicas, err := p.RetrieveRangeReplicas(ctx, rngId)
 				Expect(err).To(BeNil())
 				newReplicas, err := p.RetrieveRangeReplicas(ctx, newRanges[0].ID)

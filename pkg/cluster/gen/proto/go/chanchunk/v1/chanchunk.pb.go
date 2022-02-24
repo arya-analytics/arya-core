@@ -26,7 +26,7 @@ type ChannelChunkReplica struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	ID    string `protobuf:"bytes,1,opt,name=ID,proto3" json:"ID,omitempty" model:"role:pk"`
+	ID    string `protobuf:"bytes,1,opt,name=PK,proto3" json:"PK,omitempty" model:"role:pk"`
 	Telem []byte `protobuf:"bytes,2,opt,name=telem,proto3" json:"telem,omitempty" model:"role:bulkTelem"`
 }
 

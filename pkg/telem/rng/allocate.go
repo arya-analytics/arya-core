@@ -37,10 +37,10 @@ func (a *Allocate) retrieveObservedOrNew(ctx context.Context, q ObservedRange) (
 			return ObservedRange{}, err
 		}
 		or = ObservedRange{
-			ID:             newRng.ID,
+			PK:             newRng.ID,
 			Status:         newRng.Status,
-			LeaseReplicaID: newRng.RangeLease.RangeReplica.ID,
-			LeaseNodeID:    newRng.RangeLease.RangeReplica.NodeID,
+			LeaseReplicaPK: newRng.RangeLease.RangeReplica.ID,
+			LeaseNodePK:    newRng.RangeLease.RangeReplica.NodeID,
 		}
 		a.obs.Add(or)
 	}
@@ -55,9 +55,9 @@ type allocateChunk struct {
 }
 
 func (ac *allocateChunk) Exec(ctx context.Context) error {
-	or, err := ac.retrieveObservedOrNew(ctx, ObservedRange{LeaseNodeID: ac.nodeID, Status: models.RangeStatusOpen})
-	ac.rangeID = or.ID
-	ac.chunk.RangeID = or.ID
+	or, err := ac.retrieveObservedOrNew(ctx, ObservedRange{LeaseNodePK: ac.nodeID, Status: models.RangeStatusOpen})
+	ac.rangeID = or.PK
+	ac.chunk.RangeID = or.PK
 	return err
 }
 
@@ -69,7 +69,7 @@ type allocateChunkReplica struct {
 }
 
 func (ac *allocateChunkReplica) Exec(ctx context.Context) error {
-	or, err := ac.retrieveObservedOrNew(ctx, ObservedRange{ID: ac.rangeID, Status: models.RangeStatusOpen})
-	ac.replica.RangeReplicaID = or.LeaseReplicaID
+	or, err := ac.retrieveObservedOrNew(ctx, ObservedRange{PK: ac.rangeID, Status: models.RangeStatusOpen})
+	ac.replica.RangeReplicaID = or.LeaseReplicaPK
 	return err
 }

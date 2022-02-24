@@ -73,7 +73,7 @@ var _ = Describe("Service", func() {
 				Expect(ccRetrieveByPKResRfl.PK().Raw()).To(Equal(channelConfig.ID))
 				Expect(ccRetrieveByPKRes.Node.ID).To(Equal(node.ID))
 
-				By("Retrieving the channel config by the node ID")
+				By("Retrieving the channel config by the node PK")
 				ccRetrieveByNodeIDResRfl := model.NewReflect(&models.ChannelConfig{})
 				ccRetrieveByNodeIDQR := internal.NewQueryRequest(internal.QueryVariantRetrieve, ccRetrieveByNodeIDResRfl)
 				internal.NewWhereFieldsQueryOpt(ccRetrieveByNodeIDQR, model.WhereFields{"Node.ID": 1})

@@ -11,17 +11,19 @@ import (
 )
 
 type Persist interface {
-	NewRange(ctx context.Context, nodeID int) (*models.Range, error)
-	NewRangeReplica(ctx context.Context, rangeID uuid.UUID, nodeID int) (*models.RangeReplica, error)
+	NewRange(ctx context.Context, nodePK int) (*models.Range, error)
+	NewRangeReplica(ctx context.Context, rngPK uuid.UUID, nodePK int) (*models.RangeReplica, error)
 
-	RetrieveRange(ctx context.Context, ID uuid.UUID) (*models.Range, error)
-	RetrieveRangeSize(ctx context.Context, ID uuid.UUID) (int64, error)
-	RetrieveRangeChunks(ctx context.Context, rangeID uuid.UUID) ([]*models.ChannelChunk, error)
-	RetrieveRangeChunkReplicas(ctx context.Context, rangeID uuid.UUID) ([]*models.ChannelChunkReplica, error)
-	RetrieveRangeReplicas(ctx context.Context, rngID uuid.UUID) ([]*models.RangeReplica, error)
+	RetrieveRange(ctx context.Context, pk uuid.UUID) (*models.Range, error)
+	RetrieveRangeSize(ctx context.Context, pk uuid.UUID) (int64, error)
+	RetrieveRangeChunks(ctx context.Context, rngPK uuid.UUID) ([]*models.ChannelChunk, error)
+	RetrieveRangeChunkReplicas(ctx context.Context, rngPK uuid.UUID) ([]*models.ChannelChunkReplica, error)
+	RetrieveRangeReplicas(ctx context.Context, rngPK uuid.UUID) ([]*models.RangeReplica, error)
 
-	ReallocateChunks(ctx context.Context, pks []uuid.UUID, newRangeID uuid.UUID) error
-	ReallocateChunkReplicas(ctx context.Context, pk []uuid.UUID, newRangeReplicaID uuid.UUID) error
+	ReallocateChunks(ctx context.Context, pks []uuid.UUID, newRngPK uuid.UUID) error
+	ReallocateChunkReplicas(ctx context.Context, pk []uuid.UUID, newRRPK uuid.UUID) error
+
+	UpdateRangeStatus(ctx context.Context, rngPK uuid.UUID, status models.RangeStatus) error
 }
 
 type PersistCluster struct {
@@ -30,11 +32,11 @@ type PersistCluster struct {
 
 // |||| NEW ||||
 
-func (p *PersistCluster) NewRange(ctx context.Context, nodeID int) (*models.Range, error) {
+func (p *PersistCluster) NewRange(ctx context.Context, nodePK int) (*models.Range, error) {
 	c := errutil.NewContextCatcher(ctx)
 	r := &models.Range{}
 	c.Exec(p.Cluster.NewCreate().Model(r).Exec)
-	rr := &models.RangeReplica{RangeID: r.ID, NodeID: nodeID}
+	rr := &models.RangeReplica{RangeID: r.ID, NodeID: nodePK}
 	c.Exec(p.Cluster.NewCreate().Model(rr).Exec)
 	lease := &models.RangeLease{RangeID: r.ID, RangeReplicaID: rr.ID, RangeReplica: rr}
 	c.Exec(p.Cluster.NewCreate().Model(lease).Exec)
@@ -42,58 +44,68 @@ func (p *PersistCluster) NewRange(ctx context.Context, nodeID int) (*models.Rang
 	return r, nil
 }
 
-func (p *PersistCluster) NewRangeReplica(ctx context.Context, rangeID uuid.UUID, nodeID int) (*models.RangeReplica, error) {
-	rr := &models.RangeReplica{RangeID: rangeID, NodeID: nodeID}
+func (p *PersistCluster) NewRangeReplica(ctx context.Context, rngPK uuid.UUID, nodePK int) (*models.RangeReplica, error) {
+	rr := &models.RangeReplica{RangeID: rngPK, NodeID: nodePK}
 	err := p.Cluster.NewCreate().Model(rr).Exec(ctx)
 	return rr, err
 }
 
 // |||| RETRIEVE ||||
 
-func (p *PersistCluster) RetrieveRange(ctx context.Context, ID uuid.UUID) (*models.Range, error) {
+func (p *PersistCluster) RetrieveRange(ctx context.Context, pk uuid.UUID) (*models.Range, error) {
 	r := &models.Range{}
-	err := p.Cluster.NewRetrieve().Model(r).WherePK(ID).Exec(ctx)
+	err := p.Cluster.NewRetrieve().Model(r).WherePK(pk).Exec(ctx)
 	return r, err
 }
 
-func (p *PersistCluster) ccByRangeQ(chunks interface{}, ID uuid.UUID) *cluster.QueryRetrieve {
-	return p.Cluster.NewRetrieve().Model(chunks).WhereFields(model.WhereFields{"RangeID": ID})
+func (p *PersistCluster) ccByRangeQ(chunks interface{}, pk uuid.UUID) *cluster.QueryRetrieve {
+	return p.Cluster.NewRetrieve().Model(chunks).WhereFields(model.WhereFields{"RangeID": pk})
 }
 
-func (p *PersistCluster) RetrieveRangeSize(ctx context.Context, ID uuid.UUID) (int64, error) {
+func (p *PersistCluster) RetrieveRangeSize(ctx context.Context, pk uuid.UUID) (int64, error) {
 	var size int64 = 0
-	return size, p.ccByRangeQ(&models.ChannelChunk{}, ID).Calculate(storage.CalculateSum, "Size", &size).Exec(ctx)
+	return size, p.ccByRangeQ(&models.ChannelChunk{}, pk).Calculate(storage.CalculateSum, "Size", &size).Exec(ctx)
 }
 
-func (p *PersistCluster) RetrieveRangeChunks(ctx context.Context, rangeID uuid.UUID) ([]*models.ChannelChunk, error) {
+func (p *PersistCluster) RetrieveRangeChunks(ctx context.Context, rngPK uuid.UUID) ([]*models.ChannelChunk, error) {
 	var cc []*models.ChannelChunk
-	return cc, p.ccByRangeQ(cc, rangeID).Exec(ctx)
+	return cc, p.ccByRangeQ(&cc, rngPK).Exec(ctx)
 }
 
-func (p *PersistCluster) RetrieveRangeReplicas(ctx context.Context, rangeID uuid.UUID) ([]*models.RangeReplica, error) {
+func (p *PersistCluster) RetrieveRangeReplicas(ctx context.Context, rngPK uuid.UUID) ([]*models.RangeReplica, error) {
 	var rr []*models.RangeReplica
-	return rr, p.Cluster.NewRetrieve().Model(&rr).WhereFields(model.WhereFields{"RangeID": rangeID}).Exec(ctx)
+	return rr, p.Cluster.NewRetrieve().Model(&rr).WhereFields(model.WhereFields{"RangeID": rngPK}).Exec(ctx)
 }
 
-func (p *PersistCluster) RetrieveRangeChunkReplicas(ctx context.Context, rangeID uuid.UUID) ([]*models.ChannelChunkReplica, error) {
+func (p *PersistCluster) RetrieveRangeChunkReplicas(ctx context.Context, rngPK uuid.UUID) ([]*models.ChannelChunkReplica, error) {
 	var ccr []*models.ChannelChunkReplica
-	return ccr, p.Cluster.NewRetrieve().Model(&ccr).WhereFields(model.WhereFields{"ChannelChunk.RangeID": rangeID}).Exec(ctx)
+	return ccr, p.Cluster.
+		NewRetrieve().
+		Model(&ccr).
+		WhereFields(model.WhereFields{"ChannelChunk.RangeID": rngPK}).
+		Fields("ID", "RangeReplicaID").Exec(ctx)
 }
 
 // |||| RE-ALLOCATE ||||
 
-func (p *PersistCluster) ReallocateChunks(ctx context.Context, pks []uuid.UUID, newRangeID uuid.UUID) error {
+func (p *PersistCluster) ReallocateChunks(ctx context.Context, pks []uuid.UUID, newRngPK uuid.UUID) error {
 	var cc []*models.ChannelChunk
 	for _, pk := range pks {
-		cc = append(cc, &models.ChannelChunk{ID: pk, RangeID: newRangeID})
+		cc = append(cc, &models.ChannelChunk{ID: pk, RangeID: newRngPK})
 	}
 	return p.Cluster.NewUpdate().Model(&cc).Fields("RangeID").Bulk().Exec(ctx)
 }
 
-func (p *PersistCluster) ReallocateChunkReplicas(ctx context.Context, pks []uuid.UUID, newRangeReplicaID uuid.UUID) error {
+func (p *PersistCluster) ReallocateChunkReplicas(ctx context.Context, pks []uuid.UUID, newRRPK uuid.UUID) error {
 	var ccr []*models.ChannelChunkReplica
 	for _, pk := range pks {
-		ccr = append(ccr, &models.ChannelChunkReplica{ID: pk, RangeReplicaID: newRangeReplicaID})
+		ccr = append(ccr, &models.ChannelChunkReplica{ID: pk, RangeReplicaID: newRRPK})
 	}
 	return p.Cluster.NewUpdate().Model(&ccr).Fields("RangeReplicaID").Bulk().Exec(ctx)
+}
+
+// ||| UPDATE |||
+
+func (p *PersistCluster) UpdateRangeStatus(ctx context.Context, pk uuid.UUID, status models.RangeStatus) error {
+	return p.Cluster.NewUpdate().Model(&models.Range{ID: pk, Status: status}).Fields("Status").WherePK(pk).Exec(ctx)
 }

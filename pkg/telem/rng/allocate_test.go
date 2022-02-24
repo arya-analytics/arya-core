@@ -28,26 +28,26 @@ var _ = Describe("Allocate", func() {
 				Expect(err).To(BeNil())
 				Expect(p.Ranges).To(HaveLen(1))
 				Expect(obs.RetrieveAll()).To(HaveLen(1))
-				_, ok := obs.Retrieve(rng.ObservedRange{Status: models.RangeStatusOpen, LeaseNodeID: 1})
+				_, ok := obs.Retrieve(rng.ObservedRange{Status: models.RangeStatusOpen, LeaseNodePK: 1})
 				Expect(ok).To(BeTrue())
 			})
 		})
 		Context("When an open range is under observation", func() {
 			It("Should allocate to the open range", func() {
 				obs.Add(rng.ObservedRange{
-					ID:             uuid.New(),
+					PK:             uuid.New(),
 					Status:         models.RangeStatusOpen,
-					LeaseNodeID:    1,
-					LeaseReplicaID: uuid.New(),
+					LeaseNodePK:    1,
+					LeaseReplicaPK: uuid.New(),
 				})
 				chunkToAlloc := &models.ChannelChunk{}
 				err := svc.NewAllocate().Chunk(1, chunkToAlloc).Exec(ctx)
 				Expect(err).To(BeNil())
 				Expect(p.Ranges).To(HaveLen(0))
 				Expect(obs.RetrieveAll()).To(HaveLen(1))
-				or, ok := obs.Retrieve(rng.ObservedRange{Status: models.RangeStatusOpen, LeaseNodeID: 1})
+				or, ok := obs.Retrieve(rng.ObservedRange{Status: models.RangeStatusOpen, LeaseNodePK: 1})
 				Expect(ok).To(BeTrue())
-				Expect(chunkToAlloc.RangeID).To(Equal(or.ID))
+				Expect(chunkToAlloc.RangeID).To(Equal(or.PK))
 			})
 		})
 	})
@@ -72,9 +72,9 @@ var _ = Describe("Allocate", func() {
 					Expect(crErr).To(BeNil())
 					Expect(p.Ranges).To(HaveLen(1))
 					Expect(obs.RetrieveAll()).To(HaveLen(1))
-					or, ok := obs.Retrieve(rng.ObservedRange{Status: models.RangeStatusOpen, LeaseNodeID: 1})
+					or, ok := obs.Retrieve(rng.ObservedRange{Status: models.RangeStatusOpen, LeaseNodePK: 1})
 					Expect(ok).To(BeTrue())
-					Expect(chunkReplicaToAlloc.RangeReplicaID).To(Equal(or.LeaseReplicaID))
+					Expect(chunkReplicaToAlloc.RangeReplicaID).To(Equal(or.LeaseReplicaPK))
 				})
 			})
 			Context("When the range has been closed in between allocating the chunk and the replica", func() {
@@ -85,9 +85,9 @@ var _ = Describe("Allocate", func() {
 					Expect(err).To(BeNil())
 					Expect(p.Ranges).To(HaveLen(1))
 					obs.Add(rng.ObservedRange{
-						ID:             p.Ranges[0].ID,
-						LeaseReplicaID: p.Ranges[0].RangeLease.RangeReplica.ID,
-						LeaseNodeID:    p.Ranges[0].RangeLease.RangeReplica.NodeID,
+						PK:             p.Ranges[0].ID,
+						LeaseReplicaPK: p.Ranges[0].RangeLease.RangeReplica.ID,
+						LeaseNodePK:    p.Ranges[0].RangeLease.RangeReplica.NodeID,
 						Status:         models.RangeStatusClosed,
 					})
 					chunkReplicaToAlloc := &models.ChannelChunkReplica{}
@@ -95,9 +95,9 @@ var _ = Describe("Allocate", func() {
 					Expect(crErr).To(BeNil())
 					Expect(p.Ranges).To(HaveLen(2))
 					Expect(obs.RetrieveAll()).To(HaveLen(2))
-					or, ok := obs.Retrieve(rng.ObservedRange{Status: models.RangeStatusOpen, LeaseNodeID: 1})
+					or, ok := obs.Retrieve(rng.ObservedRange{Status: models.RangeStatusOpen, LeaseNodePK: 1})
 					Expect(ok).To(BeTrue())
-					Expect(chunkReplicaToAlloc.RangeReplicaID).To(Equal(or.LeaseReplicaID))
+					Expect(chunkReplicaToAlloc.RangeReplicaID).To(Equal(or.LeaseReplicaPK))
 				})
 			})
 		})

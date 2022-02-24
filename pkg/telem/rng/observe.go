@@ -16,10 +16,10 @@ type Observe interface {
 }
 
 type ObservedRange struct {
-	ID             uuid.UUID
+	PK             uuid.UUID
 	Status         models.RangeStatus
-	LeaseNodeID    int
-	LeaseReplicaID uuid.UUID
+	LeaseNodePK    int
+	LeaseReplicaPK uuid.UUID
 }
 
 type ObserveMem struct {
@@ -31,7 +31,7 @@ func NewObserveMem(ranges []ObservedRange) *ObserveMem {
 	rangeMap := map[uuid.UUID]ObservedRange{}
 	for _, rng := range ranges {
 		validateObservedRange(rng)
-		rangeMap[rng.ID] = rng
+		rangeMap[rng.PK] = rng
 	}
 	return &ObserveMem{ranges: rangeMap}
 }
@@ -40,7 +40,7 @@ func (o *ObserveMem) Add(or ObservedRange) {
 	o.mu.Lock()
 	defer o.mu.Unlock()
 	validateObservedRange(or)
-	o.ranges[or.ID] = or
+	o.ranges[or.PK] = or
 }
 
 func (o *ObserveMem) Retrieve(q ObservedRange) (ObservedRange, bool) {
@@ -72,26 +72,26 @@ func matchObservedRangeQuery(q ObservedRange, or ObservedRange) bool {
 	if q.Status != 0 && q.Status != or.Status {
 		return false
 	}
-	if !model.NewPK(q.ID).IsZero() && q.ID != or.ID {
+	if !model.NewPK(q.PK).IsZero() && q.PK != or.PK {
 		return false
 	}
-	if !model.NewPK(q.LeaseReplicaID).IsZero() && q.LeaseReplicaID != or.LeaseReplicaID {
+	if !model.NewPK(q.LeaseReplicaPK).IsZero() && q.LeaseReplicaPK != or.LeaseReplicaPK {
 		return false
 	}
-	if !model.NewPK(q.LeaseNodeID).IsZero() && q.LeaseNodeID != or.LeaseNodeID {
+	if !model.NewPK(q.LeaseNodePK).IsZero() && q.LeaseNodePK != or.LeaseNodePK {
 		return false
 	}
 	return true
 }
 
 func validateObservedRange(or ObservedRange) {
-	if model.NewPK(or.ID).IsZero() {
+	if model.NewPK(or.PK).IsZero() {
 		panic("can't add observed range without pk")
 	}
-	if model.NewPK(or.LeaseNodeID).IsZero() {
+	if model.NewPK(or.LeaseNodePK).IsZero() {
 		panic("can't add observed range without lease node id")
 	}
-	if model.NewPK(or.LeaseReplicaID).IsZero() {
+	if model.NewPK(or.LeaseReplicaPK).IsZero() {
 		panic("can't add observed range without lease replica id")
 	}
 	if reflect.ValueOf(or.Status).IsZero() {

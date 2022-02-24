@@ -15,7 +15,7 @@ var _ = Describe("Fields", func() {
 			m = &mock.ModelA{InnerModel: &mock.ModelB{ID: 96}}
 		})
 		It("Should return false when the fields are nonZero", func() {
-			Expect(model.NewReflect(m).FieldsByName("ID").AllNonZero()).To(BeFalse())
+			Expect(model.NewReflect(m).FieldsByName("InnerModel.ID").AllNonZero()).To(BeFalse())
 		})
 
 	})

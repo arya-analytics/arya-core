@@ -16,9 +16,9 @@ const (
 	tasksName = "roach_tasks"
 )
 
-func newTaskScheduler(db *bun.DB, opts ...tasks.SchedulerOpt) tasks.Scheduler {
+func newTaskScheduler(db *bun.DB, opts ...tasks.ScheduleOpt) tasks.Schedule {
 	opts = append(opts, tasks.ScheduleWithName(tasksName))
-	return tasks.NewSimpleScheduler(
+	return tasks.NewScheduleSimple(
 		[]tasks.Task{
 			{
 				Action:   syncNodesAction(db),
@@ -42,7 +42,7 @@ const (
 // and updates the arya nodes table to add/remove nodes that have
 // joined/exited the cluster.
 func syncNodesAction(db *bun.DB) tasks.Action {
-	return func(ctx context.Context, cfg tasks.SchedulerConfig) error {
+	return func(ctx context.Context, cfg tasks.ScheduleConfig) error {
 		sn := &syncNodes{db: db, catcher: &errutil.Catcher{},
 			handler: newErrorHandler(), cfg: cfg}
 		return sn.exec(ctx)
@@ -54,7 +54,7 @@ type syncNodes struct {
 	db      *bun.DB
 	catcher *errutil.Catcher
 	handler storage.ErrorHandler
-	cfg     tasks.SchedulerConfig
+	cfg     tasks.ScheduleConfig
 }
 
 func (sn *syncNodes) exec(ctx context.Context) error {
@@ -113,7 +113,7 @@ func (sn *syncNodes) deleteNodeWithPK(pk model.PK) {
 	sn.catcher.Exec(func() error {
 		_, err := sn.db.NewDelete().
 			Table(nodesTable).
-			Where("ID = ?", pk.Raw()).
+			Where("PK = ?", pk.Raw()).
 			Exec(sn.ctx)
 		return err
 	})

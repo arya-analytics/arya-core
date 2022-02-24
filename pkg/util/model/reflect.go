@@ -116,6 +116,9 @@ func (r *Reflect) StructFieldByName(name string) reflect.Value {
 		if i == 0 {
 			fld = r.StructValue().FieldByName(splitName)
 		} else {
+			if fld.IsZero() {
+				panic(fmt.Sprintf("nested field %s is zero on model %s", sn[i-1], r.Type().Name()))
+			}
 			fld = fld.Elem().FieldByName(splitName)
 		}
 	}

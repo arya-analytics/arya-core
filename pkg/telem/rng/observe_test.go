@@ -14,10 +14,10 @@ var _ = Describe("Observe", func() {
 		It("Should validate the observed ranges without panicking", func() {
 			Expect(func() {
 				rng.NewObserveMem([]rng.ObservedRange{
-					{ID: uuid.New(),
+					{PK: uuid.New(),
 						Status:         models.RangeStatusClosed,
-						LeaseNodeID:    1,
-						LeaseReplicaID: uuid.New()},
+						LeaseNodePK:    1,
+						LeaseReplicaPK: uuid.New()},
 				})
 			}).ToNot(Panic())
 		})
@@ -28,25 +28,25 @@ var _ = Describe("Observe", func() {
 					obs.Add(or)
 				}).To(Panic())
 			},
-			Entry("No ID", rng.ObservedRange{LeaseReplicaID: uuid.New(), LeaseNodeID: 1, Status: models.RangeStatusClosed}),
-			Entry("No Lease Node ID", rng.ObservedRange{ID: uuid.New(), LeaseReplicaID: uuid.New(), Status: models.RangeStatusClosed}),
-			Entry("No Lease Replica ID", rng.ObservedRange{ID: uuid.New(), LeaseNodeID: 1, Status: models.RangeStatusOpen}),
-			Entry("No Range Status", rng.ObservedRange{ID: uuid.New(), LeaseReplicaID: uuid.New(), LeaseNodeID: 1}),
+			Entry("No PK", rng.ObservedRange{LeaseReplicaPK: uuid.New(), LeaseNodePK: 1, Status: models.RangeStatusClosed}),
+			Entry("No Lease Node PK", rng.ObservedRange{PK: uuid.New(), LeaseReplicaPK: uuid.New(), Status: models.RangeStatusClosed}),
+			Entry("No Lease Replica PK", rng.ObservedRange{PK: uuid.New(), LeaseNodePK: 1, Status: models.RangeStatusOpen}),
+			Entry("No Range Status", rng.ObservedRange{PK: uuid.New(), LeaseReplicaPK: uuid.New(), LeaseNodePK: 1}),
 		)
 		Describe("Retrieving ranges", func() {
 			var (
 				or = rng.ObservedRange{
-					ID:             uuid.New(),
+					PK:             uuid.New(),
 					Status:         models.RangeStatusOpen,
-					LeaseNodeID:    1,
-					LeaseReplicaID: uuid.New(),
+					LeaseNodePK:    1,
+					LeaseReplicaPK: uuid.New(),
 				}
 				ranges = []rng.ObservedRange{
 					{
-						ID:             uuid.New(),
+						PK:             uuid.New(),
 						Status:         models.RangeStatusClosed,
-						LeaseNodeID:    2,
-						LeaseReplicaID: uuid.New(),
+						LeaseNodePK:    2,
+						LeaseReplicaPK: uuid.New(),
 					},
 					or,
 				}
@@ -57,17 +57,17 @@ var _ = Describe("Observe", func() {
 						obs := rng.NewObserveMem(ranges)
 						retOR, ok := obs.Retrieve(q)
 						Expect(ok).To(BeTrue())
-						Expect(retOR.ID).To(Equal(or.ID))
+						Expect(retOR.PK).To(Equal(or.PK))
 					},
-					Entry("By ID", ranges, or, rng.ObservedRange{ID: or.ID}),
+					Entry("By PK", ranges, or, rng.ObservedRange{PK: or.PK}),
 					Entry("By Status", ranges, or, rng.ObservedRange{Status: or.Status}),
-					Entry("By Lease Node ID", ranges, or, rng.ObservedRange{LeaseNodeID: or.LeaseNodeID}),
-					Entry("by Lease Node ID and status", ranges, or, rng.ObservedRange{LeaseNodeID: or.LeaseNodeID, Status: models.RangeStatusOpen}),
-					Entry("By Lease Replica ID", ranges, or, rng.ObservedRange{LeaseReplicaID: or.LeaseReplicaID}),
+					Entry("By Lease Node PK", ranges, or, rng.ObservedRange{LeaseNodePK: or.LeaseNodePK}),
+					Entry("by Lease Node PK and status", ranges, or, rng.ObservedRange{LeaseNodePK: or.LeaseNodePK, Status: models.RangeStatusOpen}),
+					Entry("By Lease Replica PK", ranges, or, rng.ObservedRange{LeaseReplicaPK: or.LeaseReplicaPK}),
 				)
 				It("Should return false when a range can't be found", func() {
 					obs := rng.NewObserveMem(ranges)
-					_, ok := obs.Retrieve(rng.ObservedRange{ID: uuid.New()})
+					_, ok := obs.Retrieve(rng.ObservedRange{PK: uuid.New()})
 					Expect(ok).To(BeFalse())
 				})
 			})
@@ -81,16 +81,16 @@ var _ = Describe("Observe", func() {
 		Describe("It shouldn't run into any race conditions with frequent updates to the same item from diff goroutines", func() {
 			wg := sync.WaitGroup{}
 			or := rng.ObservedRange{
-				ID:             uuid.New(),
-				LeaseNodeID:    1,
-				LeaseReplicaID: uuid.New(),
+				PK:             uuid.New(),
+				LeaseNodePK:    1,
+				LeaseReplicaPK: uuid.New(),
 				Status:         models.RangeStatusOpen,
 			}
 			obs := rng.NewObserveMem([]rng.ObservedRange{or})
 			wg.Add(100)
 			for i := 0; i < 100; i++ {
 				go func(or rng.ObservedRange) {
-					or.LeaseReplicaID = uuid.New()
+					or.LeaseReplicaPK = uuid.New()
 					obs.Add(or)
 					wg.Done()
 				}(or)

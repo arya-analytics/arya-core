@@ -1,16 +1,16 @@
 // Package tasks holds utilities for executing actions at specified intervals.
 // It includes a Task struct that defines a name, interval, and action. This Task can be provided
-// to a Scheduler that manages its execution. SchedulerBatch can be used to compose multiple Scheduler together and run
+// to a Schedule that manages its execution. ScheduleBatch can be used to compose multiple Schedule together and run
 // them as a set of independent goroutines.
 //
 // Error Handling
 //
 // Task.Action returns an error. This error can be used to pass issues encountered while running your task to the
-// Scheduler error handling mechanisms. When a Scheduler encounters an error, it will log the error to standard output
-// and pipe the error to the channel returned by Scheduler.Errors(). It's probably a good idea to listen to this channel
+// Schedule error handling mechanisms. When a Schedule encounters an error, it will log the error to standard output
+// and pipe the error to the channel returned by Schedule.Errors(). It's probably a good idea to listen to this channel
 // and handle the error accordingly.
 //
-// When the Scheduler encounters an error while executing a task, it will keep executing the task on the specified
+// When the Schedule encounters an error while executing a task, it will keep executing the task on the specified
 // interval, even if the task repeatedly fails.
 package tasks
 
@@ -23,11 +23,11 @@ import (
 
 // |||| SCHEDULER ||||
 
-// Scheduler aggregates and executes tasks on their specified interval.
+// Schedule aggregates and executes tasks on their specified interval.
 // The tasks package provides two schedulers.
-// SchedulerSimple executes a base set of provided tasks.
-// SchedulerBatch composes multiple schedulers and runs them concurrently.
-type Scheduler interface {
+// ScheduleSimple executes a base set of provided tasks.
+// ScheduleBatch composes multiple schedulers and runs them concurrently.
+type Schedule interface {
 	// Start starts the scheduler. See implementation specific details for more information on the behavior of Start.
 	// The provided context can be used to stop the scheduler (by calling cancel).
 	Start(ctx context.Context)
@@ -40,24 +40,24 @@ type Scheduler interface {
 
 const defaultAccel = 1
 
-// SchedulerSimple executes a set of tasks at their specified interval.
-// To create a new scheduler, use NewSimpleScheduler.
-// SchedulerSimple doesn't start any goroutines.
-type SchedulerSimple struct {
+// ScheduleSimple executes a set of tasks at their specified interval.
+// To create a new scheduler, use NewScheduleSimple.
+// ScheduleSimple doesn't start any goroutines.
+type ScheduleSimple struct {
 	Tasks    []Task
-	cfg      *SchedulerConfig
+	cfg      *ScheduleConfig
 	chanErr  chan error
 	chanStop chan bool
 }
 
-// NewSimpleScheduler creates a new Scheduler with the specified tasks.
+// NewScheduleSimple creates a new Schedule with the specified tasks.
 // Optional SchedulerOpts can be provided to modify the scheduler's behavior.
-func NewSimpleScheduler(tasks []Task, opts ...SchedulerOpt) Scheduler {
-	s := &SchedulerSimple{
+func NewScheduleSimple(tasks []Task, opts ...ScheduleOpt) Schedule {
+	s := &ScheduleSimple{
 		Tasks:    tasks,
 		chanErr:  make(chan error),
 		chanStop: make(chan bool),
-		cfg: &SchedulerConfig{
+		cfg: &ScheduleConfig{
 			Accel: defaultAccel,
 		},
 	}
@@ -65,9 +65,9 @@ func NewSimpleScheduler(tasks []Task, opts ...SchedulerOpt) Scheduler {
 	return s
 }
 
-// Start implements Scheduler.
+// Start implements Schedule.
 // NOTE: This is a blocking operation. It's common to run Start as a new goroutine.
-func (s *SchedulerSimple) Start(ctx context.Context) {
+func (s *ScheduleSimple) Start(ctx context.Context) {
 	s.logStart()
 	t, t0 := time.NewTicker(s.tickInterval()), time.Now()
 	defer t.Stop()
@@ -85,16 +85,16 @@ func (s *SchedulerSimple) Start(ctx context.Context) {
 	}
 }
 
-func (s *SchedulerSimple) Stop() {
+func (s *ScheduleSimple) Stop() {
 	s.chanStop <- true
 }
 
-// Errors implements Scheduler.
-func (s *SchedulerSimple) Errors() chan error {
+// Errors implements Schedule.
+func (s *ScheduleSimple) Errors() chan error {
 	return s.chanErr
 }
 
-func (s *SchedulerSimple) tickInterval() time.Duration {
+func (s *ScheduleSimple) tickInterval() time.Duration {
 	var intervals []time.Duration
 	for _, t := range s.Tasks {
 		intervals = append(intervals, t.Interval)
@@ -105,7 +105,7 @@ func (s *SchedulerSimple) tickInterval() time.Duration {
 
 const taskExecThreshold = 50 * time.Millisecond
 
-func (s *SchedulerSimple) exec(ctx context.Context, t time.Duration) {
+func (s *ScheduleSimple) exec(ctx context.Context, t time.Duration) {
 	for _, task := range s.Tasks {
 		if t%s.accelerate(task.Interval) < taskExecThreshold {
 			if err := task.Action(ctx, *s.cfg); err != nil {
@@ -118,17 +118,17 @@ func (s *SchedulerSimple) exec(ctx context.Context, t time.Duration) {
 
 const minToNanoSec = 1000000000 * 60
 
-func (s *SchedulerSimple) accelerate(t time.Duration) time.Duration {
+func (s *ScheduleSimple) accelerate(t time.Duration) time.Duration {
 	return time.Duration((t.Minutes() / s.cfg.Accel) * minToNanoSec)
 }
 
-func (s *SchedulerSimple) bindOpts(opts ...SchedulerOpt) {
+func (s *ScheduleSimple) bindOpts(opts ...ScheduleOpt) {
 	for _, opt := range opts {
 		opt(s.cfg)
 	}
 }
 
-func (s *SchedulerSimple) logStart() {
+func (s *ScheduleSimple) logStart() {
 	if s.cfg.Name != "" && !s.cfg.Silent {
 		log.WithFields(log.Fields{
 			"Name":          s.cfg.Name,
@@ -139,7 +139,7 @@ func (s *SchedulerSimple) logStart() {
 	}
 }
 
-func (s *SchedulerSimple) logStop() {
+func (s *ScheduleSimple) logStop() {
 	if s.cfg.Name != "" && !s.cfg.Silent {
 		log.WithFields(log.Fields{
 			"Name": s.cfg.Name,
@@ -148,7 +148,7 @@ func (s *SchedulerSimple) logStop() {
 	}
 }
 
-func (s *SchedulerSimple) logTaskFailure(task Task, err error) {
+func (s *ScheduleSimple) logTaskFailure(task Task, err error) {
 	if !s.cfg.Silent {
 		log.WithFields(log.Fields{
 			"Name":      s.cfg.Name,
@@ -159,74 +159,74 @@ func (s *SchedulerSimple) logTaskFailure(task Task, err error) {
 
 // |||| BATCH ||||
 
-// SchedulerBatch composes a set of Scheduler and runs each of them in a separate
+// ScheduleBatch composes a set of Schedule and runs each of them in a separate
 // go -routine. You can construct hierarchies of tasks schedulers by composing
-// multiple SchedulerBatch and SchedulerSimple.
-type SchedulerBatch struct {
-	schedulers []Scheduler
+// multiple ScheduleBatch and ScheduleSimple.
+type ScheduleBatch struct {
+	schedulers []Schedule
 	chanErr    chan error
 }
 
-// NewBatchScheduler creates a new SchedulerBatch from a set of Scheduler.
-func NewBatchScheduler(schedulers ...Scheduler) Scheduler {
-	return &SchedulerBatch{schedulers: schedulers}
+// NewScheduleBatch creates a new ScheduleBatch from a set of Schedule.
+func NewScheduleBatch(schedulers ...Schedule) Schedule {
+	return &ScheduleBatch{schedulers: schedulers}
 }
 
-// Start implements Scheduler.
-// NOTE: this method is non-blocking, and starts a new goroutine for each child Scheduler.
-func (sb *SchedulerBatch) Start(ctx context.Context) {
+// Start implements Schedule.
+// NOTE: this method is non-blocking, and starts a new goroutine for each child Schedule.
+func (sb *ScheduleBatch) Start(ctx context.Context) {
 	for _, s := range sb.schedulers {
 		go s.Start(ctx)
 		go sb.pipeErrors(s.Errors())
 	}
 }
 
-// Stop implements Scheduler.
-func (sb *SchedulerBatch) Stop() {
+// Stop implements Schedule.
+func (sb *ScheduleBatch) Stop() {
 	for _, s := range sb.schedulers {
 		s.Stop()
 	}
 }
 
-// Errors implements Scheduler.
-func (sb *SchedulerBatch) Errors() chan error {
+// Errors implements Schedule.
+func (sb *ScheduleBatch) Errors() chan error {
 	return sb.chanErr
 }
 
-func (sb *SchedulerBatch) pipeErrors(chanErr chan error) {
+func (sb *ScheduleBatch) pipeErrors(chanErr chan error) {
 	err := <-chanErr
 	sb.chanErr <- err
 }
 
 // |||| SCHEDULER OPTIONS ||||
 
-// SchedulerConfig holds configuration information for a Scheduler. It shouldn't be instantiated directly, and should
-// instead be configured by passing SchedulerOpt to one of the Scheduler constructors.
-type SchedulerConfig struct {
+// ScheduleConfig holds configuration information for a Schedule. It shouldn't be instantiated directly, and should
+// instead be configured by passing ScheduleOpt to one of the Schedule constructors.
+type ScheduleConfig struct {
 	Name   string
 	Accel  float64
 	Silent bool
 }
 
-// SchedulerOpt is a modifier function that allows arbitrary configuration of a scheduler.
-type SchedulerOpt func(opts *SchedulerConfig)
+// ScheduleOpt is a modifier function that allows arbitrary configuration of a scheduler.
+type ScheduleOpt func(opts *ScheduleConfig)
 
 // ScheduleWithName assigns a name to the scheduler. This is primarily for logging purposes.
-func ScheduleWithName(name string) SchedulerOpt {
-	return func(opts *SchedulerConfig) { opts.Name = name }
+func ScheduleWithName(name string) ScheduleOpt {
+	return func(opts *ScheduleConfig) { opts.Name = name }
 }
 
 // ScheduleWithAccel accelerates the scheduler by the specified multiple. A utility mostly for testing tasks with long
 // Task.Interval values. It's probably not a good idea to use this in production, as it modifies the sense of time, which
 // can be confusing.
-func ScheduleWithAccel(accel float64) SchedulerOpt {
-	return func(opts *SchedulerConfig) { opts.Accel = accel }
+func ScheduleWithAccel(accel float64) ScheduleOpt {
+	return func(opts *ScheduleConfig) { opts.Accel = accel }
 }
 
 // ScheduleWithSilence disables all logging internal to the scheduler. NOTE: This won't disable logging from Tasks,
-// unless the task accesses SchedulerConfig and implements the appropriate logic.
-func ScheduleWithSilence() SchedulerOpt {
-	return func(opts *SchedulerConfig) { opts.Silent = true }
+// unless the task accesses ScheduleConfig and implements the appropriate logic.
+func ScheduleWithSilence() ScheduleOpt {
+	return func(opts *ScheduleConfig) { opts.Silent = true }
 }
 
 // |||| MATH UTILITIES ||||

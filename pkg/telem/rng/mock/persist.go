@@ -28,12 +28,12 @@ func NewBlankPersist() *Persist {
 	}
 }
 
-func (p *Persist) NewRange(ctx context.Context, nodeID int) (*models.Range, error) {
+func (p *Persist) NewRange(ctx context.Context, nodePK int) (*models.Range, error) {
 	id := uuid.New()
 	rr := &models.RangeReplica{
 		ID:      uuid.New(),
 		RangeID: id,
-		NodeID:  nodeID,
+		NodeID:  nodePK,
 	}
 	lease := &models.RangeLease{
 		ID:             uuid.New(),
@@ -52,64 +52,64 @@ func (p *Persist) NewRange(ctx context.Context, nodeID int) (*models.Range, erro
 	return r, nil
 }
 
-func (p *Persist) NewRangeReplica(ctx context.Context, rangeID uuid.UUID, nodeID int) (*models.RangeReplica, error) {
+func (p *Persist) NewRangeReplica(ctx context.Context, rngPK uuid.UUID, nodePK int) (*models.RangeReplica, error) {
 	rr := &models.RangeReplica{
 		ID:      uuid.New(),
-		RangeID: rangeID,
-		NodeID:  nodeID,
+		RangeID: rngPK,
+		NodeID:  nodePK,
 	}
 	p.RangeReplicas = append(p.RangeReplicas, rr)
 	return rr, nil
 }
 
-func (p *Persist) RetrieveRange(ctx context.Context, ID uuid.UUID) (*models.Range, error) {
+func (p *Persist) RetrieveRange(ctx context.Context, PK uuid.UUID) (*models.Range, error) {
 	for _, rng := range p.Ranges {
-		if rng.ID == ID {
+		if rng.ID == PK {
 			return rng, nil
 		}
 	}
 	return nil, storage.Error{Type: storage.ErrorTypeItemNotFound}
 }
 
-func (p *Persist) RetrieveRangeSize(ctx context.Context, ID uuid.UUID) (int64, error) {
+func (p *Persist) RetrieveRangeSize(ctx context.Context, PK uuid.UUID) (int64, error) {
 	var size int64 = 0
 	for _, cc := range p.Chunks {
-		if cc.RangeID == ID {
+		if cc.RangeID == PK {
 			size += cc.Size
 		}
 	}
 	return size, nil
 }
 
-func (p *Persist) RetrieveRangeChunks(ctx context.Context, rangeID uuid.UUID) ([]*models.ChannelChunk, error) {
+func (p *Persist) RetrieveRangeChunks(ctx context.Context, rngPK uuid.UUID) ([]*models.ChannelChunk, error) {
 	var chunks []*models.ChannelChunk
 	for _, cc := range p.Chunks {
-		if cc.RangeID == rangeID {
+		if cc.RangeID == rngPK {
 			chunks = append(chunks, cc)
 		}
 	}
 	return chunks, nil
 }
 
-func (p *Persist) RetrieveRangeChunkReplicas(ctx context.Context, rangeID uuid.UUID) ([]*models.ChannelChunkReplica, error) {
+func (p *Persist) RetrieveRangeChunkReplicas(ctx context.Context, rngPK uuid.UUID) ([]*models.ChannelChunkReplica, error) {
 	var chunkReplicas []*models.ChannelChunkReplica
 	for _, ccr := range p.ChunkReplicas {
-		if ccr.ChannelChunk.RangeID == rangeID {
+		if ccr.ChannelChunk.RangeID == rngPK {
 			chunkReplicas = append(chunkReplicas, ccr)
 		}
 	}
 	return chunkReplicas, nil
 }
 
-func (p *Persist) ReallocateChunks(ctx context.Context, pks []uuid.UUID, newRangeID uuid.UUID) error {
-	rng, err := p.RetrieveRange(ctx, newRangeID)
+func (p *Persist) ReallocateChunks(ctx context.Context, pks []uuid.UUID, newRngPK uuid.UUID) error {
+	rng, err := p.RetrieveRange(ctx, newRngPK)
 	if err != nil {
 		return err
 	}
 	for _, PK := range model.NewPKChain(pks) {
 		for _, cc := range p.Chunks {
 			if model.NewPK(cc.ID).Equals(PK) {
-				cc.RangeID = newRangeID
+				cc.RangeID = newRngPK
 				cc.Range = rng
 			}
 		}
@@ -117,10 +117,10 @@ func (p *Persist) ReallocateChunks(ctx context.Context, pks []uuid.UUID, newRang
 	return nil
 }
 
-func (p *Persist) ReallocateChunkReplicas(ctx context.Context, pks []uuid.UUID, newRangeReplicaID uuid.UUID) error {
+func (p *Persist) ReallocateChunkReplicas(ctx context.Context, pks []uuid.UUID, newRRPK uuid.UUID) error {
 	var replica *models.RangeReplica
 	for _, rr := range p.RangeReplicas {
-		if rr.ID == newRangeReplicaID {
+		if rr.ID == newRRPK {
 			replica = rr
 		}
 	}
@@ -130,7 +130,7 @@ func (p *Persist) ReallocateChunkReplicas(ctx context.Context, pks []uuid.UUID, 
 	for _, PK := range model.NewPKChain(pks) {
 		for _, ccr := range p.ChunkReplicas {
 			if model.NewPK(ccr.ID).Equals(PK) {
-				ccr.RangeReplicaID = newRangeReplicaID
+				ccr.RangeReplicaID = newRRPK
 				ccr.RangeReplica = replica
 			}
 		}
@@ -138,14 +138,28 @@ func (p *Persist) ReallocateChunkReplicas(ctx context.Context, pks []uuid.UUID, 
 	return nil
 }
 
-func (p *Persist) RetrieveRangeReplicas(ctx context.Context, rngID uuid.UUID) ([]*models.RangeReplica, error) {
+func (p *Persist) RetrieveRangeReplicas(ctx context.Context, rngPK uuid.UUID) ([]*models.RangeReplica, error) {
 	var rangeReplicas []*models.RangeReplica
 	for _, rr := range p.RangeReplicas {
-		if rr.RangeID == rngID {
+		if rr.RangeID == rngPK {
 			rangeReplicas = append(rangeReplicas, rr)
 		}
 	}
 	return rangeReplicas, nil
+}
+
+func (p *Persist) UpdateRangeStatus(ctx context.Context, PK uuid.UUID, status models.RangeStatus) error {
+	found := false
+	for _, r := range p.Ranges {
+		if r.ID == PK {
+			r.Status = status
+			found = true
+		}
+	}
+	if !found {
+		return storage.Error{Type: storage.ErrorTypeItemNotFound}
+	}
+	return nil
 }
 
 func NewPersistOverallocatedRange() (*Persist, uuid.UUID) {

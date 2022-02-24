@@ -9,7 +9,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Persist", func() {
+var _ = Describe("Per", func() {
 	var (
 		p   *mock.Persist
 		ctx context.Context

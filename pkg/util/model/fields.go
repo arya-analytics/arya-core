@@ -18,13 +18,13 @@ func (f *Fields) values() (values []reflect.Value) {
 }
 
 func (f *Fields) AllNonZero() bool {
-	nonZero := true
+	allNonZero := true
 	for _, fld := range f.values() {
 		if !fld.IsZero() {
-			nonZero = false
+			allNonZero = false
 		}
 	}
-	return nonZero
+	return allNonZero
 }
 
 func (f *Fields) Raw() (rawFlds []interface{}) {

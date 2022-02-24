@@ -61,23 +61,27 @@ func (s *Service) createReplica(ctx context.Context, qr *internal.QueryRequest) 
 const BulkTelemField = "Telem"
 
 func (s *Service) retrieveReplica(ctx context.Context, qr *internal.QueryRequest) error {
+	baseOpts := LocalReplicaRetrieveOpts{Relations: true}
 	PKC, ok := internal.PKQueryOpt(qr)
-	if !ok {
-		panic("retrieve queries require a primary key!")
+	if ok {
+		baseOpts.PKC = PKC
 	}
+	// CLARIFICATION: If we specified a fields query opt, and it doesn't contain the telem field, we don't
+	// need to fetch bulk, so we can just return here.
+	fldsOpt, fldsOptOK := internal.RetrieveFieldsQueryOpt(qr)
+
+	whereFldsOpt, ok := internal.WhereFieldsQueryOpt(qr)
+	if ok {
+		baseOpts.WhereFields = whereFldsOpt
+	}
+
 	// CLARIFICATION: Retrieves information about the rng replicas and nodes model belongs to.
 	// It will bind the results to qr.Model itself.
-	if err := s.local.RetrieveReplica(
-		ctx,
-		qr.Model.Pointer(),
-		LocalReplicaRetrieveOpts{PKC: PKC, OmitBulk: true, Relations: true}); err != nil {
+	if err := s.local.RetrieveReplica(ctx, qr.Model.Pointer(), baseOpts); err != nil {
 		return err
 	}
 
-	// CLARIFICATION: If we specified a fields query opt, and it doesn't contain the telem field, we don't
-	// need to fetch bulk, so we can just return here.
-	fldsOpt, ok := internal.RetrieveFieldsQueryOpt(qr)
-	if ok {
+	if fldsOptOK {
 		if !fldsOpt.ContainsAny(BulkTelemField) {
 			return nil
 		}

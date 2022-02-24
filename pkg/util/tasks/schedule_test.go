@@ -9,15 +9,15 @@ import (
 	"time"
 )
 
-var _ = Describe("SchedulerSimple", func() {
+var _ = Describe("ScheduleSimple", func() {
 	Describe("Standard usage", func() {
-		Context("Base Scheduler", func() {
+		Context("Base Schedule", func() {
 			It("Should execute tasks at the correct interval", func() {
 				count := 0
-				s := tasks.NewSimpleScheduler([]tasks.Task{
+				s := tasks.NewScheduleSimple([]tasks.Task{
 					{
 						Interval: 250 * time.Millisecond,
-						Action: func(ctx context.Context, cfg tasks.SchedulerConfig) error {
+						Action: func(ctx context.Context, cfg tasks.ScheduleConfig) error {
 							count += 1
 							return nil
 						},
@@ -31,11 +31,11 @@ var _ = Describe("SchedulerSimple", func() {
 				Expect(count).To(Equal(2))
 			})
 			It("Should pipe to the errors channel when a task fails", func() {
-				s := tasks.NewSimpleScheduler([]tasks.Task{
+				s := tasks.NewScheduleSimple([]tasks.Task{
 					{
 						Name:     "bad task",
 						Interval: 250 * time.Millisecond,
-						Action: func(ctx context.Context, cfg tasks.SchedulerConfig) error {
+						Action: func(ctx context.Context, cfg tasks.ScheduleConfig) error {
 							return errors.New("a terrible error")
 						},
 					},
@@ -48,10 +48,10 @@ var _ = Describe("SchedulerSimple", func() {
 			It("Should break out of the scheduler when the context is cancelled", func() {
 				ctxWithCancel, cancel := context.WithCancel(ctx)
 				count := 0
-				s := tasks.NewSimpleScheduler([]tasks.Task{
+				s := tasks.NewScheduleSimple([]tasks.Task{
 					{
 						Interval: 250 * time.Millisecond,
-						Action: func(ctx context.Context, cfg tasks.SchedulerConfig) error {
+						Action: func(ctx context.Context, cfg tasks.ScheduleConfig) error {
 							count += 1
 							return nil
 						},
@@ -65,10 +65,10 @@ var _ = Describe("SchedulerSimple", func() {
 			Context("Acceleration", func() {
 				It("Should accelerate the scheduler correctly", func() {
 					count := 0
-					s := tasks.NewSimpleScheduler([]tasks.Task{
+					s := tasks.NewScheduleSimple([]tasks.Task{
 						{
 							Interval: 250 * time.Millisecond,
-							Action: func(ctx context.Context, cfg tasks.SchedulerConfig) error {
+							Action: func(ctx context.Context, cfg tasks.ScheduleConfig) error {
 								count += 1
 								return nil
 							},
@@ -86,17 +86,17 @@ var _ = Describe("SchedulerSimple", func() {
 			Context("Multiple Tasks", func() {
 				It("Should execute the tasks at the correct interval", func() {
 					countOne, countTwo := 0, 0
-					s := tasks.NewSimpleScheduler([]tasks.Task{
+					s := tasks.NewScheduleSimple([]tasks.Task{
 						{
 							Interval: 250 * time.Millisecond,
-							Action: func(ctx context.Context, cfg tasks.SchedulerConfig) error {
+							Action: func(ctx context.Context, cfg tasks.ScheduleConfig) error {
 								countOne += 1
 								return nil
 							},
 						},
 						{
 							Interval: 500 * time.Millisecond,
-							Action: func(ctx context.Context, cfg tasks.SchedulerConfig) error {
+							Action: func(ctx context.Context, cfg tasks.ScheduleConfig) error {
 								countTwo += 1
 								return nil
 							},
@@ -113,26 +113,26 @@ var _ = Describe("SchedulerSimple", func() {
 				})
 			})
 		})
-		Context("Batch Scheduler", func() {
+		Context("Batch Schedule", func() {
 			It("Should execute tasks at the correct interval", func() {
 				count := 0
-				s := tasks.NewSimpleScheduler([]tasks.Task{
+				s := tasks.NewScheduleSimple([]tasks.Task{
 					{
 						Interval: 250 * time.Millisecond,
-						Action: func(ctx context.Context, cfg tasks.SchedulerConfig) error {
+						Action: func(ctx context.Context, cfg tasks.ScheduleConfig) error {
 							count += 1
 							return nil
 						},
 					},
 					{
 						Interval: 300 * time.Millisecond,
-						Action: func(ctx context.Context, cfg tasks.SchedulerConfig) error {
+						Action: func(ctx context.Context, cfg tasks.ScheduleConfig) error {
 							return nil
 						},
 					},
 					{
 						Interval: 350 * time.Millisecond,
-						Action: func(ctx context.Context, cfg tasks.SchedulerConfig) error {
+						Action: func(ctx context.Context, cfg tasks.ScheduleConfig) error {
 							return nil
 						},
 					},
@@ -140,7 +140,7 @@ var _ = Describe("SchedulerSimple", func() {
 					tasks.ScheduleWithName("test tasks"),
 					tasks.ScheduleWithSilence(),
 				)
-				batchScheduler := tasks.NewBatchScheduler(s)
+				batchScheduler := tasks.NewScheduleBatch(s)
 				go batchScheduler.Start(ctx)
 				time.Sleep(625 * time.Millisecond)
 				var err error

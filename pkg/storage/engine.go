@@ -54,7 +54,7 @@ type EngineMD interface {
 	NewMigrate(a Adapter) QueryMDMigrate
 	// NewUpdate opens a new QueryMDUpdate.
 	NewUpdate(a Adapter) QueryMDUpdate
-	NewTasks(a Adapter, opts ...tasks.SchedulerOpt) tasks.Scheduler
+	NewTasks(a Adapter, opts ...tasks.ScheduleOpt) tasks.Schedule
 }
 
 // || OBJECT ||

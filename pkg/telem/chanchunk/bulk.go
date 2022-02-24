@@ -20,7 +20,7 @@ package chanchunk
 //			if !ok {
 //				return nil
 //			}
-//			chunk := &models.ChannelChunk{ID: uuid.New(), ChannelConfigID: channelConfig.ID}
+//			chunk := &models.ChannelChunk{PK: uuid.New(), ChannelConfigID: channelConfig.PK}
 //			s.alloc.Chunk(ctx, channelConfig.NodeID, chunk)
 //			if err := s.cluster.NewCreate().Model(chunk).Exec(ctx); err != nil {
 //				return err

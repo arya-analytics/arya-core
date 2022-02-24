@@ -8,9 +8,11 @@ import (
 )
 
 type LocalReplicaRetrieveOpts struct {
-	PKC       model.PKChain
-	OmitBulk  bool
-	Relations bool
+	PKC         model.PKChain
+	Fields      []string
+	WhereFields model.WhereFields
+	OmitBulk    bool
+	Relations   bool
 }
 
 type LocalReplicaDeleteOpts struct {
@@ -67,6 +69,9 @@ func (s *ServiceLocalStorage) RetrieveReplica(ctx context.Context, chunkReplica 
 	if opts.Relations {
 		q = q.Relation("RangeReplica", "ID").
 			Relation("RangeReplica.Node", "ID", "Address", "IsHost")
+	}
+	if opts.WhereFields != nil {
+		q = q.WhereFields(opts.WhereFields)
 	}
 	if opts.OmitBulk {
 		q = q.Fields("ID", "ChannelChunkID", "RangeReplicaID")
