@@ -221,42 +221,39 @@ var _ = Describe("Partition", func() {
 		)
 		var (
 			rngPK uuid.UUID
-			p     rng.Persist
-			pd    *rng.PartitionDetect
-			ps    tasks.Schedule
+			pst   rng.Persist
+			svc   *rng.Service
+			obs   rng.Observe
 		)
 		JustBeforeEach(func() {
-			go ps.Start(ctx)
+			go svc.Start(ctx, tasks.ScheduleWithAccel(accel), tasks.ScheduleWithSilence())
+			time.Sleep(10 * time.Millisecond)
 			var err error
 			go func() {
-				err = <-ps.Errors()
+				err = <-svc.Errors()
 			}()
 			time.Sleep(tickInterval)
-			ps.Stop()
+			svc.Stop()
 			Expect(err).To(BeNil())
 		})
 		Describe("Persisted Detection", func() {
 			BeforeEach(func() {
-				p, rngPK = mock.NewPersistOverallocatedRange()
-				obs := rng.NewObserveMem([]rng.ObservedRange{})
-				pd = &rng.PartitionDetect{
-					Persist: p,
-					Observe: obs,
-				}
-				ps = rng.NewSchedulePartition(pd, tasks.ScheduleWithAccel(accel), tasks.ScheduleWithSilence())
+				pst, rngPK = mock.NewPersistOverallocatedRange()
+				obs = rng.NewObserveMem([]rng.ObservedRange{})
+				svc = rng.NewService(obs, pst)
 			})
 			It("Should reallocate the overallocated range", func() {
-				size, err := pd.Persist.RetrieveRangeSize(ctx, rngPK)
+				size, err := pst.RetrieveRangeSize(ctx, rngPK)
 				Expect(err).To(BeNil())
 				Expect(size).To(BeNumerically("<", models.MaxRangeSize))
 			})
 		})
 		Describe("Observed Detection", func() {
 			BeforeEach(func() {
-				p, rngPK = mock.NewPersistOverallocatedRange()
-				newRng, err := p.RetrieveRange(ctx, rngPK)
+				pst, rngPK = mock.NewPersistOverallocatedRange()
+				newRng, err := pst.RetrieveRange(ctx, rngPK)
 				Expect(err).To(BeNil())
-				obs := rng.NewObserveMem([]rng.ObservedRange{
+				obs = rng.NewObserveMem([]rng.ObservedRange{
 					{
 						PK:             newRng.ID,
 						Status:         models.RangeStatusOpen,
@@ -264,19 +261,15 @@ var _ = Describe("Partition", func() {
 						LeaseReplicaPK: newRng.RangeLease.RangeReplica.ID,
 					},
 				})
-				pd = &rng.PartitionDetect{
-					Persist: p,
-					Observe: obs,
-				}
-				ps = rng.NewSchedulePartition(pd, tasks.ScheduleWithAccel(accel), tasks.ScheduleWithSilence())
+				svc = rng.NewService(obs, pst)
 			})
 			It("Should reallocate the overallocated range", func() {
-				size, err := pd.Persist.RetrieveRangeSize(ctx, rngPK)
+				size, err := pst.RetrieveRangeSize(ctx, rngPK)
 				Expect(err).To(BeNil())
 				Expect(size).To(BeNumerically("<", models.MaxRangeSize))
 			})
 			It("Should only create one new range", func() {
-				Expect(pd.Observe.RetrieveAll()).To(HaveLen(2))
+				Expect(obs.RetrieveAll()).To(HaveLen(2))
 			})
 		})
 	})

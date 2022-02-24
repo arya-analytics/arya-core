@@ -10,12 +10,12 @@ import (
 	"github.com/google/uuid"
 )
 
-type PersistCreate interface {
+type persistCreate interface {
 	CreateRange(ctx context.Context, nodePK int) (*models.Range, error)
 	CreateRangeReplica(ctx context.Context, rngPK uuid.UUID, nodePK int) (*models.RangeReplica, error)
 }
 
-type PersistRetrieve interface {
+type persistRetrieve interface {
 	RetrieveRange(ctx context.Context, pk uuid.UUID) (*models.Range, error)
 	RetrieveRangeSize(ctx context.Context, pk uuid.UUID) (int64, error)
 	RetrieveOpenRanges(ctx context.Context) ([]*models.Range, error)
@@ -24,16 +24,16 @@ type PersistRetrieve interface {
 	RetrieveRangeReplicas(ctx context.Context, rngPK uuid.UUID) ([]*models.RangeReplica, error)
 }
 
-type PersistUpdate interface {
+type persistUpdate interface {
 	ReallocateChunks(ctx context.Context, pks []uuid.UUID, newRngPK uuid.UUID) error
 	ReallocateChunkReplicas(ctx context.Context, pk []uuid.UUID, newRRPK uuid.UUID) error
 	UpdateRangeStatus(ctx context.Context, rngPK uuid.UUID, status models.RangeStatus) error
 }
 
 type Persist interface {
-	PersistCreate
-	PersistRetrieve
-	PersistUpdate
+	persistCreate
+	persistRetrieve
+	persistUpdate
 }
 
 type PersistCluster struct {

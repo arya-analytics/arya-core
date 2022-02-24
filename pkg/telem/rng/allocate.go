@@ -10,7 +10,7 @@ import (
 // |||| BASE ALLOCATOR ||||
 
 type Allocate struct {
-	pst     PersistCreate
+	pst     persistCreate
 	obs     Observe
 	nodeID  int
 	rangeID uuid.UUID
