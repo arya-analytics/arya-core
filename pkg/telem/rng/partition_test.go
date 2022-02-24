@@ -145,6 +145,18 @@ var _ = Describe("Partition", func() {
 				})
 
 			})
+			Context("Range Status", func() {
+				It("Should close the source range", func() {
+					sourceRng, err := p.RetrieveRange(ctx, rngId)
+					Expect(err).To(BeNil())
+					Expect(sourceRng.Status).To(Equal(models.RangeStatusClosed))
+				})
+				It("Should open the new range", func() {
+					newRng, err := p.RetrieveRange(ctx, newRanges[0].ID)
+					Expect(err).To(BeNil())
+					Expect(newRng.Status).To(Equal(models.RangeStatusOpen))
+				})
+			})
 		})
 	})
 	Describe("PartitionDetect", func() {
