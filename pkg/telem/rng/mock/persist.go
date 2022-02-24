@@ -101,7 +101,7 @@ func (p *Persist) RetrieveRangeChunkReplicas(ctx context.Context, rangeID uuid.U
 	return chunkReplicas, nil
 }
 
-func (p *Persist) ReallocateChunks(ctx context.Context, pks interface{}, newRangeID uuid.UUID) error {
+func (p *Persist) ReallocateChunks(ctx context.Context, pks []uuid.UUID, newRangeID uuid.UUID) error {
 	rng, err := p.RetrieveRange(ctx, newRangeID)
 	if err != nil {
 		return err
@@ -117,7 +117,7 @@ func (p *Persist) ReallocateChunks(ctx context.Context, pks interface{}, newRang
 	return nil
 }
 
-func (p *Persist) ReallocateChunkReplicas(ctx context.Context, pks interface{}, newRangeReplicaID uuid.UUID) error {
+func (p *Persist) ReallocateChunkReplicas(ctx context.Context, pks []uuid.UUID, newRangeReplicaID uuid.UUID) error {
 	var replica *models.RangeReplica
 	for _, rr := range p.RangeReplicas {
 		if rr.ID == newRangeReplicaID {

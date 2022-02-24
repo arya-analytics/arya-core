@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/telem/rng/mock"
-	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -88,7 +87,13 @@ var _ = Describe("Persist", func() {
 				orChunks, err := op.RetrieveRangeChunks(ctx, rngID)
 				Expect(err).To(BeNil())
 				newRng, err := op.NewRange(ctx, 2)
-				err = op.ReallocateChunks(ctx, model.NewReflect(&orChunks).PKChain().Raw(), newRng.ID)
+				var (
+					ccPKs []uuid.UUID
+				)
+				for _, cc := range orChunks {
+					ccPKs = append(ccPKs, cc.ID)
+				}
+				err = op.ReallocateChunks(ctx, ccPKs, newRng.ID)
 				reChunks, err := op.RetrieveRangeChunks(ctx, newRng.ID)
 				Expect(len(reChunks)).To(Equal(len(orChunks)))
 				Expect(reChunks[0].RangeID).To(Equal(newRng.ID))
@@ -103,10 +108,20 @@ var _ = Describe("Persist", func() {
 				orChunks, err := op.RetrieveRangeChunks(ctx, rngID)
 				orChunkReplicas, err := op.RetrieveRangeChunkReplicas(ctx, rngID)
 				Expect(err).To(BeNil())
+				var (
+					ccPKs  []uuid.UUID
+					ccrPKs []uuid.UUID
+				)
+				for _, cc := range orChunks {
+					ccPKs = append(ccPKs, cc.ID)
+				}
+				for _, ccr := range orChunks {
+					ccrPKs = append(ccrPKs, ccr.ID)
+				}
 				newRng, err := op.NewRange(ctx, 2)
-				err = op.ReallocateChunks(ctx, model.NewReflect(&orChunks).PKChain().Raw(), newRng.ID)
+				err = op.ReallocateChunks(ctx, ccPKs, newRng.ID)
 				Expect(err).To(BeNil())
-				err = op.ReallocateChunkReplicas(ctx, model.NewReflect(&orChunkReplicas).PKChain().Raw(), newRng.RangeLease.RangeReplicaID)
+				err = op.ReallocateChunkReplicas(ctx, ccrPKs, newRng.RangeLease.RangeReplicaID)
 				Expect(err).To(BeNil())
 				reReplicas, err := op.RetrieveRangeChunkReplicas(ctx, newRng.ID)
 				Expect(len(reReplicas)).To(Equal(len(orChunkReplicas)))
