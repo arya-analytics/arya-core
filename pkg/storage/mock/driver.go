@@ -7,10 +7,11 @@ import (
 	"github.com/go-redis/redis/v8"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
-	log "github.com/sirupsen/logrus"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
 	"github.com/uptrace/bun/extra/bundebug"
+	"io/ioutil"
+	baseLog "log"
 	"net"
 	"net/url"
 	"strconv"
@@ -42,6 +43,7 @@ func availHTTPPort() int {
 }
 
 func (d *DriverRoach) Connect() (*bun.DB, error) {
+	baseLog.SetOutput(ioutil.Discard)
 	if d.WithHTTP {
 		d.HTTPPort = availHTTPPort()
 	}
@@ -73,7 +75,7 @@ func (d *DriverRoach) Connect() (*bun.DB, error) {
 	if d.Verbose {
 		bunDB.AddQueryHook(bundebug.NewQueryHook(bundebug.WithVerbose(true)))
 	}
-	log.Infof("Roach Connection String: %s", ts.PGURL().String())
+	//log.Infof("Roach Connection String: %s", ts.PGURL().String())
 	return bunDB, nil
 }
 

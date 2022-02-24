@@ -6,7 +6,6 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/util/errutil"
 	"github.com/arya-analytics/aryacore/pkg/util/tasks"
 	"github.com/google/uuid"
-	log "github.com/sirupsen/logrus"
 	"sync"
 )
 
@@ -48,7 +47,6 @@ func (pd *PartitionDetect) DetectPersist(ctx context.Context, opt tasks.Schedule
 	if err != nil {
 		return err
 	}
-	log.Info(len(openRanges))
 	var or []ObservedRange
 	for _, openRange := range openRanges {
 		or = append(or, ObservedRange{

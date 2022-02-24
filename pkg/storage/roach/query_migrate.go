@@ -2,7 +2,6 @@ package roach
 
 import (
 	"context"
-	log "github.com/sirupsen/logrus"
 	"github.com/uptrace/bun"
 	bunMigrate "github.com/uptrace/bun/migrate"
 )
@@ -35,17 +34,9 @@ func (q *queryMigrate) init(ctx context.Context) {
 
 func (q *queryMigrate) Exec(ctx context.Context) error {
 	q.init(ctx)
-	var group *bunMigrate.MigrationGroup
-	q.catcher.Exec(func() (err error) {
-		group, err = q.bunMigrator().Migrate(ctx)
-		return err
-	})
 	q.catcher.Exec(func() error {
-		if group.ID == 0 {
-			log.Info("No new bunQ to run.")
-		}
-		log.Infof("Migrated to group %s \n", group)
-		return nil
+		_, err := q.bunMigrator().Migrate(ctx)
+		return err
 	})
 	return q.baseErr()
 }
