@@ -38,6 +38,11 @@ var _ = Describe("Service", func() {
 			RangeID: rangeX.ID,
 			NodeID:  node.ID,
 		}
+		rangeReplicaTwo = &models.RangeReplica{
+			ID:      uuid.New(),
+			RangeID: rangeX.ID,
+			NodeID:  node.ID,
+		}
 		channelChunk = &models.ChannelChunk{
 			ID:              uuid.New(),
 			RangeID:         rangeX.ID,
@@ -52,6 +57,7 @@ var _ = Describe("Service", func() {
 			channelConfig,
 			rangeX,
 			rangeReplica,
+			rangeReplicaTwo,
 			channelChunk,
 		}
 	)
@@ -125,6 +131,17 @@ var _ = Describe("Service", func() {
 				resRflItem, ok := resRfl.ValueByPK(resRfl.PKChain()[0])
 				Expect(ok).To(BeTrue())
 				Expect(resRflItem.Pointer().(*models.ChannelChunkReplica).Telem.Bytes()).To(Equal([]byte("randomdata")))
+
+				updateCCR := []*models.ChannelChunkReplica{{ID: resRflItem.PK().Raw().(uuid.UUID), RangeReplicaID: rangeReplicaTwo.ID}}
+				updateQR := internal.NewQueryRequest(internal.QueryVariantUpdate, model.NewReflect(&updateCCR))
+				internal.NewFieldsQueryOpt(updateQR, "RangeReplicaID")
+				internal.NewBulkUpdateQueryOpt(updateQR)
+
+				By("Being able to handle the update query")
+				Expect(svc.CanHandle(updateQR)).To(BeTrue())
+
+				By("Executing the update query")
+				Expect(svc.Exec(ctx, updateQR)).To(BeNil())
 
 				deleteQR := internal.NewQueryRequest(
 					internal.QueryVariantDelete,

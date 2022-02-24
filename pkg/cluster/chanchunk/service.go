@@ -6,6 +6,7 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/route"
+	log "github.com/sirupsen/logrus"
 )
 
 type Service struct {
@@ -26,6 +27,7 @@ func (s *Service) Exec(ctx context.Context, qr *internal.QueryRequest) error {
 		internal.QueryVariantCreate:   s.createReplica,
 		internal.QueryVariantRetrieve: s.retrieveReplica,
 		internal.QueryVariantDelete:   s.deleteReplica,
+		internal.QueryVariantUpdate:   s.updateReplica,
 	})
 }
 
@@ -109,6 +111,33 @@ func (s *Service) deleteReplica(ctx context.Context, qr *internal.QueryRequest) 
 		func(m *model.Reflect) error { return s.local.DeleteReplica(ctx, LocalReplicaDeleteOpts{m.PKChain()}) },
 		func(m *model.Reflect) error { return s.remote.DeleteReplica(ctx, buildRemoteReplicaDeleteOpts(m)) },
 	)
+}
+
+func (s *Service) updateReplica(ctx context.Context, qr *internal.QueryRequest) error {
+	opts := LocalReplicaUpdateOpts{}
+	bulkOpt := internal.BulkUpdateQueryOpt(qr)
+	opts.Bulk = bulkOpt
+	PKC, pkOk := internal.PKQueryOpt(qr)
+	if bulkOpt && pkOk {
+		panic("bulk update queries can't specify a primary key")
+	}
+	if pkOk {
+		if len(PKC) > 1 {
+
+			panic("update queries can't have more than one primary key")
+		}
+		opts.PK = PKC[0]
+	}
+	fieldsOpt, ok := internal.RetrieveFieldsQueryOpt(qr)
+	if ok {
+		opts.Fields = fieldsOpt
+	}
+	if !qr.Model.FieldsByName("Telem").AllNonZero() {
+		log.
+			WithFields(log.Fields{"ID": qr.Model.PKChain().Raw()}).
+			Warn("can't perform update on replica's telemetry, but was still specified!")
+	}
+	return s.local.UpdateReplica(ctx, qr.Model.Pointer(), opts)
 }
 
 // |||| ROUTING ||||

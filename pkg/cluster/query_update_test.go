@@ -42,5 +42,20 @@ var _ = Describe("QueryUpdate", func() {
 				Expect(pkOpt).To(Equal(model.NewPKChain([]uuid.UUID{pk})))
 			})
 		})
+		Context("Bulk", func() {
+			It("Should set the correct bulk option", func() {
+				Expect(clus.NewUpdate().Model(m).Bulk().Exec(ctx))
+				bulkOpt := internal.BulkUpdateQueryOpt(svc.QueryRequest)
+				Expect(bulkOpt).To(BeTrue())
+			})
+		})
+		Context("Fields", func() {
+			It("Should set the correct fields", func() {
+				Expect(clus.NewUpdate().Model(m).Fields("Name").Exec(ctx))
+				fieldsOpt, ok := internal.RetrieveFieldsQueryOpt(svc.QueryRequest)
+				Expect(ok).To(BeTrue())
+				Expect(fieldsOpt).To(Equal(internal.FieldsQueryOpt{"Name"}))
+			})
+		})
 	})
 })

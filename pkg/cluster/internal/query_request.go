@@ -174,6 +174,29 @@ func RetrieveCalculateQueryOpt(qr *QueryRequest) (CalculateQueryOpt, bool) {
 	return qo.(CalculateQueryOpt), true
 }
 
+// || BULK UPDATE ||
+
+const bulkUpdateOptKey = "BulkUpdateQueryOpt"
+
+func NewBulkUpdateQueryOpt(qr *QueryRequest) {
+	panicWhenAlreadySpecified(qr, bulkUpdateOptKey)
+	if qr.Variant != QueryVariantUpdate {
+		panic("can't mark a non update query as bulk")
+	}
+	qr.opts[bulkUpdateOptKey] = true
+}
+
+func BulkUpdateQueryOpt(qr *QueryRequest) bool {
+	if qr.Variant != QueryVariantUpdate {
+		panic("can't retrieve a bulk query opt from non bulk query")
+	}
+	bulkOpt, ok := qr.opts[bulkUpdateOptKey]
+	if !ok {
+		return false
+	}
+	return bulkOpt.(bool)
+}
+
 type QueryRequestVariantOperations map[QueryVariant]ServiceOperation
 
 func SwitchQueryRequestVariant(ctx context.Context, qr *QueryRequest, qrvo QueryRequestVariantOperations) error {
