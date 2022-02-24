@@ -9,7 +9,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Per", func() {
+var _ = Describe("pst", func() {
 	var (
 		p   *mock.Persist
 		ctx context.Context
@@ -20,7 +20,7 @@ var _ = Describe("Per", func() {
 	})
 	Describe("New Range", func() {
 		It("Should create a new range, range replica, and lease", func() {
-			rng, err := p.NewRange(ctx, 1)
+			rng, err := p.CreateRange(ctx, 1)
 			Expect(err).To(BeNil())
 			Expect(rng.RangeLease.RangeReplica.NodeID).To(Equal(1))
 			Expect(rng.Status).To(Equal(models.RangeStatusOpen))
@@ -28,9 +28,9 @@ var _ = Describe("Per", func() {
 	})
 	Describe("New Range Replica", func() {
 		It("Should create a new range replica", func() {
-			rng, err := p.NewRange(ctx, 1)
+			rng, err := p.CreateRange(ctx, 1)
 			Expect(err).To(BeNil())
-			rr, err := p.NewRangeReplica(ctx, rng.ID, 2)
+			rr, err := p.CreateRangeReplica(ctx, rng.ID, 2)
 			Expect(err).To(BeNil())
 			Expect(rr.NodeID).To(Equal(2))
 
@@ -38,7 +38,7 @@ var _ = Describe("Per", func() {
 	})
 	Describe("Retrieve Range", func() {
 		It("Should retrieve the range correctly", func() {
-			rng, err := p.NewRange(ctx, 1)
+			rng, err := p.CreateRange(ctx, 1)
 			Expect(err).To(BeNil())
 			Expect(rng.RangeLease.RangeReplica.NodeID).To(Equal(1))
 			rRng, err := p.RetrieveRange(ctx, rng.ID)
@@ -48,7 +48,7 @@ var _ = Describe("Per", func() {
 	})
 	Describe("Retrieve Open Ranges", func() {
 		It("Should retrieve the open ranges correctly", func() {
-			_, err := p.NewRange(ctx, 1)
+			_, err := p.CreateRange(ctx, 1)
 			Expect(err).To(BeNil())
 			openRng, err := p.RetrieveOpenRanges(ctx)
 			Expect(openRng).To(HaveLen(1))
@@ -95,7 +95,7 @@ var _ = Describe("Per", func() {
 			It("Should reallocate the chunks correctly", func() {
 				orChunks, err := op.RetrieveRangeChunks(ctx, rngID)
 				Expect(err).To(BeNil())
-				newRng, err := op.NewRange(ctx, 2)
+				newRng, err := op.CreateRange(ctx, 2)
 				var (
 					ccPKs []uuid.UUID
 				)
@@ -127,7 +127,7 @@ var _ = Describe("Per", func() {
 				for _, ccr := range orChunkReplicas {
 					ccrPKs = append(ccrPKs, ccr.ID)
 				}
-				newRng, err := op.NewRange(ctx, 2)
+				newRng, err := op.CreateRange(ctx, 2)
 				err = op.ReallocateChunks(ctx, ccPKs, newRng.ID)
 				Expect(err).To(BeNil())
 				err = op.ReallocateChunkReplicas(ctx, ccrPKs, newRng.RangeLease.RangeReplicaID)

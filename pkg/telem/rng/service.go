@@ -10,5 +10,5 @@ func NewService(obs Observe, p Persist) *Service {
 }
 
 func (s *Service) NewAllocate() *Allocate {
-	return &Allocate{obs: s.obs, p: s.p}
+	return &Allocate{obs: s.obs, pst: s.p}
 }

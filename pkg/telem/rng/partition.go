@@ -7,7 +7,34 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/util/tasks"
 	"github.com/google/uuid"
 	"sync"
+	"time"
 )
+
+// |||| SCHEDULER ||||
+
+const (
+	detectPersistInterval = 120 * time.Second
+	detectObserveInterval = 30 * time.Second
+)
+
+func NewSchedulePartition(pd *PartitionDetect, opts ...tasks.ScheduleOpt) tasks.Schedule {
+	tsk := []tasks.Task{
+		{
+			Name:     "Detect Persist",
+			Action:   pd.DetectPersist,
+			Interval: detectPersistInterval,
+		},
+		{
+			Name:     "Detect Observe",
+			Action:   pd.DetectObserver,
+			Interval: detectObserveInterval,
+		},
+	}
+	defaultOpts := []tasks.ScheduleOpt{tasks.ScheduleWithName("Partition Scheduler")}
+	allOpts := append(defaultOpts, opts...)
+	return tasks.NewScheduleSimple(tsk, allOpts...)
+
+}
 
 // |||| DETECT ||||
 
@@ -53,6 +80,7 @@ func (pd *PartitionDetect) DetectPersist(ctx context.Context, opt tasks.Schedule
 			PK:             openRange.ID,
 			LeaseNodePK:    openRange.RangeLease.RangeReplica.NodeID,
 			LeaseReplicaPK: openRange.RangeLease.RangeReplica.ID,
+			Status:         openRange.Status,
 		})
 	}
 	return pd.detect(ctx, or, opt)
@@ -88,11 +116,11 @@ func (pd *PartitionDetect) observeNewRngGroups(newRangeGroups [][]*models.Range)
 // |||| EXECUTE ||||
 
 func NewPartitionExecute(ctx context.Context, p Persist, rngPK uuid.UUID) *PartitionExecute {
-	return &PartitionExecute{Per: p, sourceRangePK: rngPK, catcher: errutil.NewContextCatcher(ctx)}
+	return &PartitionExecute{pst: p, sourceRangePK: rngPK, catcher: errutil.NewContextCatcher(ctx)}
 }
 
 type PartitionExecute struct {
-	Per           Persist
+	pst           Persist
 	sourceRangePK uuid.UUID
 	newRanges     []*models.Range
 	catcher       *errutil.ContextCatcher
@@ -109,7 +137,7 @@ func (p *PartitionExecute) overAllocated() bool {
 
 func (p *PartitionExecute) rangeSize() (size int64) {
 	p.catcher.Exec(func(ctx context.Context) (err error) {
-		p._rngSize, err = p.Per.RetrieveRangeSize(ctx, p.sourceRangePK)
+		p._rngSize, err = p.pst.RetrieveRangeSize(ctx, p.sourceRangePK)
 		return err
 	})
 	return p._rngSize
@@ -125,31 +153,31 @@ func (p *PartitionExecute) Exec() ([]*models.Range, error) {
 	excCCR := excessChunkReplicas(sourceRR, ccr, excCC)
 	newRng := p.newRange(sourceRng.RangeLease.RangeReplica.NodeID)
 	p.reallocateChunks(excCC, newRng.ID)
-	for nodePK, ccrPKs := range excCCR {
+	for nodePK, ccrPKC := range excCCR {
 		newRRPK := p.newReplicaPK(newRng.RangeLease.RangeReplica, nodePK)
-		p.reallocateChunkReplicas(ccrPKs, newRRPK)
+		p.reallocateChunkReplicas(ccrPKC, newRRPK)
 	}
 	p.newRanges = append(p.newRanges, newRng)
 	p.updateRangeStatus(p.sourceRangePK, models.RangeStatusClosed)
-	nextP := &PartitionExecute{Per: p.Per, sourceRangePK: newRng.ID, newRanges: p.newRanges, catcher: p.catcher}
+	nextP := &PartitionExecute{pst: p.pst, sourceRangePK: newRng.ID, newRanges: p.newRanges, catcher: p.catcher}
 	return nextP.Exec()
 }
 
 func (p *PartitionExecute) updateRangeStatus(rngPK uuid.UUID, status models.RangeStatus) {
-	p.catcher.Exec(func(ctx context.Context) error { return p.Per.UpdateRangeStatus(ctx, rngPK, status) })
+	p.catcher.Exec(func(ctx context.Context) error { return p.pst.UpdateRangeStatus(ctx, rngPK, status) })
 }
 
 func (p *PartitionExecute) reallocateChunks(ccPKs []uuid.UUID, rngPK uuid.UUID) {
-	p.catcher.Exec(func(ctx context.Context) error { return p.Per.ReallocateChunks(ctx, ccPKs, rngPK) })
+	p.catcher.Exec(func(ctx context.Context) error { return p.pst.ReallocateChunks(ctx, ccPKs, rngPK) })
 }
 
-func (p *PartitionExecute) reallocateChunkReplicas(ccrPKs []uuid.UUID, RRPK uuid.UUID) {
-	p.catcher.Exec(func(ctx context.Context) error { return p.Per.ReallocateChunkReplicas(ctx, ccrPKs, RRPK) })
+func (p *PartitionExecute) reallocateChunkReplicas(ccrPKC []uuid.UUID, RRPK uuid.UUID) {
+	p.catcher.Exec(func(ctx context.Context) error { return p.pst.ReallocateChunkReplicas(ctx, ccrPKC, RRPK) })
 }
 
 func (p *PartitionExecute) newRange(nodePK int) (newRng *models.Range) {
 	p.catcher.Exec(func(ctx context.Context) (err error) {
-		newRng, err = p.Per.NewRange(ctx, nodePK)
+		newRng, err = p.pst.CreateRange(ctx, nodePK)
 		return err
 	})
 	return newRng
@@ -159,7 +187,7 @@ func (p *PartitionExecute) newReplicaPK(leaseRR *models.RangeReplica, nodeID int
 	newReplicaID := leaseRR.ID
 	if nodeID != leaseRR.NodeID {
 		p.catcher.Exec(func(ctx context.Context) error {
-			newRR, err := p.Per.NewRangeReplica(ctx, leaseRR.RangeID, nodeID)
+			newRR, err := p.pst.CreateRangeReplica(ctx, leaseRR.RangeID, nodeID)
 			newReplicaID = newRR.ID
 			return err
 		})
@@ -167,21 +195,26 @@ func (p *PartitionExecute) newReplicaPK(leaseRR *models.RangeReplica, nodeID int
 	return newReplicaID
 }
 
-func (p *PartitionExecute) retrievePartitionInfo() (sourceRng *models.Range, sourceRR []*models.RangeReplica, cc []*models.ChannelChunk, ccr []*models.ChannelChunkReplica) {
+func (p *PartitionExecute) retrievePartitionInfo() (
+	sourceRng *models.Range,
+	sourceRR []*models.RangeReplica,
+	cc []*models.ChannelChunk,
+	ccr []*models.ChannelChunkReplica,
+) {
 	p.catcher.Exec(func(ctx context.Context) (cErr error) {
-		sourceRng, cErr = p.Per.RetrieveRange(ctx, p.sourceRangePK)
+		sourceRng, cErr = p.pst.RetrieveRange(ctx, p.sourceRangePK)
 		return cErr
 	})
 	p.catcher.Exec(func(ctx context.Context) (cErr error) {
-		cc, cErr = p.Per.RetrieveRangeChunks(ctx, p.sourceRangePK)
+		cc, cErr = p.pst.RetrieveRangeChunks(ctx, p.sourceRangePK)
 		return cErr
 	})
 	p.catcher.Exec(func(ctx context.Context) (cErr error) {
-		sourceRR, cErr = p.Per.RetrieveRangeReplicas(ctx, p.sourceRangePK)
+		sourceRR, cErr = p.pst.RetrieveRangeReplicas(ctx, p.sourceRangePK)
 		return cErr
 	})
 	p.catcher.Exec(func(ctx context.Context) (cErr error) {
-		ccr, cErr = p.Per.RetrieveRangeChunkReplicas(ctx, p.sourceRangePK)
+		ccr, cErr = p.pst.RetrieveRangeChunkReplicas(ctx, p.sourceRangePK)
 		return cErr
 	})
 	return sourceRng, sourceRR, cc, ccr
@@ -189,8 +222,8 @@ func (p *PartitionExecute) retrievePartitionInfo() (sourceRng *models.Range, sou
 
 func excessChunkReplicas(rrC []*models.RangeReplica, ccrC []*models.ChannelChunkReplica, excCC []uuid.UUID) map[int][]uuid.UUID {
 	excessCCR := map[int][]uuid.UUID{}
-	for _, ID := range excCC {
-		for _, ccr := range findChunkReplicas(ID, ccrC) {
+	for _, pk := range excCC {
+		for _, ccr := range filterChunkReplicas(pk, ccrC) {
 			rr, ok := findRangeReplica(ccr.RangeReplicaID, rrC)
 			if !ok {
 				panic("couldn't find the chunks range replica")
@@ -201,30 +234,30 @@ func excessChunkReplicas(rrC []*models.RangeReplica, ccrC []*models.ChannelChunk
 	return excessCCR
 }
 
-func excessChunks(size int64, chunks []*models.ChannelChunk) (reallocatedChunkIDs []uuid.UUID) {
-	for i := 0; i < len(chunks); i++ {
+func excessChunks(size int64, ccC []*models.ChannelChunk) (excCC []uuid.UUID) {
+	for i := 0; i < len(ccC); i++ {
 		if size < models.MaxRangeSize {
 			break
 		}
-		c := chunks[i]
-		reallocatedChunkIDs = append(reallocatedChunkIDs, c.ID)
+		c := ccC[i]
+		excCC = append(excCC, c.ID)
 		size -= c.Size
 	}
-	return reallocatedChunkIDs
+	return excCC
 }
 
-func findChunkReplicas(chunkID uuid.UUID, chunkReplicas []*models.ChannelChunkReplica) (results []*models.ChannelChunkReplica) {
-	for _, ccr := range chunkReplicas {
-		if ccr.ChannelChunkID == chunkID {
-			results = append(results, ccr)
+func filterChunkReplicas(chunkPK uuid.UUID, CCR []*models.ChannelChunkReplica) (resCCR []*models.ChannelChunkReplica) {
+	for _, ccr := range CCR {
+		if ccr.ChannelChunkID == chunkPK {
+			resCCR = append(resCCR, ccr)
 		}
 	}
-	return results
+	return resCCR
 }
 
-func findRangeReplica(rangeReplicaID uuid.UUID, rangeReplicas []*models.RangeReplica) (*models.RangeReplica, bool) {
-	for _, rr := range rangeReplicas {
-		if rr.ID == rangeReplicaID {
+func findRangeReplica(RRPK uuid.UUID, RR []*models.RangeReplica) (*models.RangeReplica, bool) {
+	for _, rr := range RR {
+		if rr.ID == RRPK {
 			return rr, true
 		}
 	}

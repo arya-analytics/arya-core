@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"time"
 )
 
 var _ = Describe("Partition", func() {
@@ -210,6 +211,72 @@ var _ = Describe("Partition", func() {
 				sourceRng, ok := pd.Observe.Retrieve(rng.ObservedRange{PK: rngPK})
 				Expect(ok).To(BeTrue())
 				Expect(sourceRng.Status).To(Equal(models.RangeStatusClosed))
+			})
+		})
+	})
+	Describe("PartitionScheduler", func() {
+		const (
+			accel        = 160
+			tickInterval = 900 * time.Millisecond
+		)
+		var (
+			rngPK uuid.UUID
+			p     rng.Persist
+			pd    *rng.PartitionDetect
+			ps    tasks.Schedule
+		)
+		JustBeforeEach(func() {
+			go ps.Start(ctx)
+			var err error
+			go func() {
+				err = <-ps.Errors()
+			}()
+			time.Sleep(tickInterval)
+			ps.Stop()
+			Expect(err).To(BeNil())
+		})
+		Describe("Persisted Detection", func() {
+			BeforeEach(func() {
+				p, rngPK = mock.NewPersistOverallocatedRange()
+				obs := rng.NewObserveMem([]rng.ObservedRange{})
+				pd = &rng.PartitionDetect{
+					Persist: p,
+					Observe: obs,
+				}
+				ps = rng.NewSchedulePartition(pd, tasks.ScheduleWithAccel(accel), tasks.ScheduleWithSilence())
+			})
+			It("Should reallocate the overallocated range", func() {
+				size, err := pd.Persist.RetrieveRangeSize(ctx, rngPK)
+				Expect(err).To(BeNil())
+				Expect(size).To(BeNumerically("<", models.MaxRangeSize))
+			})
+		})
+		Describe("Observed Detection", func() {
+			BeforeEach(func() {
+				p, rngPK = mock.NewPersistOverallocatedRange()
+				newRng, err := p.RetrieveRange(ctx, rngPK)
+				Expect(err).To(BeNil())
+				obs := rng.NewObserveMem([]rng.ObservedRange{
+					{
+						PK:             newRng.ID,
+						Status:         models.RangeStatusOpen,
+						LeaseNodePK:    newRng.RangeLease.RangeReplica.NodeID,
+						LeaseReplicaPK: newRng.RangeLease.RangeReplica.ID,
+					},
+				})
+				pd = &rng.PartitionDetect{
+					Persist: p,
+					Observe: obs,
+				}
+				ps = rng.NewSchedulePartition(pd, tasks.ScheduleWithAccel(accel), tasks.ScheduleWithSilence())
+			})
+			It("Should reallocate the overallocated range", func() {
+				size, err := pd.Persist.RetrieveRangeSize(ctx, rngPK)
+				Expect(err).To(BeNil())
+				Expect(size).To(BeNumerically("<", models.MaxRangeSize))
+			})
+			It("Should only create one new range", func() {
+				Expect(pd.Observe.RetrieveAll()).To(HaveLen(2))
 			})
 		})
 	})

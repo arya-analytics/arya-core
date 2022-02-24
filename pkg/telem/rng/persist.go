@@ -10,21 +10,30 @@ import (
 	"github.com/google/uuid"
 )
 
-type Persist interface {
-	NewRange(ctx context.Context, nodePK int) (*models.Range, error)
-	NewRangeReplica(ctx context.Context, rngPK uuid.UUID, nodePK int) (*models.RangeReplica, error)
+type PersistCreate interface {
+	CreateRange(ctx context.Context, nodePK int) (*models.Range, error)
+	CreateRangeReplica(ctx context.Context, rngPK uuid.UUID, nodePK int) (*models.RangeReplica, error)
+}
 
+type PersistRetrieve interface {
 	RetrieveRange(ctx context.Context, pk uuid.UUID) (*models.Range, error)
 	RetrieveRangeSize(ctx context.Context, pk uuid.UUID) (int64, error)
 	RetrieveOpenRanges(ctx context.Context) ([]*models.Range, error)
 	RetrieveRangeChunks(ctx context.Context, rngPK uuid.UUID) ([]*models.ChannelChunk, error)
 	RetrieveRangeChunkReplicas(ctx context.Context, rngPK uuid.UUID) ([]*models.ChannelChunkReplica, error)
 	RetrieveRangeReplicas(ctx context.Context, rngPK uuid.UUID) ([]*models.RangeReplica, error)
+}
 
+type PersistUpdate interface {
 	ReallocateChunks(ctx context.Context, pks []uuid.UUID, newRngPK uuid.UUID) error
 	ReallocateChunkReplicas(ctx context.Context, pk []uuid.UUID, newRRPK uuid.UUID) error
-
 	UpdateRangeStatus(ctx context.Context, rngPK uuid.UUID, status models.RangeStatus) error
+}
+
+type Persist interface {
+	PersistCreate
+	PersistRetrieve
+	PersistUpdate
 }
 
 type PersistCluster struct {
@@ -33,7 +42,7 @@ type PersistCluster struct {
 
 // |||| NEW ||||
 
-func (p *PersistCluster) NewRange(ctx context.Context, nodePK int) (*models.Range, error) {
+func (p *PersistCluster) CreateRange(ctx context.Context, nodePK int) (*models.Range, error) {
 	c := errutil.NewContextCatcher(ctx)
 	r := &models.Range{}
 	c.Exec(p.Cluster.NewCreate().Model(r).Exec)
@@ -45,7 +54,7 @@ func (p *PersistCluster) NewRange(ctx context.Context, nodePK int) (*models.Rang
 	return r, nil
 }
 
-func (p *PersistCluster) NewRangeReplica(ctx context.Context, rngPK uuid.UUID, nodePK int) (*models.RangeReplica, error) {
+func (p *PersistCluster) CreateRangeReplica(ctx context.Context, rngPK uuid.UUID, nodePK int) (*models.RangeReplica, error) {
 	rr := &models.RangeReplica{RangeID: rngPK, NodeID: nodePK}
 	err := p.Cluster.NewCreate().Model(rr).Exec(ctx)
 	return rr, err

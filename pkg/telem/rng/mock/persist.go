@@ -28,7 +28,7 @@ func NewBlankPersist() *Persist {
 	}
 }
 
-func (p *Persist) NewRange(ctx context.Context, nodePK int) (*models.Range, error) {
+func (p *Persist) CreateRange(ctx context.Context, nodePK int) (*models.Range, error) {
 	id := uuid.New()
 	rr := &models.RangeReplica{
 		ID:      uuid.New(),
@@ -52,7 +52,7 @@ func (p *Persist) NewRange(ctx context.Context, nodePK int) (*models.Range, erro
 	return r, nil
 }
 
-func (p *Persist) NewRangeReplica(ctx context.Context, rngPK uuid.UUID, nodePK int) (*models.RangeReplica, error) {
+func (p *Persist) CreateRangeReplica(ctx context.Context, rngPK uuid.UUID, nodePK int) (*models.RangeReplica, error) {
 	rr := &models.RangeReplica{
 		ID:      uuid.New(),
 		RangeID: rngPK,

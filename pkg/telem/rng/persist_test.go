@@ -50,9 +50,9 @@ var _ = Describe("Persist", func() {
 				Expect(clust.NewDelete().Model(item).WherePKs(model.NewReflect(item).PKChain().Raw()).Exec(ctx)).To(BeNil())
 			}
 		})
-		Describe("NewRange", func() {
+		Describe("CreateRange", func() {
 			It("Should save a new range, range lease, and range replica to storage", func() {
-				rng, err := p.NewRange(ctx, 1)
+				rng, err := p.CreateRange(ctx, 1)
 				Expect(err).To(BeNil())
 				Expect(model.NewPK(rng.ID).IsZero()).To(BeFalse())
 				Expect(model.NewPK(rng.RangeLease.ID).IsZero()).To(BeFalse())
@@ -62,14 +62,14 @@ var _ = Describe("Persist", func() {
 		Describe("New Range Replica", func() {
 			It("Should save the replica with the correct node id", func() {
 				p := &rng.PersistCluster{Cluster: clust}
-				rngReplica, err := p.NewRangeReplica(ctx, newRng.ID, 1)
+				rngReplica, err := p.CreateRangeReplica(ctx, newRng.ID, 1)
 				Expect(err).To(BeNil())
 				Expect(rngReplica.NodeID).To(Equal(1))
 			})
 		})
 		Describe("Retrieve Range Replica", func() {
 			It("Should retrieve the correct replica", func() {
-				rngReplica, err := p.NewRangeReplica(ctx, newRng.ID, 1)
+				rngReplica, err := p.CreateRangeReplica(ctx, newRng.ID, 1)
 				Expect(err).To(BeNil())
 				rr, err := p.RetrieveRangeReplicas(ctx, newRng.ID)
 				Expect(err).To(BeNil())
@@ -128,7 +128,7 @@ var _ = Describe("Persist", func() {
 				}
 				cc, err := p.RetrieveRangeChunks(ctx, newRng.ID)
 				Expect(err).To(BeNil())
-				rng, err := p.NewRange(ctx, 1)
+				rng, err := p.CreateRange(ctx, 1)
 				Expect(err).To(BeNil())
 				var ccPKs []uuid.UUID
 				for _, c := range cc {
@@ -153,7 +153,7 @@ var _ = Describe("Persist", func() {
 				for _, c := range resCCR {
 					ccrPKs = append(ccrPKs, c.ID)
 				}
-				rng, err := p.NewRange(ctx, 1)
+				rng, err := p.CreateRange(ctx, 1)
 				cc, err := p.RetrieveRangeChunks(ctx, newRng.ID)
 				Expect(err).To(BeNil())
 				var ccPKs []uuid.UUID

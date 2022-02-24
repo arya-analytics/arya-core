@@ -10,7 +10,7 @@ import (
 // |||| BASE ALLOCATOR ||||
 
 type Allocate struct {
-	p       Persist
+	pst     PersistCreate
 	obs     Observe
 	nodeID  int
 	rangeID uuid.UUID
@@ -32,7 +32,7 @@ func (a *Allocate) retrieveObservedOrNew(ctx context.Context, q ObservedRange) (
 	or, ok := a.obs.Retrieve(q)
 	if !ok {
 		var err error
-		newRng, err := a.p.NewRange(ctx, a.nodeID)
+		newRng, err := a.pst.CreateRange(ctx, a.nodeID)
 		if err != nil {
 			return ObservedRange{}, err
 		}
