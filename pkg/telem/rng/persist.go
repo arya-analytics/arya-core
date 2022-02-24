@@ -62,26 +62,22 @@ func (p *PersistCluster) ccByRangeQ(chunks interface{}, ID uuid.UUID) *cluster.Q
 
 func (p *PersistCluster) RetrieveRangeSize(ctx context.Context, ID uuid.UUID) (int64, error) {
 	var size int64 = 0
-	err := p.ccByRangeQ(&models.ChannelChunk{}, ID).Calculate(storage.CalculateSum, "Size", &size).Exec(ctx)
-	return size, err
+	return size, p.ccByRangeQ(&models.ChannelChunk{}, ID).Calculate(storage.CalculateSum, "Size", &size).Exec(ctx)
 }
 
 func (p *PersistCluster) RetrieveRangeChunks(ctx context.Context, rangeID uuid.UUID) ([]*models.ChannelChunk, error) {
 	var cc []*models.ChannelChunk
-	err := p.ccByRangeQ(cc, rangeID).Exec(ctx)
-	return cc, err
+	return cc, p.ccByRangeQ(cc, rangeID).Exec(ctx)
 }
 
 func (p *PersistCluster) RetrieveRangeReplicas(ctx context.Context, rangeID uuid.UUID) ([]*models.RangeReplica, error) {
 	var rr []*models.RangeReplica
-	err := p.Cluster.NewRetrieve().Model(&rr).WhereFields(model.WhereFields{"RangeID": rangeID}).Exec(ctx)
-	return rr, err
+	return rr, p.Cluster.NewRetrieve().Model(&rr).WhereFields(model.WhereFields{"RangeID": rangeID}).Exec(ctx)
 }
 
 func (p *PersistCluster) RetrieveRangeChunkReplicas(ctx context.Context, rangeID uuid.UUID) ([]*models.ChannelChunkReplica, error) {
 	var ccr []*models.ChannelChunkReplica
-	err := p.Cluster.NewRetrieve().Model(&ccr).WhereFields(model.WhereFields{"ChannelChunk.RangeID": rangeID}).Exec(ctx)
-	return ccr, err
+	return ccr, p.Cluster.NewRetrieve().Model(&ccr).WhereFields(model.WhereFields{"ChannelChunk.RangeID": rangeID}).Exec(ctx)
 }
 
 // |||| RE-ALLOCATE ||||
