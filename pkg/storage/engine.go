@@ -119,7 +119,8 @@ type QueryMDCreate interface {
 type QueryMDUpdate interface {
 	QueryMDBase
 	Model(model interface{}) QueryMDUpdate
-	Where(query string, args ...interface{}) QueryMDUpdate
+	Bulk() QueryMDUpdate
+	Fields(flds ...string) QueryMDUpdate
 	WherePK(pk interface{}) QueryMDUpdate
 }
 

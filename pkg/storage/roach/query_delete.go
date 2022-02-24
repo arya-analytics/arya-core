@@ -32,7 +32,7 @@ func (q *queryDelete) Where(query string, args ...interface{}) storage.QueryMDDe
 
 func (q *queryDelete) Model(m interface{}) storage.QueryMDDelete {
 	q.baseModel(m)
-	q.bunQ = q.bunQ.Model(q.Dest().Pointer())
+	q.bunQ = q.bunQ.Model(q.baseDest().Pointer())
 	return q
 }
 

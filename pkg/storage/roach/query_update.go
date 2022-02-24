@@ -20,16 +20,22 @@ func newUpdate(db *bun.DB) *queryUpdate {
 func (q *queryUpdate) Model(m interface{}) storage.QueryMDUpdate {
 	q.baseModel(m)
 	q.baseExchangeToDest()
-	q.bunQ = q.bunQ.Model(q.Dest().Pointer())
+	q.bunQ = q.bunQ.Model(q.baseDest().Pointer())
+	return q
+}
+
+func (q *queryUpdate) Bulk() storage.QueryMDUpdate {
+	q.bunQ = q.bunQ.Bulk().OmitZero()
+	return q
+}
+
+func (q *queryUpdate) Fields(flds ...string) storage.QueryMDUpdate {
+	q.bunQ = q.bunQ.Column(q.baseSQL().fieldNames(flds...)...)
 	return q
 }
 
 func (q *queryUpdate) WherePK(pk interface{}) storage.QueryMDUpdate {
-	return q.Where(q.baseSQL().pk(), pk)
-}
-
-func (q *queryUpdate) Where(query string, args ...interface{}) storage.QueryMDUpdate {
-	q.bunQ = q.bunQ.Where(query, args...)
+	q.bunQ = q.bunQ.Where(q.baseSQL().pk(), pk)
 	return q
 }
 

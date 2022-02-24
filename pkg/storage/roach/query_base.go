@@ -24,7 +24,7 @@ func (q *queryBase) baseModel(m interface{}) {
 	q.exchange = model.NewExchange(m, catalog().New(m))
 }
 
-func (q *queryBase) Dest() *model.Reflect {
+func (q *queryBase) baseDest() *model.Reflect {
 	return q.exchange.Dest
 }
 
@@ -33,7 +33,7 @@ func (q *queryBase) baseExchangeToSource() {
 }
 
 func (q *queryBase) baseSQL() sqlGen {
-	return sqlGen{q.db, q.Dest()}
+	return sqlGen{q.db, q.baseDest()}
 }
 
 func (q *queryBase) baseExchangeToDest() {
