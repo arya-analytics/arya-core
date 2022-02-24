@@ -23,7 +23,7 @@ func (pd *PartitionDetect) DetectObserver(ctx context.Context, opt tasks.Schedul
 	for i, or := range openRanges {
 		wg.Add(1)
 		go func(i int, or ObservedRange) {
-			newRngGroups[i], errs[i] = pd.Exec(ctx, or)
+			newRngGroups[i], errs[i] = pd.exec(ctx, or)
 			wg.Done()
 		}(i, or)
 	}
@@ -37,7 +37,7 @@ func (pd *PartitionDetect) DetectObserver(ctx context.Context, opt tasks.Schedul
 	return nil
 }
 
-func (pd *PartitionDetect) Exec(ctx context.Context, or ObservedRange) ([]*models.Range, error) {
+func (pd *PartitionDetect) exec(ctx context.Context, or ObservedRange) ([]*models.Range, error) {
 	pe := NewPartitionExecute(ctx, pd.Persist, or.PK)
 	oa, err := pe.OverAllocated()
 	if !oa || err != nil {

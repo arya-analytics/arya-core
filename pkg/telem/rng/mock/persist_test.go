@@ -45,6 +45,14 @@ var _ = Describe("Per", func() {
 			Expect(err).To(BeNil())
 		})
 	})
+	Describe("Retrieve Open Ranges", func() {
+		It("Should retrieve the open ranges correctly", func() {
+			_, err := p.NewRange(ctx, 1)
+			Expect(err).To(BeNil())
+			openRng, err := p.RetrieveOpenRanges(ctx)
+			Expect(openRng).To(HaveLen(1))
+		})
+	})
 	Describe("Chunk Related Operations", func() {
 		var (
 			rngID uuid.UUID
@@ -115,7 +123,7 @@ var _ = Describe("Per", func() {
 				for _, cc := range orChunks {
 					ccPKs = append(ccPKs, cc.ID)
 				}
-				for _, ccr := range orChunks {
+				for _, ccr := range orChunkReplicas {
 					ccrPKs = append(ccrPKs, ccr.ID)
 				}
 				newRng, err := op.NewRange(ctx, 2)
@@ -124,8 +132,19 @@ var _ = Describe("Per", func() {
 				err = op.ReallocateChunkReplicas(ctx, ccrPKs, newRng.RangeLease.RangeReplicaID)
 				Expect(err).To(BeNil())
 				reReplicas, err := op.RetrieveRangeChunkReplicas(ctx, newRng.ID)
+				for _, ccr := range reReplicas {
+					Expect(ccr.RangeReplicaID).To(Equal(newRng.RangeLease.RangeReplicaID))
+				}
 				Expect(len(reReplicas)).To(Equal(len(orChunkReplicas)))
-
+			})
+		})
+		Describe("Test Update Range Status", func() {
+			It("Should update the ragne status correctly", func() {
+				err := op.UpdateRangeStatus(ctx, rngID, models.RangeStatusPartition)
+				Expect(err).To(BeNil())
+				rng, err := op.RetrieveRange(ctx, rngID)
+				Expect(err).To(BeNil())
+				Expect(rng.Status).To(Equal(models.RangeStatusPartition))
 			})
 		})
 	})

@@ -16,6 +16,7 @@ type Persist interface {
 
 	RetrieveRange(ctx context.Context, pk uuid.UUID) (*models.Range, error)
 	RetrieveRangeSize(ctx context.Context, pk uuid.UUID) (int64, error)
+	RetrieveOpenRanges(ctx context.Context) ([]*models.Range, error)
 	RetrieveRangeChunks(ctx context.Context, rngPK uuid.UUID) ([]*models.ChannelChunk, error)
 	RetrieveRangeChunkReplicas(ctx context.Context, rngPK uuid.UUID) ([]*models.ChannelChunkReplica, error)
 	RetrieveRangeReplicas(ctx context.Context, rngPK uuid.UUID) ([]*models.RangeReplica, error)
@@ -54,8 +55,12 @@ func (p *PersistCluster) NewRangeReplica(ctx context.Context, rngPK uuid.UUID, n
 
 func (p *PersistCluster) RetrieveRange(ctx context.Context, pk uuid.UUID) (*models.Range, error) {
 	r := &models.Range{}
-	err := p.Cluster.NewRetrieve().Model(r).WherePK(pk).Exec(ctx)
-	return r, err
+	return r, p.Cluster.NewRetrieve().Model(r).WherePK(pk).Exec(ctx)
+}
+
+func (p *PersistCluster) RetrieveOpenRanges(ctx context.Context) (ranges []*models.Range, err error) {
+	return ranges, p.Cluster.NewRetrieve().Model(&ranges).WhereFields(model.WhereFields{"Status": models.RangeStatusOpen}).Exec(ctx)
+
 }
 
 func (p *PersistCluster) ccByRangeQ(chunks interface{}, pk uuid.UUID) *cluster.QueryRetrieve {

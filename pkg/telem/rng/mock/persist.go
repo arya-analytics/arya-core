@@ -71,6 +71,16 @@ func (p *Persist) RetrieveRange(ctx context.Context, PK uuid.UUID) (*models.Rang
 	return nil, storage.Error{Type: storage.ErrorTypeItemNotFound}
 }
 
+func (p *Persist) RetrieveOpenRanges(ctx context.Context) ([]*models.Range, error) {
+	var ranges []*models.Range
+	for _, rng := range p.Ranges {
+		if rng.Status == models.RangeStatusOpen {
+			ranges = append(ranges, rng)
+		}
+	}
+	return ranges, nil
+}
+
 func (p *Persist) RetrieveRangeSize(ctx context.Context, PK uuid.UUID) (int64, error) {
 	var size int64 = 0
 	for _, cc := range p.Chunks {

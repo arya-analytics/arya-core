@@ -9,7 +9,6 @@ import (
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	log "github.com/sirupsen/logrus"
 )
 
 var _ = Describe("Persist", func() {
@@ -152,7 +151,6 @@ var _ = Describe("Persist", func() {
 				}
 				Expect(p.ReallocateChunks(ctx, ccPKs, rng.ID)).To(BeNil())
 				Expect(err).To(BeNil())
-				log.Info(rng.ID, rng.RangeLease.RangeReplica.ID)
 				Expect(p.ReallocateChunkReplicas(ctx, ccrPKs, rng.RangeLease.RangeReplica.ID)).To(BeNil())
 				updatedResCCR, err := p.RetrieveRangeChunkReplicas(ctx, rng.ID)
 				Expect(err).To(BeNil())
