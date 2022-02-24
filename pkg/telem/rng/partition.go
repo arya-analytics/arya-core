@@ -6,6 +6,7 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/util/errutil"
 	"github.com/arya-analytics/aryacore/pkg/util/tasks"
 	"github.com/google/uuid"
+	log "github.com/sirupsen/logrus"
 	"sync"
 )
 
@@ -18,6 +19,10 @@ type PartitionDetect struct {
 
 func (pd *PartitionDetect) DetectObserver(ctx context.Context, opt tasks.ScheduleConfig) error {
 	openRanges := pd.Observe.RetrieveFilter(ObservedRange{Status: models.RangeStatusOpen})
+	return pd.detect(ctx, openRanges, opt)
+}
+
+func (pd *PartitionDetect) detect(ctx context.Context, openRanges []ObservedRange, opt tasks.ScheduleConfig) error {
 	wg := sync.WaitGroup{}
 	newRngGroups, errs := make([][]*models.Range, len(openRanges)), make([]error, len(openRanges))
 	for i, or := range openRanges {
@@ -35,6 +40,24 @@ func (pd *PartitionDetect) DetectObserver(ctx context.Context, opt tasks.Schedul
 	}
 	pd.observeNewRngGroups(newRngGroups)
 	return nil
+
+}
+
+func (pd *PartitionDetect) DetectPersist(ctx context.Context, opt tasks.ScheduleConfig) error {
+	openRanges, err := pd.Persist.RetrieveOpenRanges(ctx)
+	if err != nil {
+		return err
+	}
+	log.Info(len(openRanges))
+	var or []ObservedRange
+	for _, openRange := range openRanges {
+		or = append(or, ObservedRange{
+			PK:             openRange.ID,
+			LeaseNodePK:    openRange.RangeLease.RangeReplica.NodeID,
+			LeaseReplicaPK: openRange.RangeLease.RangeReplica.ID,
+		})
+	}
+	return pd.detect(ctx, or, opt)
 }
 
 func (pd *PartitionDetect) exec(ctx context.Context, or ObservedRange) ([]*models.Range, error) {

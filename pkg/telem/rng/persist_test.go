@@ -29,13 +29,15 @@ var _ = Describe("Persist", func() {
 			p = &rng.PersistCluster{Cluster: clust}
 			node := &models.Node{ID: 1}
 			chanCfg = &models.ChannelConfig{ID: uuid.New(), NodeID: node.ID}
-			newRng = &models.Range{ID: uuid.New()}
+			newRng = &models.Range{ID: uuid.New(), Status: models.RangeStatusOpen}
 			newRR = &models.RangeReplica{ID: uuid.New(), RangeID: newRng.ID, NodeID: node.ID}
+			rngLease := &models.RangeLease{ID: uuid.New(), RangeID: newRng.ID, RangeReplicaID: newRR.ID}
 			items = []interface{}{
 				node,
 				chanCfg,
 				newRng,
 				newRR,
+				rngLease,
 			}
 		})
 		JustBeforeEach(func() {
@@ -80,6 +82,15 @@ var _ = Describe("Persist", func() {
 				resRng, err := p.RetrieveRange(ctx, newRng.ID)
 				Expect(err).To(BeNil())
 				Expect(resRng.ID).To(Equal(newRng.ID))
+			})
+		})
+		Describe("Retrieve Open Ranges", func() {
+			It("Should retrieve the correct open ranges", func() {
+				openRng, err := p.RetrieveOpenRanges(ctx)
+				Expect(err).To(BeNil())
+				Expect(openRng).To(HaveLen(1))
+				Expect(openRng[0].RangeLease.RangeReplica.NodeID).To(Equal(1))
+				Expect(openRng[0].RangeLease.RangeReplica.ID).To(Equal(newRR.ID))
 			})
 		})
 		Describe("Retrieve Range Chunk Replicas", func() {

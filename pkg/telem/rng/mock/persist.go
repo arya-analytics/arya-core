@@ -174,7 +174,8 @@ func (p *Persist) UpdateRangeStatus(ctx context.Context, PK uuid.UUID, status mo
 
 func NewPersistOverallocatedRange() (*Persist, uuid.UUID) {
 	rng := &models.Range{
-		ID: uuid.New(),
+		ID:     uuid.New(),
+		Status: models.RangeStatusOpen,
 	}
 	var rangeReplicas []*models.RangeReplica
 	for i := 0; i < 3; i++ {

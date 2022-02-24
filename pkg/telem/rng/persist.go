@@ -59,7 +59,12 @@ func (p *PersistCluster) RetrieveRange(ctx context.Context, pk uuid.UUID) (*mode
 }
 
 func (p *PersistCluster) RetrieveOpenRanges(ctx context.Context) (ranges []*models.Range, err error) {
-	return ranges, p.Cluster.NewRetrieve().Model(&ranges).WhereFields(model.WhereFields{"Status": models.RangeStatusOpen}).Exec(ctx)
+	err = p.Cluster.NewRetrieve().
+		Model(&ranges).
+		Relation("RangeLease", "ID", "RangeReplicaID").
+		Relation("RangeLease.RangeReplica", "ID", "NodeID").
+		WhereFields(model.WhereFields{"Status": models.RangeStatusOpen}).Exec(ctx)
+	return ranges, err
 
 }
 

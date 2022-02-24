@@ -23,6 +23,7 @@ var _ = Describe("Per", func() {
 			rng, err := p.NewRange(ctx, 1)
 			Expect(err).To(BeNil())
 			Expect(rng.RangeLease.RangeReplica.NodeID).To(Equal(1))
+			Expect(rng.Status).To(Equal(models.RangeStatusOpen))
 		})
 	})
 	Describe("New Range Replica", func() {
