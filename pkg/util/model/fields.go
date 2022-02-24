@@ -17,9 +17,10 @@ func (f *Fields) values() (values []reflect.Value) {
 	return values
 }
 
-func (f *Fields) AllNonZero() (nonZero bool) {
+func (f *Fields) AllNonZero() bool {
+	nonZero := true
 	for _, fld := range f.values() {
-		if fld.IsZero() {
+		if !fld.IsZero() {
 			nonZero = false
 		}
 	}
