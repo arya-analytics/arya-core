@@ -51,6 +51,16 @@ var _ = Describe("Fields", func() {
 				}).To(Panic())
 			})
 		})
+		Describe("PKChain", func() {
+			var m *mock.ModelA
+			BeforeEach(func() {
+				m = &mock.ModelA{ID: 96}
+			})
+			It("Should convert the pk chain correctly", func() {
+				baseRfl := model.NewReflect(m)
+				Expect(baseRfl.FieldsByName("ID").ToPKChain()).To(HaveLen(1))
+			})
+		})
 		Context("Inner model is nil", func() {
 			var m *mock.ModelA
 			BeforeEach(func() {
