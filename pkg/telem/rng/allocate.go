@@ -31,7 +31,6 @@ func (a *Allocate) ChunkReplica(replica *models.ChannelChunkReplica) *allocateCh
 func (a *Allocate) retrieveObservedOrNew(ctx context.Context, q ObservedRange) (ObservedRange, error) {
 	or, ok := a.obs.Retrieve(q)
 	if !ok {
-		var err error
 		newRng, err := a.pst.CreateRange(ctx, a.nodeID)
 		if err != nil {
 			return ObservedRange{}, err
