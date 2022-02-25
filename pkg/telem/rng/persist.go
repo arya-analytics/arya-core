@@ -44,7 +44,7 @@ type PersistCluster struct {
 
 func (p *PersistCluster) CreateRange(ctx context.Context, nodePK int) (*models.Range, error) {
 	c := errutil.NewContextCatcher(ctx)
-	r := &models.Range{}
+	r := &models.Range{Status: models.RangeStatusOpen}
 	c.Exec(p.Cluster.NewCreate().Model(r).Exec)
 	rr := &models.RangeReplica{RangeID: r.ID, NodeID: nodePK}
 	c.Exec(p.Cluster.NewCreate().Model(rr).Exec)
@@ -64,7 +64,12 @@ func (p *PersistCluster) CreateRangeReplica(ctx context.Context, rngPK uuid.UUID
 
 func (p *PersistCluster) RetrieveRange(ctx context.Context, pk uuid.UUID) (*models.Range, error) {
 	r := &models.Range{}
-	return r, p.Cluster.NewRetrieve().Model(r).WherePK(pk).Exec(ctx)
+	return r, p.Cluster.NewRetrieve().
+		Model(r).
+		WherePK(pk).
+		Relation("RangeLease", "ID", "RangeReplicaID").
+		Relation("RangeLease.RangeReplica", "ID", "NodeID").
+		Exec(ctx)
 }
 
 func (p *PersistCluster) RetrieveOpenRanges(ctx context.Context) (ranges []*models.Range, err error) {
