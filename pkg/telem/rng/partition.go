@@ -17,16 +17,16 @@ const (
 	detectObserveInterval = 30 * time.Second
 )
 
-func newSchedulerPartition(pd *PartitionDetect, opts ...tasks.ScheduleOpt) tasks.Schedule {
+func newSchedulerPartition(pd *partitionDetect, opts ...tasks.ScheduleOpt) tasks.Schedule {
 	tsk := []tasks.Task{
 		{
 			Name:     "Detect Persist",
-			Action:   pd.DetectPersist,
+			Action:   pd.detectPersist,
 			Interval: detectPersistInterval,
 		},
 		{
 			Name:     "Detect Observe",
-			Action:   pd.DetectObserver,
+			Action:   pd.detectObserver,
 			Interval: detectObserveInterval,
 		},
 	}
@@ -38,17 +38,34 @@ func newSchedulerPartition(pd *PartitionDetect, opts ...tasks.ScheduleOpt) tasks
 
 // |||| DETECT ||||
 
-type PartitionDetect struct {
+type partitionDetect struct {
 	Observe Observe
 	Persist Persist
 }
 
-func (pd *PartitionDetect) DetectObserver(ctx context.Context, opt tasks.ScheduleConfig) error {
+func (pd *partitionDetect) detectObserver(ctx context.Context, opt tasks.ScheduleConfig) error {
 	openRanges := pd.Observe.RetrieveFilter(ObservedRange{Status: models.RangeStatusOpen})
 	return pd.detect(ctx, openRanges, opt)
 }
 
-func (pd *PartitionDetect) detect(ctx context.Context, openRanges []ObservedRange, opt tasks.ScheduleConfig) error {
+func (pd *partitionDetect) detectPersist(ctx context.Context, opt tasks.ScheduleConfig) error {
+	openRanges, err := pd.Persist.RetrieveOpenRanges(ctx)
+	if err != nil {
+		return err
+	}
+	var or []ObservedRange
+	for _, openRange := range openRanges {
+		or = append(or, ObservedRange{
+			PK:             openRange.ID,
+			LeaseNodePK:    openRange.RangeLease.RangeReplica.NodeID,
+			LeaseReplicaPK: openRange.RangeLease.RangeReplica.ID,
+			Status:         openRange.Status,
+		})
+	}
+	return pd.detect(ctx, or, opt)
+}
+
+func (pd *partitionDetect) detect(ctx context.Context, openRanges []ObservedRange, opt tasks.ScheduleConfig) error {
 	wg := sync.WaitGroup{}
 	newRngGroups, errs := make([][]*models.Range, len(openRanges)), make([]error, len(openRanges))
 	for i, or := range openRanges {
@@ -66,27 +83,9 @@ func (pd *PartitionDetect) detect(ctx context.Context, openRanges []ObservedRang
 	}
 	pd.observeNewRngGroups(newRngGroups)
 	return nil
-
 }
 
-func (pd *PartitionDetect) DetectPersist(ctx context.Context, opt tasks.ScheduleConfig) error {
-	openRanges, err := pd.Persist.RetrieveOpenRanges(ctx)
-	if err != nil {
-		return err
-	}
-	var or []ObservedRange
-	for _, openRange := range openRanges {
-		or = append(or, ObservedRange{
-			PK:             openRange.ID,
-			LeaseNodePK:    openRange.RangeLease.RangeReplica.NodeID,
-			LeaseReplicaPK: openRange.RangeLease.RangeReplica.ID,
-			Status:         openRange.Status,
-		})
-	}
-	return pd.detect(ctx, or, opt)
-}
-
-func (pd *PartitionDetect) exec(ctx context.Context, or ObservedRange) ([]*models.Range, error) {
+func (pd *partitionDetect) exec(ctx context.Context, or ObservedRange) ([]*models.Range, error) {
 	pe := NewPartitionExecute(ctx, pd.Persist, or.PK)
 	oa, err := pe.OverAllocated()
 	if !oa || err != nil {
@@ -100,7 +99,7 @@ func (pd *PartitionDetect) exec(ctx context.Context, or ObservedRange) ([]*model
 	return newRng, err
 }
 
-func (pd *PartitionDetect) observeNewRngGroups(newRangeGroups [][]*models.Range) {
+func (pd *partitionDetect) observeNewRngGroups(newRangeGroups [][]*models.Range) {
 	for _, rangeGroup := range newRangeGroups {
 		for _, rng := range rangeGroup {
 			pd.Observe.Add(ObservedRange{

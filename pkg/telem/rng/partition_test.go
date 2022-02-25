@@ -160,60 +160,6 @@ var _ = Describe("Partition", func() {
 			})
 		})
 	})
-	Describe("PartitionDetect", func() {
-		var (
-			rngPK uuid.UUID
-			p     rng.Persist
-			pd    *rng.PartitionDetect
-		)
-		BeforeEach(func() {
-			p, rngPK = mock.NewPersistOverallocatedRange()
-			newRng, err := p.RetrieveRange(ctx, rngPK)
-			Expect(err).To(BeNil())
-			obs := rng.NewObserveMem([]rng.ObservedRange{
-				{
-					PK:             newRng.ID,
-					Status:         models.RangeStatusOpen,
-					LeaseNodePK:    newRng.RangeLease.RangeReplica.NodeID,
-					LeaseReplicaPK: newRng.RangeLease.RangeReplica.ID,
-				},
-			})
-			pd = &rng.PartitionDetect{
-				Observe: obs,
-				Persist: p,
-			}
-		})
-		Describe("DetectObserver", func() {
-			BeforeEach(func() {
-				Expect(pd.DetectObserver(ctx, tasks.ScheduleConfig{})).To(BeNil())
-			})
-			It("Should add the new range to the observer", func() {
-				Expect(pd.Observe.RetrieveAll()).To(HaveLen(2))
-				Expect(pd.Observe.RetrieveFilter(rng.ObservedRange{Status: models.RangeStatusOpen})).To(HaveLen(1))
-			})
-			It("Should close the source range", func() {
-				Expect(pd.Observe.RetrieveFilter(rng.ObservedRange{Status: models.RangeStatusClosed})).To(HaveLen(1))
-				sourceRng, ok := pd.Observe.Retrieve(rng.ObservedRange{PK: rngPK})
-				Expect(ok).To(BeTrue())
-				Expect(sourceRng.Status).To(Equal(models.RangeStatusClosed))
-			})
-		})
-		Describe("DetectPersist", func() {
-			BeforeEach(func() {
-				Expect(pd.DetectPersist(ctx, tasks.ScheduleConfig{})).To(BeNil())
-			})
-			It("Should add the new range to the observer", func() {
-				Expect(pd.Observe.RetrieveAll()).To(HaveLen(2))
-				Expect(pd.Observe.RetrieveFilter(rng.ObservedRange{Status: models.RangeStatusOpen})).To(HaveLen(1))
-			})
-			It("Should close the source range", func() {
-				Expect(pd.Observe.RetrieveFilter(rng.ObservedRange{Status: models.RangeStatusClosed})).To(HaveLen(1))
-				sourceRng, ok := pd.Observe.Retrieve(rng.ObservedRange{PK: rngPK})
-				Expect(ok).To(BeTrue())
-				Expect(sourceRng.Status).To(Equal(models.RangeStatusClosed))
-			})
-		})
-	})
 	Describe("PartitionScheduler", func() {
 		const (
 			accel        = 160
@@ -247,6 +193,16 @@ var _ = Describe("Partition", func() {
 				Expect(err).To(BeNil())
 				Expect(size).To(BeNumerically("<", models.MaxRangeSize))
 			})
+			It("Should add the new range to the observer", func() {
+				Expect(obs.RetrieveAll()).To(HaveLen(2))
+				Expect(obs.RetrieveFilter(rng.ObservedRange{Status: models.RangeStatusOpen})).To(HaveLen(1))
+			})
+			It("Should close the source range", func() {
+				Expect(obs.RetrieveFilter(rng.ObservedRange{Status: models.RangeStatusClosed})).To(HaveLen(1))
+				sourceRng, ok := obs.Retrieve(rng.ObservedRange{PK: rngPK})
+				Expect(ok).To(BeTrue())
+				Expect(sourceRng.Status).To(Equal(models.RangeStatusClosed))
+			})
 		})
 		Describe("Observed Detection", func() {
 			BeforeEach(func() {
@@ -270,6 +226,16 @@ var _ = Describe("Partition", func() {
 			})
 			It("Should only create one new range", func() {
 				Expect(obs.RetrieveAll()).To(HaveLen(2))
+			})
+			It("Should add the new range to the observer", func() {
+				Expect(obs.RetrieveAll()).To(HaveLen(2))
+				Expect(obs.RetrieveFilter(rng.ObservedRange{Status: models.RangeStatusOpen})).To(HaveLen(1))
+			})
+			It("Should close the source range", func() {
+				Expect(obs.RetrieveFilter(rng.ObservedRange{Status: models.RangeStatusClosed})).To(HaveLen(1))
+				sourceRng, ok := obs.Retrieve(rng.ObservedRange{PK: rngPK})
+				Expect(ok).To(BeTrue())
+				Expect(sourceRng.Status).To(Equal(models.RangeStatusClosed))
 			})
 		})
 	})

@@ -20,7 +20,7 @@ func (s *Service) NewAllocate() *Allocate {
 }
 
 func (s *Service) Start(ctx context.Context, opts ...tasks.ScheduleOpt) {
-	s.ps = newSchedulerPartition(&PartitionDetect{Persist: s.pst, Observe: s.obs}, opts...)
+	s.ps = newSchedulerPartition(&partitionDetect{Persist: s.pst, Observe: s.obs}, opts...)
 	s.ps.Start(ctx)
 }
 
