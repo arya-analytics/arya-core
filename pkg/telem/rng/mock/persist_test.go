@@ -50,7 +50,7 @@ var _ = Describe("pst", func() {
 		It("Should retrieve the open ranges correctly", func() {
 			_, err := p.CreateRange(ctx, 1)
 			Expect(err).To(BeNil())
-			openRng, err := p.RetrieveOpenRanges(ctx)
+			openRng, err := p.RetrieveRangesByStatus(ctx)
 			Expect(openRng).To(HaveLen(1))
 		})
 	})

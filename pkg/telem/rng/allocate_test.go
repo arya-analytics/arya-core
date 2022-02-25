@@ -22,7 +22,7 @@ var _ = Describe("Allocate", func() {
 	})
 	Describe("A Chunk", func() {
 		Context("When no open range is under observation", func() {
-			It("Should allocate a new range", func() {
+			It("Should Allocate a new range", func() {
 				chunkToAlloc := &models.ChannelChunk{}
 				err := svc.NewAllocate().Chunk(1, chunkToAlloc).Exec(ctx)
 				Expect(err).To(BeNil())
@@ -33,7 +33,7 @@ var _ = Describe("Allocate", func() {
 			})
 		})
 		Context("When an open range is under observation", func() {
-			It("Should allocate to the open range", func() {
+			It("Should Allocate to the open range", func() {
 				obs.Add(rng.ObservedRange{
 					PK:             uuid.New(),
 					Status:         models.RangeStatusOpen,
@@ -62,7 +62,7 @@ var _ = Describe("Allocate", func() {
 		})
 		Context("When a chunk has already been allocated", func() {
 			Context("When the range remains open", func() {
-				It("Should allocate to the open range", func() {
+				It("Should Allocate to the open range", func() {
 					chunkToAlloc := &models.ChannelChunk{}
 					alloc := svc.NewAllocate()
 					err := alloc.Chunk(1, chunkToAlloc).Exec(ctx)
@@ -78,7 +78,7 @@ var _ = Describe("Allocate", func() {
 				})
 			})
 			Context("When the range has been closed in between allocating the chunk and the replica", func() {
-				It("Should allocate a new range", func() {
+				It("Should Allocate a new range", func() {
 					chunkToAlloc := &models.ChannelChunk{}
 					alloc := svc.NewAllocate()
 					err := alloc.Chunk(1, chunkToAlloc).Exec(ctx)

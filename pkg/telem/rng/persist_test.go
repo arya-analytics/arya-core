@@ -86,7 +86,7 @@ var _ = Describe("Persist", func() {
 		})
 		Describe("Retrieve Open Ranges", func() {
 			It("Should retrieve the correct open ranges", func() {
-				openRng, err := p.RetrieveOpenRanges(ctx)
+				openRng, err := p.RetrieveRangesByStatus(ctx)
 				Expect(err).To(BeNil())
 				Expect(openRng).To(HaveLen(2))
 				Expect(openRng[0].RangeLease.RangeReplica.NodeID).To(Equal(1))

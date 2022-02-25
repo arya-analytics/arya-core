@@ -71,7 +71,7 @@ func (p *Persist) RetrieveRange(ctx context.Context, PK uuid.UUID) (*models.Rang
 	return nil, storage.Error{Type: storage.ErrorTypeItemNotFound}
 }
 
-func (p *Persist) RetrieveOpenRanges(ctx context.Context) ([]*models.Range, error) {
+func (p *Persist) RetrieveRangesByStatus(ctx context.Context) ([]*models.Range, error) {
 	var ranges []*models.Range
 	for _, rng := range p.Ranges {
 		if rng.Status == models.RangeStatusOpen {

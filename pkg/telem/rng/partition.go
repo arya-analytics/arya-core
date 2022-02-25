@@ -13,6 +13,7 @@ import (
 // |||| SCHEDULER ||||
 
 const (
+	scheduleWithName      = "Partition Scheduler"
 	detectPersistInterval = 120 * time.Second
 	detectObserveInterval = 30 * time.Second
 )
@@ -30,7 +31,7 @@ func newSchedulerPartition(pd *partitionDetect, opts ...tasks.ScheduleOpt) tasks
 			Interval: detectObserveInterval,
 		},
 	}
-	defaultOpts := []tasks.ScheduleOpt{tasks.ScheduleWithName("Partition Scheduler")}
+	defaultOpts := []tasks.ScheduleOpt{tasks.ScheduleWithName(scheduleWithName)}
 	allOpts := append(defaultOpts, opts...)
 	return tasks.NewScheduleSimple(tsk, allOpts...)
 
@@ -49,7 +50,7 @@ func (pd *partitionDetect) detectObserver(ctx context.Context, opt tasks.Schedul
 }
 
 func (pd *partitionDetect) detectPersist(ctx context.Context, opt tasks.ScheduleConfig) error {
-	openRanges, err := pd.Persist.RetrieveOpenRanges(ctx)
+	openRanges, err := pd.Persist.RetrieveRangesByStatus(ctx)
 	if err != nil {
 		return err
 	}
@@ -118,6 +119,12 @@ func NewPartitionExecute(ctx context.Context, p Persist, rngPK uuid.UUID) *Parti
 	return &PartitionExecute{pst: p, sourceRangePK: rngPK, catcher: errutil.NewContextCatcher(ctx)}
 }
 
+// PartitionExecute checks if a models.Range is over-allocated (i.e. exceeds models.MaxRangeSize),
+// and then splits it into smaller ranges until its no longer allocated. It will then mark the original (source)
+// models.Range as closed.
+//
+// Exec runs the partition, and returns any new models.Range objects created during the partition as well as
+// any errors encountered.
 type PartitionExecute struct {
 	pst           Persist
 	sourceRangePK uuid.UUID
@@ -126,22 +133,12 @@ type PartitionExecute struct {
 	_rngSize      int64
 }
 
+// OverAllocated returns true if the size of the source range exceeds models.MaxRangeSize.
 func (p *PartitionExecute) OverAllocated() (bool, error) {
 	return p.overAllocated(), p.catcher.Error()
 }
 
-func (p *PartitionExecute) overAllocated() bool {
-	return p.rangeSize() > models.MaxRangeSize
-}
-
-func (p *PartitionExecute) rangeSize() (size int64) {
-	p.catcher.Exec(func(ctx context.Context) (err error) {
-		p._rngSize, err = p.pst.RetrieveRangeSize(ctx, p.sourceRangePK)
-		return err
-	})
-	return p._rngSize
-}
-
+// Exec executes the partition.
 func (p *PartitionExecute) Exec() ([]*models.Range, error) {
 	if !p.overAllocated() {
 		return p.newRanges, nil
@@ -160,6 +157,18 @@ func (p *PartitionExecute) Exec() ([]*models.Range, error) {
 	p.updateRangeStatus(p.sourceRangePK, models.RangeStatusClosed)
 	nextP := &PartitionExecute{pst: p.pst, sourceRangePK: newRng.ID, newRanges: p.newRanges, catcher: p.catcher}
 	return nextP.Exec()
+}
+
+func (p *PartitionExecute) overAllocated() bool {
+	return p.rangeSize() > models.MaxRangeSize
+}
+
+func (p *PartitionExecute) rangeSize() (size int64) {
+	p.catcher.Exec(func(ctx context.Context) (err error) {
+		p._rngSize, err = p.pst.RetrieveRangeSize(ctx, p.sourceRangePK)
+		return err
+	})
+	return p._rngSize
 }
 
 func (p *PartitionExecute) updateRangeStatus(rngPK uuid.UUID, status models.RangeStatus) {

@@ -8,13 +8,27 @@ import (
 	"sync"
 )
 
+// Observe watches a set of models.Range in an in-memory
+// store in order to provide fast, goroutine secure retrieve
+// and update operations.
+//
+// Observe should not persist any changes to permanent storage.
 type Observe interface {
+	// Add adds a new ObservedRange to Observe. Updates an ObservedRange if the ObservedRange.PK
+	// already exists in Observe.
+	//
+	// NOTE: ObservedRange must be completely defined (i.e. all fields nonzero), or else the method will panic.
 	Add(or ObservedRange)
+	// Retrieve retrieves an ObservedRange matching a (partially) defined query q. Returns false if the
+	// ObservedRange can't be found.
 	Retrieve(q ObservedRange) (ObservedRange, bool)
+	// RetrieveAll retrieves all ObservedRange currently in Observe.
 	RetrieveAll() []ObservedRange
+	// RetrieveFilter retrieves all ObservedRange matching a (partially) defined query q.
 	RetrieveFilter(q ObservedRange) []ObservedRange
 }
 
+// ObservedRange holds critical info about a tracked range.
 type ObservedRange struct {
 	PK             uuid.UUID
 	Status         models.RangeStatus
@@ -22,11 +36,13 @@ type ObservedRange struct {
 	LeaseReplicaPK uuid.UUID
 }
 
+// ObserveMem implements Observe with a mutex controlled in-memory map.
 type ObserveMem struct {
 	mu     sync.Mutex
 	ranges map[uuid.UUID]ObservedRange
 }
 
+// NewObserveMem creates a new ObserveMem with the preloaded ranges.
 func NewObserveMem(ranges []ObservedRange) *ObserveMem {
 	rangeMap := map[uuid.UUID]ObservedRange{}
 	for _, rng := range ranges {
