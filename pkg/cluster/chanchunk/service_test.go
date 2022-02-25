@@ -22,7 +22,7 @@ import (
 var _ = Describe("Service", func() {
 	var (
 		remoteSvc     chanchunk.ServiceRemote
-		localSvc      chanchunk.ServiceLocal
+		localSvc      chanchunk.Local
 		svc           *chanchunk.Service
 		pool          *cluster.NodeRPCPool
 		server        *mock.Server

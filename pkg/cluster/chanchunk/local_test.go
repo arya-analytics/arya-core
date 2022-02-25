@@ -12,7 +12,7 @@ import (
 
 var _ = Describe("Local", func() {
 	var (
-		localSvc            chanchunk.ServiceLocal
+		localSvc            chanchunk.Local
 		items               []interface{}
 		channelConfig       *models.ChannelConfig
 		node                *models.Node

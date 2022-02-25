@@ -11,10 +11,10 @@ import (
 
 type Service struct {
 	remote ServiceRemote
-	local  ServiceLocal
+	local  Local
 }
 
-func NewService(local ServiceLocal, remote ServiceRemote) *Service {
+func NewService(local Local, remote ServiceRemote) *Service {
 	return &Service{remote: remote, local: local}
 }
 
@@ -50,7 +50,7 @@ func (s *Service) createReplica(ctx context.Context, qr *internal.QueryRequest) 
 	); err != nil {
 		return err
 	}
-	// CLARIFICATION: Now that we have the RangeReplica.Node.IsHost field populated, we can switch on it.
+	// CLARIFICATION: Now that we have the RangeReplicas.Node.IsHost field populated, we can switch on it.
 	return replicaNodeIsHostSwitch(
 		qr.Model,
 		func(m *model.Reflect) error { return s.local.CreateReplica(ctx, m.Pointer()) },
@@ -87,7 +87,7 @@ func (s *Service) retrieveReplica(ctx context.Context, qr *internal.QueryRequest
 		}
 	}
 
-	// CLARIFICATION: Now that we have the RangeReplica.Node.IsHost field populated, we can switch on it.
+	// CLARIFICATION: Now that we have the RangeReplicas.Node.IsHost field populated, we can switch on it.
 	return replicaNodeIsHostSwitch(
 		qr.Model,
 		func(m *model.Reflect) error {
@@ -109,7 +109,7 @@ func (s *Service) deleteReplica(ctx context.Context, qr *internal.QueryRequest) 
 	if err := s.local.RetrieveReplica(ctx, qr.Model.Pointer(), LocalReplicaRetrieveOpts{PKC: PKC}); err != nil {
 		return err
 	}
-	// CLARIFICATION: Now that we have the RangeReplica.Node.IsHost field populated, we can switch on it.
+	// CLARIFICATION: Now that we have the RangeReplicas.Node.IsHost field populated, we can switch on it.
 	return replicaNodeIsHostSwitch(
 		qr.Model,
 		func(m *model.Reflect) error { return s.local.DeleteReplica(ctx, LocalReplicaDeleteOpts{m.PKChain()}) },

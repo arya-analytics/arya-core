@@ -1,6 +1,7 @@
 package model
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 )
@@ -41,7 +42,7 @@ func (f *Fields) ToPKChain() PKChain {
 func (f *Fields) ToReflect() *Reflect {
 	t, ok := f.source.Type().FieldByName(f.fldName)
 	if !ok {
-		panic("field does not exist")
+		panic(fmt.Sprintf("field %s does not exist", f.fldName))
 	}
 	newRfl := NewReflect(reflect.New(t.Type.Elem()).Interface()).NewChain()
 	f.source.ForEach(func(rfl *Reflect, i int) {
