@@ -17,13 +17,15 @@ service ChannelChunkService {
 
 message ChannelChunkReplica {
   string ID = 1 [(tagger.tags) = "model:\"role:pk,\""];
-  bytes telem = 2 [(tagger.tags) = "model:\"role:bulkTelem,\""];
+  string ChannelChunkID = 2;
+  string RangeReplicaID = 3;
+  bytes telem = 4 [(tagger.tags) = "model:\"role:bulkTelem,\""];
 }
 
 // |||| CREATE ||||
 
 message ChannelChunkServiceCreateReplicasRequest {
-  ChannelChunkReplica chunk = 1;
+  ChannelChunkReplica CCR = 1;
 }
 
 message ChannelChunkServiceCreateReplicasResponse {}
@@ -31,17 +33,17 @@ message ChannelChunkServiceCreateReplicasResponse {}
 // |||| RETRIEVE ||||
 
 message ChannelChunkServiceRetrieveReplicasResponse {
-  ChannelChunkReplica chunk = 1;
+  ChannelChunkReplica CCR = 1;
 }
 
 message ChannelChunkServiceRetrieveReplicasRequest {
-  repeated string id = 1;
+  repeated string PKC = 1;
 }
 
 // |||| DELETE ||||
 
 message ChannelChunkServiceDeleteReplicasRequest {
-  repeated string id = 1;
+  repeated string PKC = 1;
 }
 
 message ChannelChunkServiceDeleteReplicasResponse {}

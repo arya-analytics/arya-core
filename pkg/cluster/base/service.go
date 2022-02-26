@@ -39,14 +39,41 @@ func (s *Service) create(ctx context.Context, qr *internal.QueryRequest) error {
 
 func (s *Service) retrieve(ctx context.Context, qr *internal.QueryRequest) error {
 	q := s.storage.NewRetrieve().Model(qr.Model.Pointer())
+
+	// PK
+
 	PKC, ok := internal.PKQueryOpt(qr)
 	if ok {
-		q.WherePKs(PKC.Raw())
+		q = q.WherePKs(PKC.Raw())
 	}
-	flds, ok := internal.FieldsQueryOpt(qr)
+
+	// WHERE FIELDS
+
+	wFlds, ok := internal.WhereFieldsQueryOpt(qr)
 	if ok {
-		q.WhereFields(flds)
+		q = q.WhereFields(wFlds)
 	}
+
+	// FIELDS
+
+	flds, ok := internal.RetrieveFieldsQueryOpt(qr)
+	if ok {
+		q = q.Fields(flds...)
+	}
+
+	// RELATIONS
+
+	for _, rel := range internal.RelationQueryOpts(qr) {
+		q = q.Relation(rel.Rel, rel.Fields...)
+	}
+
+	// CALCULATIONS
+
+	calc, ok := internal.RetrieveCalculateQueryOpt(qr)
+	if ok {
+		q = q.Calculate(calc.C, calc.FldName, calc.Into)
+	}
+
 	return q.Exec(ctx)
 }
 
@@ -54,20 +81,38 @@ func (s *Service) delete(ctx context.Context, qr *internal.QueryRequest) error {
 	q := s.storage.NewDelete().Model(qr.Model.Pointer())
 	PKC, ok := internal.PKQueryOpt(qr)
 	if ok {
-		q.WherePKs(PKC.Raw())
+		q = q.WherePKs(PKC.Raw())
 	}
 	return q.Exec(ctx)
 }
 
 func (s *Service) update(ctx context.Context, qr *internal.QueryRequest) error {
 	q := s.storage.NewUpdate().Model(qr.Model.Pointer())
+
+	// PK
+
 	PKC, ok := internal.PKQueryOpt(qr)
 	if len(PKC) > 1 {
 		panic("update queries can't have more than one pk!")
 	}
 	if ok {
-		q.WherePK(PKC[0].Raw())
+		q = q.WherePK(PKC[0].Raw())
 	}
+
+	// FIELDS
+
+	flds, ok := internal.RetrieveFieldsQueryOpt(qr)
+	if ok {
+		q = q.Fields(flds...)
+	}
+
+	// BULK
+
+	bulkOpt := internal.BulkUpdateQueryOpt(qr)
+	if bulkOpt {
+		q = q.Bulk()
+	}
+
 	return q.Exec(ctx)
 }
 
@@ -78,5 +123,6 @@ func catalog() model.Catalog {
 		&models.RangeReplica{},
 		&models.RangeLease{},
 		&models.ChannelConfig{},
+		&models.ChannelChunk{},
 	}
 }

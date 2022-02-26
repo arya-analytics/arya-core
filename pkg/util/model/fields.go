@@ -1,6 +1,7 @@
 package model
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 )
@@ -17,13 +18,14 @@ func (f *Fields) values() (values []reflect.Value) {
 	return values
 }
 
-func (f *Fields) AllNonZero() (nonZero bool) {
+func (f *Fields) AllNonZero() bool {
+	allNonZero := true
 	for _, fld := range f.values() {
-		if fld.IsZero() {
-			nonZero = false
+		if !fld.IsZero() {
+			allNonZero = false
 		}
 	}
-	return nonZero
+	return allNonZero
 }
 
 func (f *Fields) Raw() (rawFlds []interface{}) {
@@ -40,7 +42,7 @@ func (f *Fields) ToPKChain() PKChain {
 func (f *Fields) ToReflect() *Reflect {
 	t, ok := f.source.Type().FieldByName(f.fldName)
 	if !ok {
-		panic("field does not exist")
+		panic(fmt.Sprintf("field %s does not exist", f.fldName))
 	}
 	newRfl := NewReflect(reflect.New(t.Type.Elem()).Interface()).NewChain()
 	f.source.ForEach(func(rfl *Reflect, i int) {
@@ -60,6 +62,10 @@ func SplitLastFieldName(name string) (string, string) {
 	sn := SplitFieldNames(name)
 	fn := strings.Join(sn[0:len(sn)-1], ".")
 	return fn, sn[len(sn)-1]
+}
+
+func SplitFirstFieldName(name string) string {
+	return SplitFieldNames(name)[0]
 }
 
 type WhereFields map[string]interface{}

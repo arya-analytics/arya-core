@@ -2,7 +2,6 @@ package storage
 
 import (
 	"context"
-	"fmt"
 )
 
 // QueryUpdate updates a model in storage.
@@ -25,10 +24,6 @@ func newUpdate(s Storage) *QueryUpdate {
 // NOTE: This query currently updates ALL values of the model. Not just defined ones.
 func (q *QueryUpdate) Model(model interface{}) *QueryUpdate {
 	q.baseBindModel(model)
-	if !q.modelRfl.IsStruct() {
-		panic(fmt.Sprintf("received a non struct model of type %T. "+
-			"model must be a struct", q.modelRfl.Type()))
-	}
 	q.setMDQuery(q.mdQuery().Model(model))
 	return q
 }
@@ -36,6 +31,22 @@ func (q *QueryUpdate) Model(model interface{}) *QueryUpdate {
 // WherePK queries the primary key of the model to be deleted.
 func (q *QueryUpdate) WherePK(pk interface{}) *QueryUpdate {
 	q.setMDQuery(q.mdQuery().WherePK(pk))
+	return q
+}
+
+// Fields marks the fields that need to be updated. If this option isn't specified,
+// will replace all fields.
+//
+// NOTE: When calling Bulk, order matters. Fields must be called before Bulk.
+func (q *QueryUpdate) Fields(flds ...string) *QueryUpdate {
+	q.setMDQuery(q.mdQuery().Fields(flds...))
+	return q
+}
+
+// Bulk marks the update as a bulk update and allows for
+// the update of multiple records.
+func (q *QueryUpdate) Bulk() *QueryUpdate {
+	q.setMDQuery(q.mdQuery().Bulk())
 	return q
 }
 

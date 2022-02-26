@@ -13,7 +13,7 @@
 // Engines (Engine) can fulfill one of three roles:
 //
 // EngineMD - Reads and writes lightweight, strongly consistent data to storage.
-// EngineObject - Saves bulk data to node localstorage data storage.
+// EngineObject - Saves chanchunk data to node localstorage data storage.
 // EngineCache - High speed cache that can read and write time series data.
 //
 // Initialization
@@ -65,7 +65,7 @@ type Storage interface {
 	NewTSCreate() *QueryTSCreate
 	NewMigrate() *QueryMigrate
 	AddQueryHook(hook QueryHook)
-	NewTasks(opts ...tasks.SchedulerOpt) tasks.Scheduler
+	NewTasks(opts ...tasks.ScheduleOpt) tasks.Schedule
 	hooks() []QueryHook
 	config() Config
 	adapter(e Engine) Adapter
@@ -126,8 +126,8 @@ func (s *storage) NewTSCreate() *QueryTSCreate {
 	return newTSCreate(s)
 }
 
-func (s *storage) NewTasks(opts ...tasks.SchedulerOpt) tasks.Scheduler {
-	return tasks.NewBatchScheduler(
+func (s *storage) NewTasks(opts ...tasks.ScheduleOpt) tasks.Schedule {
+	return tasks.NewScheduleBatch(
 		s.cfg.EngineMD.NewTasks(s.adapter(s.cfg.EngineMD), opts...),
 	)
 }

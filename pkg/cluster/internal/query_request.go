@@ -3,8 +3,8 @@ package internal
 import (
 	"context"
 	"fmt"
+	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
-	"reflect"
 )
 
 // |||| REQUEST ||||
@@ -62,34 +62,139 @@ type pkQueryOpt struct {
 	PKChain model.PKChain
 }
 
-func NewPKQueryOpt(qr *QueryRequest, args ...interface{}) {
+func NewPKQueryOpt(qr *QueryRequest, pk interface{}) {
 	panicWhenAlreadySpecified(qr, pkQueryOptKey)
+	qo := pkQueryOpt{model.NewPKChain([]interface{}{pk})}
+	qr.opts[pkQueryOptKey] = qo
+}
 
-	// Handling a single vs multi PK query
-	pks := args[0]
-	if reflect.TypeOf(args[0]).Kind() != reflect.Slice {
-		pks = args
-	}
-
+func NewPKsQueryOpt(qr *QueryRequest, pks interface{}) {
+	panicWhenAlreadySpecified(qr, pkQueryOptKey)
 	qo := pkQueryOpt{model.NewPKChain(pks)}
 	qr.opts[pkQueryOptKey] = qo
 }
 
-// || FIELDS ||
+// || WHERE FIELDS ||
 
-const fieldQueryOptKey = "FieldQueryOpt"
+const whereFieldsQueryOptKey = "WhereFieldsQueryOpt"
 
-func FieldsQueryOpt(qr *QueryRequest) (model.WhereFields, bool) {
-	qo, ok := qr.opts[fieldQueryOptKey]
+func WhereFieldsQueryOpt(qr *QueryRequest) (model.WhereFields, bool) {
+	qo, ok := qr.opts[whereFieldsQueryOptKey]
 	if !ok {
 		return model.WhereFields{}, false
 	}
 	return qo.(model.WhereFields), true
 }
 
-func NewFieldsQueryOpt(q *QueryRequest, ops model.WhereFields) {
-	panicWhenAlreadySpecified(q, fieldQueryOptKey)
-	q.opts[fieldQueryOptKey] = ops
+func NewWhereFieldsQueryOpt(q *QueryRequest, ops model.WhereFields) {
+	panicWhenAlreadySpecified(q, whereFieldsQueryOptKey)
+	q.opts[whereFieldsQueryOptKey] = ops
+}
+
+// || FIELDS ||
+
+const fieldsQueryOptkey = "RetrieveFieldsQueryOpt"
+
+type FieldsQueryOpt []string
+
+func (fqo FieldsQueryOpt) ContainsAny(flds ...string) (contains bool) {
+	for _, qFld := range flds {
+		for _, fld := range fqo {
+			if qFld == fld {
+				contains = true
+			}
+		}
+	}
+	return contains
+}
+
+func NewFieldsQueryOpt(qr *QueryRequest, flds ...string) {
+	panicWhenAlreadySpecified(qr, fieldsQueryOptkey)
+	qo := FieldsQueryOpt{}
+	qo = append(qo, flds...)
+	qr.opts[fieldsQueryOptkey] = qo
+}
+
+func RetrieveFieldsQueryOpt(qr *QueryRequest) (FieldsQueryOpt, bool) {
+	qo, ok := qr.opts[fieldsQueryOptkey]
+	if !ok {
+		return FieldsQueryOpt{}, false
+	}
+	return qo.(FieldsQueryOpt), true
+}
+
+// || RELATION ||
+
+type RelationQueryOpt struct {
+	Rel    string
+	Fields []string
+}
+
+const relationQueryOptKey = "RelationQueryOpt"
+
+func NewRelationQueryOpt(qr *QueryRequest, rel string, flds ...string) {
+	rq := RelationQueryOpt{rel, flds}
+	_, ok := qr.opts[relationQueryOptKey]
+	if !ok {
+		qr.opts[relationQueryOptKey] = []RelationQueryOpt{rq}
+	} else {
+		qr.opts[relationQueryOptKey] = append(qr.opts[relationQueryOptKey].([]RelationQueryOpt), rq)
+	}
+}
+
+func RelationQueryOpts(qr *QueryRequest) []RelationQueryOpt {
+	opts, ok := qr.opts[relationQueryOptKey]
+	if !ok {
+		return []RelationQueryOpt{}
+	}
+	return opts.([]RelationQueryOpt)
+}
+
+// || CALCULATE ||
+
+const calculateOptKey = "CalculateQueryOpt"
+
+type CalculateQueryOpt struct {
+	C       storage.Calculate
+	FldName string
+	Into    interface{}
+}
+
+func NewCalculateQueryOpt(qr *QueryRequest, c storage.Calculate, fldName string, into interface{}) {
+	panicWhenAlreadySpecified(qr, calculateOptKey)
+	qo := CalculateQueryOpt{C: c, FldName: fldName, Into: into}
+	qr.opts[calculateOptKey] = qo
+}
+
+func RetrieveCalculateQueryOpt(qr *QueryRequest) (CalculateQueryOpt, bool) {
+	qo, ok := qr.opts[calculateOptKey]
+	if !ok {
+		return CalculateQueryOpt{}, false
+	}
+	return qo.(CalculateQueryOpt), true
+}
+
+// || BULK UPDATE ||
+
+const bulkUpdateOptKey = "BulkUpdateQueryOpt"
+
+func NewBulkUpdateQueryOpt(qr *QueryRequest) {
+	panicWhenAlreadySpecified(qr, bulkUpdateOptKey)
+	if qr.Variant != QueryVariantUpdate {
+		panic("can't mark a non update query as bulk")
+	}
+	qr.opts[bulkUpdateOptKey] = true
+}
+
+func BulkUpdateQueryOpt(qr *QueryRequest) bool {
+	if qr.Variant != QueryVariantUpdate {
+		panic("can't retrieve a bulk query opt from non bulk query")
+	}
+	bulkOpt, ok := qr.opts[bulkUpdateOptKey]
+	if !ok {
+		return false
+	}
+	return bulkOpt.(bool)
 }
 
 type QueryRequestVariantOperations map[QueryVariant]ServiceOperation

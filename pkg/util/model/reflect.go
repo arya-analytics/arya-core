@@ -116,6 +116,9 @@ func (r *Reflect) StructFieldByName(name string) reflect.Value {
 		if i == 0 {
 			fld = r.StructValue().FieldByName(splitName)
 		} else {
+			if fld.IsZero() {
+				return reflect.Value{}
+			}
 			fld = fld.Elem().FieldByName(splitName)
 		}
 	}

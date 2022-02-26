@@ -3,6 +3,7 @@ package cluster
 import (
 	"context"
 	"github.com/arya-analytics/aryacore/pkg/cluster/internal"
+	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 )
 
@@ -22,17 +23,32 @@ func (q *QueryRetrieve) Model(m interface{}) *QueryRetrieve {
 }
 
 func (q *QueryRetrieve) WherePK(pk interface{}) *QueryRetrieve {
-	internal.NewPKQueryOpt(q.baseQueryRequest(), []interface{}{pk})
+	internal.NewPKQueryOpt(q.baseQueryRequest(), pk)
 	return q
 }
 
 func (q *QueryRetrieve) WherePKs(pks interface{}) *QueryRetrieve {
-	internal.NewPKQueryOpt(q.baseQueryRequest(), pks)
+	internal.NewPKsQueryOpt(q.baseQueryRequest(), pks)
+	return q
+}
+
+func (q *QueryRetrieve) Fields(flds ...string) *QueryRetrieve {
+	internal.NewFieldsQueryOpt(q.baseQueryRequest(), flds...)
+	return q
+}
+
+func (q *QueryRetrieve) Calculate(c storage.Calculate, fldName string, into interface{}) *QueryRetrieve {
+	internal.NewCalculateQueryOpt(q.baseQueryRequest(), c, fldName, into)
+	return q
+}
+
+func (q *QueryRetrieve) Relation(rel string, flds ...string) *QueryRetrieve {
+	internal.NewRelationQueryOpt(q.baseQueryRequest(), rel, flds...)
 	return q
 }
 
 func (q *QueryRetrieve) WhereFields(flds model.WhereFields) *QueryRetrieve {
-	internal.NewFieldsQueryOpt(q.baseQueryRequest(), flds)
+	internal.NewWhereFieldsQueryOpt(q.baseQueryRequest(), flds)
 	return q
 }
 

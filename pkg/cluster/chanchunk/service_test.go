@@ -4,12 +4,11 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/cluster"
 	"github.com/arya-analytics/aryacore/pkg/cluster/chanchunk"
 	"github.com/arya-analytics/aryacore/pkg/cluster/chanchunk/mock"
-	"github.com/arya-analytics/aryacore/pkg/cluster/internal"
 	clustermock "github.com/arya-analytics/aryacore/pkg/cluster/mock"
 	"github.com/arya-analytics/aryacore/pkg/models"
-	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
+	mockTlm "github.com/arya-analytics/aryacore/pkg/util/telem/mock"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -21,41 +20,26 @@ import (
 
 var _ = Describe("Service", func() {
 	var (
+		clust         cluster.Cluster
 		remoteSvc     chanchunk.ServiceRemote
-		localSvc      chanchunk.ServiceLocal
+		localSvc      chanchunk.Local
 		svc           *chanchunk.Service
 		pool          *cluster.NodeRPCPool
-		server        *mock.Server
+		persist       *mock.ServerRPCPersist
+		server        *chanchunk.ServerRPC
 		grpcServer    *grpc.Server
 		lis           net.Listener
+		ccr           *models.ChannelChunkReplica
 		node          = &models.Node{ID: 1}
 		channelConfig = &models.ChannelConfig{NodeID: node.ID, ID: uuid.New()}
-		rangeX        = &models.Range{
-			ID: uuid.New(),
-		}
-		rangeReplica = &models.RangeReplica{
-			ID:      uuid.New(),
-			RangeID: rangeX.ID,
-			NodeID:  node.ID,
-		}
-		channelChunk = &models.ChannelChunk{
-			ID:              uuid.New(),
-			RangeID:         rangeX.ID,
-			ChannelConfigID: channelConfig.ID,
-		}
-		channelChunkReplica = &models.ChannelChunkReplica{
-			RangeReplicaID: rangeReplica.ID,
-			ChannelChunkID: channelChunk.ID,
-			Telem:          telem.NewBulk([]byte{}),
-		}
-		items = []interface{}{
-			node,
-			channelConfig,
-			rangeX,
-			rangeReplica,
-		}
+		rng           = &models.Range{ID: uuid.New()}
+		rr            = &models.RangeReplica{ID: uuid.New(), RangeID: rng.ID, NodeID: node.ID}
+		cc            = &models.ChannelChunk{ID: uuid.New(), RangeID: rng.ID, ChannelConfigID: channelConfig.ID}
+		items         = []interface{}{node, channelConfig, rng, rr, cc}
 	)
 	BeforeEach(func() {
+		store.AddQueryHook(mock.HostInterceptQueryHook(2))
+		clust = cluster.New()
 		var lisErr error
 		lis, lisErr = net.Listen("tcp", "localhost:0")
 		Expect(lisErr).To(BeNil())
@@ -64,11 +48,20 @@ var _ = Describe("Service", func() {
 		node.RPCPort = port
 		pool = clustermock.NewNodeRPCPool()
 		remoteSvc = chanchunk.NewServiceRemoteRPC(pool)
-		server = mock.NewServer()
+		persist = &mock.ServerRPCPersist{}
+		server = chanchunk.NewServerRPC(persist)
 		grpcServer = grpc.NewServer()
 		server.BindTo(grpcServer)
 		localSvc = chanchunk.NewServiceLocalStorage(store)
 		svc = chanchunk.NewService(localSvc, remoteSvc)
+		clust.BindService(svc)
+		ccr = &models.ChannelChunkReplica{
+			ID:             uuid.New(),
+			RangeReplicaID: rr.ID,
+			ChannelChunkID: cc.ID,
+			Telem:          telem.NewBulk([]byte{}),
+		}
+		mockTlm.TelemBulkPopulateRandomFloat64(ccr.Telem, 500)
 	})
 	BeforeEach(func() {
 		localSvc = chanchunk.NewServiceLocalStorage(store)
@@ -95,138 +88,76 @@ var _ = Describe("Service", func() {
 			Expect(err).To(BeNil())
 		}
 	})
-	Describe("Channel Chunk", func() {
-		DescribeTable("Should Create + Retrieve + Delete correctly",
-			func(cc interface{}, resCC interface{}) {
-				rfl, resRfl := model.NewReflect(cc), model.NewReflect(resCC)
-				createQR := &internal.QueryRequest{
-					Variant: internal.QueryVariantCreate,
-					Model:   rfl,
-				}
-				By("Being able to handle the create query")
-				Expect(svc.CanHandle(createQR)).To(BeTrue())
-				By("Being able to execute the create query")
-				Expect(svc.Exec(ctx, createQR)).To(BeNil())
-
-				retrieveQR := internal.NewQueryRequest(
-					internal.QueryVariantRetrieve,
-					model.NewReflect(resCC),
-				)
-				internal.NewPKQueryOpt(retrieveQR, rfl.PKChain().Raw())
-				By("Being able to handle the retrieve query")
-				Expect(svc.CanHandle(retrieveQR)).To(BeTrue())
-
-				By("Executing the retrieve query")
-				Expect(svc.Exec(ctx, retrieveQR)).To(BeNil())
-
-				By("Retrieving the correct item")
-				Expect(resRfl.PKChain()).To(Equal(rfl.PKChain()))
-
-				deleteQR := internal.NewQueryRequest(
-					internal.QueryVariantDelete,
-					resRfl,
-				)
-				internal.NewPKQueryOpt(deleteQR, rfl.PKChain().Raw())
-
-				By("Being able to handle the delete query")
-				Expect(svc.CanHandle(deleteQR)).To(BeTrue())
-
-				By("Executing the delete query")
-				Expect(svc.Exec(ctx, deleteQR)).To(BeNil())
-
-				resCCTwo := &models.ChannelChunk{}
-				retrieveQRTwo := internal.NewQueryRequest(
-					internal.QueryVariantRetrieve,
-					model.NewReflect(resCCTwo),
-				)
-				internal.NewPKQueryOpt(retrieveQRTwo, rfl.PKChain()[0].Raw())
-
-				By("Not being able to be re-retrieved")
-				rTwoErr := svc.Exec(ctx, retrieveQR)
-				if rTwoErr != nil {
-					Expect(rTwoErr.(storage.Error).Type).To(Equal(storage.ErrorTypeItemNotFound))
-				} else {
-					Expect(model.NewPK(resCCTwo.ID).IsZero()).To(BeTrue())
-				}
-			},
-			Entry("Single Chunk", channelChunk, &models.ChannelChunk{}),
-			Entry("Slice of Chunks", &[]*models.ChannelChunk{channelChunk}, &[]*models.ChannelChunk{}),
-		)
-	})
-	Describe("Channel Chunk Replica", func() {
-		JustBeforeEach(func() {
-			chunkCreateQR := internal.NewQueryRequest(
-				internal.QueryVariantCreate,
-				model.NewReflect(channelChunk),
-			)
-			Expect(svc.CanHandle(chunkCreateQR)).To(BeTrue())
-			Expect(svc.Exec(ctx, chunkCreateQR)).To(BeNil())
+	Describe("Node Is Remote", func() {
+		It("Should create the chunk replica correctly", func() {
+			err := clust.NewCreate().Model(ccr).Exec(ctx)
+			Expect(err).To(BeNil())
+			Expect(persist.ChunkReplicas).To(HaveLen(1))
+			Expect(persist.ChunkReplicas[0].ID).To(Equal(ccr.ID))
 		})
-		JustAfterEach(func() {
-			deleteQR := internal.NewQueryRequest(
-				internal.QueryVariantDelete,
-				model.NewReflect(channelChunk),
-			)
-			internal.NewPKQueryOpt(deleteQR, channelChunk.ID)
-			Expect(svc.CanHandle(deleteQR)).To(BeTrue())
-			err := svc.Exec(ctx, deleteQR)
+		It("Should retrieve the chunk replica correctly", func() {
+			cErr := clust.NewCreate().Model(ccr).Exec(ctx)
+			ccr.Telem = telem.NewBulk([]byte{})
+			sCErr := store.NewCreate().Model(ccr).Exec(ctx)
+			Expect(sCErr).To(BeNil())
+			Expect(cErr).To(BeNil())
+			resCCR := &models.ChannelChunkReplica{}
+			rErr := clust.NewRetrieve().Model(resCCR).WherePK(ccr.ID).Exec(ctx)
+			Expect(rErr).To(BeNil())
+			Expect(resCCR.ID).To(Equal(ccr.ID))
+		})
+		It("Should delete the chunk replica correctly", func() {
+			cErr := clust.NewCreate().Model(ccr).Exec(ctx)
+			ccr.Telem = telem.NewBulk([]byte{})
+			sCErr := store.NewCreate().Model(ccr).Exec(ctx)
+			Expect(sCErr).To(BeNil())
+			Expect(cErr).To(BeNil())
+			dErr := clust.NewDelete().Model(&models.ChannelChunkReplica{}).WherePK(ccr.ID).Exec(ctx)
+			Expect(dErr).To(BeNil())
+			Expect(persist.ChunkReplicas).To(HaveLen(0))
+		})
+	})
+	Describe("Node Is Local", func() {
+		BeforeEach(func() {
+			store.AddQueryHook(mock.HostInterceptQueryHook(1))
+		})
+		It("Should create the chunk replica correctly", func() {
+			err := clust.NewCreate().Model(ccr).Exec(ctx)
 			Expect(err).To(BeNil())
 		})
-		DescribeTable("Should Create + Retrieve + Delete the chunk replica correctly",
-			func(cc interface{}, resCC interface{}) {
-				rfl, resRfl := model.NewReflect(cc), model.NewReflect(resCC)
-				createQR := &internal.QueryRequest{
-					Variant: internal.QueryVariantCreate,
-					Model:   rfl,
-				}
-				By("Being able to handle the create query")
-				Expect(svc.CanHandle(createQR)).To(BeTrue())
-				By("Being able to execute the create query")
-				Expect(svc.Exec(ctx, createQR)).To(BeNil())
-
-				retrieveQR := internal.NewQueryRequest(
-					internal.QueryVariantRetrieve,
-					model.NewReflect(resCC),
-				)
-				internal.NewPKQueryOpt(retrieveQR, rfl.PKChain().Raw())
-				By("Being able to handle the retrieve query")
-				Expect(svc.CanHandle(retrieveQR)).To(BeTrue())
-
-				By("Executing the retrieve query")
-				Expect(svc.Exec(ctx, retrieveQR)).To(BeNil())
-
-				By("Retrieving the correct item")
-				Expect(resRfl.PKChain()).To(Equal(rfl.PKChain()))
-
-				deleteQR := internal.NewQueryRequest(
-					internal.QueryVariantDelete,
-					resRfl,
-				)
-				internal.NewPKQueryOpt(deleteQR, rfl.PKChain().Raw())
-
-				By("Being able to handle the delete query")
-				Expect(svc.CanHandle(deleteQR)).To(BeTrue())
-
-				By("Executing the delete query")
-				Expect(svc.Exec(ctx, deleteQR)).To(BeNil())
-
-				resCCTwo := &models.ChannelChunkReplica{}
-				retrieveQRTwo := internal.NewQueryRequest(
-					internal.QueryVariantRetrieve,
-					model.NewReflect(resCCTwo),
-				)
-				internal.NewPKQueryOpt(retrieveQRTwo, rfl.PKChain()[0].Raw())
-
-				By("Not being able to be re-retrieved")
-				rTwoErr := svc.Exec(ctx, retrieveQRTwo)
-				if rTwoErr != nil {
-					Expect(rTwoErr.(storage.Error).Type).To(Equal(storage.ErrorTypeItemNotFound))
-				} else {
-					Expect(model.NewPK(resCCTwo.ID).IsZero()).To(BeTrue())
-				}
-			},
-			Entry("Single Chunk Replica", channelChunkReplica, &models.ChannelChunkReplica{}),
-			Entry("Multiple Chunk Replicas", &[]*models.ChannelChunkReplica{channelChunkReplica}, &[]*models.ChannelChunkReplica{}),
-		)
+		It("Should retrieve the chunk replica correctly", func() {
+			cErr := clust.NewCreate().Model(ccr).Exec(ctx)
+			Expect(cErr).To(BeNil())
+			resCCR := &models.ChannelChunkReplica{}
+			rErr := clust.NewRetrieve().Model(resCCR).WherePK(ccr.ID).Exec(ctx)
+			Expect(rErr).To(BeNil())
+			Expect(resCCR.ID).To(Equal(ccr.ID))
+		})
+		It("Should retrieve only meta data when bulk telem field not specified", func() {
+			cErr := clust.NewCreate().Model(ccr).Exec(ctx)
+			Expect(cErr).To(BeNil())
+			resCCR := &models.ChannelChunkReplica{}
+			rErr := clust.NewRetrieve().Model(resCCR).WhereFields(model.WhereFields{"ID": ccr.ID}).Fields("ID").Exec(ctx)
+			Expect(rErr).To(BeNil())
+			Expect(resCCR.ID).To(Equal(ccr.ID))
+			Expect(resCCR.Telem).To(BeNil())
+		})
+		It("Should delete the chunk replica correctly", func() {
+			cErr := clust.NewCreate().Model(ccr).Exec(ctx)
+			Expect(cErr).To(BeNil())
+			dErr := clust.NewDelete().Model(&models.ChannelChunkReplica{}).WherePK(ccr.ID).Exec(ctx)
+			Expect(dErr).To(BeNil())
+			Expect(persist.ChunkReplicas).To(HaveLen(0))
+		})
+		It("Should update the replica correctly", func() {
+			cErr := clust.NewCreate().Model(ccr).Exec(ctx)
+			Expect(cErr).To(BeNil())
+			rrTwo := &models.RangeReplica{ID: uuid.New(), RangeID: rng.ID, NodeID: node.ID}
+			rrErr := store.NewCreate().Model(rrTwo).Exec(ctx)
+			Expect(rrErr).To(BeNil())
+			ccr.RangeReplicaID = rrTwo.ID
+			uErr := clust.NewUpdate().Model(ccr).WherePK(ccr.ID).Fields("RangeReplicaID").Exec(ctx)
+			Expect(uErr).To(BeNil())
+		})
 	})
 })

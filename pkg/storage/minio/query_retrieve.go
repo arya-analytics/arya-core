@@ -54,7 +54,6 @@ func (q *queryRetrieve) Exec(ctx context.Context) error {
 		q.baseExec(func() error {
 			_, err := bulk.ReadFrom(resObj)
 			return err
-
 		})
 		q.appendToDVC(&dataValue{PK: pk, Data: bulk})
 	}

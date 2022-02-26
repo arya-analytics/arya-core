@@ -18,16 +18,16 @@ func TestTasks(t *testing.T) {
 	RunSpecs(t, "NewTasks Suite")
 }
 
-// A SimpleScheduler that increments a counter.
-func ExampleNewSimpleScheduler() {
+// A ScheduleSimple that increments a counter.
+func ExampleNewScheduleSimple() {
 	ctx := context.Background()
 	count := 0
-	s := tasks.NewSimpleScheduler(
+	s := tasks.NewScheduleSimple(
 		[]tasks.Task{
 			{
 				Name:     "increment counter",
 				Interval: 250 * time.Millisecond,
-				Action: func(ctx context.Context, cfg tasks.SchedulerConfig) error {
+				Action: func(ctx context.Context, cfg tasks.ScheduleConfig) error {
 					count += 1
 					return nil
 				},
@@ -42,16 +42,16 @@ func ExampleNewSimpleScheduler() {
 	// 2
 }
 
-// A BatchScheduler that compose two simple schedulers together.
-func ExampleNewBatchScheduler() {
+// A ScheduleBatch that compose two simple schedulers together.
+func ExampleNewScheduleBatch() {
 	ctx := context.Background()
 	countOne := 0
-	sOne := tasks.NewSimpleScheduler(
+	sOne := tasks.NewScheduleSimple(
 		[]tasks.Task{
 			{
 				Name:     "increment counter one",
 				Interval: 250 * time.Millisecond,
-				Action: func(ctx context.Context, cfg tasks.SchedulerConfig) error {
+				Action: func(ctx context.Context, cfg tasks.ScheduleConfig) error {
 					countOne += 1
 					return nil
 				},
@@ -59,19 +59,19 @@ func ExampleNewBatchScheduler() {
 		},
 	)
 	countTwo := 0
-	sTwo := tasks.NewSimpleScheduler(
+	sTwo := tasks.NewScheduleSimple(
 		[]tasks.Task{
 			{
 				Name:     "increment counter two",
 				Interval: 500 * time.Millisecond,
-				Action: func(ctx context.Context, cfg tasks.SchedulerConfig) error {
+				Action: func(ctx context.Context, cfg tasks.ScheduleConfig) error {
 					countTwo += 1
 					return nil
 				},
 			},
 		},
 	)
-	s := tasks.NewBatchScheduler(sOne, sTwo)
+	s := tasks.NewScheduleBatch(sOne, sTwo)
 	s.Start(ctx)
 	defer s.Stop()
 	time.Sleep(550 * time.Millisecond)

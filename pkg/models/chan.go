@@ -5,34 +5,15 @@ import (
 	"github.com/google/uuid"
 )
 
-type Range struct {
-	ID         uuid.UUID `model:"role:pk,"`
-	RangeLease *RangeLease
-}
-
-type RangeLease struct {
-	ID             uuid.UUID `model:"role:pk,"`
-	RangeID        uuid.UUID
-	RangeReplica   *RangeReplica
-	RangeReplicaID uuid.UUID
-}
-
-type RangeReplica struct {
-	ID      uuid.UUID `model:"role:pk"`
-	Range   *Range
-	RangeID uuid.UUID
-	Node    *Node
-	NodeID  int
-}
-
-// |||| CHANNEL ||||
-
 type ChannelConfig struct {
-	ID     uuid.UUID `model:"role:pk,"`
-	Name   string
-	Node   *Node
-	NodeID int
+	ID       uuid.UUID `model:"role:pk,"`
+	Name     string
+	Node     *Node
+	NodeID   int
+	DataRate int
 }
+
+const MaxChunkSize = 2e7
 
 type ChannelChunk struct {
 	ID              uuid.UUID `model:"role:pk,"`
@@ -40,6 +21,8 @@ type ChannelChunk struct {
 	RangeID         uuid.UUID
 	ChannelConfig   *ChannelConfig
 	ChannelConfigID uuid.UUID
+	Size            int64
+	StartTS         int64
 }
 
 type ChannelChunkReplica struct {

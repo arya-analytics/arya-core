@@ -1,6 +1,7 @@
 package roach
 
 import (
+	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/google/uuid"
 	"github.com/uptrace/bun"
@@ -26,7 +27,7 @@ func catalog() model.Catalog {
 // |||| NODE ||||
 
 type Node struct {
-	// Select key MUST match nodesGossip table in migrations file.
+	// Select key MUST match nodesGossip table in bunQ file.
 	bun.BaseModel   `bun:"select:nodes_gossip,table:nodes"`
 	ID              int       `bun:",pk" model:"role:pk,"`
 	RPCPort         int       `bun:"rpc_port"`
@@ -45,8 +46,10 @@ type Node struct {
 // |||| RANGE ||||
 
 type Range struct {
-	ID         uuid.UUID   `bun:"type:UUID,pk" model:"role:pk,"`
-	RangeLease *RangeLease `bun:"rel:has-one,join:id=range_id"`
+	ID         uuid.UUID          `bun:"type:UUID,pk" model:"role:pk,"`
+	Status     models.RangeStatus `bun:"type:SMALLINT,default:2"`
+	Open       bool               `bun:"default:TRUE,"`
+	RangeLease *RangeLease        `bun:"rel:has-one,join:id=range_id"`
 }
 
 type RangeLease struct {
@@ -67,10 +70,11 @@ type RangeReplica struct {
 // |||| CHANNEL ||||
 
 type ChannelConfig struct {
-	ID     uuid.UUID `bun:"type:UUID,pk" model:"role:pk,"`
-	Name   string
-	Node   *Node `bun:"rel:belongs-to,join:node_id=id,"`
-	NodeID int
+	ID       uuid.UUID `bun:"type:UUID,pk" model:"role:pk,"`
+	Name     string
+	Node     *Node `bun:"rel:belongs-to,join:node_id=id,"`
+	NodeID   int
+	DataRate int
 }
 
 type ChannelChunk struct {
@@ -79,6 +83,8 @@ type ChannelChunk struct {
 	RangeID         uuid.UUID      `bun:"type:UUID,"`
 	ChannelConfig   *ChannelConfig `bun:"rel:belongs-to,join:channel_config_id=id,"`
 	ChannelConfigID uuid.UUID      `bun:"type:UUID,"`
+	Size            int64
+	StartTS         int64
 }
 
 type ChannelChunkReplica struct {

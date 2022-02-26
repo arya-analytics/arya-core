@@ -11,6 +11,18 @@ type Adapter interface {
 	ID() uuid.UUID
 }
 
+// |||| CALCULATIONS ||||
+
+type Calculate int
+
+const (
+	CalculateSum Calculate = iota
+	CalculateMax
+	CalculateMin
+	CalculateCount
+	CalculateAVG
+)
+
 // |||| ENGINE ||||
 
 // Engine is a set of general interfaces that each engine variant must meet.
@@ -23,7 +35,7 @@ type Adapter interface {
 type Engine interface {
 	NewAdapter() Adapter
 	IsAdapter(a Adapter) bool
-	InCatalog(model interface{}) bool
+	ShouldHandle(model interface{}, flds ...string) bool
 }
 
 // || META DATA ||
@@ -42,12 +54,12 @@ type EngineMD interface {
 	NewMigrate(a Adapter) QueryMDMigrate
 	// NewUpdate opens a new QueryMDUpdate.
 	NewUpdate(a Adapter) QueryMDUpdate
-	NewTasks(a Adapter, opts ...tasks.SchedulerOpt) tasks.Scheduler
+	NewTasks(a Adapter, opts ...tasks.ScheduleOpt) tasks.Schedule
 }
 
 // || OBJECT ||
 
-// EngineObject is responsible for storing bulk data to node localstorage data storage.
+// EngineObject is responsible for storing chanchunk data to node localstorage data storage.
 type EngineObject interface {
 	Engine
 	// NewRetrieve opens a new QueryObjectRetrieve.
@@ -92,6 +104,7 @@ type QueryMDRetrieve interface {
 	WherePKs(pks interface{}) QueryMDRetrieve
 	Relation(rel string, fields ...string) QueryMDRetrieve
 	Fields(fields ...string) QueryMDRetrieve
+	Calculate(c Calculate, fldName string, into interface{}) QueryMDRetrieve
 	WhereFields(flds model.WhereFields) QueryMDRetrieve
 	Count(ctx context.Context) (int, error)
 }
@@ -106,7 +119,8 @@ type QueryMDCreate interface {
 type QueryMDUpdate interface {
 	QueryMDBase
 	Model(model interface{}) QueryMDUpdate
-	Where(query string, args ...interface{}) QueryMDUpdate
+	Bulk() QueryMDUpdate
+	Fields(flds ...string) QueryMDUpdate
 	WherePK(pk interface{}) QueryMDUpdate
 }
 

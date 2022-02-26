@@ -1,5 +1,7 @@
 package errutil
 
+import "context"
+
 // |||| CATCHER ||||
 
 type Catcher struct {
@@ -24,4 +26,19 @@ func (c *Catcher) Reset() {
 
 func (c *Catcher) Error() error {
 	return c.err
+}
+
+type ContextCatcher struct {
+	*Catcher
+	ctx context.Context
+}
+
+func NewContextCatcher(ctx context.Context) *ContextCatcher {
+	return &ContextCatcher{Catcher: &Catcher{}, ctx: ctx}
+}
+
+type ActionFuncContext func(ctx context.Context) error
+
+func (c *ContextCatcher) Exec(actionFunc ActionFuncContext) {
+	c.Catcher.Exec(func() error { return actionFunc(c.ctx) })
 }

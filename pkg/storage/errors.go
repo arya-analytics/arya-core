@@ -19,7 +19,7 @@ type Error struct {
 }
 
 func (e Error) Error() string {
-	return fmt.Sprintf("%s: %s - %s", errKey, e.Type, e.Message)
+	return fmt.Sprintf("%s: %s - %s - %s", errKey, e.Type, e.Message, e.Base)
 }
 
 type ErrorType int

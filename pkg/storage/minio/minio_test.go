@@ -50,12 +50,22 @@ var _ = Describe("Minio Engine", func() {
 		Describe("Contains", func() {
 			Context("Model in catalog", func() {
 				It("Should return true", func() {
-					Expect(engine.InCatalog(&models.ChannelChunkReplica{})).To(BeTrue())
+					Expect(engine.ShouldHandle(&models.ChannelChunkReplica{})).To(BeTrue())
 				})
 			})
 			Context("Model not in catalog", func() {
 				It("Should return false", func() {
-					Expect(engine.InCatalog(&mock2.ModelB{})).To(BeFalse())
+					Expect(engine.ShouldHandle(&mock2.ModelB{})).To(BeFalse())
+				})
+			})
+			Context("A model field that minio storage needs to handle not specified", func() {
+				It("Should return false", func() {
+					Expect(engine.ShouldHandle(&models.ChannelChunkReplica{}, "RangeReplicaID")).To(BeFalse())
+				})
+			})
+			Context("A model field that minio needs to handle specified", func() {
+				It("Should return true", func() {
+					Expect(engine.ShouldHandle(&models.ChannelChunkReplica{}, "Telem")).To(BeTrue())
 				})
 			})
 		})

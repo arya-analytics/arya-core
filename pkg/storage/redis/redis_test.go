@@ -50,12 +50,12 @@ var _ = Describe("Redis Engine", func() {
 		Describe("Contains", func() {
 			Context("Model in catalog", func() {
 				It("Should return true", func() {
-					Expect(engine.InCatalog(&models.ChannelSample{})).To(BeTrue())
+					Expect(engine.ShouldHandle(&models.ChannelSample{})).To(BeTrue())
 				})
 			})
 			Context("Model not in catalog", func() {
 				It("Should return false", func() {
-					Expect(engine.InCatalog(&mock2.ModelB{})).To(BeFalse())
+					Expect(engine.ShouldHandle(&mock2.ModelB{})).To(BeFalse())
 				})
 			})
 		})

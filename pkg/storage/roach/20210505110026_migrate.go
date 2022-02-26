@@ -47,15 +47,14 @@ var (
 // |||| CATCHER ||||
 
 type migrateCatcher struct {
-	*errutil.Catcher
-	ctx context.Context
+	*errutil.ContextCatcher
 }
 
 type migrationExecFunc func(ctx context.Context, dest ...interface{}) (sql.Result, error)
 
-func (m *migrateCatcher) execMigration(execFunc migrationExecFunc) {
-	m.Exec(func() error {
-		_, err := execFunc(m.ctx)
+func (m *migrateCatcher) Exec(execFunc migrationExecFunc) {
+	m.ContextCatcher.Exec(func(ctx context.Context) error {
+		_, err := execFunc(ctx)
 		return err
 	})
 }
@@ -64,53 +63,56 @@ func (m *migrateCatcher) execMigration(execFunc migrationExecFunc) {
 
 func migrateUpFunc(d Driver) migrate.MigrationFunc {
 	return func(ctx context.Context, db *bun.DB) error {
-		c := &migrateCatcher{Catcher: &errutil.Catcher{}, ctx: ctx}
+		c := &migrateCatcher{ContextCatcher: errutil.NewContextCatcher(ctx)}
 
 		// |||| NODE ||||
 
-		c.execMigration(db.NewCreateTable().Model((*Node)(nil)).Exec)
-		c.Exec(func() error {
+		c.Exec(db.NewCreateTable().Model((*Node)(nil)).Exec)
+		c.Catcher.Exec(func() error {
 			_, err := db.Exec(nodesViewSQL)
 			return err
 		})
 
 		// |||| RANGE ||||
-		c.execMigration(db.NewCreateTable().
+
+		c.Exec(db.NewCreateTable().
 			Model((*Range)(nil)).
 			Exec,
 		)
-		c.execMigration(db.NewCreateTable().
+		c.Exec(db.NewCreateIndex().
+			Model((*Range)(nil)).
+			Column("id").
+			Where("status > 1").
+			Exec,
+		)
+
+		c.Exec(db.NewCreateTable().
 			Model((*RangeReplica)(nil)).
 			ForeignKey(`("node_id") REFERENCES "nodes" ("id") ON DELETE CASCADE`).
 			ForeignKey(`("range_id") REFERENCES "ranges" ("id") ON DELETE CASCADE`).
 			Exec,
 		)
-		c.execMigration(db.NewCreateTable().
+		c.Exec(db.NewCreateTable().
 			Model((*RangeLease)(nil)).
 			ForeignKey(`("range_replica_id") REFERENCES "range_replicas" ("id") ON DELETE CASCADE`).
 			ForeignKey(`("range_id") REFERENCES "ranges" ("id") ON DELETE CASCADE`).
 			Exec,
 		)
-		//c.Exec(func() error {
-		//	_, err := db.Exec(`ALTER TABLE "range_leases" ADD CONSTRAINT fk_range_id_ref_ranges
-		//							FOREIGN KEY ("range_id") REFERENCES "ranges" ("id") ON DELETE CASCADE`)
-		//	return err
-		//})
 
 		// |||| CHANNEL ||||
 
-		c.execMigration(db.NewCreateTable().
+		c.Exec(db.NewCreateTable().
 			Model((*ChannelConfig)(nil)).
 			ForeignKey(`("node_id") REFERENCES "nodes" ("id") ON DELETE CASCADE`).
 			Exec,
 		)
-		c.execMigration(db.NewCreateTable().
+		c.Exec(db.NewCreateTable().
 			Model((*ChannelChunk)(nil)).
 			ForeignKey(`("channel_config_id") REFERENCES "channel_configs" ("id") ON DELETE CASCADE`).
 			ForeignKey(`("range_id") REFERENCES "ranges" ("id") ON DELETE CASCADE`).
 			Exec,
 		)
-		c.execMigration(db.NewCreateTable().
+		c.Exec(db.NewCreateTable().
 			Model((*ChannelChunkReplica)(nil)).
 			ForeignKey(`("channel_chunk_id") REFERENCES channel_chunks ("id") ON DELETE CASCADE`).
 			ForeignKey(`("range_replica_id") REFERENCES range_replicas ("id") ON DELETE CASCADE`).

@@ -91,7 +91,7 @@ func (pk PK) Raw() interface{} {
 // Equals compares a provided PK tPk with PK itself. Returns true if they are equal,
 // returns false if they aren't.
 func (pk PK) Equals(tPk PK) bool {
-	return pk.raw == tPk.raw
+	return pk.String() == tPk.String()
 }
 
 // Value returns the reflect.Value of the PK.
@@ -150,8 +150,4 @@ func (pkc PKChain) AllZero() bool {
 		}
 	}
 	return allZero
-}
-
-func isPKStructTag(t StructTag) bool {
-	return t.Match(TagCat, RoleKey, PKRole)
 }

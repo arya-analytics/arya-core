@@ -35,7 +35,7 @@ func (e *Engine) IsAdapter(a storage.Adapter) bool {
 	return ok
 }
 
-func (e *Engine) InCatalog(m interface{}) bool {
+func (e *Engine) ShouldHandle(m interface{}, _ ...string) bool {
 	return catalog().Contains(m)
 }
 
@@ -64,6 +64,6 @@ func (e *Engine) NewMigrate(a storage.Adapter) storage.QueryMDMigrate {
 	return newMigrate(conn(a), e.driver)
 }
 
-func (e *Engine) NewTasks(a storage.Adapter, opts ...tasks.SchedulerOpt) tasks.Scheduler {
+func (e *Engine) NewTasks(a storage.Adapter, opts ...tasks.ScheduleOpt) tasks.Schedule {
 	return newTaskScheduler(conn(a), opts...)
 }

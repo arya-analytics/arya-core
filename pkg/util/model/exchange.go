@@ -1,6 +1,8 @@
 package model
 
 import (
+	"fmt"
+	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	"reflect"
 )
@@ -84,7 +86,7 @@ func (m *Exchange) bindToSource(sourceRfl, destRfl *Reflect) {
 					var ok bool
 					destFld, ok = m.execCustomHandlers(fldName, sourceRfl, destRfl, sourceFld, destFld)
 					if !ok {
-						panic("field types incompatible")
+						panic(fmt.Sprintf("field %s has incompatible type %s", fldName, sourceFld.Type()))
 					}
 				} else if !destFld.Type().Implements(sourceFld.Type()) {
 					panic("doesn't implement interface")
@@ -160,7 +162,7 @@ func validDestField(val reflect.Value) bool {
 //
 // Then, the Exchange will automatically adapt PK types that wouldn't otherwise be compatible.
 func FieldHandlerPK(sourceST, destST StructTag, sourceFld, destFld reflect.Value) (reflect.Value, bool) {
-	if !isPKStructTag(sourceST) || !isPKStructTag(destST) {
+	if !isPKField(sourceST) || !isPKField(destST) {
 		return reflect.Value{}, false
 	}
 	sourcePK, destPK := NewPK(sourceFld.Interface()), NewPK(destFld.Interface())
@@ -169,4 +171,8 @@ func FieldHandlerPK(sourceST, destST StructTag, sourceFld, destFld reflect.Value
 		return oPK.Value(), false
 	}
 	return oPK.Value(), true
+}
+
+func isPKField(st StructTag) bool {
+	return st.Field.Type == reflect.TypeOf(uuid.UUID{}) || st.Field.Type.Kind() == reflect.String
 }

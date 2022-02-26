@@ -2,6 +2,7 @@ package roach
 
 import (
 	"fmt"
+	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/util/caseconv"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/uptrace/bun"
@@ -15,9 +16,7 @@ type sqlGen struct {
 	m  *model.Reflect
 }
 
-func (sg sqlGen) bindTableToField(tableName, fldName string) string {
-	return fmt.Sprintf("%s.%s", tableName, fldName)
-}
+// |||| PRIMARY KEY ||||
 
 func (sg sqlGen) pkField() reflect.StructField {
 	st, ok := sg.m.StructTagChain().RetrieveByFieldRole(model.PKRole)
@@ -35,6 +34,8 @@ func (sg sqlGen) pks() string {
 	return fmt.Sprintf("%s IN (?)", sg.bindTableToField(sg.table().ModelName, sg.pkField().Name))
 }
 
+// |||| FIELDS ||||
+
 func (sg sqlGen) fieldName(fldName string) string {
 	return caseconv.PascalToSnake(fldName)
 }
@@ -46,15 +47,20 @@ func (sg sqlGen) fieldNames(fldNames ...string) (sqlNames []string) {
 	return sqlNames
 }
 
-func (sg sqlGen) table() *schema.Table {
-	return sg.db.Table(sg.m.Type())
-}
-
 func (sg sqlGen) relFldEquals(fldName string) string {
 	relN, baseN := model.SplitLastFieldName(fldName)
 	relFldName := sg.bindTableToField(sg.relTableName(relN), sg.fieldName(baseN))
 	return fmt.Sprintf("%s = ?", relFldName)
+}
 
+// |||| TABLE ||||
+
+func (sg sqlGen) bindTableToField(tableName, fldName string) string {
+	return fmt.Sprintf("%s.%s", tableName, fldName)
+}
+
+func (sg sqlGen) table() *schema.Table {
+	return sg.db.Table(sg.m.Type())
 }
 
 const nestedTableSeparator = "__"
@@ -73,4 +79,18 @@ func (sg sqlGen) relTableName(relName string) (tableName string) {
 		tableName += table.ModelName
 	}
 	return tableName
+}
+
+// |||| CALCULATIONS ||||
+
+func (sg sqlGen) calculate(c storage.Calculate) string {
+	calcSQL := map[storage.Calculate]string{
+		storage.CalculateSum:   "SUM",
+		storage.CalculateAVG:   "AVG",
+		storage.CalculateCount: "COUNT",
+		storage.CalculateMax:   "MAX",
+		storage.CalculateMin:   "MIN",
+	}
+	return fmt.Sprintf("%s(?)", calcSQL[c])
+
 }

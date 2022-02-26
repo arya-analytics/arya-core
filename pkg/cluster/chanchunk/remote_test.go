@@ -27,7 +27,7 @@ var _ = Describe("ServiceRemoteRPC", func() {
 	var (
 		pool                         *cluster.NodeRPCPool
 		svc                          chanchunk.ServiceRemote
-		serverOne, serverTwo         *mock.Server
+		persistOne, persistTwo       *mock.ServerRPCPersist
 		grpcServerOne, grpcServerTwo *grpc.Server
 		nodeOne, nodeTwo             *models.Node
 		serverErr                    error
@@ -35,7 +35,8 @@ var _ = Describe("ServiceRemoteRPC", func() {
 	BeforeEach(func() {
 		pool = clustermock.NewNodeRPCPool()
 		svc = chanchunk.NewServiceRemoteRPC(pool)
-		serverOne, serverTwo = mock.NewServer(), mock.NewServer()
+		persistOne, persistTwo = &mock.ServerRPCPersist{}, &mock.ServerRPCPersist{}
+		serverOne, serverTwo := chanchunk.NewServerRPC(persistOne), chanchunk.NewServerRPC(persistTwo)
 		grpcServerOne, grpcServerTwo = grpc.NewServer(), grpc.NewServer()
 		serverOne.BindTo(grpcServerOne)
 		serverTwo.BindTo(grpcServerTwo)
@@ -72,7 +73,7 @@ var _ = Describe("ServiceRemoteRPC", func() {
 	})
 	It("Should create the replicas correctly", func() {
 		idOne, idTwo := uuid.New(), uuid.New()
-		cErr := svc.CreateReplica(ctx, []chanchunk.RemoterReplicaCreateOpts{
+		cErr := svc.Create(ctx, []chanchunk.RemoteCreateOpts{
 			{
 				Node: nodeOne,
 				ChunkReplica: &[]*models.ChannelChunkReplica{
@@ -92,28 +93,54 @@ var _ = Describe("ServiceRemoteRPC", func() {
 			},
 		})
 		Expect(cErr).To(BeNil())
-		Expect(serverOne.CreatedChunks.ChainValue().Len()).To(Equal(1))
-		Expect(serverOne.CreatedChunks.ChainValueByIndex(0).PK().String()).To(Equal(idOne.String()))
-		Expect(serverTwo.CreatedChunks.ChainValue().Len()).To(Equal(1))
-		Expect(serverTwo.CreatedChunks.ChainValueByIndex(0).PK().String()).To(Equal(idTwo.String()))
+		Expect(persistOne.ChunkReplicas).To(HaveLen(1))
+		Expect(persistOne.ChunkReplicas[0].ID).To(Equal(idOne))
+		Expect(persistTwo.ChunkReplicas).To(HaveLen(1))
+		Expect(persistTwo.ChunkReplicas[0].ID).To(Equal(idTwo))
 	})
 	It("Should delete the replicas correctly", func() {
-		pkC := model.NewPKChain([]uuid.UUID{uuid.New()})
-		cErr := svc.DeleteReplica(ctx, []chanchunk.RemoteReplicaDeleteOpts{
+		idOne := uuid.New()
+		cErr := svc.Create(ctx, []chanchunk.RemoteCreateOpts{
 			{
 				Node: nodeOne,
-				PKC:  pkC,
+				ChunkReplica: &[]*models.ChannelChunkReplica{
+					{
+						ID:    idOne,
+						Telem: telem.NewBulk([]byte{1, 2, 3}),
+					},
+				},
+			},
+		})
+
+		Expect(cErr).To(BeNil())
+		dErr := svc.Delete(ctx, []chanchunk.RemoteDeleteOpts{
+			{
+				Node: nodeOne,
+				PKC:  model.NewPKChain([]uuid.UUID{idOne}),
+			},
+		})
+		Expect(dErr).To(BeNil())
+		Expect(persistOne.ChunkReplicas).To(HaveLen(0))
+	})
+	It("Should retrieve the replicas correctly", func() {
+		idOne := uuid.New()
+		cErr := svc.Create(ctx, []chanchunk.RemoteCreateOpts{
+			{
+				Node: nodeOne,
+				ChunkReplica: &[]*models.ChannelChunkReplica{
+					{
+						ID:    idOne,
+						Telem: telem.NewBulk([]byte{1, 2, 3}),
+					},
+				},
 			},
 		})
 		Expect(cErr).To(BeNil())
-		Expect(serverOne.DeletedChunkPKChain.Raw()).To(Equal(pkC.Raw()))
-	})
-	It("Should retrieve the replicas correctly", func() {
-		id := uuid.New()
 		var ccr []*models.ChannelChunkReplica
-		cErr := svc.RetrieveReplica(ctx, &ccr, []chanchunk.RemoteReplicaRetrieveOpts{{Node: nodeTwo, PKC: model.NewPKChain([]uuid.UUID{id})}})
-		Expect(cErr).To(BeNil())
+		rErr := svc.Retrieve(ctx, &ccr, []chanchunk.RemoteRetrieveOpts{{Node: nodeOne, PKC: model.NewPKChain([]uuid.UUID{idOne})}})
+		Expect(rErr).To(BeNil())
 		Expect(ccr).To(HaveLen(1))
-		Expect(ccr[0].ID).To(Equal(id))
+		Expect(ccr[0].ID).To(Equal(idOne))
+		Expect(ccr[0].Telem.Bytes()).To(Equal([]byte{1, 2, 3}))
 	})
 })

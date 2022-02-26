@@ -9,7 +9,8 @@ import (
 
 type queryRetrieve struct {
 	queryBase
-	bunQ *bun.SelectQuery
+	bunQ     *bun.SelectQuery
+	scanArgs []interface{}
 }
 
 func newRetrieve(db *bun.DB) *queryRetrieve {
@@ -20,7 +21,7 @@ func newRetrieve(db *bun.DB) *queryRetrieve {
 
 func (q *queryRetrieve) Model(m interface{}) storage.QueryMDRetrieve {
 	q.baseModel(m)
-	q.bunQ = q.bunQ.Model(q.Dest().Pointer())
+	q.bunQ = q.bunQ.Model(q.baseDest().Pointer())
 	return q
 }
 
@@ -60,6 +61,12 @@ func (q *queryRetrieve) Fields(flds ...string) storage.QueryMDRetrieve {
 	return q
 }
 
+func (q *queryRetrieve) Calculate(c storage.Calculate, fldName string, into interface{}) storage.QueryMDRetrieve {
+	q.addScanArg(into)
+	q.bunQ = q.bunQ.ColumnExpr(q.baseSQL().calculate(c), bun.Ident(q.baseSQL().fieldName(fldName)))
+	return q
+}
+
 func (q *queryRetrieve) Count(ctx context.Context) (count int, err error) {
 	q.baseExec(func() error {
 		count, err = q.bunQ.Count(ctx)
@@ -70,9 +77,13 @@ func (q *queryRetrieve) Count(ctx context.Context) (count int, err error) {
 
 func (q *queryRetrieve) Exec(ctx context.Context) error {
 	q.baseExec(func() error {
-		err := q.bunQ.Scan(ctx)
+		err := q.bunQ.Scan(ctx, q.scanArgs...)
 		return err
 	})
 	q.baseExchangeToSource()
 	return q.baseErr()
+}
+
+func (q *queryRetrieve) addScanArg(arg interface{}) {
+	q.scanArgs = append(q.scanArgs, arg)
 }

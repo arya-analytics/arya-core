@@ -1,6 +1,8 @@
 package storage
 
-import "context"
+import (
+	"context"
+)
 
 // QueryDelete deletes a model or set of models depending on the parameters passed.
 // QueryDelete requires that WherePK or WherePKs is called,
@@ -46,7 +48,7 @@ func (q *QueryDelete) WherePKs(pks interface{}) *QueryDelete {
 func (q *QueryDelete) Exec(ctx context.Context) error {
 	q.baseRunBeforeHooks(ctx)
 	q.baseExec(func() error { return q.mdQuery().Exec(ctx) })
-	if q.baseObjEngine().InCatalog(q.modelRfl.Pointer()) {
+	if q.baseObjEngine().ShouldHandle(q.modelRfl.Pointer()) {
 		q.baseExec(func() error {
 			return q.objQuery().Model(q.modelRfl.Pointer()).WherePKs(q.modelRfl.PKChain().Raw()).Exec(ctx)
 		})

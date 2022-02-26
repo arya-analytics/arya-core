@@ -4,17 +4,18 @@ import (
 	"context"
 	"github.com/arya-analytics/aryacore/pkg/cluster/internal"
 	"github.com/arya-analytics/aryacore/pkg/models"
+	"github.com/arya-analytics/aryacore/pkg/util/errutil"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/route"
-	"reflect"
+	log "github.com/sirupsen/logrus"
 )
 
 type Service struct {
 	remote ServiceRemote
-	local  ServiceLocal
+	local  Local
 }
 
-func NewService(local ServiceLocal, remote ServiceRemote) *Service {
+func NewService(local Local, remote ServiceRemote) *Service {
 	return &Service{remote: remote, local: local}
 }
 
@@ -23,56 +24,12 @@ func (s *Service) CanHandle(q *internal.QueryRequest) bool {
 }
 
 func (s *Service) Exec(ctx context.Context, qr *internal.QueryRequest) error {
-	switch qr.Model.Type() {
-	case reflect.TypeOf(models.ChannelChunk{}):
-		return internal.SwitchQueryRequestVariant(ctx, qr, internal.QueryRequestVariantOperations{
-			internal.QueryVariantCreate:   s.createChunk,
-			internal.QueryVariantRetrieve: s.retrieveChunk,
-			internal.QueryVariantUpdate:   s.updateChunk,
-			internal.QueryVariantDelete:   s.deleteChunk,
-		})
-	case reflect.TypeOf(models.ChannelChunkReplica{}):
-		return internal.SwitchQueryRequestVariant(ctx, qr, internal.QueryRequestVariantOperations{
-			internal.QueryVariantCreate:   s.createReplica,
-			internal.QueryVariantRetrieve: s.retrieveReplica,
-			internal.QueryVariantDelete:   s.deleteReplica,
-		})
-	default:
-		panic("channel chunk service received an unknown model type!")
-	}
-}
-
-// |||| CHUNK ||||
-
-func (s *Service) createChunk(ctx context.Context, qr *internal.QueryRequest) error {
-	return s.local.CreateChunk(ctx, qr.Model.Pointer())
-}
-
-func (s *Service) retrieveChunk(ctx context.Context, qr *internal.QueryRequest) error {
-	PKC, ok := internal.PKQueryOpt(qr)
-	if !ok {
-		panic("retrieve queries require a primary key!")
-	}
-	return s.local.RetrieveChunk(ctx, qr.Model.Pointer(), LocalChunkRetrieveOpts{PKC: PKC})
-}
-
-func (s *Service) updateChunk(ctx context.Context, qr *internal.QueryRequest) error {
-	PKC, ok := internal.PKQueryOpt(qr)
-	if !ok {
-		panic("update queries require a primary key!")
-	}
-	if len(PKC) > 1 {
-		panic("update query cannot have more than one primary key!")
-	}
-	return s.local.UpdateChunk(ctx, qr.Model.Pointer(), LocalChunkUpdateOpts{PK: PKC[0]})
-}
-
-func (s *Service) deleteChunk(ctx context.Context, qr *internal.QueryRequest) error {
-	PKC, ok := internal.PKQueryOpt(qr)
-	if !ok {
-		panic("delete queries require a primary key!")
-	}
-	return s.local.DeleteChunk(ctx, LocalChunkDeleteOpts{PKC: PKC})
+	return internal.SwitchQueryRequestVariant(ctx, qr, internal.QueryRequestVariantOperations{
+		internal.QueryVariantCreate:   s.createReplica,
+		internal.QueryVariantRetrieve: s.retrieveReplica,
+		internal.QueryVariantDelete:   s.deleteReplica,
+		internal.QueryVariantUpdate:   s.updateReplica,
+	})
 }
 
 // |||| REPLICA ||||
@@ -90,40 +47,54 @@ func (s *Service) createReplica(ctx context.Context, qr *internal.QueryRequest) 
 	if err := s.local.RetrieveRangeReplica(
 		ctx,
 		qr.Model.FieldsByName(RangeReplicaField).ToReflect().Pointer(),
-		LocalRangeReplicaRetrieveOpts{PKC: qr.Model.FieldsByName(RangeReplicaIDField).ToPKChain()},
+		qr.Model.FieldsByName(RangeReplicaIDField).ToPKChain(),
 	); err != nil {
 		return err
 	}
-	// CLARIFICATION: Now that we have the RangeReplica.Node.IsHost field populated, we can switch on it.
+	// CLARIFICATION: Now that we have the RangeReplicas.Node.IsHost field populated, we can switch on it.
 	return replicaNodeIsHostSwitch(
 		qr.Model,
-		func(m *model.Reflect) error { return s.local.CreateReplica(ctx, m.Pointer()) },
-		func(m *model.Reflect) error { return s.remote.CreateReplica(ctx, buildRemoteReplicaCreateOpts(m)) },
+		func(m *model.Reflect) error { return s.local.Create(ctx, m.Pointer()) },
+		func(m *model.Reflect) error { return s.remote.Create(ctx, remCreateOpts(m)) },
 	)
 }
 
+const BulkTelemField = "Telem"
+
 func (s *Service) retrieveReplica(ctx context.Context, qr *internal.QueryRequest) error {
+	baseOpts := LocalRetrieveOpts{Relations: true, OmitTelem: true}
 	PKC, ok := internal.PKQueryOpt(qr)
-	if !ok {
-		panic("retrieve queries require a primary key!")
+	if ok {
+		baseOpts.PKC = PKC
 	}
+	// CLARIFICATION: If we specified a fields query opt, and it doesn't contain the telem field, we don't
+	// need to fetch bulk, so we can just return here.
+	fldsOpt, fldsOptOK := internal.RetrieveFieldsQueryOpt(qr)
+
+	whereFldsOpt, ok := internal.WhereFieldsQueryOpt(qr)
+	if ok {
+		baseOpts.WhereFields = whereFldsOpt
+	}
+
 	// CLARIFICATION: Retrieves information about the rng replicas and nodes model belongs to.
 	// It will bind the results to qr.Model itself.
-	if err := s.local.RetrieveReplica(
-		ctx,
-		qr.Model.Pointer(),
-		LocalReplicaRetrieveOpts{PKC: PKC, OmitBulk: true, Relations: true}); err != nil {
+	if err := s.local.Retrieve(ctx, qr.Model.Pointer(), baseOpts); err != nil {
 		return err
 	}
-	// CLARIFICATION: Now that we have the RangeReplica.Node.IsHost field populated, we can switch on it.
+
+	if fldsOptOK {
+		if !fldsOpt.ContainsAny(BulkTelemField) {
+			return nil
+		}
+	}
+
+	// CLARIFICATION: Now that we have the RangeReplicas.Node.IsHost field populated, we can switch on it.
 	return replicaNodeIsHostSwitch(
 		qr.Model,
 		func(m *model.Reflect) error {
-			return s.local.RetrieveReplica(ctx, m.Pointer(), LocalReplicaRetrieveOpts{PKC: m.PKChain()})
+			return s.local.Retrieve(ctx, m.Pointer(), LocalRetrieveOpts{PKC: m.PKChain()})
 		},
-		func(m *model.Reflect) error {
-			return s.remote.RetrieveReplica(ctx, m.Pointer(), buildRemoteReplicaRetrieveOpts(m))
-		},
+		func(m *model.Reflect) error { return s.remote.Retrieve(ctx, m.Pointer(), remRetrieveOpts(m)) },
 	)
 }
 
@@ -134,33 +105,50 @@ func (s *Service) deleteReplica(ctx context.Context, qr *internal.QueryRequest) 
 	}
 	// CLARIFICATION: Retrieves information about the rng replicas and nodes model belongs to.
 	// It will bind the results to qr.Model itself.
-	if err := s.local.RetrieveReplica(ctx, qr.Model.Pointer(), LocalReplicaRetrieveOpts{PKC: PKC}); err != nil {
+	if err := s.local.Retrieve(ctx, qr.Model.Pointer(), LocalRetrieveOpts{PKC: PKC, Relations: true}); err != nil {
 		return err
 	}
-	// CLARIFICATION: Now that we have the RangeReplica.Node.IsHost field populated, we can switch on it.
+	// CLARIFICATION: Now that we have the RangeReplicas.Node.IsHost field populated, we can switch on it.
 	return replicaNodeIsHostSwitch(
 		qr.Model,
-		func(m *model.Reflect) error { return s.local.DeleteReplica(ctx, LocalReplicaDeleteOpts{m.PKChain()}) },
-		func(m *model.Reflect) error { return s.remote.DeleteReplica(ctx, buildRemoteReplicaDeleteOpts(m)) },
+		func(m *model.Reflect) error { return s.local.Delete(ctx, LocalDeleteOpts{m.PKChain()}) },
+		func(m *model.Reflect) error { return s.remote.Delete(ctx, remDeleteOpts(m)) },
 	)
+}
+
+func (s *Service) updateReplica(ctx context.Context, qr *internal.QueryRequest) error {
+	opts := LocalUpdateOpts{}
+	bulkOpt := internal.BulkUpdateQueryOpt(qr)
+	opts.Bulk = bulkOpt
+	PKC, pkOk := internal.PKQueryOpt(qr)
+	if pkOk {
+		if len(PKC) > 1 {
+			panic("update queries can't have more than one primary key")
+		}
+		opts.PK = PKC[0]
+	}
+	fieldsOpt, ok := internal.RetrieveFieldsQueryOpt(qr)
+	if ok {
+		opts.Fields = fieldsOpt
+	}
+	if !qr.Model.FieldsByName("Telem").AllNonZero() {
+		log.
+			WithFields(log.Fields{"ID": qr.Model.PKChain().Raw()}).
+			Warn("can't perform update on replica's telemetry, but was still specified!")
+	}
+	return s.local.Update(ctx, qr.Model.Pointer(), opts)
 }
 
 // |||| ROUTING ||||
 
-func replicaNodeIsHostSwitch(mRfl *model.Reflect, localF, remoteF func(m *model.Reflect) error) (err error) {
+func replicaNodeIsHostSwitch(mRfl *model.Reflect, localF, remoteF func(m *model.Reflect) error) error {
+	c := errutil.Catcher{}
 	route.ModelSwitchBoolean(mRfl,
 		NodeIsHostField,
-		func(_ bool, m *model.Reflect) {
-			if lErr := localF(m); lErr != nil {
-				err = lErr
-			}
-		},
-		func(_ bool, m *model.Reflect) {
-			if rErr := remoteF(m); rErr != nil {
-				err = rErr
-			}
-		})
-	return err
+		func(_ bool, m *model.Reflect) { c.Exec(func() error { return localF(m) }) },
+		func(_ bool, m *model.Reflect) { c.Exec(func() error { return remoteF(m) }) },
+	)
+	return c.Error()
 }
 
 func replicaNodeSwitch(rfl *model.Reflect, action func(node *models.Node, rfl *model.Reflect)) {
@@ -169,24 +157,24 @@ func replicaNodeSwitch(rfl *model.Reflect, action func(node *models.Node, rfl *m
 
 /// |||| REMOTE OPTION BUILDING ||||
 
-func buildRemoteReplicaRetrieveOpts(remoteCCR *model.Reflect) (opts []RemoteReplicaRetrieveOpts) {
-	replicaNodeSwitch(remoteCCR, func(node *models.Node, m *model.Reflect) {
-		opts = append(opts, RemoteReplicaRetrieveOpts{Node: node, PKC: m.PKChain()})
+func remRetrieveOpts(ccr *model.Reflect) (opts []RemoteRetrieveOpts) {
+	replicaNodeSwitch(ccr, func(node *models.Node, m *model.Reflect) {
+		opts = append(opts, RemoteRetrieveOpts{Node: node, PKC: m.PKChain()})
 	})
 	return opts
 
 }
 
-func buildRemoteReplicaCreateOpts(remoteCCR *model.Reflect) (opts []RemoterReplicaCreateOpts) {
-	replicaNodeSwitch(remoteCCR, func(node *models.Node, m *model.Reflect) {
-		opts = append(opts, RemoterReplicaCreateOpts{Node: node, ChunkReplica: m.Pointer()})
+func remCreateOpts(ccr *model.Reflect) (opts []RemoteCreateOpts) {
+	replicaNodeSwitch(ccr, func(node *models.Node, m *model.Reflect) {
+		opts = append(opts, RemoteCreateOpts{Node: node, ChunkReplica: m.Pointer()})
 	})
 	return opts
 }
 
-func buildRemoteReplicaDeleteOpts(remoteCCR *model.Reflect) (opts []RemoteReplicaDeleteOpts) {
-	replicaNodeSwitch(remoteCCR, func(node *models.Node, m *model.Reflect) {
-		opts = append(opts, RemoteReplicaDeleteOpts{Node: node, PKC: m.PKChain()})
+func remDeleteOpts(ccr *model.Reflect) (opts []RemoteDeleteOpts) {
+	replicaNodeSwitch(ccr, func(node *models.Node, m *model.Reflect) {
+		opts = append(opts, RemoteDeleteOpts{Node: node, PKC: m.PKChain()})
 	})
 	return opts
 }
@@ -194,5 +182,5 @@ func buildRemoteReplicaDeleteOpts(remoteCCR *model.Reflect) (opts []RemoteReplic
 // |||| CATALOG ||||
 
 func catalog() model.Catalog {
-	return model.Catalog{&models.ChannelChunk{}, &models.ChannelChunkReplica{}}
+	return model.Catalog{&models.ChannelChunkReplica{}}
 }

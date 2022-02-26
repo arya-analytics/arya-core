@@ -23,8 +23,8 @@ func (q *queryCreate) Model(m interface{}) storage.QueryMDCreate {
 	q.baseModel(m)
 	q.baseExchangeToDest()
 	q.catcher.Exec(func() error {
-		beforeInsertSetUUID(q.Dest())
-		q.q = q.q.Model(q.Dest().Pointer())
+		beforeInsertSetUUID(q.baseDest())
+		q.q = q.q.Model(q.baseDest().Pointer())
 		return nil
 	})
 	// We set base values, so we want to exchange back to source.

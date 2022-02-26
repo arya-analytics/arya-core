@@ -20,6 +20,16 @@ func (q *QueryUpdate) Model(m interface{}) *QueryUpdate {
 	return q
 }
 
+func (q *QueryUpdate) Fields(flds ...string) *QueryUpdate {
+	internal.NewFieldsQueryOpt(q.baseQueryRequest(), flds...)
+	return q
+}
+
+func (q *QueryUpdate) Bulk() *QueryUpdate {
+	internal.NewBulkUpdateQueryOpt(q.baseQueryRequest())
+	return q
+}
+
 func (q *QueryUpdate) WherePK(pk interface{}) *QueryUpdate {
 	internal.NewPKQueryOpt(q.baseQueryRequest(), pk)
 	return q
