@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/arya-analytics/aryacore/pkg/cluster/internal"
 	"github.com/arya-analytics/aryacore/pkg/models"
+	"github.com/arya-analytics/aryacore/pkg/util/errutil"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/route"
 	log "github.com/sirupsen/logrus"
@@ -61,7 +62,7 @@ func (s *Service) createReplica(ctx context.Context, qr *internal.QueryRequest) 
 const BulkTelemField = "Telem"
 
 func (s *Service) retrieveReplica(ctx context.Context, qr *internal.QueryRequest) error {
-	baseOpts := LocalReplicaRetrieveOpts{Relations: true}
+	baseOpts := LocalReplicaRetrieveOpts{Relations: true, OmitTelem: true}
 	PKC, ok := internal.PKQueryOpt(qr)
 	if ok {
 		baseOpts.PKC = PKC
@@ -122,12 +123,8 @@ func (s *Service) updateReplica(ctx context.Context, qr *internal.QueryRequest) 
 	bulkOpt := internal.BulkUpdateQueryOpt(qr)
 	opts.Bulk = bulkOpt
 	PKC, pkOk := internal.PKQueryOpt(qr)
-	if bulkOpt && pkOk {
-		panic("bulk update queries can't specify a primary key")
-	}
 	if pkOk {
 		if len(PKC) > 1 {
-
 			panic("update queries can't have more than one primary key")
 		}
 		opts.PK = PKC[0]
@@ -146,20 +143,14 @@ func (s *Service) updateReplica(ctx context.Context, qr *internal.QueryRequest) 
 
 // |||| ROUTING ||||
 
-func replicaNodeIsHostSwitch(mRfl *model.Reflect, localF, remoteF func(m *model.Reflect) error) (err error) {
+func replicaNodeIsHostSwitch(mRfl *model.Reflect, localF, remoteF func(m *model.Reflect) error) error {
+	c := errutil.Catcher{}
 	route.ModelSwitchBoolean(mRfl,
 		NodeIsHostField,
-		func(_ bool, m *model.Reflect) {
-			if lErr := localF(m); lErr != nil {
-				err = lErr
-			}
-		},
-		func(_ bool, m *model.Reflect) {
-			if rErr := remoteF(m); rErr != nil {
-				err = rErr
-			}
-		})
-	return err
+		func(_ bool, m *model.Reflect) { c.Exec(func() error { return localF(m) }) },
+		func(_ bool, m *model.Reflect) { c.Exec(func() error { return remoteF(m) }) },
+	)
+	return c.Error()
 }
 
 func replicaNodeSwitch(rfl *model.Reflect, action func(node *models.Node, rfl *model.Reflect)) {

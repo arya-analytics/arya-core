@@ -133,6 +133,15 @@ var _ = Describe("Service", func() {
 			Expect(rErr).To(BeNil())
 			Expect(resCCR.ID).To(Equal(ccr.ID))
 		})
+		It("Should retrieve only meta data when bulk telem field not specified", func() {
+			cErr := clust.NewCreate().Model(ccr).Exec(ctx)
+			Expect(cErr).To(BeNil())
+			resCCR := &models.ChannelChunkReplica{}
+			rErr := clust.NewRetrieve().Model(resCCR).WhereFields(model.WhereFields{"ID": ccr.ID}).Fields("ID").Exec(ctx)
+			Expect(rErr).To(BeNil())
+			Expect(resCCR.ID).To(Equal(ccr.ID))
+			Expect(resCCR.Telem).To(BeNil())
+		})
 		It("Should delete the chunk replica correctly", func() {
 			cErr := clust.NewCreate().Model(ccr).Exec(ctx)
 			Expect(cErr).To(BeNil())
@@ -143,12 +152,11 @@ var _ = Describe("Service", func() {
 		It("Should update the replica correctly", func() {
 			cErr := clust.NewCreate().Model(ccr).Exec(ctx)
 			Expect(cErr).To(BeNil())
-			ccr.Telem = nil
 			rrTwo := &models.RangeReplica{ID: uuid.New(), RangeID: rng.ID, NodeID: node.ID}
 			rrErr := store.NewCreate().Model(rrTwo).Exec(ctx)
 			Expect(rrErr).To(BeNil())
 			ccr.RangeReplicaID = rrTwo.ID
-			uErr := clust.NewUpdate().Model(ccr).WherePK(ccr.ID).Exec(ctx)
+			uErr := clust.NewUpdate().Model(ccr).WherePK(ccr.ID).Fields("RangeReplicaID").Exec(ctx)
 			Expect(uErr).To(BeNil())
 		})
 	})
