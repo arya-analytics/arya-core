@@ -104,7 +104,8 @@ var _ = Describe("pst", func() {
 				for _, cc := range orChunks {
 					ccPKs = append(ccPKs, cc.ID)
 				}
-				err = op.ReallocateChunks(ctx, ccPKs, newRng.ID)
+				reAllocErr := op.ReallocateChunks(ctx, ccPKs, newRng.ID)
+				Expect(reAllocErr).To(BeNil())
 				reChunks, rErr := op.RetrieveRangeChunks(ctx, newRng.ID)
 				Expect(rErr).To(BeNil())
 				Expect(len(reChunks)).To(Equal(len(orChunks)))
@@ -120,8 +121,9 @@ var _ = Describe("pst", func() {
 		Describe("Reallocate Chunk Replicas", func() {
 			It("Should reallocate chunk replicas correctly", func() {
 				orChunks, err := op.RetrieveRangeChunks(ctx, rngID)
-				orChunkReplicas, err := op.RetrieveRangeChunkReplicas(ctx, rngID)
 				Expect(err).To(BeNil())
+				orChunkReplicas, rErr := op.RetrieveRangeChunkReplicas(ctx, rngID)
+				Expect(rErr).To(BeNil())
 				var (
 					ccPKs  []uuid.UUID
 					ccrPKs []uuid.UUID
@@ -132,12 +134,14 @@ var _ = Describe("pst", func() {
 				for _, ccr := range orChunkReplicas {
 					ccrPKs = append(ccrPKs, ccr.ID)
 				}
-				newRng, err := op.CreateRange(ctx, 2)
-				err = op.ReallocateChunks(ctx, ccPKs, newRng.ID)
-				Expect(err).To(BeNil())
-				err = op.ReallocateChunkReplicas(ctx, ccrPKs, newRng.RangeLease.RangeReplicaID)
-				Expect(err).To(BeNil())
-				reReplicas, err := op.RetrieveRangeChunkReplicas(ctx, newRng.ID)
+				newRng, cErr := op.CreateRange(ctx, 2)
+				Expect(cErr).To(BeNil())
+				ccRErr := op.ReallocateChunks(ctx, ccPKs, newRng.ID)
+				Expect(ccRErr).To(BeNil())
+				ccrAErr := op.ReallocateChunkReplicas(ctx, ccrPKs, newRng.RangeLease.RangeReplicaID)
+				Expect(ccrAErr).To(BeNil())
+				reReplicas, rCCRErr := op.RetrieveRangeChunkReplicas(ctx, newRng.ID)
+				Expect(rCCRErr).To(BeNil())
 				for _, ccr := range reReplicas {
 					Expect(ccr.RangeReplicaID).To(Equal(newRng.RangeLease.RangeReplicaID))
 				}
