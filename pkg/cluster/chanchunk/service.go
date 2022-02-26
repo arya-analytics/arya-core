@@ -106,7 +106,7 @@ func (s *Service) deleteReplica(ctx context.Context, qr *internal.QueryRequest) 
 	}
 	// CLARIFICATION: Retrieves information about the rng replicas and nodes model belongs to.
 	// It will bind the results to qr.Model itself.
-	if err := s.local.RetrieveReplica(ctx, qr.Model.Pointer(), LocalReplicaRetrieveOpts{PKC: PKC}); err != nil {
+	if err := s.local.RetrieveReplica(ctx, qr.Model.Pointer(), LocalReplicaRetrieveOpts{PKC: PKC, Relations: true}); err != nil {
 		return err
 	}
 	// CLARIFICATION: Now that we have the RangeReplicas.Node.IsHost field populated, we can switch on it.

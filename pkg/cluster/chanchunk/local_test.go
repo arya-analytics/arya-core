@@ -88,8 +88,8 @@ var _ = Describe("Local", func() {
 		It("Should omit bulk data when option specified", func() {
 			resCCR := &models.ChannelChunkReplica{}
 			opts := chanchunk.LocalReplicaRetrieveOpts{
-				PKC:      model.NewPKChain([]uuid.UUID{channelChunkReplica.ID}),
-				OmitBulk: true,
+				PKC:       model.NewPKChain([]uuid.UUID{channelChunkReplica.ID}),
+				OmitTelem: true,
 			}
 			err := localSvc.RetrieveReplica(ctx, resCCR, opts)
 			Expect(err).To(BeNil())

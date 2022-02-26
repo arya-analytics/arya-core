@@ -470,10 +470,10 @@ var file_chanchunk_v1_chanchunk_proto_depIdxs = []int32{
 	0, // 0: chanchunk.v1.ChannelChunkServiceCreateReplicasRequest.CCR:type_name -> chanchunk.v1.ChannelChunkReplica
 	0, // 1: chanchunk.v1.ChannelChunkServiceRetrieveReplicasResponse.CCR:type_name -> chanchunk.v1.ChannelChunkReplica
 	1, // 2: chanchunk.v1.ChannelChunkService.CreateReplicas:input_type -> chanchunk.v1.ChannelChunkServiceCreateReplicasRequest
-	4, // 3: chanchunk.v1.ChannelChunkService.RetrieveReplicas:input_type -> chanchunk.v1.ChannelChunkServiceRetrieveReplicasRequest
+	4, // 3: chanchunk.v1.ChannelChunkService.RetrieveReplica:input_type -> chanchunk.v1.ChannelChunkServiceRetrieveReplicasRequest
 	5, // 4: chanchunk.v1.ChannelChunkService.DeleteReplicas:input_type -> chanchunk.v1.ChannelChunkServiceDeleteReplicasRequest
 	2, // 5: chanchunk.v1.ChannelChunkService.CreateReplicas:output_type -> chanchunk.v1.ChannelChunkServiceCreateReplicasResponse
-	3, // 6: chanchunk.v1.ChannelChunkService.RetrieveReplicas:output_type -> chanchunk.v1.ChannelChunkServiceRetrieveReplicasResponse
+	3, // 6: chanchunk.v1.ChannelChunkService.RetrieveReplica:output_type -> chanchunk.v1.ChannelChunkServiceRetrieveReplicasResponse
 	6, // 7: chanchunk.v1.ChannelChunkService.DeleteReplicas:output_type -> chanchunk.v1.ChannelChunkServiceDeleteReplicasResponse
 	5, // [5:8] is the sub-list for method output_type
 	2, // [2:5] is the sub-list for method input_type

@@ -11,7 +11,7 @@ type LocalReplicaRetrieveOpts struct {
 	PKC         model.PKChain
 	Fields      []string
 	WhereFields model.WhereFields
-	OmitBulk    bool
+	OmitTelem   bool
 	Relations   bool
 }
 
@@ -60,12 +60,12 @@ func (ls *LocalStorage) RetrieveReplica(ctx context.Context, chunkReplica interf
 	}
 	if opts.Relations {
 		q = q.Relation("RangeReplica", "ID").
-			Relation("RangeReplica.Node", "ID", "Address", "IsHost")
+			Relation("RangeReplica.Node", "ID", "Address", "IsHost", "RPCPort")
 	}
 	if opts.WhereFields != nil {
 		q = q.WhereFields(opts.WhereFields)
 	}
-	if opts.OmitBulk {
+	if opts.OmitTelem {
 		q = q.Fields("ID", "ChannelChunkID", "RangeReplicaID")
 	}
 	return q.Exec(ctx)
