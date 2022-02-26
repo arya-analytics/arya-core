@@ -73,7 +73,7 @@ var _ = Describe("ServiceRemoteRPC", func() {
 	})
 	It("Should create the replicas correctly", func() {
 		idOne, idTwo := uuid.New(), uuid.New()
-		cErr := svc.CreateReplica(ctx, []chanchunk.RemoterReplicaCreateOpts{
+		cErr := svc.Create(ctx, []chanchunk.RemoteCreateOpts{
 			{
 				Node: nodeOne,
 				ChunkReplica: &[]*models.ChannelChunkReplica{
@@ -100,7 +100,7 @@ var _ = Describe("ServiceRemoteRPC", func() {
 	})
 	It("Should delete the replicas correctly", func() {
 		idOne := uuid.New()
-		cErr := svc.CreateReplica(ctx, []chanchunk.RemoterReplicaCreateOpts{
+		cErr := svc.Create(ctx, []chanchunk.RemoteCreateOpts{
 			{
 				Node: nodeOne,
 				ChunkReplica: &[]*models.ChannelChunkReplica{
@@ -113,7 +113,7 @@ var _ = Describe("ServiceRemoteRPC", func() {
 		})
 
 		Expect(cErr).To(BeNil())
-		dErr := svc.DeleteReplica(ctx, []chanchunk.RemoteReplicaDeleteOpts{
+		dErr := svc.Delete(ctx, []chanchunk.RemoteDeleteOpts{
 			{
 				Node: nodeOne,
 				PKC:  model.NewPKChain([]uuid.UUID{idOne}),
@@ -124,7 +124,7 @@ var _ = Describe("ServiceRemoteRPC", func() {
 	})
 	It("Should retrieve the replicas correctly", func() {
 		idOne := uuid.New()
-		cErr := svc.CreateReplica(ctx, []chanchunk.RemoterReplicaCreateOpts{
+		cErr := svc.Create(ctx, []chanchunk.RemoteCreateOpts{
 			{
 				Node: nodeOne,
 				ChunkReplica: &[]*models.ChannelChunkReplica{
@@ -137,7 +137,7 @@ var _ = Describe("ServiceRemoteRPC", func() {
 		})
 		Expect(cErr).To(BeNil())
 		var ccr []*models.ChannelChunkReplica
-		rErr := svc.RetrieveReplica(ctx, &ccr, []chanchunk.RemoteReplicaRetrieveOpts{{Node: nodeOne, PKC: model.NewPKChain([]uuid.UUID{idOne})}})
+		rErr := svc.Retrieve(ctx, &ccr, []chanchunk.RemoteRetrieveOpts{{Node: nodeOne, PKC: model.NewPKChain([]uuid.UUID{idOne})}})
 		Expect(rErr).To(BeNil())
 		Expect(ccr).To(HaveLen(1))
 		Expect(ccr[0].ID).To(Equal(idOne))

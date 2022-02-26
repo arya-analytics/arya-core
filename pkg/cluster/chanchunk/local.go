@@ -7,7 +7,7 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 )
 
-type LocalReplicaRetrieveOpts struct {
+type LocalRetrieveOpts struct {
 	PKC         model.PKChain
 	Fields      []string
 	WhereFields model.WhereFields
@@ -15,26 +15,22 @@ type LocalReplicaRetrieveOpts struct {
 	Relations   bool
 }
 
-type LocalReplicaDeleteOpts struct {
+type LocalDeleteOpts struct {
 	PKC model.PKChain
 }
 
-type LocalReplicaUpdateOpts struct {
+type LocalUpdateOpts struct {
 	PK     model.PK
 	Fields []string
 	Bulk   bool
 }
 
-type LocalRangeReplicaRetrieveOpts struct {
-	PKC model.PKChain
-}
-
 type Local interface {
-	CreateReplica(ctx context.Context, chunkReplica interface{}) error
-	RetrieveReplica(ctx context.Context, chunkReplica interface{}, opts LocalReplicaRetrieveOpts) error
-	UpdateReplica(ctx context.Context, chunkReplica interface{}, opts LocalReplicaUpdateOpts) error
-	DeleteReplica(ctx context.Context, opts LocalReplicaDeleteOpts) error
-	RetrieveRangeReplica(ctx context.Context, rangeReplica interface{}, opts LocalRangeReplicaRetrieveOpts) error
+	Create(ctx context.Context, ccr interface{}) error
+	Retrieve(ctx context.Context, ccr interface{}, opts LocalRetrieveOpts) error
+	Update(ctx context.Context, ccr interface{}, opts LocalUpdateOpts) error
+	Delete(ctx context.Context, opts LocalDeleteOpts) error
+	RetrieveRangeReplica(ctx context.Context, rangeReplica interface{}, pkc model.PKChain) error
 }
 
 // |||| LOCAL STORAGE IMPLEMENTATION ||||
@@ -49,11 +45,11 @@ func NewServiceLocalStorage(storage storage.Storage) Local {
 
 // |||| REPLICA ||||
 
-func (ls *LocalStorage) CreateReplica(ctx context.Context, chunkReplica interface{}) error {
+func (ls *LocalStorage) Create(ctx context.Context, chunkReplica interface{}) error {
 	return ls.storage.NewCreate().Model(chunkReplica).Exec(ctx)
 }
 
-func (ls *LocalStorage) RetrieveReplica(ctx context.Context, chunkReplica interface{}, opts LocalReplicaRetrieveOpts) error {
+func (ls *LocalStorage) Retrieve(ctx context.Context, chunkReplica interface{}, opts LocalRetrieveOpts) error {
 	q := ls.storage.NewRetrieve().Model(chunkReplica)
 	if opts.PKC != nil {
 		q = q.WherePKs(opts.PKC.Raw())
@@ -71,7 +67,7 @@ func (ls *LocalStorage) RetrieveReplica(ctx context.Context, chunkReplica interf
 	return q.Exec(ctx)
 }
 
-func (ls *LocalStorage) DeleteReplica(ctx context.Context, opts LocalReplicaDeleteOpts) error {
+func (ls *LocalStorage) Delete(ctx context.Context, opts LocalDeleteOpts) error {
 	q := ls.storage.NewDelete().Model(&models.ChannelChunkReplica{})
 	if opts.PKC != nil {
 		q = q.WherePKs(opts.PKC.Raw())
@@ -79,7 +75,7 @@ func (ls *LocalStorage) DeleteReplica(ctx context.Context, opts LocalReplicaDele
 	return q.Exec(ctx)
 }
 
-func (ls *LocalStorage) UpdateReplica(ctx context.Context, chunkReplica interface{}, opts LocalReplicaUpdateOpts) error {
+func (ls *LocalStorage) Update(ctx context.Context, chunkReplica interface{}, opts LocalUpdateOpts) error {
 	q := ls.storage.NewUpdate().Model(chunkReplica)
 	if len(opts.Fields) > 0 {
 		q.Fields(opts.Fields...)
@@ -95,12 +91,10 @@ func (ls *LocalStorage) UpdateReplica(ctx context.Context, chunkReplica interfac
 
 // |||| RANGE REPLICA ||||
 
-func (ls *LocalStorage) RetrieveRangeReplica(ctx context.Context, rangeReplica interface{}, opts LocalRangeReplicaRetrieveOpts) error {
-	q := ls.storage.NewRetrieve().
+func (ls *LocalStorage) RetrieveRangeReplica(ctx context.Context, rangeReplica interface{}, pkc model.PKChain) error {
+	return ls.storage.NewRetrieve().
 		Model(rangeReplica).
-		Relation("Node", "ID", "Address", "IsHost", "RPCPort")
-	if opts.PKC != nil {
-		q = q.WherePKs(opts.PKC.Raw())
-	}
-	return q.Exec(ctx)
+		Relation("Node", "ID", "Address", "IsHost", "RPCPort").
+		WherePKs(pkc.Raw()).
+		Exec(ctx)
 }

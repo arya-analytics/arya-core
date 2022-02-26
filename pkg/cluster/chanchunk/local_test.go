@@ -65,33 +65,33 @@ var _ = Describe("Local", func() {
 	})
 	Describe("Channel Chunk Replica", func() {
 		JustBeforeEach(func() {
-			ccrErr := localSvc.CreateReplica(ctx, channelChunkReplica)
+			ccrErr := localSvc.Create(ctx, channelChunkReplica)
 			Expect(ccrErr).To(BeNil())
 		})
 		JustAfterEach(func() {
-			ccrOpts := chanchunk.LocalReplicaDeleteOpts{
+			ccrOpts := chanchunk.LocalDeleteOpts{
 				PKC: model.NewPKChain([]uuid.UUID{channelChunk.ID}),
 			}
-			ccrErr := localSvc.DeleteReplica(ctx, ccrOpts)
+			ccrErr := localSvc.Delete(ctx, ccrOpts)
 			Expect(ccrErr).To(BeNil())
 		})
 		It("Should create the replica correctly", func() {
 			resCCR := &models.ChannelChunkReplica{}
-			opts := chanchunk.LocalReplicaRetrieveOpts{
+			opts := chanchunk.LocalRetrieveOpts{
 				PKC: model.NewPKChain([]uuid.UUID{channelChunkReplica.ID}),
 			}
-			err := localSvc.RetrieveReplica(ctx, resCCR, opts)
+			err := localSvc.Retrieve(ctx, resCCR, opts)
 			Expect(err).To(BeNil())
 			Expect(resCCR.ID).To(Equal(channelChunkReplica.ID))
 			Expect(resCCR.Telem.Bytes()).To(Equal([]byte("randomdata")))
 		})
 		It("Should omit bulk data when option specified", func() {
 			resCCR := &models.ChannelChunkReplica{}
-			opts := chanchunk.LocalReplicaRetrieveOpts{
+			opts := chanchunk.LocalRetrieveOpts{
 				PKC:       model.NewPKChain([]uuid.UUID{channelChunkReplica.ID}),
 				OmitTelem: true,
 			}
-			err := localSvc.RetrieveReplica(ctx, resCCR, opts)
+			err := localSvc.Retrieve(ctx, resCCR, opts)
 			Expect(err).To(BeNil())
 			Expect(resCCR.ID).To(Equal(channelChunkReplica.ID))
 			Expect(resCCR.Telem).To(BeNil())
@@ -100,20 +100,17 @@ var _ = Describe("Local", func() {
 			newRR := &models.RangeReplica{ID: uuid.New(), RangeID: rangeX.ID, NodeID: node.ID}
 			Expect(store.NewCreate().Model(newRR).Exec(ctx)).To(BeNil())
 			updateCCR := []*models.ChannelChunkReplica{{ID: channelChunkReplica.ID, RangeReplicaID: newRR.ID}}
-			opts := chanchunk.LocalReplicaUpdateOpts{
+			opts := chanchunk.LocalUpdateOpts{
 				Bulk:   true,
 				Fields: []string{"RangeReplicaID"},
 			}
-			Expect(localSvc.UpdateReplica(ctx, &updateCCR, opts)).To(BeNil())
+			Expect(localSvc.Update(ctx, &updateCCR, opts)).To(BeNil())
 		})
 	})
 	Describe("Retrieve Range Replicas", func() {
 		It("Should retrieve the node information correctly", func() {
 			resRR := &models.RangeReplica{}
-			opts := chanchunk.LocalRangeReplicaRetrieveOpts{
-				PKC: model.NewPKChain([]uuid.UUID{rangeReplica.ID}),
-			}
-			err := localSvc.RetrieveRangeReplica(ctx, resRR, opts)
+			err := localSvc.RetrieveRangeReplica(ctx, resRR, model.NewPKChain([]uuid.UUID{rangeReplica.ID}))
 			Expect(err).To(BeNil())
 			Expect(resRR.Node.ID).To(Equal(1))
 		})
