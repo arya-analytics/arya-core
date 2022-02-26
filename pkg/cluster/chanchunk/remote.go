@@ -132,9 +132,3 @@ func (s *ServiceRemoteRPC) Delete(ctx context.Context, qp []RemoteDeleteOpts) er
 	}
 	return nil
 }
-
-// || RPC SERVER SCAFFOLD ||
-
-type ServiceRemoteRPCServerScaffold struct {
-	api.UnimplementedChannelChunkServiceServer
-}

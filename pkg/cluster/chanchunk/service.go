@@ -61,19 +61,27 @@ func (s *Service) createReplica(ctx context.Context, qr *internal.QueryRequest) 
 
 const BulkTelemField = "Telem"
 
+// retrieveRequiredFields returns the minimum set of fields we need to complete a channel chunk replica retrieve
+// request. We need this info to resolve the node that the replica belongs to.
+func retrieveRequiredFields() []string {
+	return []string{"ID", "ChannelChunkID", "RangeReplicaID"}
+}
+
 func (s *Service) retrieveReplica(ctx context.Context, qr *internal.QueryRequest) error {
-	baseOpts := LocalRetrieveOpts{Relations: true, OmitTelem: true}
-	PKC, ok := internal.PKQueryOpt(qr)
-	if ok {
+	baseOpts := LocalRetrieveOpts{NodeRelations: true, Fields: retrieveRequiredFields()}
+	PKC, pkOK := internal.PKQueryOpt(qr)
+	if pkOK {
 		baseOpts.PKC = PKC
 	}
-	// CLARIFICATION: If we specified a fields query opt, and it doesn't contain the telem field, we don't
-	// need to fetch bulk, so we can just return here.
-	fldsOpt, fldsOptOK := internal.RetrieveFieldsQueryOpt(qr)
 
-	whereFldsOpt, ok := internal.WhereFieldsQueryOpt(qr)
-	if ok {
+	whereFldsOpt, whereFldsOK := internal.WhereFieldsQueryOpt(qr)
+	if whereFldsOK {
 		baseOpts.WhereFields = whereFldsOpt
+	}
+
+	fldsOpt, fldsOptOK := internal.RetrieveFieldsQueryOpt(qr)
+	if fldsOptOK {
+		baseOpts.Fields = fldsOpt.AllExcept(BulkTelemField).Append(retrieveRequiredFields()...)
 	}
 
 	// CLARIFICATION: Retrieves information about the rng replicas and nodes model belongs to.
@@ -82,10 +90,10 @@ func (s *Service) retrieveReplica(ctx context.Context, qr *internal.QueryRequest
 		return err
 	}
 
-	if fldsOptOK {
-		if !fldsOpt.ContainsAny(BulkTelemField) {
-			return nil
-		}
+	// CLARIFICATION: If we specified a fields query opt, and it doesn't contain the telem field, we don't
+	// need to fetch bulk, so we can just return here.
+	if fldsOptOK && !fldsOpt.ContainsAny(BulkTelemField) {
+		return nil
 	}
 
 	// CLARIFICATION: Now that we have the RangeReplicas.Node.IsHost field populated, we can switch on it.
@@ -105,7 +113,7 @@ func (s *Service) deleteReplica(ctx context.Context, qr *internal.QueryRequest) 
 	}
 	// CLARIFICATION: Retrieves information about the rng replicas and nodes model belongs to.
 	// It will bind the results to qr.Model itself.
-	if err := s.local.Retrieve(ctx, qr.Model.Pointer(), LocalRetrieveOpts{PKC: PKC, Relations: true}); err != nil {
+	if err := s.local.Retrieve(ctx, qr.Model.Pointer(), LocalRetrieveOpts{PKC: PKC, NodeRelations: true}); err != nil {
 		return err
 	}
 	// CLARIFICATION: Now that we have the RangeReplicas.Node.IsHost field populated, we can switch on it.
@@ -117,9 +125,7 @@ func (s *Service) deleteReplica(ctx context.Context, qr *internal.QueryRequest) 
 }
 
 func (s *Service) updateReplica(ctx context.Context, qr *internal.QueryRequest) error {
-	opts := LocalUpdateOpts{}
-	bulkOpt := internal.BulkUpdateQueryOpt(qr)
-	opts.Bulk = bulkOpt
+	opts := LocalUpdateOpts{Bulk: internal.BulkUpdateQueryOpt(qr)}
 	PKC, pkOk := internal.PKQueryOpt(qr)
 	if pkOk {
 		if len(PKC) > 1 {

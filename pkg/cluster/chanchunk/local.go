@@ -8,11 +8,10 @@ import (
 )
 
 type LocalRetrieveOpts struct {
-	PKC         model.PKChain
-	Fields      []string
-	WhereFields model.WhereFields
-	OmitTelem   bool
-	Relations   bool
+	PKC           model.PKChain
+	Fields        []string
+	WhereFields   model.WhereFields
+	NodeRelations bool
 }
 
 type LocalDeleteOpts struct {
@@ -54,15 +53,15 @@ func (ls *LocalStorage) Retrieve(ctx context.Context, chunkReplica interface{}, 
 	if opts.PKC != nil {
 		q = q.WherePKs(opts.PKC.Raw())
 	}
-	if opts.Relations {
+	if opts.NodeRelations {
 		q = q.Relation("RangeReplica", "ID").
 			Relation("RangeReplica.Node", "ID", "Address", "IsHost", "RPCPort")
 	}
 	if opts.WhereFields != nil {
 		q = q.WhereFields(opts.WhereFields)
 	}
-	if opts.OmitTelem {
-		q = q.Fields("ID", "ChannelChunkID", "RangeReplicaID")
+	if len(opts.Fields) > 0 {
+		q = q.Fields(opts.Fields...)
 	}
 	return q.Exec(ctx)
 }

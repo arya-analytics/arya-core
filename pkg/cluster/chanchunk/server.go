@@ -78,23 +78,23 @@ func parsePKC(strPKC []string) model.PKChain {
 }
 
 type ServerRPCPersistCluster struct {
-	cluster cluster.Cluster
+	Cluster cluster.Cluster
 }
 
 func (sp *ServerRPCPersistCluster) RetrieveReplica(ctx context.Context, ccr *api.ChannelChunkReplica, pk model.PK) error {
 	exc := rpc.NewModelExchange(&models.ChannelChunkReplica{}, ccr)
-	if err := sp.cluster.NewRetrieve().Model(exc.Source).WherePK(pk.Raw()).Exec(ctx); err != nil {
+	if err := sp.Cluster.NewRetrieve().Model(exc.Source.Pointer()).WherePK(pk.Raw()).Exec(ctx); err != nil {
 		return err
 	}
 	exc.ToDest()
 	return nil
 }
 func (sp *ServerRPCPersistCluster) CreateReplica(ctx context.Context, ccr *api.ChannelChunkReplica) error {
-	exc := rpc.NewModelExchange(ccr, &models.ChannelChunkReplica{})
-	exc.ToDest()
-	return sp.cluster.NewCreate().Model(exc.Dest).Exec(ctx)
+	mCCR := &models.ChannelChunkReplica{}
+	rpc.NewModelExchange(ccr, mCCR).ToDest()
+	return sp.Cluster.NewCreate().Model(mCCR).Exec(ctx)
 }
 
 func (sp *ServerRPCPersistCluster) DeleteReplica(ctx context.Context, pkc model.PKChain) error {
-	return sp.cluster.NewDelete().Model(&models.ChannelChunkReplica{}).WherePKs(pkc.Raw()).Exec(ctx)
+	return sp.Cluster.NewDelete().Model(&models.ChannelChunkReplica{}).WherePKs(pkc.Raw()).Exec(ctx)
 }
