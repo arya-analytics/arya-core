@@ -18,8 +18,8 @@ func TestTasks(t *testing.T) {
 	RunSpecs(t, "NewTasks Suite")
 }
 
-// A SimpleScheduler that increments a counter.
-func ExampleNewSimpleScheduler() {
+// A ScheduleSimple that increments a counter.
+func ExampleNewScheduleSimple() {
 	ctx := context.Background()
 	count := 0
 	s := tasks.NewScheduleSimple(
@@ -42,8 +42,8 @@ func ExampleNewSimpleScheduler() {
 	// 2
 }
 
-// A BatchScheduler that compose two simple schedulers together.
-func ExampleNewBatchScheduler() {
+// A ScheduleBatch that compose two simple schedulers together.
+func ExampleNewScheduleBatch() {
 	ctx := context.Background()
 	countOne := 0
 	sOne := tasks.NewScheduleSimple(

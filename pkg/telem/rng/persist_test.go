@@ -32,13 +32,7 @@ var _ = Describe("Persist", func() {
 			newRng = &models.Range{ID: uuid.New(), Status: models.RangeStatusOpen}
 			newRR = &models.RangeReplica{ID: uuid.New(), RangeID: newRng.ID, NodeID: node.ID}
 			rngLease := &models.RangeLease{ID: uuid.New(), RangeID: newRng.ID, RangeReplicaID: newRR.ID}
-			items = []interface{}{
-				node,
-				chanCfg,
-				newRng,
-				newRR,
-				rngLease,
-			}
+			items = []interface{}{node, chanCfg, newRng, newRR, rngLease}
 		})
 		JustBeforeEach(func() {
 			for _, item := range items {

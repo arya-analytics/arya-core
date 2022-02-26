@@ -17,7 +17,7 @@ type Service struct {
 	pst Persist
 }
 
-// NewService creates a new rng.Service. Requires a val
+// NewService creates a new rng.Service. Requires a val.
 func NewService(obs Observe, p Persist) *Service {
 	return &Service{obs: obs, pst: p}
 }

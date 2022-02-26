@@ -66,7 +66,7 @@ func (pd *partitionDetect) detectPersist(ctx context.Context, opt tasks.Schedule
 	return pd.detect(ctx, or, opt)
 }
 
-func (pd *partitionDetect) detect(ctx context.Context, openRanges []ObservedRange, opt tasks.ScheduleConfig) error {
+func (pd *partitionDetect) detect(ctx context.Context, openRanges []ObservedRange, _ tasks.ScheduleConfig) error {
 	wg := sync.WaitGroup{}
 	newRngGroups, errs := make([][]*models.Range, len(openRanges)), make([]error, len(openRanges))
 	for i, or := range openRanges {

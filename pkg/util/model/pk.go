@@ -151,7 +151,3 @@ func (pkc PKChain) AllZero() bool {
 	}
 	return allZero
 }
-
-func isPKStructTag(t StructTag) bool {
-	return t.Match(TagCat, RoleKey, PKRole)
-}
