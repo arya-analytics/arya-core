@@ -70,13 +70,12 @@ func (p *PersistCluster) CreateRange(ctx context.Context, nodePK int) (*models.R
 	lease := &models.RangeLease{RangeID: r.ID, RangeReplicaID: rr.ID, RangeReplica: rr}
 	c.Exec(p.Cluster.NewCreate().Model(lease).Exec)
 	r.RangeLease = lease
-	return r, nil
+	return r, c.Error()
 }
 
 func (p *PersistCluster) CreateRangeReplica(ctx context.Context, rngPK uuid.UUID, nodePK int) (*models.RangeReplica, error) {
 	rr := &models.RangeReplica{RangeID: rngPK, NodeID: nodePK}
-	err := p.Cluster.NewCreate().Model(rr).Exec(ctx)
-	return rr, err
+	return rr, p.Cluster.NewCreate().Model(rr).Exec(ctx)
 }
 
 // || RETRIEVE ||
