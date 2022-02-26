@@ -34,7 +34,7 @@ func (s *Server) CreateReplicas(stream api.ChannelChunkService_CreateReplicasSer
 		if err != nil {
 			return err
 		}
-		s.CreatedChunks.ChainAppend(model.NewReflect(cc.Chunk))
+		s.CreatedChunks.ChainAppend(model.NewReflect(cc.CCR))
 	}
 	if err := stream.SendAndClose(&api.ChannelChunkServiceCreateReplicasResponse{}); err != nil {
 		return err
@@ -43,8 +43,8 @@ func (s *Server) CreateReplicas(stream api.ChannelChunkService_CreateReplicasSer
 }
 
 func (s *Server) RetrieveReplicas(req *api.ChannelChunkServiceRetrieveReplicasRequest, stream api.ChannelChunkService_RetrieveReplicasServer) error {
-	for _, id := range req.Id {
-		if err := stream.Send(&api.ChannelChunkServiceRetrieveReplicasResponse{Chunk: &api.ChannelChunkReplica{
+	for _, id := range req.PKC {
+		if err := stream.Send(&api.ChannelChunkServiceRetrieveReplicasResponse{CCR: &api.ChannelChunkReplica{
 			ID:    id,
 			Telem: []byte{1, 2, 3, 4},
 		}}); err != nil {
@@ -56,7 +56,7 @@ func (s *Server) RetrieveReplicas(req *api.ChannelChunkServiceRetrieveReplicasRe
 
 func (s *Server) DeleteReplicas(ctx context.Context, req *api.ChannelChunkServiceDeleteReplicasRequest) (*api.ChannelChunkServiceDeleteReplicasResponse, error) {
 	pkC := model.NewPKChain([]uuid.UUID{})
-	for _, id := range req.Id {
+	for _, id := range req.PKC {
 		pk, err := model.NewPK(uuid.New()).NewFromString(id)
 		if err != nil {
 			panic(err)

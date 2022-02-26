@@ -22,9 +22,8 @@ var _ = Describe("QueryUpdate", func() {
 		)
 		BeforeEach(func() {
 			svc = mock.NewService()
-			clus = cluster.New(cluster.ServiceChain{
-				svc,
-			})
+			clus = cluster.New()
+			clus.BindService(svc)
 			m = &models.ChannelChunkReplica{
 				ID: uuid.New(),
 			}

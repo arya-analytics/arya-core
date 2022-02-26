@@ -26,11 +26,9 @@ func New(ctx context.Context, opts ...mock.StorageOpt) (*Cluster, error) {
 		return nil, err
 	}
 	pool := &cluster.NodeRPCPool{Pool: rpc.NewPool(grpc.WithTransportCredentials(insecure.NewCredentials()))}
-	svc := cluster.ServiceChain{
-		chanchunk.NewService(chanchunk.NewServiceLocalStorage(s), chanchunk.NewServiceRemoteRPC(pool)),
-		base.NewService(s),
-	}
-	baseCluster := cluster.New(svc)
+	baseCluster := cluster.New()
+	baseCluster.BindService(chanchunk.NewService(chanchunk.NewServiceLocalStorage(s), chanchunk.NewServiceRemoteRPC(pool)))
+	baseCluster.BindService(base.NewService(s))
 	c := &Cluster{storage: s, Cluster: baseCluster}
 	return c, nil
 }

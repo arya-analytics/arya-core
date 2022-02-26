@@ -11,6 +11,7 @@ type Service interface {
 }
 
 type Cluster interface {
+	BindService(s Service)
 	NewCreate() *QueryCreate
 	NewRetrieve() *QueryRetrieve
 	NewUpdate() *QueryUpdate
@@ -21,8 +22,12 @@ type cluster struct {
 	svc ServiceChain
 }
 
-func New(svc ServiceChain) Cluster {
-	return &cluster{svc}
+func New() Cluster {
+	return &cluster{}
+}
+
+func (c *cluster) BindService(s Service) {
+	c.svc = append(c.svc, s)
 }
 
 func (c *cluster) NewCreate() *QueryCreate {
