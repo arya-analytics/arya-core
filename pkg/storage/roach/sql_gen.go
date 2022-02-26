@@ -5,6 +5,7 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/util/caseconv"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
+	log "github.com/sirupsen/logrus"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/schema"
 	"reflect"
@@ -47,10 +48,29 @@ func (sg sqlGen) fieldNames(fldNames ...string) (sqlNames []string) {
 	return sqlNames
 }
 
-func (sg sqlGen) relFldEquals(fldName string) string {
+func (sg sqlGen) relFldExp(fldName string, fldVal interface{}) (string, []interface{}) {
 	relN, baseN := model.SplitLastFieldName(fldName)
 	relFldName := sg.bindTableToField(sg.relTableName(relN), sg.fieldName(baseN))
-	return fmt.Sprintf("%s = ?", relFldName)
+	return sg.parseFldExp(relFldName, fldVal)
+}
+
+func (sg sqlGen) parseFldExp(fldName string, fldVal interface{}) (string, []interface{}) {
+	exp, ok := fldVal.(model.FieldExp)
+	if !ok {
+		return fmt.Sprintf("%s = ?", fldName), []interface{}{fldVal}
+	}
+	switch exp.Op {
+	case model.FieldExpOpInRange:
+		return fmt.Sprintf("%s BETWEEN ? and ?", fldName), exp.Vals
+	case model.FieldExpOpLessThan:
+		return fmt.Sprintf("%s < ?", fldName), exp.Vals
+	case model.FieldExpOpGreaterThan:
+		return fmt.Sprintf("%s > ?", fldName), exp.Vals
+	default:
+		log.Warnf("roach sql gen could not parse expression opt %s. attempting equality", exp.Op)
+		return fmt.Sprintf("%s = ?", fldName), []interface{}{exp}
+	}
+
 }
 
 // |||| TABLE ||||

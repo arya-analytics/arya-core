@@ -12,7 +12,7 @@ type StructTag struct {
 	Field reflect.StructField
 }
 
-// RetrieveKVChain the key value pairs in a struct tag category as strings i.e.
+// RetrieveKVChain the key Val pairs in a struct tag category as strings i.e.
 // ["ferrari:Fast","beetle:s"].
 func (s StructTag) RetrieveKVChain(cat string) (kvc []string, ok bool) {
 	valString, ok := s.Lookup(cat)
@@ -26,7 +26,7 @@ func (s StructTag) RetrieveKVChain(cat string) (kvc []string, ok bool) {
 const allMatchIndicator = "*"
 
 // Match returns true if the provided arguments match the category, key,
-// and/or value of the StructTag. If you want to search by arbitrary value,
+// and/or Val of the StructTag. If you want to search by arbitrary Val,
 // pass a "*" to key arg. NOTE: "*" will not search all categories,
 // and "*" will also not search all values.
 func (s StructTag) Match(cat string, key string, value string) bool {
@@ -41,9 +41,9 @@ func (s StructTag) Match(cat string, key string, value string) bool {
 	} else if key != allMatchIndicator {
 		matcher = func(kv string) bool { return strings.Contains(kv, key) }
 	} else if value != allMatchIndicator {
-		panic("cannot search struct tag by arbitrary value")
+		panic("cannot search struct tag by arbitrary Val")
 	} else {
-		// If both our key and value are empty, then we're just looking
+		// If both our key and Val are empty, then we're just looking
 		// up by category, so we return true.
 		return true
 	}
@@ -74,7 +74,7 @@ func NewStructTagChain(t reflect.Type) (tags StructTagChain) {
 }
 
 // Retrieve retrieves the StructTag in the StructTagChain that matches the provided arguments.
-// If you want to search by arbitrary value, pass a "*" to key. If you want to search by
+// If you want to search by arbitrary Val, pass a "*" to key. If you want to search by
 // arbitrary key, pass a "*" to key arg. NOTE: "*" will not search all categories.
 func (s StructTagChain) Retrieve(cat string, key string, value string) (StructTag, bool) {
 	for _, st := range s {

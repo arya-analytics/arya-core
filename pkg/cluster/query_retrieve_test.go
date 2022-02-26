@@ -53,12 +53,23 @@ var _ = Describe("QueryRetrieve", func() {
 			})
 		})
 		Context("WhereFields", func() {
-			It("Should set the correct fields", func() {
-				flds := model.WhereFields{"key": "value"}
-				Expect(clus.NewRetrieve().Model(m).WhereFields(flds).Exec(ctx)).To(BeNil())
-				fldOpt, ok := internal.WhereFieldsQueryOpt(svc.QueryRequest)
-				Expect(ok).To(BeTrue())
-				Expect(fldOpt).To(Equal(flds))
+			Describe("Simple equality expression", func() {
+				It("Should set the correct fields", func() {
+					flds := model.WhereFields{"key": "value"}
+					Expect(clus.NewRetrieve().Model(m).WhereFields(flds).Exec(ctx)).To(BeNil())
+					fldOpt, ok := internal.WhereFieldsQueryOpt(svc.QueryRequest)
+					Expect(ok).To(BeTrue())
+					Expect(fldOpt).To(Equal(flds))
+				})
+			})
+			Describe("Greater than expression", func() {
+				It("Should set the correct fields", func() {
+					flds := model.WhereFields{"key": model.FieldGreaterThan(123)}
+					Expect(clus.NewRetrieve().Model(m).WhereFields(flds).Exec(ctx)).To(BeNil())
+					fldOpt, ok := internal.WhereFieldsQueryOpt(svc.QueryRequest)
+					Expect(ok).To(BeTrue())
+					Expect(fldOpt["key"].(model.FieldExp).Vals).To(Equal(123))
+				})
 			})
 		})
 		Context("Relation", func() {

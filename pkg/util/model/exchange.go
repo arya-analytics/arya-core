@@ -136,7 +136,7 @@ func newReflectNilNonPtr(v interface{}) *Reflect {
 		rfl = rfl.ToNewPointer()
 	}
 	// If v is zero, that means it's a struct we can't assign values to,
-	// so we need to initialize a new empty struct with a non-zero value.
+	// so we need to initialize a new empty struct with a non-zero Val.
 	if rfl.PointerValue().IsZero() {
 		rfl = rfl.NewRaw()
 	}

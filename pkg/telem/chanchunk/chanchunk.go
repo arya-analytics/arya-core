@@ -37,3 +37,11 @@ func (s *Service) CreateStream(ctx context.Context, cfg *models.ChannelConfig) (
 	}()
 	return stream, errChan
 }
+
+type RetrieveOpts struct {
+	startTS int64
+	endTS   int64
+}
+
+//func (s *Service) RetrieveStream(ctx context.Context, cfg *models.ChannelConfig, opts RetrieveOpts) (chan *models.ChannelChunkReplica, chan error) {
+//}

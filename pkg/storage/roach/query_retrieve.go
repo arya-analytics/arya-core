@@ -44,7 +44,8 @@ func (q *queryRetrieve) WhereFields(flds model.WhereFields) storage.QueryMDRetri
 		if relN != "" {
 			q.bunQ = q.bunQ.Relation(relN)
 		}
-		q.bunQ = q.bunQ.Where(q.baseSQL().relFldEquals(fldN), fldV)
+		fldExp, args := q.baseSQL().relFldExp(fldN, fldV)
+		q.bunQ = q.bunQ.Where(fldExp, args...)
 	}
 	return q
 }

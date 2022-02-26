@@ -174,6 +174,23 @@ var _ = Describe("QueryRetrieve", func() {
 				Expect(err).To(BeNil())
 				Expect(resRngLease.ID).To(Equal(rngLease.ID))
 			})
+			It("Should retrieve the field by a great than expression", func() {
+
+			})
+			DescribeTable("Field Expressions", func(exp model.FieldExp) {
+				cc := &models.ChannelChunk{ChannelConfigID: channelConfig.ID, Size: 4000, RangeID: rng.ID}
+				cErr := engine.NewCreate(adapter).Model(cc).Exec(ctx)
+				Expect(cErr).To(BeNil())
+				var resCC []*models.ChannelChunk
+				rErr := engine.NewRetrieve(adapter).Model(&resCC).WhereFields(model.WhereFields{"Size": exp}).Exec(ctx)
+				Expect(rErr).To(BeNil())
+				Expect(resCC).To(HaveLen(1))
+			},
+				Entry("Greater than", model.FieldGreaterThan(3500)),
+				Entry("Less than", model.FieldLessThan(4500)),
+				Entry("In Range", model.FieldInRange(3000, 4500)),
+			)
+
 			It("Should return a not found error when no item can be found", func() {
 				resRngLease := &models.RangeLease{}
 				err := engine.
