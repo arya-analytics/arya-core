@@ -50,7 +50,8 @@ var _ = Describe("pst", func() {
 		It("Should retrieve the open ranges correctly", func() {
 			_, err := p.CreateRange(ctx, 1)
 			Expect(err).To(BeNil())
-			openRng, err := p.RetrieveRangesByStatus(ctx)
+			openRng, rErr := p.RetrieveRangesByStatus(ctx)
+			Expect(rErr).To(BeNil())
 			Expect(openRng).To(HaveLen(1))
 		})
 	})
@@ -95,7 +96,8 @@ var _ = Describe("pst", func() {
 			It("Should reallocate the chunks correctly", func() {
 				orChunks, err := op.RetrieveRangeChunks(ctx, rngID)
 				Expect(err).To(BeNil())
-				newRng, err := op.CreateRange(ctx, 2)
+				newRng, cErr := op.CreateRange(ctx, 2)
+				Expect(cErr).To(BeNil())
 				var (
 					ccPKs []uuid.UUID
 				)
@@ -103,12 +105,15 @@ var _ = Describe("pst", func() {
 					ccPKs = append(ccPKs, cc.ID)
 				}
 				err = op.ReallocateChunks(ctx, ccPKs, newRng.ID)
-				reChunks, err := op.RetrieveRangeChunks(ctx, newRng.ID)
+				reChunks, rErr := op.RetrieveRangeChunks(ctx, newRng.ID)
+				Expect(rErr).To(BeNil())
 				Expect(len(reChunks)).To(Equal(len(orChunks)))
 				Expect(reChunks[0].RangeID).To(Equal(newRng.ID))
-				size, err := op.RetrieveRangeSize(ctx, rngID)
+				size, rsErr := op.RetrieveRangeSize(ctx, rngID)
+				Expect(rsErr).To(BeNil())
 				Expect(size).To(BeNumerically("<", models.MaxRangeSize))
-				newSourceChunks, err := op.RetrieveRangeChunks(ctx, rngID)
+				newSourceChunks, rcErr := op.RetrieveRangeChunks(ctx, rngID)
+				Expect(rcErr).To(BeNil())
 				Expect(len(newSourceChunks)).To(Equal(0))
 			})
 		})
