@@ -7,6 +7,7 @@ import (
 	"github.com/go-redis/redis/v8"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
+	log "github.com/sirupsen/logrus"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
 	"github.com/uptrace/bun/extra/bundebug"
@@ -74,8 +75,8 @@ func (d *DriverRoach) Connect() (*bun.DB, error) {
 	bunDB := bun.NewDB(sqlDB, pgdialect.New())
 	if d.Verbose {
 		bunDB.AddQueryHook(bundebug.NewQueryHook(bundebug.WithVerbose(true)))
+		log.Infof("Roach Connection String: %s", ts.PGURL().String())
 	}
-	//log.Infof("Roach Connection String: %s", ts.PGURL().String())
 	return bunDB, nil
 }
 

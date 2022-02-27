@@ -93,7 +93,7 @@ func NewWhereFieldsQueryOpt(q *QueryRequest, ops model.WhereFields) {
 
 // || FIELDS ||
 
-const fieldsQueryOptkey = "RetrieveFieldsQueryOpt"
+const fieldsQueryOptKey = "FieldsQueryOpt"
 
 type FieldsQueryOpt []string
 
@@ -108,15 +108,50 @@ func (fqo FieldsQueryOpt) ContainsAny(flds ...string) (contains bool) {
 	return contains
 }
 
+func (fqo FieldsQueryOpt) AllExcept(flds ...string) (filteredFqo FieldsQueryOpt) {
+	for _, fld := range fqo {
+		for _, eFld := range flds {
+			if eFld != fld {
+				filteredFqo = append(filteredFqo, fld)
+			}
+		}
+	}
+	return filteredFqo
+}
+
+func (fqo FieldsQueryOpt) AllPresent(flds ...string) bool {
+	for _, fqoFld := range fqo {
+		present := false
+		for _, fld := range flds {
+			if fld == fqoFld {
+				present = true
+			}
+		}
+		if !present {
+			return false
+		}
+	}
+	return true
+}
+
+func (fqo FieldsQueryOpt) Append(flds ...string) FieldsQueryOpt {
+	for _, fld := range flds {
+		if !fqo.AllPresent(fld) {
+			fqo = append(fqo, fld)
+		}
+	}
+	return fqo
+}
+
 func NewFieldsQueryOpt(qr *QueryRequest, flds ...string) {
-	panicWhenAlreadySpecified(qr, fieldsQueryOptkey)
+	panicWhenAlreadySpecified(qr, fieldsQueryOptKey)
 	qo := FieldsQueryOpt{}
 	qo = append(qo, flds...)
-	qr.opts[fieldsQueryOptkey] = qo
+	qr.opts[fieldsQueryOptKey] = qo
 }
 
 func RetrieveFieldsQueryOpt(qr *QueryRequest) (FieldsQueryOpt, bool) {
-	qo, ok := qr.opts[fieldsQueryOptkey]
+	qo, ok := qr.opts[fieldsQueryOptKey]
 	if !ok {
 		return FieldsQueryOpt{}, false
 	}

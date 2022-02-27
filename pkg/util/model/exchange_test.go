@@ -382,7 +382,7 @@ var _ = Describe("Model Exchange", func() {
 						}).To(Panic())
 					})
 				})
-				Context("Providing a non-pointer value", func() {
+				Context("Providing a non-pointer Val", func() {
 					It("Should panic", func() {
 						source := mock.ModelB{}
 						dest := &mock.ModelA{}
@@ -391,7 +391,7 @@ var _ = Describe("Model Exchange", func() {
 						}).To(Panic())
 					})
 				})
-				Context("Providing a double-pointer struct value", func() {
+				Context("Providing a double-pointer struct Val", func() {
 					It("Should panic", func() {
 						source := &mock.ModelB{}
 						dest := &mock.ModelA{}
@@ -400,7 +400,7 @@ var _ = Describe("Model Exchange", func() {
 						}).To(Panic())
 					})
 				})
-				Context("Providing a double-pointer slice value", func() {
+				Context("Providing a double-pointer slice Val", func() {
 					It("Should panic", func() {
 						source := []*mock.ModelB{&mock.ModelB{Name: "Hello"}}
 						dest := &[]*mock.ModelA{}
@@ -413,7 +413,7 @@ var _ = Describe("Model Exchange", func() {
 			Describe("Exchanging values", func() {
 				Describe("Incompatible rfl types", func() {
 					Context("Top level incompatibility", func() {
-						Context("Non pointer value", func() {
+						Context("Non pointer Val", func() {
 							It("Should panic", func() {
 								source := &mock.ModelB{
 									ID:   22,
@@ -426,7 +426,7 @@ var _ = Describe("Model Exchange", func() {
 								})
 							})
 						})
-						Context("Pointer value", func() {
+						Context("Pointer Val", func() {
 							It("Should panic", func() {
 								source := &mock.ModelE{
 									ID:                  45,

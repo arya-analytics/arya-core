@@ -2,6 +2,7 @@ package minio
 
 import (
 	"context"
+	"fmt"
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/minio/minio-go/v7"
 )
@@ -27,6 +28,12 @@ func (c *createQuery) Model(m interface{}) storage.QueryObjectCreate {
 func (c *createQuery) Exec(ctx context.Context) error {
 	for _, dv := range c.modelExchange.DataVals() {
 		c.catcher.Exec(func() error {
+			if dv.Data == nil {
+				return storage.Error{
+					Type:    storage.ErrorTypeInvalidArgs,
+					Message: fmt.Sprintf("Minio data to write is nil! Model %s with id %s", c.modelExchange.Dest.Type(), dv.PK),
+				}
+			}
 			_, err := c.baseClient().PutObject(
 				ctx,
 				c.baseBucket(),

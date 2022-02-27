@@ -22,7 +22,7 @@ var _ = Describe("StructTag", func() {
 				Expect(ok).To(BeTrue())
 				Expect(t.Field.Name).To(Equal("ID"))
 			})
-			It("Should retrieve the correct tag by kev:value pair", func() {
+			It("Should retrieve the correct tag by kev:Val pair", func() {
 				t, ok := tags.Retrieve("randomcat", "random", "hello")
 				Expect(ok).To(BeTrue())
 				Expect(t.Field.Name).To(Equal("Name"))
@@ -55,10 +55,10 @@ var _ = Describe("StructTag", func() {
 				Expect(ok).To(BeFalse())
 			})
 		})
-		Context("value but no key provided", func() {
+		Context("Val but no key provided", func() {
 			It("Should panic", func() {
 				Expect(func() {
-					tags.Retrieve("randomcat", "*", "value")
+					tags.Retrieve("randomcat", "*", "Val")
 				}).To(Panic())
 			})
 		})

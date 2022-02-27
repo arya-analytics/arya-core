@@ -83,7 +83,7 @@ func (pk PK) NewFromString(pkStr string) (PK, error) {
 	return NewPK(newRawPk), err
 }
 
-// Raw returns raw value of the pk i.e. the pk provided when calling model.NewPK.
+// Raw returns raw Val of the pk i.e. the pk provided when calling model.NewPK.
 func (pk PK) Raw() interface{} {
 	return pk.raw
 }
@@ -104,7 +104,7 @@ func (pk PK) Type() reflect.Type {
 	return reflect.TypeOf(pk.raw)
 }
 
-// IsZero returns true if the pk is the zero value for its type.
+// IsZero returns true if the pk is the zero Val for its type.
 func (pk PK) IsZero() bool {
 	return pk.Value().IsZero()
 }
@@ -141,7 +141,7 @@ func (pkc PKChain) Strings() (pks []string) {
 	return pks
 }
 
-// AllZero checks if all the PK in PKChain are the zero value.
+// AllZero checks if all the PK in PKChain are the zero Val.
 func (pkc PKChain) AllZero() bool {
 	allZero := true
 	for _, pk := range pkc {

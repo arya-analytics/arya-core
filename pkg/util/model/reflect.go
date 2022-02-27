@@ -35,7 +35,7 @@ func NewReflect(modelPtr interface{}) *Reflect {
 // UnsafeNewReflect initializes and returns an unvalidated model
 // Reflect. If you don't have a good reason to do this, don't.
 // The main reason for bypassing validation is to construct a pointer from a
-// provided value - see Reflect.ToNewPointer.
+// provided Val - see Reflect.ToNewPointer.
 func UnsafeNewReflect(modelPtr interface{}) *Reflect {
 	return &Reflect{modelObj: modelPtr}
 }
@@ -87,7 +87,7 @@ func (r *Reflect) IsStruct() bool {
 
 // || STRUCT METHODS ||
 
-// StructValue returns the value of the model object.
+// StructValue returns the Val of the model object.
 // Panics if the model object is a chain.
 //
 // This operation would panic:
@@ -127,7 +127,7 @@ func (r *Reflect) StructFieldByName(name string) reflect.Value {
 
 // || CHAIN METHODS ||
 
-// ChainValue returns the value of the value of the model object.
+// ChainValue returns the Val of the Val of the model object.
 // Panics if the model object is a struct.
 //
 // This operation would panic:
@@ -160,8 +160,8 @@ func (r *Reflect) ChainValueByIndex(i int) *Reflect {
 }
 
 // ChainValueByIndexOrNew retrieves Reflect from the model object by index.
-// If the index requested exceeds the length of the chain value,
-// creates new Reflect and appends it to chain value before returning.
+// If the index requested exceeds the length of the chain Val,
+// creates new Reflect and appends it to chain Val before returning.
 func (r *Reflect) ChainValueByIndexOrNew(i int) *Reflect {
 	diff := i - r.ChainValue().Len()
 	if diff < 0 {
@@ -196,7 +196,7 @@ func (r *Reflect) FieldsByName(name string) *Fields {
 
 // || FINDING VALUES ||
 
-// ValueByPK retrieves Reflect by its pk value. If Reflect model object is chain,
+// ValueByPK retrieves Reflect by its pk Val. If Reflect model object is chain,
 // searches the chain for the PK, and returns ok=false if it can't be found.
 // If Reflect model object is struct, returns the struct if the PK matches. If it isn't,
 // returns ok=false.
@@ -310,7 +310,7 @@ func (r *Reflect) RawType() reflect.Type {
 	return r.PointerType().Elem()
 }
 
-// RawValue returns the unparsed value of the model object.
+// RawValue returns the unparsed Val of the model object.
 func (r *Reflect) RawValue() reflect.Value {
 	return r.PointerValue().Elem()
 }
@@ -349,13 +349,13 @@ func (r *Reflect) StructTagChain() StructTagChain {
 
 func (r *Reflect) panicIfChain() {
 	if r.IsChain() {
-		panic("model is chain, cannot get struct value")
+		panic("model is chain, cannot get struct Val")
 	}
 }
 
 func (r *Reflect) panicIfStruct() {
 	if r.IsStruct() {
-		panic("model is struct, cannot get chain value")
+		panic("model is struct, cannot get chain Val")
 	}
 }
 

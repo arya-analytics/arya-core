@@ -22,7 +22,7 @@ var _ = Describe("Reflect", func() {
 		It("Should create a new pointer for a non-pointer model", func() {
 			Expect(model.UnsafeNewReflect(mock.ModelA{}).ToNewPointer().IsPointer()).To(BeTrue())
 		})
-		It("Should create the pointer to the correct underlying value", func() {
+		It("Should create the pointer to the correct underlying Val", func() {
 			var baseVal []*mock.ModelA
 			baseRfl := model.UnsafeNewReflect(baseVal)
 			Expect(baseRfl.ToNewPointer().RawValue().Interface()).To(Equal(baseVal))
@@ -48,7 +48,7 @@ var _ = Describe("Reflect", func() {
 			It("Should return the correct type", func() {
 				Expect(rfl.Type()).To(Equal(mBaseType))
 			})
-			It("Should return the correct value", func() {
+			It("Should return the correct Val", func() {
 				Expect(rfl.StructValue().Type()).To(Equal(mBaseType))
 			})
 			It("Should return false for IsChain", func() {
@@ -75,7 +75,7 @@ var _ = Describe("Reflect", func() {
 			It("Should return the correct struct field by index", func() {
 				Expect(rfl.StructValue().Field(0).Interface()).To(Equal(22))
 			})
-			It("Should return the same item for the raw value as for the value",
+			It("Should return the same item for the raw Val as for the Val",
 				func() {
 					Expect(rfl.RawValue()).To(Equal(rfl.StructValue()))
 				})
@@ -85,7 +85,7 @@ var _ = Describe("Reflect", func() {
 			It("Should return the correct pointer type", func() {
 				Expect(rfl.PointerType()).To(Equal(mType))
 			})
-			It("Should return the correct pointer value", func() {
+			It("Should return the correct pointer Val", func() {
 				Expect(rfl.PointerValue()).To(Equal(reflect.ValueOf(m)))
 			})
 			Context("FieldTypeByName", func() {
@@ -186,23 +186,23 @@ var _ = Describe("Reflect", func() {
 		It("Should return false for IsStruct", func() {
 			Expect(rfl.IsStruct()).To(BeFalse())
 		})
-		It("Should return the correct model value by index", func() {
+		It("Should return the correct model Val by index", func() {
 			Expect(rfl.ChainValueByIndex(0).PointerType()).To(Equal(mSingleType))
 			Expect(rfl.ChainValueByIndex(0).Type()).To(Equal(mSingleBaseType))
 			Expect(rfl.ChainValueByIndexOrNew(0).Pointer()).To(Equal(m[0]))
 		})
-		It("Should create a new reflect if the index exceeds the chain value", func() {
+		It("Should create a new reflect if the index exceeds the chain Val", func() {
 			Expect(rfl.ChainValueByIndexOrNew(rfl.ChainValue().Len()).Type()).To(
 				Equal(mSingleBaseType))
 		})
-		It("Should return a slice for the raw value", func() {
+		It("Should return a slice for the raw Val", func() {
 			Expect(rfl.RawValue().Interface()).To(Equal(m))
 			Expect(rfl.RawType()).To(Equal(mBaseType))
 		})
 		It("Should return the correct pointer type", func() {
 			Expect(rfl.PointerType()).To(Equal(mType))
 		})
-		It("Should return the correct pointer value", func() {
+		It("Should return the correct pointer Val", func() {
 			Expect(rfl.PointerValue()).To(Equal(reflect.ValueOf(&m)))
 		})
 		It("Should return the correct fields by index", func() {
@@ -248,12 +248,12 @@ var _ = Describe("Reflect", func() {
 			})
 		})
 		Describe("PKS", func() {
-			It("Should get the correct value by PKC", func() {
+			It("Should get the correct Val by PKC", func() {
 				val, ok := rfl.ValueByPK(model.NewPK(m[0].ID))
 				Expect(ok).To(BeTrue())
 				Expect(val.Type()).To(Equal(mSingleBaseType))
 			})
-			It("Should return not ok when the value can't be found", func() {
+			It("Should return not ok when the Val can't be found", func() {
 				_, ok := rfl.ValueByPK(model.NewPK(uuid.New()))
 				Expect(ok).To(BeFalse())
 			})

@@ -112,6 +112,11 @@ func migrateUpFunc(d Driver) migrate.MigrationFunc {
 			ForeignKey(`("range_id") REFERENCES "ranges" ("id") ON DELETE CASCADE`).
 			Exec,
 		)
+		c.Exec(db.NewCreateIndex().
+			Model((*ChannelChunk)(nil)).
+			Column("id", "start_ts").
+			Exec,
+		)
 		c.Exec(db.NewCreateTable().
 			Model((*ChannelChunkReplica)(nil)).
 			ForeignKey(`("channel_chunk_id") REFERENCES channel_chunks ("id") ON DELETE CASCADE`).

@@ -68,4 +68,39 @@ func SplitFirstFieldName(name string) string {
 	return SplitFieldNames(name)[0]
 }
 
+type FieldExpOp int
+
+//go:generate stringer -type=FieldExpOp
+const (
+	FieldExpOpGreaterThan FieldExpOp = iota
+	FieldExpOpLessThan
+	FieldExpOpInRange
+	FieldExpOpIn
+)
+
+type FieldExp struct {
+	Op   FieldExpOp
+	Vals []interface{}
+}
+
+func FieldGreaterThan(value interface{}) FieldExp {
+	return FieldExp{Op: FieldExpOpGreaterThan, Vals: []interface{}{value}}
+}
+
+func FieldLessThan(value interface{}) FieldExp {
+	return FieldExp{Op: FieldExpOpLessThan, Vals: []interface{}{value}}
+}
+
+func FieldInRange(start interface{}, stop interface{}) FieldExp {
+	return FieldExp{Op: FieldExpOpInRange, Vals: []interface{}{start, stop}}
+}
+
+func FieldIn(vals ...interface{}) FieldExp {
+	return FieldExp{Op: FieldExpOpIn, Vals: vals}
+}
+
+// What are the things we need to return
+// 1. What type of expression is this
+// 2. What are the parameters of the expression
+
 type WhereFields map[string]interface{}

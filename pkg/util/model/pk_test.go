@@ -63,13 +63,13 @@ var _ = Describe("PKC", func() {
 			})
 		})
 		Describe("Reflect StructValue", func() {
-			It("Should return the correct reflect value", func() {
+			It("Should return the correct reflect Val", func() {
 				id := uuid.New()
 				Expect(model.NewPK(id).Value().Interface()).To(Equal(id))
 			})
 		})
 		Describe("Is Zero", func() {
-			It("Should return true when the id is a zero value", func() {
+			It("Should return true when the id is a zero Val", func() {
 				var id int
 				Expect(model.NewPK(id).IsZero()).To(BeTrue())
 			})
@@ -82,7 +82,7 @@ var _ = Describe("PKC", func() {
 			It("Should have the correct length", func() {
 				Expect(pks).To(HaveLen(2))
 			})
-			It("Should return the correct interface value", func() {
+			It("Should return the correct interface Val", func() {
 				Expect(pks.Raw()[0]).To(Equal(rawPks[0]))
 				Expect(pks.Raw()[1]).To(Equal(rawPks[1]))
 			})
