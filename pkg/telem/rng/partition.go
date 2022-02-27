@@ -18,7 +18,7 @@ const (
 	detectObserveInterval = 30 * time.Second
 )
 
-func newSchedulerPartition(pd *partitionDetect, opts ...tasks.ScheduleOpt) tasks.Schedule {
+func newSchedulePartition(pd *partitionDetect, opts ...tasks.ScheduleOpt) tasks.Schedule {
 	tsk := []tasks.Task{
 		{
 			Name:     "Detect Persist",

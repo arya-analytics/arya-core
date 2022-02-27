@@ -30,7 +30,7 @@ func (s *Service) NewAllocate() *Allocate {
 // Start starts Service internal tasks.
 // NOTE: If restarting the Service, call Stop before calling Start again.
 func (s *Service) Start(ctx context.Context, opts ...tasks.ScheduleOpt) {
-	s.ps = newSchedulerPartition(&partitionDetect{Persist: s.pst, Observe: s.obs}, opts...)
+	s.ps = newSchedulePartition(&partitionDetect{Persist: s.pst, Observe: s.obs}, opts...)
 	s.ps.Start(ctx)
 }
 
