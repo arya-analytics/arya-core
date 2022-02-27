@@ -68,7 +68,7 @@ var _ = Describe("QueryRetrieve", func() {
 					Expect(clus.NewRetrieve().Model(m).WhereFields(flds).Exec(ctx)).To(BeNil())
 					fldOpt, ok := internal.WhereFieldsQueryOpt(svc.QueryRequest)
 					Expect(ok).To(BeTrue())
-					Expect(fldOpt["key"].(model.FieldExp).Vals).To(Equal(123))
+					Expect(fldOpt["key"].(model.FieldExp).Vals).To(Equal([]interface{}{123}))
 				})
 			})
 		})
