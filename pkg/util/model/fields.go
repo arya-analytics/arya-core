@@ -70,12 +70,12 @@ func SplitFirstFieldName(name string) string {
 
 type FieldExpOp int
 
-
 //go:generate stringer -type=FieldExpOp
 const (
 	FieldExpOpGreaterThan FieldExpOp = iota
 	FieldExpOpLessThan
 	FieldExpOpInRange
+	FieldExpOpIn
 )
 
 type FieldExp struct {
@@ -93,6 +93,10 @@ func FieldLessThan(value interface{}) FieldExp {
 
 func FieldInRange(start interface{}, stop interface{}) FieldExp {
 	return FieldExp{Op: FieldExpOpInRange, Vals: []interface{}{start, stop}}
+}
+
+func FieldIn(vals ...interface{}) FieldExp {
+	return FieldExp{Op: FieldExpOpIn, Vals: vals}
 }
 
 // What are the things we need to return
