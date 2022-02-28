@@ -6,7 +6,7 @@ import (
 )
 
 type ChunkData struct {
-	done bool
+	pos  int
 	data []byte
 }
 
@@ -20,11 +20,15 @@ func (cd *ChunkData) Read(p []byte) (n int, err error) {
 	if cd.Done() {
 		return 0, io.EOF
 	}
-	for i, b := range cd.data {
-		p[i] = b
+	i := 0
+	for ; i < len(cd.data)-cd.pos; i++ {
+		if i > len(p)-1 {
+			break
+		}
+		p[i] = cd.data[i+cd.pos]
 	}
-	cd.done = true
-	return len(cd.data), nil
+	cd.pos += i
+	return len(p), nil
 }
 
 func (cd *ChunkData) Size() int64 {
@@ -36,11 +40,11 @@ func (cd *ChunkData) Bytes() []byte {
 }
 
 func (cd *ChunkData) Done() bool {
-	return cd.done
+	return cd.pos == len(cd.data)
 }
 
 func (cd *ChunkData) Reset() {
-	cd.done = false
+	cd.pos = 0
 }
 
 func (cd *ChunkData) ReadSlice(from int64, to int64) []byte {
@@ -62,7 +66,7 @@ func (cd *ChunkData) Write(p []byte) (n int, err error) {
 	for i, b := range p {
 		cd.data[i] = b
 	}
-	cd.done = false
+	cd.Reset()
 	return len(p), nil
 }
 
