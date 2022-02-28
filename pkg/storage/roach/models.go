@@ -3,6 +3,7 @@ package roach
 import (
 	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
+	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"github.com/google/uuid"
 	"github.com/uptrace/bun"
 	"time"
@@ -74,7 +75,7 @@ type ChannelConfig struct {
 	Name     string
 	Node     *Node `bun:"rel:belongs-to,join:node_id=id,"`
 	NodeID   int
-	DataRate int
+	DataRate telem.DataRate
 }
 
 type ChannelChunk struct {
@@ -84,7 +85,7 @@ type ChannelChunk struct {
 	ChannelConfig   *ChannelConfig `bun:"rel:belongs-to,join:channel_config_id=id,"`
 	ChannelConfigID uuid.UUID      `bun:"type:UUID,"`
 	Size            int64
-	StartTS         int64
+	StartTS         telem.TimeStamp
 }
 
 type ChannelChunkReplica struct {

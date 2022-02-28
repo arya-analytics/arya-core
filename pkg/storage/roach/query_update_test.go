@@ -3,6 +3,7 @@ package roach_test
 import (
 	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
+	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -96,8 +97,8 @@ var _ = Describe("QueryUpdate", func() {
 			Expect(resChannelConfigs[0].ID).To(BeElementOf(channelConfigs[0].ID, channelConfigs[1].ID))
 			Expect(resChannelConfigs[0].Name).To(Equal("New Name"))
 			Expect(resChannelConfigs[1].Name).To(Equal("New Name"))
-			Expect(resChannelConfigs[0].DataRate).To(Equal(32))
-			Expect(resChannelConfigs[1].DataRate).To(Equal(32))
+			Expect(resChannelConfigs[0].DataRate).To(Equal(telem.DataRate(32)))
+			Expect(resChannelConfigs[1].DataRate).To(Equal(telem.DataRate(32)))
 		})
 	})
 })

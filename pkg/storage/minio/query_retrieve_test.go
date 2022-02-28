@@ -17,7 +17,7 @@ var _ = Describe("QueryRetrieve", func() {
 		bytes = []byte("randomstring")
 		channelChunk = &models.ChannelChunkReplica{
 			ID:    uuid.New(),
-			Telem: telem.NewBulk(bytes),
+			Telem: telem.NewChunkData(bytes),
 		}
 	})
 	JustBeforeEach(func() {
@@ -44,7 +44,7 @@ var _ = Describe("QueryRetrieve", func() {
 			BeforeEach(func() {
 				channelChunkTwo = &models.ChannelChunkReplica{
 					ID:    uuid.New(),
-					Telem: telem.NewBulk([]byte("model two")),
+					Telem: telem.NewChunkData([]byte("model two")),
 				}
 			})
 			JustBeforeEach(func() {

@@ -44,7 +44,7 @@ func UnsafeNewReflect(modelPtr interface{}) *Reflect {
 // Checks that the model object is either a model or a chain.
 // Panics if it isn't either of those.
 func (r *Reflect) Validate() {
-	if err := validator.Exec(r); err != nil {
+	if err := validator.Exec(r).Error(); err != nil {
 		panic(err)
 	}
 }
@@ -361,8 +361,7 @@ func (r *Reflect) panicIfStruct() {
 
 // |||| VALIDATION ||||
 
-func validateSliceOrStruct(v interface{}) error {
-	r := v.(*Reflect)
+func validateSliceOrStruct(r *Reflect) error {
 	if !r.IsStruct() && !r.IsChain() {
 		return fmt.Errorf("model validation failed - is %s, must be struct or slice",
 			r.Type().Kind())
@@ -370,8 +369,7 @@ func validateSliceOrStruct(v interface{}) error {
 	return nil
 }
 
-func validateIsPointer(v interface{}) error {
-	r := v.(*Reflect)
+func validateIsPointer(r *Reflect) error {
 	if r.PointerType().Kind() != reflect.Ptr {
 		return fmt.Errorf("model validation failed - model is not a pointer")
 	}
@@ -379,15 +377,14 @@ func validateIsPointer(v interface{}) error {
 
 }
 
-func validateNonZero(v interface{}) error {
-	r := v.(*Reflect)
+func validateNonZero(r *Reflect) error {
 	if r.PointerValue().IsZero() {
 		return fmt.Errorf("model validation failed - model is nil")
 	}
 	return nil
 }
 
-var validator = validate.New([]validate.Func{
+var validator = validate.New[*Reflect]([]func(r *Reflect) error{
 	validateIsPointer,
 	validateSliceOrStruct,
 	validateNonZero,

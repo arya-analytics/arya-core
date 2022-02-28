@@ -79,7 +79,7 @@ var _ = Describe("Persist", func() {
 			})
 		})
 		Describe("Retrieve Open Ranges", func() {
-			It("Should retrieve the correct open ranges", func() {
+			It("Should retrieve the correct open rngMap", func() {
 				openRng, err := p.RetrieveRangesByStatus(ctx)
 				Expect(err).To(BeNil())
 				Expect(openRng).To(HaveLen(2))
@@ -87,14 +87,14 @@ var _ = Describe("Persist", func() {
 				Expect(openRng[0].RangeLease.RangeReplica.ID).To(Equal(newRR.ID))
 			})
 		})
-		Describe("Retrieve Range Chunk Replicas", func() {
+		Describe("Retrieve Range ChunkData Replicas", func() {
 			It("Should retrieve the list of chunk replicas", func() {
 				for i := 0; i < 10; i++ {
 					cc := &models.ChannelChunk{ID: uuid.New(), RangeID: newRng.ID, ChannelConfigID: chanCfg.ID}
 					Expect(clust.NewCreate().
 						Model(cc).Exec(ctx)).To(BeNil())
 					Expect(clust.NewCreate().
-						Model(&models.ChannelChunkReplica{ID: uuid.New(), RangeReplicaID: newRR.ID, ChannelChunkID: cc.ID, Telem: telem.NewBulk([]byte("Hello"))}).Exec(ctx)).To(BeNil())
+						Model(&models.ChannelChunkReplica{ID: uuid.New(), RangeReplicaID: newRR.ID, ChannelChunkID: cc.ID, Telem: telem.NewChunkData([]byte("Hello"))}).Exec(ctx)).To(BeNil())
 				}
 				resCCR, err := p.RetrieveRangeChunkReplicas(ctx, newRng.ID)
 				Expect(resCCR).To(HaveLen(10))
@@ -131,14 +131,14 @@ var _ = Describe("Persist", func() {
 				Expect(p.ReallocateChunks(ctx, ccPKs, rng.ID)).To(BeNil())
 			})
 		})
-		Describe("Reallocate Chunk Replicas", func() {
+		Describe("Reallocate ChunkData Replicas", func() {
 			It("Should retrieve the list of chunk replicas", func() {
 				for i := 0; i < 10; i++ {
 					cc := &models.ChannelChunk{ID: uuid.New(), RangeID: newRng.ID, ChannelConfigID: chanCfg.ID}
 					Expect(clust.NewCreate().
 						Model(cc).Exec(ctx)).To(BeNil())
 					Expect(clust.NewCreate().
-						Model(&models.ChannelChunkReplica{ID: uuid.New(), RangeReplicaID: newRR.ID, ChannelChunkID: cc.ID, Telem: telem.NewBulk([]byte("Hello"))}).Exec(ctx)).To(BeNil())
+						Model(&models.ChannelChunkReplica{ID: uuid.New(), RangeReplicaID: newRR.ID, ChannelChunkID: cc.ID, Telem: telem.NewChunkData([]byte("Hello"))}).Exec(ctx)).To(BeNil())
 				}
 				resCCR, err := p.RetrieveRangeChunkReplicas(ctx, newRng.ID)
 				Expect(resCCR).To(HaveLen(10))

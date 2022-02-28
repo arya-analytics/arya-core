@@ -21,20 +21,20 @@ func FieldHandlerTelemBulk(sourceST, destST model.StructTag, sourceFld, destFld 
 		return reflect.Value{}, false
 	}
 	if isTelemBulkField(sourceFld) && isBytesField(destFld) {
-		blk, b := sourceFld.Interface().(*telem.Bulk), destFld.Interface().([]byte)
+		blk, b := sourceFld.Interface().(*telem.ChunkData), destFld.Interface().([]byte)
 		if sourceFld.IsNil() {
-			blk = telem.NewBulk([]byte{})
+			blk = telem.NewChunkData([]byte{})
 			sourceFld.Set(reflect.ValueOf(blk))
 		}
 		if _, err := blk.Write(b); err != nil {
 			panic(err)
 		}
 	} else if isBytesField(sourceFld) && isTelemBulkField(destFld) {
-		blk := destFld.Interface().(*telem.Bulk)
+		blk := destFld.Interface().(*telem.ChunkData)
 		sourceFld.Set(reflect.ValueOf(blk.Bytes()))
 	} else {
 		panic(fmt.Sprintf(
-			"fields tagged bulkTelem, but didn't receive correct types! received %s and %s",
+			"fields tagged telemChunkData, but didn't receive correct types! received %s and %s",
 			sourceFld.Type(),
 			destFld.Type(),
 		))
@@ -47,9 +47,9 @@ func isBytesField(fld reflect.Value) bool {
 }
 
 func isTelemBulkField(fld reflect.Value) bool {
-	return fld.Type() == reflect.TypeOf(&telem.Bulk{})
+	return fld.Type() == reflect.TypeOf(&telem.ChunkData{})
 }
 
 func taggedTelemBulk(st model.StructTag) bool {
-	return st.Match(model.TagCat, model.RoleKey, "bulkTelem")
+	return st.Match(model.TagCat, model.RoleKey, "telemChunkData")
 }

@@ -15,7 +15,7 @@ var _ = Describe("QueryDelete", func() {
 		BeforeEach(func() {
 			channelChunk = &models.ChannelChunkReplica{
 				ID:    uuid.New(),
-				Telem: telem.NewBulk([]byte("randomstring")),
+				Telem: telem.NewChunkData([]byte("randomstring")),
 			}
 		})
 		JustBeforeEach(func() {
@@ -41,7 +41,7 @@ var _ = Describe("QueryDelete", func() {
 			BeforeEach(func() {
 				channelChunkTwo = &models.ChannelChunkReplica{
 					ID:    uuid.New(),
-					Telem: telem.NewBulk([]byte("mock bytes")),
+					Telem: telem.NewChunkData([]byte("mock bytes")),
 				}
 			})
 			JustBeforeEach(func() {

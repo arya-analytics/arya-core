@@ -50,10 +50,17 @@ func (q *queryRetrieve) Exec(ctx context.Context) error {
 			return err
 		})
 		q.validateRes(resObj)
-		bulk := telem.NewBulk([]byte{})
+		var bulk *telem.ChunkData
 		q.baseExec(func() error {
-			_, err := bulk.ReadFrom(resObj)
-			return err
+			stat, err := resObj.Stat()
+			if err != nil {
+				return err
+			}
+			bulk = telem.NewChunkData(make([]byte, stat.Size))
+			if _, err := bulk.ReadFrom(resObj); err != nil {
+				return err
+			}
+			return resObj.Close()
 		})
 		q.appendToDVC(&dataValue{PK: pk, Data: bulk})
 	}
@@ -70,20 +77,17 @@ func (q *queryRetrieve) appendToDVC(dv *dataValue) {
 }
 
 func (q *queryRetrieve) validateRes(resObj *minio.Object) {
-	q.baseExec(func() error {
-		return retrieveQueryResValidator.Exec(resObj)
-	})
+	q.baseExec(func() error { return retrieveQueryResValidator.Exec(resObj).Error() })
 
 }
 
 // |||| VALIDATORS ||||
 
-var retrieveQueryResValidator = validate.New([]validate.Func{
+var retrieveQueryResValidator = validate.New[*minio.Object]([]func(o *minio.Object) error{
 	validateResStat,
 })
 
-func validateResStat(v interface{}) error {
-	res := v.(*minio.Object)
-	_, err := res.Stat()
+func validateResStat(o *minio.Object) error {
+	_, err := o.Stat()
 	return err
 }

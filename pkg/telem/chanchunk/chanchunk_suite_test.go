@@ -15,13 +15,13 @@ var (
 )
 
 var _ = BeforeSuite(func() {
-	var err error
-	clust, err = mock.New(ctx)
-	Expect(err).To(BeNil())
+	//var err error
+	//clust, err = mock.New(ctx)
+	//Expect(err).To(BeNil())
 })
 
 var _ = AfterSuite(func() {
-	clust.Stop()
+	//clust.Stop()
 })
 
 func TestChanchunk(t *testing.T) {

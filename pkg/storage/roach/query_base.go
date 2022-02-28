@@ -9,14 +9,14 @@ import (
 
 type queryBase struct {
 	exchange *model.Exchange
-	catcher  *errutil.Catcher
+	catcher  *errutil.CatchSimple
 	handler  storage.ErrorHandler
 	db       *bun.DB
 }
 
 func (q *queryBase) baseInit(db *bun.DB) {
 	q.db = db
-	q.catcher = &errutil.Catcher{}
+	q.catcher = &errutil.CatchSimple{}
 	q.handler = newErrorHandler()
 }
 

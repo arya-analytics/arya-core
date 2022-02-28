@@ -19,6 +19,10 @@ func (ts TimeStamp) Add(s TimeSpan) TimeStamp {
 	return TimeStamp(int64(ts) + int64(s))
 }
 
+func (ts TimeStamp) ToTime() time.Time {
+	return time.UnixMicro(int64(ts))
+}
+
 func (ts TimeStamp) String() string {
 	return time.UnixMicro(int64(ts)).String()
 }

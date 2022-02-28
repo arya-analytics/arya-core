@@ -43,7 +43,7 @@ const (
 // joined/exited the cluster.
 func syncNodesAction(db *bun.DB) tasks.Action {
 	return func(ctx context.Context, cfg tasks.ScheduleConfig) error {
-		sn := &syncNodes{db: db, catcher: &errutil.Catcher{},
+		sn := &syncNodes{db: db, catcher: &errutil.CatchSimple{},
 			handler: newErrorHandler(), cfg: cfg}
 		return sn.exec(ctx)
 	}
@@ -52,7 +52,7 @@ func syncNodesAction(db *bun.DB) tasks.Action {
 type syncNodes struct {
 	ctx     context.Context
 	db      *bun.DB
-	catcher *errutil.Catcher
+	catcher *errutil.CatchSimple
 	handler storage.ErrorHandler
 	cfg     tasks.ScheduleConfig
 }

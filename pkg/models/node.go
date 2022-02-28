@@ -46,7 +46,7 @@ func (n *Node) RPCAddress() (string, error) {
 type NodeQueryHook struct{}
 
 func (nqh *NodeQueryHook) BeforeQuery(ctx context.Context, qe *storage.QueryEvent) error {
-	qhr := queryHookRunner{rfl: qe.Model, Catcher: &errutil.Catcher{}}
+	qhr := queryHookRunner{rfl: qe.Model, CatchSimple: &errutil.CatchSimple{}}
 	if qe.Model.Type() == reflect.TypeOf(Node{}) {
 		switch qe.Query.(type) {
 		case *storage.QueryCreate:

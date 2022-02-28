@@ -19,21 +19,21 @@ func (s *Storage) Stop() {
 	s.DriverRoach.Stop()
 }
 
-type StorageOpts struct {
+type storageOpts struct {
 	Verbose bool
 }
 
-type StorageOpt func(so *StorageOpts)
+type StorageOpt func(so *storageOpts)
 
 func WithVerbose() StorageOpt {
-	return func(so *StorageOpts) {
+	return func(so *storageOpts) {
 		so.Verbose = true
 	}
 
 }
 
 func NewStorage(opts ...StorageOpt) *Storage {
-	so := &StorageOpts{}
+	so := &storageOpts{}
 	for _, opt := range opts {
 		opt(so)
 	}

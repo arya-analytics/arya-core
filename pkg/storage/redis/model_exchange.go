@@ -3,6 +3,7 @@ package redis
 import (
 	"github.com/arya-analytics/aryacore/pkg/storage/redis/timeseries"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
+	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"github.com/google/uuid"
 	"reflect"
 )
@@ -74,7 +75,7 @@ func (m *modelExchange) bindRes(key string, res interface{}) error {
 func (m *modelExchange) newSampleFromRFL(rfl *model.Reflect) timeseries.Sample {
 	return timeseries.Sample{
 		Key:       model.NewPK(keyField(rfl).Interface()).String(),
-		Timestamp: stampField(rfl).Interface().(int64),
+		Timestamp: stampField(rfl).Interface().(telem.TimeStamp),
 		Value:     valueField(rfl).Interface().(float64),
 	}
 }

@@ -13,13 +13,13 @@ type queryBase struct {
 	_baseMDQuery    QueryMDBase
 	_baseObjQuery   QueryObjectBase
 	_baseCacheQuery QueryCacheBase
-	_catcher        *errutil.Catcher
+	_catcher        *errutil.CatchSimple
 }
 
 func (q *queryBase) baseInit(s Storage, query Query) {
 	q.storage = s
 	q._query = query
-	q._catcher = &errutil.Catcher{}
+	q._catcher = &errutil.CatchSimple{}
 }
 
 // |||| MODEL UTILITIES ||||

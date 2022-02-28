@@ -5,12 +5,22 @@ import (
 	"github.com/google/uuid"
 )
 
+type ChannelConflictPolicy int
+
+const (
+	ChannelConflictPolicyError ChannelConflictPolicy = iota + 1
+	ChannelConflictPolicyDiscard
+	ChannelConflictPolicyOverwrite
+)
+
 type ChannelConfig struct {
-	ID       uuid.UUID `model:"role:pk,"`
-	Name     string
-	Node     *Node
-	NodeID   int
-	DataRate int
+	ID             uuid.UUID `model:"role:pk,"`
+	Name           string
+	Node           *Node
+	NodeID         int
+	DataRate       telem.DataRate
+	DataType       telem.DataType
+	ConflictPolicy ChannelConflictPolicy
 }
 
 const MaxChunkSize = 2e7
@@ -22,7 +32,7 @@ type ChannelChunk struct {
 	ChannelConfig   *ChannelConfig
 	ChannelConfigID uuid.UUID
 	Size            int64
-	StartTS         int64
+	StartTS         telem.TimeStamp
 }
 
 type ChannelChunkReplica struct {
@@ -31,12 +41,12 @@ type ChannelChunkReplica struct {
 	ChannelChunkID uuid.UUID
 	RangeReplica   *RangeReplica
 	RangeReplicaID uuid.UUID
-	Telem          *telem.Bulk `storage:"re:object," model:"role:bulkTelem,"`
+	Telem          *telem.ChunkData `storage:"re:object," model:"role:telemChunkData,"`
 }
 
 type ChannelSample struct {
 	ChannelConfig   *ChannelConfig `model:"role:series"`
 	ChannelConfigID uuid.UUID
-	Value           float64 `storage:"role:cache"`
-	Timestamp       int64   `storage:"role:cache"`
+	Value           float64         `storage:"role:cache"`
+	Timestamp       telem.TimeStamp `storage:"role:cache"`
 }

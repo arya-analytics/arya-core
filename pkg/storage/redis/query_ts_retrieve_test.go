@@ -3,6 +3,7 @@ package redis_test
 import (
 	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -32,7 +33,7 @@ var _ = Describe("QueryTsRetrieve", func() {
 				sample = &models.ChannelSample{
 					ChannelConfigID: series.ID,
 					Value:           123.2,
-					Timestamp:       time.Now().UnixNano(),
+					Timestamp:       telem.NewTimeStamp(time.Now()),
 				}
 			})
 			Describe("Retrieving the most recent sample", func() {
@@ -56,15 +57,15 @@ var _ = Describe("QueryTsRetrieve", func() {
 						{
 							ChannelConfigID: series.ID,
 							Value:           47.3,
-							Timestamp:       time.Now().UnixNano(),
+							Timestamp:       telem.NewTimeStamp(time.Now()),
 						},
 						{
 							ChannelConfigID: series.ID,
-							Timestamp:       time.Now().Add(1 * time.Second).UnixNano(),
+							Timestamp:       telem.NewTimeStamp(time.Now().Add(1 * time.Second)),
 						},
 						{
 							ChannelConfigID: series.ID,
-							Timestamp:       time.Now().Add(2 * time.Second).UnixNano(),
+							Timestamp:       telem.NewTimeStamp(time.Now().Add(2 * time.Second)),
 						},
 					}
 
@@ -91,12 +92,12 @@ var _ = Describe("QueryTsRetrieve", func() {
 						{
 							ChannelConfigID: series.ID,
 							Value:           47.3,
-							Timestamp:       time.Now().UnixNano(),
+							Timestamp:       telem.NewTimeStamp(time.Now()),
 						},
 						{
 							ChannelConfigID: seriesTwo.ID,
 							Value:           96.7,
-							Timestamp:       time.Now().Add(1 * time.Second).UnixNano(),
+							Timestamp:       telem.NewTimeStamp(time.Now().Add(1 * time.Second)),
 						},
 					}
 
@@ -115,17 +116,17 @@ var _ = Describe("QueryTsRetrieve", func() {
 					samples = []*models.ChannelSample{
 						{
 							ChannelConfigID: series.ID,
-							Timestamp:       time.Now().UnixNano(),
+							Timestamp:       telem.NewTimeStamp(time.Now()),
 							Value:           1251.3,
 						},
 						{
 							ChannelConfigID: series.ID,
-							Timestamp:       time.Now().Add(-12 * time.Second).UnixNano(),
+							Timestamp:       telem.NewTimeStamp(time.Now().Add(-12 * time.Second)),
 							Value:           432.3,
 						},
 						{
 							ChannelConfigID: series.ID,
-							Timestamp:       time.Now().Add(-30 * time.Second).UnixNano(),
+							Timestamp:       telem.NewTimeStamp(time.Now().Add(-30 * time.Second)),
 							Value:           322.3,
 						},
 					}
@@ -133,8 +134,8 @@ var _ = Describe("QueryTsRetrieve", func() {
 				})
 				It("Should retrieve without error", func() {
 					var resSamples []*models.ChannelSample
-					toTS := time.Now().Add(3 * time.Second).UnixNano()
-					fromTS := time.Now().Add(-15 * time.Second).UnixNano()
+					toTS := time.Now().Add(3 * time.Second).UnixMicro()
+					fromTS := time.Now().Add(-15 * time.Second).UnixMicro()
 					err = engine.NewTSRetrieve(adapter).Model(&resSamples).WherePK(
 						series.ID).WhereTimeRange(fromTS, toTS).Exec(ctx)
 					Expect(err).To(BeNil())
@@ -158,7 +159,7 @@ var _ = Describe("QueryTsRetrieve", func() {
 			samples = []*models.ChannelSample{{
 				ChannelConfigID: series.ID,
 				Value:           432.1,
-				Timestamp:       time.Now().UnixNano(),
+				Timestamp:       telem.NewTimeStamp(time.Now()),
 			}}
 		})
 		JustBeforeEach(func() {

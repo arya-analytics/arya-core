@@ -2,6 +2,7 @@ package timeseries_test
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/storage/redis/timeseries"
+	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"time"
@@ -23,7 +24,7 @@ var _ = Describe("Timeseries", func() {
 				err := mockClient.TSCreateSamples(mockCtx, timeseries.Sample{
 					Key:       mockTSKey,
 					Value:     123.2,
-					Timestamp: time.Now().UnixNano(),
+					Timestamp: telem.NewTimeStamp(time.Now()),
 				}).Err()
 				Expect(err).To(BeNil())
 				_, rErr := mockClient.TSGet(mockCtx, mockTSKey).Result()
@@ -35,12 +36,12 @@ var _ = Describe("Timeseries", func() {
 				err := mockClient.TSCreateSamples(mockCtx, timeseries.Sample{
 					Key:       mockTSKey,
 					Value:     123.2,
-					Timestamp: time.Now().UnixNano(),
+					Timestamp: telem.NewTimeStamp(time.Now()),
 				},
 					timeseries.Sample{
 						Key:       mockTSKey,
 						Value:     123.5,
-						Timestamp: time.Unix(0, 0).Unix(),
+						Timestamp: telem.NewTimeStamp(time.Unix(0, 0)),
 					},
 				).Err()
 				Expect(err).To(BeNil())
@@ -54,7 +55,7 @@ var _ = Describe("Timeseries", func() {
 				cErr := mockClient.TSCreateSamples(mockCtx, timeseries.Sample{
 					Key:       mockTSKey,
 					Value:     123.2,
-					Timestamp: time.Now().UnixNano(),
+					Timestamp: telem.NewTimeStamp(time.Now()),
 				}).Err()
 				Expect(cErr).To(BeNil())
 				res, rErr := mockClient.TSGet(mockCtx, mockTSKey).Result()

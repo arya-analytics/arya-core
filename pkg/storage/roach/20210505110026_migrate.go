@@ -47,13 +47,13 @@ var (
 // |||| CATCHER ||||
 
 type migrateCatcher struct {
-	*errutil.ContextCatcher
+	*errutil.CatchWContext
 }
 
 type migrationExecFunc func(ctx context.Context, dest ...interface{}) (sql.Result, error)
 
 func (m *migrateCatcher) Exec(execFunc migrationExecFunc) {
-	m.ContextCatcher.Exec(func(ctx context.Context) error {
+	m.CatchWContext.Exec(func(ctx context.Context) error {
 		_, err := execFunc(ctx)
 		return err
 	})
@@ -63,12 +63,12 @@ func (m *migrateCatcher) Exec(execFunc migrationExecFunc) {
 
 func migrateUpFunc(d Driver) migrate.MigrationFunc {
 	return func(ctx context.Context, db *bun.DB) error {
-		c := &migrateCatcher{ContextCatcher: errutil.NewContextCatcher(ctx)}
+		c := &migrateCatcher{CatchWContext: errutil.NewCatchWContext(ctx)}
 
 		// |||| NODE ||||
 
 		c.Exec(db.NewCreateTable().Model((*Node)(nil)).Exec)
-		c.Catcher.Exec(func() error {
+		c.CatchSimple.Exec(func() error {
 			_, err := db.Exec(nodesViewSQL)
 			return err
 		})

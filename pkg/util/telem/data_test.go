@@ -6,7 +6,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Data", func() {
+var _ = Describe("Telem", func() {
 	var (
 		cd *telem.ChunkData
 	)
@@ -21,15 +21,41 @@ var _ = Describe("Data", func() {
 		Expect(n).To(Equal(3))
 		Expect(err).To(BeNil())
 	})
-	It("Should read bytes out fo the chunk data", func() {
+	It("Should read bytes out of the chunk data", func() {
 		var p = make([]byte, 3)
 		cd.Write([]byte{1, 2, 3})
 		n, err := cd.Read(p)
 		Expect(n).To(Equal(3))
 		Expect(err).To(BeNil())
 		Expect(p[1]).To(Equal(uint8(2)))
-		Expect(cd.Done()).To(Equal(true))
+		Expect(cd.Done()).To(BeTrue())
 		cd.Reset()
 	})
+	It("Should be able to read bytes multiple times", func() {
+		var pOne = make([]byte, 3)
+		cd.Write([]byte{1, 2, 3, 4, 5})
+		n, err := cd.Read(pOne)
+		Expect(n).To(Equal(3))
+		Expect(err).To(BeNil())
+		Expect(pOne[1]).To(Equal(uint8(2)))
 
+		Expect(cd.Done()).To(BeFalse())
+
+		var pTwo = make([]byte, 2)
+
+		n, err = cd.Read(pTwo)
+
+		Expect(n).To(Equal(2))
+		Expect(pTwo).To(Equal([]byte{4, 5}))
+		Expect(err).To(BeNil())
+
+		Expect(cd.Done()).To(BeTrue())
+	})
+	It("Should read bytes into another chunk data", func() {
+		cd.Write([]byte{1, 2, 3, 4, 5})
+		cdTwo := telem.NewChunkData(make([]byte, 5))
+		n, err := cdTwo.ReadFrom(cd)
+		Expect(err).To(BeNil())
+		Expect(n).To(Equal(int64(5)))
+	})
 })

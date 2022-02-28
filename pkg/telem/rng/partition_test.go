@@ -123,7 +123,7 @@ var _ = Describe("Partition", func() {
 					Expect(len(sourceChunks) + len(newChunks)).To(Equal(sourceChunkCount))
 				})
 			})
-			Context("Reallocated Chunk Replicas", func() {
+			Context("Reallocated ChunkData Replicas", func() {
 				Specify("The amount of chunk replicas should remain the same", func() {
 					sourceCCRs, err := p.RetrieveRangeChunkReplicas(ctx, rngId)
 					Expect(err).To(BeNil())

@@ -3,6 +3,7 @@ package redis_test
 import (
 	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -37,7 +38,7 @@ var _ = Describe("QueryTsCreate", func() {
 				})
 				BeforeEach(func() {
 					sample = &models.ChannelSample{
-						Timestamp:       time.Now().UnixNano(),
+						Timestamp:       telem.NewTimeStamp(time.Now()),
 						Value:           123.2,
 						ChannelConfigID: series.ID,
 					}

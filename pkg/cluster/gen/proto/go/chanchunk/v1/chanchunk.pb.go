@@ -29,7 +29,7 @@ type ChannelChunkReplica struct {
 	ID             string `protobuf:"bytes,1,opt,name=ID,proto3" json:"ID,omitempty" model:"role:pk"`
 	ChannelChunkID string `protobuf:"bytes,2,opt,name=ChannelChunkID,proto3" json:"ChannelChunkID,omitempty"`
 	RangeReplicaID string `protobuf:"bytes,3,opt,name=RangeReplicaID,proto3" json:"RangeReplicaID,omitempty"`
-	Telem          []byte `protobuf:"bytes,4,opt,name=telem,proto3" json:"telem,omitempty" model:"role:bulkTelem"`
+	Telem          []byte `protobuf:"bytes,4,opt,name=telem,proto3" json:"telem,omitempty" model:"role:telemChunkData"`
 }
 
 func (x *ChannelChunkReplica) Reset() {

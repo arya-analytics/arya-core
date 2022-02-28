@@ -59,7 +59,7 @@ var _ = Describe("Service", func() {
 			ID:             uuid.New(),
 			RangeReplicaID: rr.ID,
 			ChannelChunkID: cc.ID,
-			Telem:          telem.NewBulk([]byte{}),
+			Telem:          telem.NewChunkData([]byte{}),
 		}
 		mockTlm.TelemBulkPopulateRandomFloat64(ccr.Telem, 500)
 	})
@@ -97,7 +97,7 @@ var _ = Describe("Service", func() {
 		})
 		It("Should retrieve the chunk replica correctly", func() {
 			cErr := clust.NewCreate().Model(ccr).Exec(ctx)
-			ccr.Telem = telem.NewBulk([]byte{})
+			ccr.Telem = telem.NewChunkData([]byte{})
 			sCErr := store.NewCreate().Model(ccr).Exec(ctx)
 			Expect(sCErr).To(BeNil())
 			Expect(cErr).To(BeNil())
@@ -108,7 +108,7 @@ var _ = Describe("Service", func() {
 		})
 		It("Should delete the chunk replica correctly", func() {
 			cErr := clust.NewCreate().Model(ccr).Exec(ctx)
-			ccr.Telem = telem.NewBulk([]byte{})
+			ccr.Telem = telem.NewChunkData([]byte{})
 			sCErr := store.NewCreate().Model(ccr).Exec(ctx)
 			Expect(sCErr).To(BeNil())
 			Expect(cErr).To(BeNil())

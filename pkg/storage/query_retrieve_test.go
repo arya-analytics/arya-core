@@ -34,7 +34,7 @@ var _ = Describe("QueryRetrieve", func() {
 		Expect(nErr).To(BeNil())
 	})
 	Describe("Standard usage", func() {
-		Context("Meta Data Only", func() {
+		Context("Meta Telem Only", func() {
 			Context("Single item", func() {
 				Describe("Retrieve a channel config", func() {
 					It("Should retrieve the correct item", func() {
@@ -84,7 +84,7 @@ var _ = Describe("QueryRetrieve", func() {
 				})
 			})
 		})
-		Context("Object Telem + Meta Telem", func() {
+		Context("Object Chunk + Meta Chunk", func() {
 			Context("Single item", func() {
 				var (
 					channelChunk        *models.ChannelChunk
@@ -103,7 +103,7 @@ var _ = Describe("QueryRetrieve", func() {
 					}
 					channelChunkReplica = &models.ChannelChunkReplica{
 						ChannelChunkID: channelChunk.ID,
-						Telem:          telem.NewBulk(bytes),
+						Telem:          telem.NewChunkData(bytes),
 						RangeReplicaID: rngReplica.ID,
 					}
 					items = []interface{}{

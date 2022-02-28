@@ -28,7 +28,7 @@ func (cd *ChunkData) Read(p []byte) (n int, err error) {
 		p[i] = cd.data[i+cd.pos]
 	}
 	cd.pos += i
-	return len(p), nil
+	return i, nil
 }
 
 func (cd *ChunkData) Size() int64 {
@@ -71,7 +71,7 @@ func (cd *ChunkData) Write(p []byte) (n int, err error) {
 }
 
 func (cd *ChunkData) WriteData(data interface{}) error {
-	return binary.Write(cd, binary.BigEndian, data)
+	return binary.Write(cd, ByteOrder(), data)
 }
 
 // || MODIFY ||

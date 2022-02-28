@@ -11,12 +11,12 @@ import (
 type queryBase struct {
 	_client       *minio.Client
 	modelExchange *modelExchange
-	catcher       *errutil.Catcher
+	catcher       *errutil.CatchSimple
 	handler       storage.ErrorHandler
 }
 
 func (q *queryBase) baseInit(client *minio.Client) {
-	q.catcher = &errutil.Catcher{}
+	q.catcher = &errutil.CatchSimple{}
 	q.handler = newErrorHandler()
 	q._client = client
 }
@@ -55,18 +55,17 @@ func (q *queryBase) baseErr() error {
 }
 
 func (q *queryBase) baseValidateReq() {
-	q.catcher.Exec(func() error { return baseQueryReqValidator.Exec(q) })
+	q.catcher.Exec(func() error { return baseQueryReqValidator.Exec(q).Error() })
 }
 
 // |||| VALIDATORS |||
 
-var baseQueryReqValidator = validate.New([]validate.Func{
+var baseQueryReqValidator = validate.New[*queryBase]([]func(q *queryBase) error{
 	validateModelProvided,
 })
 
-func validateModelProvided(v interface{}) error {
-	b := v.(*queryBase)
-	if b.modelExchange == nil {
+func validateModelProvided(q *queryBase) error {
+	if q.modelExchange == nil {
 		return storage.Error{Type: storage.ErrorTypeInvalidArgs,
 			Message: "no model provided to query"}
 	}

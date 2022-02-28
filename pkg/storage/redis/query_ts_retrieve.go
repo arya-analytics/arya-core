@@ -85,16 +85,15 @@ func (tsr *tsRetrieveQuery) Exec(ctx context.Context) error {
 
 func (tsr *tsRetrieveQuery) validateReq() {
 	tsr.catcher.Exec(func() error {
-		return tsRetrieveQueryReqValidator.Exec(tsr)
+		return tsRetrieveQueryReqValidator.Exec(tsr).Error()
 	})
 }
 
-var tsRetrieveQueryReqValidator = validate.New([]validate.Func{
+var tsRetrieveQueryReqValidator = validate.New[*tsRetrieveQuery]([]func(q *tsRetrieveQuery) error{
 	validatePKProvided,
 })
 
-func validatePKProvided(v interface{}) error {
-	q := v.(*tsRetrieveQuery)
+func validatePKProvided(q *tsRetrieveQuery) error {
 	if (len(q.PKChain)) == 0 {
 		return storage.Error{
 			Type:    storage.ErrorTypeInvalidArgs,

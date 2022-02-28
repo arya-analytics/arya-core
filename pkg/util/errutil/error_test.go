@@ -8,9 +8,9 @@ import (
 )
 
 var _ = Describe("Error", func() {
-	Describe("Catcher", func() {
+	Describe("CatchSimple", func() {
 		Context("No error encountered", func() {
-			var catcher = &errutil.Catcher{}
+			var catcher = &errutil.CatchSimple{}
 			It("Should continue to execute functions", func() {
 				counter := 1
 				for i := 0; i < 4; i++ {
@@ -26,7 +26,7 @@ var _ = Describe("Error", func() {
 			})
 		})
 		Context("Error encountered", func() {
-			var catcher = &errutil.Catcher{}
+			var catcher = &errutil.CatchSimple{}
 			It("Should stop execution", func() {
 				counter := 1
 				for i := 0; i < 4; i++ {

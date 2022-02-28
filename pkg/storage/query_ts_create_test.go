@@ -3,6 +3,7 @@ package storage_test
 import (
 	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -56,7 +57,7 @@ var _ = Describe("QueryTSCreate", func() {
 					sample = &models.ChannelSample{
 						ChannelConfigID: channelConfig.ID,
 						Value:           31.6,
-						Timestamp:       time.Now().UnixNano(),
+						Timestamp:       telem.NewTimeStamp(time.Now()),
 					}
 				})
 				It("Should create the sample correctly", func() {
@@ -81,17 +82,17 @@ var _ = Describe("QueryTSCreate", func() {
 						{
 							ChannelConfigID: channelConfig.ID,
 							Value:           3124.4,
-							Timestamp:       time.Now().UnixNano(),
+							Timestamp:       telem.NewTimeStamp(time.Now()),
 						},
 						{
 							ChannelConfigID: channelConfigTwo.ID,
 							Value:           3124.4,
-							Timestamp:       time.Now().Add(1 * time.Second).UnixNano(),
+							Timestamp:       telem.NewTimeStamp(time.Now().Add(1 * time.Second)),
 						},
 						{
 							ChannelConfigID: channelConfig.ID,
 							Value:           3124.4,
-							Timestamp:       time.Now().Add(1 * time.Second).UnixNano(),
+							Timestamp:       telem.NewTimeStamp(time.Now().Add(1 * time.Second)),
 						},
 					}
 				})

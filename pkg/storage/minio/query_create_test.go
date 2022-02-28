@@ -13,7 +13,7 @@ var _ = Describe("QueryCreate", func() {
 	BeforeEach(func() {
 		channelChunk = &models.ChannelChunkReplica{
 			ID:    uuid.New(),
-			Telem: telem.NewBulk([]byte("randomstring")),
+			Telem: telem.NewChunkData([]byte("randomstring")),
 		}
 	})
 	JustBeforeEach(func() {
@@ -25,7 +25,7 @@ var _ = Describe("QueryCreate", func() {
 			ID).Exec(ctx)
 		Expect(err).To(BeNil())
 	})
-	It("Should be created correctly", func() {
+	FIt("Should be created correctly", func() {
 		mockModelTwo := &models.ChannelChunkReplica{}
 		err := engine.NewRetrieve(adapter).Model(mockModelTwo).WherePK(channelChunk.ID).
 			Exec(ctx)

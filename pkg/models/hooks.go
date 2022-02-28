@@ -8,11 +8,11 @@ import (
 
 type queryHookRunner struct {
 	rfl *model.Reflect
-	*errutil.Catcher
+	*errutil.CatchSimple
 }
 
 func (qhr *queryHookRunner) Exec(action func(rfl *model.Reflect) error) {
-	qhr.Catcher.Exec(func() error { return action(qhr.rfl) })
+	qhr.CatchSimple.Exec(func() error { return action(qhr.rfl) })
 }
 
 func BindHooks(s storage.Storage) {

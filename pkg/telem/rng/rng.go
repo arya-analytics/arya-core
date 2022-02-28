@@ -9,7 +9,7 @@ import (
 )
 
 // Service is the central access point to the rng package. Provides utilities for allocating channel chunks to range
-// as well as starting and stopping rng specific tasks, such as partitioning ranges.
+// as well as starting and stopping rng specific tasks, such as partitioning rngMap.
 // ONLY one Service should exist per core instance.
 type Service struct {
 	ps  tasks.Schedule

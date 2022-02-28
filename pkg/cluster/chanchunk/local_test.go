@@ -28,7 +28,7 @@ var _ = Describe("Local", func() {
 		rng = &models.Range{ID: uuid.New()}
 		rr = &models.RangeReplica{ID: uuid.New(), RangeID: rng.ID, NodeID: node.ID}
 		cc = &models.ChannelChunk{ID: uuid.New(), RangeID: rng.ID, ChannelConfigID: channelConfig.ID}
-		ccr = &models.ChannelChunkReplica{RangeReplicaID: rr.ID, ChannelChunkID: cc.ID, Telem: telem.NewBulk([]byte("randomdata"))}
+		ccr = &models.ChannelChunkReplica{RangeReplicaID: rr.ID, ChannelChunkID: cc.ID, Telem: telem.NewChunkData([]byte("randomdata"))}
 		items = []interface{}{node, channelConfig, rng, rr, cc}
 	})
 	JustBeforeEach(func() {
@@ -41,7 +41,7 @@ var _ = Describe("Local", func() {
 			Expect(store.NewDelete().Model(m).WherePK(model.NewReflect(m).PK().Raw()).Exec(ctx)).To(BeNil())
 		}
 	})
-	Describe("Channel Chunk Replica", func() {
+	Describe("Channel ChunkData Replica", func() {
 		JustBeforeEach(func() {
 			Expect(localSvc.Create(ctx, ccr)).To(BeNil())
 		})

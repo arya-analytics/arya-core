@@ -34,6 +34,7 @@ func (c *createQuery) Exec(ctx context.Context) error {
 					Message: fmt.Sprintf("Minio data to write is nil! Model %s with id %s", c.modelExchange.Dest.Type(), dv.PK),
 				}
 			}
+			dv.Data.Reset()
 			_, err := c.baseClient().PutObject(
 				ctx,
 				c.baseBucket(),
@@ -42,6 +43,7 @@ func (c *createQuery) Exec(ctx context.Context) error {
 				dv.Data.Size(),
 				putObjectOpts,
 			)
+			dv.Data.Reset()
 			return err
 		})
 	}

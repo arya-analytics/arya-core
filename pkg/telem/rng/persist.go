@@ -23,7 +23,7 @@ type persistRetrieve interface {
 	RetrieveRange(ctx context.Context, pk uuid.UUID) (*models.Range, error)
 	// RetrieveRangeSize calculates and returns the size of the range with the provided pk.
 	RetrieveRangeSize(ctx context.Context, pk uuid.UUID) (int64, error)
-	// RetrieveRangesByStatus retrieves all ranges with the provided models.RangeStatus.
+	// RetrieveRangesByStatus retrieves all rngMap with the provided models.RangeStatus.
 	RetrieveRangesByStatus(ctx context.Context) ([]*models.Range, error)
 	// RetrieveRangeChunks retrieves all models.ChannelChunk belonging to the models.Range with primary key rngPK.
 	RetrieveRangeChunks(ctx context.Context, rngPK uuid.UUID) ([]*models.ChannelChunk, error)
@@ -62,7 +62,7 @@ type PersistCluster struct {
 // || CREATE ||
 
 func (p *PersistCluster) CreateRange(ctx context.Context, nodePK int) (*models.Range, error) {
-	c := errutil.NewContextCatcher(ctx)
+	c := errutil.NewCatchWContext(ctx)
 	r := &models.Range{Status: models.RangeStatusOpen}
 	c.Exec(p.Cluster.NewCreate().Model(r).Exec)
 	rr := &models.RangeReplica{RangeID: r.ID, NodeID: nodePK}
