@@ -23,7 +23,7 @@ func NewService(clust cluster.Cluster, rngSVC *rng.Service) *Service {
 
 type TelemChunk struct {
 	StartTS int64
-	Data    *telem.Bulk
+	Data    *telem.Chunk
 }
 
 func (s *Service) CreateStream(ctx context.Context, cfg *models.ChannelConfig) (chan *TelemChunk, chan error) {
