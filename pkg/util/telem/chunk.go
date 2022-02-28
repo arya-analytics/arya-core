@@ -90,6 +90,10 @@ func (t *Chunk) ValuesInRange(rng TimeRange) interface{} {
 	return convertBytes(t.ReadSlice(startByteI, endByteI), t.dataType)
 }
 
+func (t *Chunk) AllValues() interface{} {
+	return convertBytes(t.Bytes(), t.dataType)
+}
+
 // |||| MODIFICATION ||||
 
 func (t *Chunk) RemoveFromStart(ts TimeStamp) {
@@ -134,7 +138,6 @@ func sampleSize(dt DataType) int64 {
 		return 8
 	case DataTypeFloat32:
 		return 4
-	default:
-		panic("t chunk has unknown data type")
 	}
+	panic("t chunk has unknown data type")
 }

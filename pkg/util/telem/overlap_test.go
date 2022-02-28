@@ -190,7 +190,6 @@ var _ = Describe("Overlap", func() {
 				It("Should be non-uniform", func() {
 					Expect(o.IsUniform()).To(BeFalse())
 				})
-
 			})
 		})
 		Describe("Modification", func() {
