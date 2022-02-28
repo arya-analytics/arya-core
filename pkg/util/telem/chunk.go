@@ -1,16 +1,53 @@
 package telem
 
-import (
-	"encoding/binary"
-	"github.com/arya-analytics/aryacore/pkg/models"
-	"math"
+type Chunk struct {
+	start    TimeStamp
+	dataType DataType
+	dataRate DataRate
+	*ChunkData
+}
+
+func NewChunk(
+	start TimeStamp,
+	dataType DataType,
+	dataRate DataRate,
+	data *ChunkData,
+) *Chunk {
+	return &Chunk{
+		start:     start,
+		dataType:  dataType,
+		dataRate:  dataRate,
+		ChunkData: data,
+	}
+}
+
+type DataType int
+
+const (
+	DataTypeFloat64 DataType = iota + 1
+	DataTypeFloat32
 )
 
-type Chunk struct {
-	start TimeStamp
-	dr    DataRate
-	dt    models.ChannelDataType
-	data  *ChunkData
+// |||| STATIC ATTRIBUTES ||||
+
+func (t *Chunk) SampleSize() int64 {
+	return sampleSize(t.dataType)
+}
+
+func (t *Chunk) Period() TimeSpan {
+	return t.dataRate.Period()
+}
+
+// |||| SIZING ||||
+
+func (t *Chunk) Len() int64 {
+	return t.Size() / t.SampleSize()
+}
+
+// |||| TIMING ||||
+
+func (t *Chunk) RangeSinceStart(ts TimeStamp) TimeRange {
+	return NewTimeRange(t.start, ts)
 }
 
 func (t *Chunk) Start() TimeStamp {
@@ -27,43 +64,10 @@ func (t *Chunk) Range() TimeRange {
 }
 
 func (t *Chunk) Span() TimeSpan {
-	return TimeSpan(t.Len() * int64(t.Period()))
+	return TimeSpan(t.Len() * int64(t.dataRate.Period()))
 }
 
-func (t *Chunk) Len() int64 {
-	return t.data.Size() / t.SampleSize()
-
-}
-
-func (t *Chunk) RemoveFromStart(ts TimeStamp) {
-	t.data.Splice(t.ByteIndexAtTS(t.Start()), t.ByteIndexAtTS(ts))
-	t.start = ts
-}
-
-func (t *Chunk) RemoveFromEnd(ts TimeStamp) {
-	t.data.Splice(t.ByteIndexAtTS(ts), t.ByteIndexAtTS(t.End()))
-
-}
-
-func (t *Chunk) Duration() {
-}
-
-func (t *Chunk) SampleSize() int64 {
-	switch t.dt {
-	case models.ChannelDataTypeFloat64:
-		return 8
-	default:
-		panic("t chunk has unknown data type")
-	}
-}
-
-func (t *Chunk) Period() TimeSpan {
-	return TimeSpan(1 / float64(t.dr) * SecondsToMicroSeconds)
-}
-
-func (t *Chunk) RangeSinceStart(ts TimeStamp) TimeRange {
-	return NewTimeRange(t.start, ts)
-}
+// |||| INDEXING ||||
 
 func (t *Chunk) IndexAtTS(ts TimeStamp) int64 {
 	return int64(t.RangeSinceStart(ts).Span() / t.Period())
@@ -73,17 +77,64 @@ func (t *Chunk) ByteIndexAtTS(ts TimeStamp) int64 {
 	return t.IndexAtTS(ts) * t.SampleSize()
 }
 
+// |||| VALUE ACCESS ||||
+
 func (t *Chunk) ValueAtTS(ts TimeStamp) interface{} {
 	byteI := t.ByteIndexAtTS(ts)
-	return convertBytesToValue(t.data.ReadSlice(byteI, byteI+t.SampleSize()), t.dt)
+	return convertBytes(t.ReadSlice(byteI, byteI+t.SampleSize()), t.dataType)
 }
 
-func convertBytesToValue(b []byte, dataType models.ChannelDataType) interface{} {
-	switch dataType {
-	case models.ChannelDataTypeFloat64:
-		bits := binary.BigEndian.Uint64(b)
-		return math.Float64frombits(bits)
+func (t *Chunk) ValuesInRange(rng TimeRange) interface{} {
+	capped := t.capRange(rng)
+	startByteI, endByteI := t.ByteIndexAtTS(capped.Start()), t.ByteIndexAtTS(capped.End())
+	return convertBytes(t.ReadSlice(startByteI, endByteI), t.dataType)
+}
+
+// |||| MODIFICATION ||||
+
+func (t *Chunk) RemoveFromStart(ts TimeStamp) {
+	t.Splice(t.ByteIndexAtTS(t.Start()), t.ByteIndexAtTS(ts))
+	t.start = ts
+}
+
+func (t *Chunk) RemoveFromEnd(ts TimeStamp) {
+	t.Splice(t.ByteIndexAtTS(ts), t.ByteIndexAtTS(t.End()))
+
+}
+
+// |||| OVERLAP ||||
+
+func (t *Chunk) Overlap(cChunk *Chunk) ChunkOverlap {
+	return ChunkOverlap{source: t, dest: cChunk}
+}
+
+// |||| UTILITIES ||||
+
+func (t *Chunk) lastValueTS() TimeStamp {
+	return t.End().Add(-1 * t.Period())
+}
+
+func (t *Chunk) capRange(rng TimeRange) TimeRange {
+	return NewTimeRange(t.capStamp(rng.Start()), t.capStamp(rng.End()))
+}
+
+func (t *Chunk) capStamp(ts TimeStamp) TimeStamp {
+	if ts > t.lastValueTS() {
+		return t.End()
+	}
+	if ts < t.Start() {
+		return t.Start()
+	}
+	return ts
+}
+
+func sampleSize(dt DataType) int64 {
+	switch dt {
+	case DataTypeFloat64:
+		return 8
+	case DataTypeFloat32:
+		return 4
 	default:
-		panic("telem chunk has unknown data type")
+		panic("t chunk has unknown data type")
 	}
 }

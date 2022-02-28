@@ -5,7 +5,7 @@ import (
 	"math/rand"
 )
 
-func TelemBulkPopulateRandomFloat64(tb *telem.Chunk, qty int) {
+func TelemBulkPopulateRandomFloat64(tb *telem.ChunkData, qty int) {
 	var w64 []float64
 	for i := 0; i < qty; i++ {
 		w64 = append(w64, rand.Float64())
@@ -15,7 +15,7 @@ func TelemBulkPopulateRandomFloat64(tb *telem.Chunk, qty int) {
 	}
 }
 
-func TelemBulkPopulateRandomFloat32(tb *telem.Chunk, qty int) {
+func TelemBulkPopulateRandomFloat32(tb *telem.ChunkData, qty int) {
 	var w32 []float32
 	for i := 0; i < qty; i++ {
 		w32 = append(w32, rand.Float32())

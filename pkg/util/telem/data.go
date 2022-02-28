@@ -10,7 +10,7 @@ type ChunkData struct {
 	data []byte
 }
 
-func NewBulk(data []byte) *ChunkData {
+func NewChunkData(data []byte) *ChunkData {
 	return &ChunkData{data: data}
 }
 
