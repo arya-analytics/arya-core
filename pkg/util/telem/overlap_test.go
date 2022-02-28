@@ -45,6 +45,26 @@ var _ = Describe("Overlap", func() {
 					It("Should return the correct dest values", func() {
 						Expect(o.DestValues().([]float64)).To(Equal([]float64{6, 7, 8, 9}))
 					})
+					It("Should return the correct type", func() {
+						Expect(o.Type()).To(Equal(telem.OverlapTypePartial))
+					})
+					Describe("Removing the overlap", func() {
+						It("Should remove from the source", func() {
+							Expect(o.RemoveFromSource()).To(BeNil())
+							Expect(cOne.Len()).To(Equal(int64(5)))
+							Expect(cTwo.Len()).To(Equal(int64(7)))
+							Expect(cTwo.ValueAtTS(cTwo.Start())).To(Equal(float64(6)))
+							Expect(cOne.ValueAtTS(cOne.End().Add(telem.NewTimeSpan(-1 * time.Second)))).To(Equal(float64(5)))
+						})
+						It("Should remove from the dest", func() {
+							Expect(o.RemoveFromDest()).To(BeNil())
+							Expect(cOne.Len()).To(Equal(int64(9)))
+							Expect(cTwo.Len()).To(Equal(int64(3)))
+							Expect(cTwo.ValueAtTS(cTwo.Start())).To(Equal(float64(10)))
+							Expect(cOne.ValueAtTS(cOne.End().Add(telem.NewTimeSpan(-1 * time.Second)))).To(Equal(float64(9)))
+						})
+
+					})
 				})
 				Context("Non-uniform", func() {
 					var (
@@ -79,6 +99,52 @@ var _ = Describe("Overlap", func() {
 					It("Should return the correct dest values", func() {
 						Expect(o.DestValues().([]float64)).To(Equal([]float64{7, 8, 9, 10}))
 					})
+					It("Should return the correct overlap type", func() {
+						Expect(o.Type()).To(Equal(telem.OverlapTypePartial))
+					})
+				})
+			})
+			Describe("Duplicate", func() {
+				var (
+					cOne *telem.Chunk
+					cTwo *telem.Chunk
+					o    telem.ChunkOverlap
+				)
+				BeforeEach(func() {
+					cdOne := telem.NewChunkData([]byte{})
+					Expect(cdOne.WriteData([]float64{1, 2, 3, 4, 5, 6, 7, 8, 9})).To(BeNil())
+					cOne = telem.NewChunk(telem.TimeStamp(0), telem.DataTypeFloat64, telem.DataRate(1), cdOne)
+					cdTwo := telem.NewChunkData([]byte{})
+					Expect(cdTwo.WriteData([]float64{1, 2, 3, 4, 5, 6, 7, 8, 9})).To(BeNil())
+					cTwo = telem.NewChunk(telem.TimeStamp(0), telem.DataTypeFloat64, telem.DataRate(1), cdTwo)
+					o = cOne.Overlap(cTwo)
+				})
+				It("Should be valid", func() {
+					Expect(o.IsValid()).To(BeTrue())
+				})
+				It("Should be uniform", func() {
+					Expect(o.IsUniform()).To(BeTrue())
+				})
+				It("Should return the correct values in the source range", func() {
+					Expect(o.SourceValues()).To(Equal([]float64{1, 2, 3, 4, 5, 6, 7, 8, 9}))
+				})
+				It("Should return the correct values in the dest range", func() {
+					Expect(o.DestValues()).To(Equal([]float64{1, 2, 3, 4, 5, 6, 7, 8, 9}))
+				})
+				It("Should return a duplicate type", func() {
+					Expect(cTwo.Overlap(cOne).Type()).To(Equal(telem.OverlapTypeDuplicate))
+				})
+				Describe("Removing the overlap", func() {
+					It("Should remove the overlap from the source", func() {
+						Expect(o.RemoveFromSource()).To(BeNil())
+						Expect(o.IsValid()).To(BeFalse())
+						Expect(cOne.Len()).To(Equal(int64(0)))
+					})
+					It("Should remove the overlap from the dest", func() {
+						Expect(o.RemoveFromDest()).To(BeNil())
+						Expect(o.IsValid()).To(BeFalse())
+						Expect(cTwo.Len()).To(Equal(int64(0)))
+					})
 				})
 			})
 			Describe("One chunk consumes another", func() {
@@ -111,6 +177,16 @@ var _ = Describe("Overlap", func() {
 					It("Should return the correct values in the dest range", func() {
 						Expect(o.DestValues()).To(Equal([]float64{2, 3, 4, 5}))
 					})
+					It("Should return a SourceConsume type", func() {
+						Expect(o.Type()).To(Equal(telem.OverlapTypeSourceConsume))
+					})
+					It("Should return a DestConsume type", func() {
+						Expect(cTwo.Overlap(cOne).Type()).To(Equal(telem.OverlapTypeDestConsume))
+					})
+					It("Should remove the overlap from the consumed", func() {
+						Expect(o.RemoveFromConsumed()).To(BeNil())
+						Expect(cTwo.Len()).To(Equal(int64(0)))
+					})
 				})
 				Context("Non-uniform", func() {
 					var (
@@ -141,6 +217,12 @@ var _ = Describe("Overlap", func() {
 					It("Should return the correct values in the dest range", func() {
 						Expect(o.DestValues()).To(Equal([]float64{3, 4, 5, 6}))
 					})
+					It("Should return a SourceConsume type", func() {
+						Expect(o.Type()).To(Equal(telem.OverlapTypeSourceConsume))
+					})
+					It("Should return a DestConsume type", func() {
+						Expect(cTwo.Overlap(cOne).Type()).To(Equal(telem.OverlapTypeDestConsume))
+					})
 				})
 			})
 		})
@@ -167,8 +249,11 @@ var _ = Describe("Overlap", func() {
 				It("Should be non-uniform", func() {
 					Expect(o.IsUniform()).To(BeFalse())
 				})
+				It("Should return the correct overlap type", func() {
+					Expect(o.Type()).To(Equal(telem.OverlapTypeNoneOrInvalid))
+				})
 			})
-			Describe("Incompatible data rates", func() {
+			Describe("Incompatible data types", func() {
 				var (
 					cOne *telem.Chunk
 					cTwo *telem.Chunk
@@ -191,37 +276,29 @@ var _ = Describe("Overlap", func() {
 					Expect(o.IsUniform()).To(BeFalse())
 				})
 			})
-		})
-		Describe("Modification", func() {
-			Describe("Removing the ChunkOverlap", func() {
+			Describe("Incompatible data rates", func() {
 				var (
 					cOne *telem.Chunk
 					cTwo *telem.Chunk
+					o    telem.ChunkOverlap
 				)
 				BeforeEach(func() {
 					cdOne := telem.NewChunkData([]byte{})
-					cdOne.WriteData([]float64{1, 2, 3, 4, 5, 6, 7, 8, 9})
-
-					cOne = telem.NewChunk(
-						telem.TimeStamp(0),
-						telem.DataTypeFloat64,
-						telem.DataRate(1),
-						cdOne,
-					)
-
+					Expect(cdOne.WriteData([]float64{1, 2, 3, 4, 5, 6, 7, 8, 9})).To(BeNil())
+					cOne = telem.NewChunk(telem.TimeStamp(0), telem.DataTypeFloat64, telem.DataRate(1), cdOne)
 					cdTwo := telem.NewChunkData([]byte{})
-					cdTwo.WriteData([]float64{6, 7, 8, 9, 10, 11, 12})
+					Expect(cdTwo.WriteData([]float64{11, 12})).To(BeNil())
+					cTwoStart := cOne.Start().Add(telem.NewTimeSpan(11 * time.Second))
+					cTwo = telem.NewChunk(cTwoStart, telem.DataTypeFloat64, telem.DataRate(25), cdTwo)
+					o = cOne.Overlap(cTwo)
+				})
+				It("Should not be valid", func() {
+					Expect(o.IsValid()).To(BeFalse())
+				})
+				It("Should be non-uniform", func() {
+					Expect(o.IsUniform()).To(BeFalse())
+				})
 
-					cTwo = telem.NewChunk(
-						cOne.Start().Add(telem.NewTimeSpan(5*time.Second)),
-						telem.DataTypeFloat64,
-						telem.DataRate(1),
-						cdTwo,
-					)
-					Expect(cTwo.ValueAtTS(cTwo.Start())).To(Equal(float64(6)))
-				})
-				It("Should remove the overlap correctly", func() {
-				})
 			})
 		})
 	})

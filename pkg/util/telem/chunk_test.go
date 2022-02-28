@@ -89,13 +89,13 @@ var _ = Describe("ChunkData", func() {
 			})
 		})
 		Describe("Remove", func() {
-			It("Should remove from the start", func() {
+			It("Should removeFrom from the start", func() {
 				ts := chunk.Start().Add(chunk.Period() * 30)
 				chunk.RemoveFromStart(ts)
 				Expect(chunk.Size())
 				Expect(chunk.ValueAtTS(chunk.Start())).To(Equal(float64(30)))
 			})
-			It("Should remove from the end", func() {
+			It("Should removeFrom from the end", func() {
 				ts := chunk.Start().Add(chunk.Period() * 400)
 				chunk.RemoveFromEnd(ts)
 				Expect(chunk.Span()).To(Equal(chunk.Period() * 400))
@@ -176,17 +176,17 @@ var _ = Describe("ChunkData", func() {
 				})
 			})
 			Describe("Large Chunk", func() {
-				It("Should efficiently convert the values", func() {
+				It("Shouldn't take an absurd amount of time to convert the values", func() {
 					cd := telem.NewChunkData([]byte{})
 					var vals []float64
-					for i := 0; i < 312500; i++ {
+					for i := 0; i < 20000; i++ {
 						vals = append(vals, float64(i))
 					}
-					cd.WriteData(vals)
+					Expect(cd.WriteData(vals)).To(BeNil())
 					cc := telem.NewChunk(telem.TimeStamp(0), telem.DataTypeFloat64, telem.DataRate(25000), cd)
 					ts := time.Now()
 					cc.AllValues()
-					Expect(time.Now().Sub(ts)).To(BeNumerically("<", 30*time.Millisecond))
+					Expect(time.Now().Sub(ts)).To(BeNumerically("<", 5*time.Millisecond))
 				})
 			})
 		})

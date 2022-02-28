@@ -62,6 +62,7 @@ func (cd *ChunkData) Write(p []byte) (n int, err error) {
 	for i, b := range p {
 		cd.data[i] = b
 	}
+	cd.done = false
 	return len(p), nil
 }
 
