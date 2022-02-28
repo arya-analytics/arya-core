@@ -46,7 +46,7 @@ var _ = Describe("Overlap", func() {
 						Expect(o.DestValues().([]float64)).To(Equal([]float64{6, 7, 8, 9}))
 					})
 					It("Should return the correct type", func() {
-						Expect(o.Type()).To(Equal(telem.OverlapTypePartial))
+						Expect(o.Type()).To(Equal(telem.OverlapTypeLeftPartial))
 					})
 					Describe("Removing the overlap", func() {
 						It("Should remove from the source", func() {
@@ -100,7 +100,7 @@ var _ = Describe("Overlap", func() {
 						Expect(o.DestValues().([]float64)).To(Equal([]float64{7, 8, 9, 10}))
 					})
 					It("Should return the correct overlap type", func() {
-						Expect(o.Type()).To(Equal(telem.OverlapTypePartial))
+						Expect(o.Type()).To(Equal(telem.OverlapTypeLeftPartial))
 					})
 				})
 			})

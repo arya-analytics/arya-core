@@ -1,5 +1,17 @@
 package telem
 
+// |||| DATA TYPE ||||
+
+type DataType int
+
+//go:generate stringer -type=DataType
+const (
+	DataTypeFloat64 DataType = iota + 1
+	DataTypeFloat32
+)
+
+// |||| CHUNK ||||
+
 type Chunk struct {
 	start    TimeStamp
 	dataType DataType
@@ -7,26 +19,9 @@ type Chunk struct {
 	*ChunkData
 }
 
-func NewChunk(
-	start TimeStamp,
-	dataType DataType,
-	dataRate DataRate,
-	data *ChunkData,
-) *Chunk {
-	return &Chunk{
-		start:     start,
-		dataType:  dataType,
-		dataRate:  dataRate,
-		ChunkData: data,
-	}
+func NewChunk(start TimeStamp, dataType DataType, dataRate DataRate, data *ChunkData) *Chunk {
+	return &Chunk{start: start, dataType: dataType, dataRate: dataRate, ChunkData: data}
 }
-
-type DataType int
-
-const (
-	DataTypeFloat64 DataType = iota + 1
-	DataTypeFloat32
-)
 
 // |||| STATIC ATTRIBUTES ||||
 

@@ -11,9 +11,11 @@ type ChunkOverlap struct {
 
 type OverlapType int
 
+//go:generate stringer -type=OverlapType
 const (
 	OverlapTypeNoneOrInvalid OverlapType = iota
-	OverlapTypePartial
+	OverlapTypeRightPartial
+	OverlapTypeLeftPartial
 	OverlapTypeSourceConsume
 	OverlapTypeDestConsume
 	OverlapTypeDuplicate
@@ -39,14 +41,20 @@ func (o ChunkOverlap) Type() OverlapType {
 	if o.source.Start() == o.dest.Start() && o.source.Span() == o.dest.Span() {
 		return OverlapTypeDuplicate
 	}
-	return OverlapTypePartial
+	if o.source.Start() < o.dest.Start() {
+		return OverlapTypeLeftPartial
+	}
+	if o.source.End() > o.dest.End() {
+		return OverlapTypeRightPartial
+	}
+	panic("could not determine overlap type")
 }
 
 // |||| VALIDATION ||||
 
 func (o ChunkOverlap) IsValid() bool {
 	_, valid := o.baseRange()
-	return valid && o.chunksCompatible()
+	return valid && o.ChunksCompatible()
 }
 
 func (o ChunkOverlap) IsUniform() bool {
@@ -108,7 +116,7 @@ func (o ChunkOverlap) removeFrom(c *Chunk) error {
 	return nil
 }
 
-func (o ChunkOverlap) chunksCompatible() bool {
+func (o ChunkOverlap) ChunksCompatible() bool {
 	return o.dest.dataRate == o.source.dataRate && o.dest.dataType == o.source.dataType
 }
 
