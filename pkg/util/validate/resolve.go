@@ -4,23 +4,18 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/util/errutil"
 )
 
-type Resolve interface {
-	CanHandle(err error) bool
-	Handle(err error, args interface{}) error
-}
-
-type ResolveRun struct {
-	resolves  []Resolve
+type Resolve[T any] struct {
+	actions   []func(err error, args T) (bool, error)
 	opts      *opts
 	catch     errutil.Catch
 	sourceErr error
 	handled   bool
 }
 
-func NewResolveRun(resolves []Resolve, rOpts ...Opt) *ResolveRun {
-	re := &ResolveRun{
-		resolves: resolves,
-		opts:     &opts{},
+func NewResolve[T any](actions []func(err error, args T) (bool, error), rOpts ...Opt) *Resolve[T] {
+	re := &Resolve[T]{
+		actions: actions,
+		opts:    &opts{},
 	}
 	for _, opt := range rOpts {
 		opt(re.opts)
@@ -28,36 +23,36 @@ func NewResolveRun(resolves []Resolve, rOpts ...Opt) *ResolveRun {
 	return re
 }
 
-func (re *ResolveRun) Exec(err error, args interface{}) *ResolveRun {
+func (re *Resolve[T]) Exec(err error, args T) *Resolve[T] {
 	re.sourceErr = err
 	re.catch = &errutil.CatchSimple{}
 	if re.opts.aggregate {
 		re.catch = &errutil.CatchAggregate{}
 	}
-	for _, resolve := range re.resolves {
-		if resolve.CanHandle(err) {
-			re.handled = true
-			re.catch.Exec(func() error { return resolve.Handle(err, args) })
-		}
+	for _, action := range re.actions {
+		re.catch.Exec(func() (cErr error) {
+			re.handled, cErr = action(err, args)
+			return cErr
+		})
 	}
 	return re
 }
 
-func (re *ResolveRun) Handled() bool {
+func (re *Resolve[T]) Handled() bool {
 	return re.handled
 }
 
-func (re *ResolveRun) Resolved() bool {
+func (re *Resolve[T]) Resolved() bool {
 	return re.handled && re.Error() == nil
 }
 
-func (re *ResolveRun) Errors() []error {
+func (re *Resolve[T]) Errors() []error {
 	if !re.handled {
 		return []error{re.sourceErr}
 	}
 	return re.catch.Errors()
 }
 
-func (re *ResolveRun) Error() error {
+func (re *Resolve[T]) Error() error {
 	return re.Errors()[0]
 }

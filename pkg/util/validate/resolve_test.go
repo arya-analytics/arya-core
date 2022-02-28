@@ -7,45 +7,39 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-type DummyResolve struct{}
-
-func (dr *DummyResolve) CanHandle(err error) bool {
-	return err.Error() == "weird ol err"
-}
-
-func (dr *DummyResolve) Handle(err error, args interface{}) error {
-	if args == "resolveable" {
-		return nil
+func dummyResolveAction(err error, args string) (bool, error) {
+	if err.Error() != "weird ol err" {
+		return false, err
 	}
-	return errors.New("unresolveable error")
+	if args == "resolveable" {
+		return true, nil
+	}
+	return true, errors.New("unresolveable error")
 }
 
 var _ = Describe("Resolve", func() {
 	It("should resolve the error successfully", func() {
-		resolves := []validate.Resolve{
-			&DummyResolve{},
-		}
-		run := validate.NewResolveRun(resolves)
+		run := validate.NewResolve([]func(err error, args string) (bool, error){
+			dummyResolveAction,
+		})
 		err := run.Exec(errors.New("weird ol err"), "resolveable").Error()
 		Expect(err).To(BeNil())
 		Expect(run.Handled()).To(BeTrue())
 		Expect(run.Resolved()).To(BeTrue())
 	})
 	It("shouldn't resolve the error when its unresolveable", func() {
-		resolves := []validate.Resolve{
-			&DummyResolve{},
-		}
-		run := validate.NewResolveRun(resolves)
+		run := validate.NewResolve([]func(err error, args string) (bool, error){
+			dummyResolveAction,
+		})
 		err := run.Exec(errors.New("weird ol err"), "unresolveable").Error()
 		Expect(err.Error()).To(Equal("unresolveable error"))
 		Expect(run.Handled()).To(BeTrue())
 		Expect(run.Resolved()).To(BeFalse())
 	})
 	It("Should return the original error when no resolve can handle it", func() {
-		resolves := []validate.Resolve{
-			&DummyResolve{},
-		}
-		run := validate.NewResolveRun(resolves, validate.WithAggregation())
+		run := validate.NewResolve([]func(err error, args string) (bool, error){
+			dummyResolveAction,
+		}, validate.WithAggregation())
 		err := run.Exec(errors.New("normal ol err"), "unresolveable").Error()
 		Expect(err.Error()).To(Equal("normal ol err"))
 		Expect(run.Handled()).To(BeFalse())
