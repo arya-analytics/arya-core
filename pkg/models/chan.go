@@ -7,6 +7,8 @@ import (
 
 type ChannelConflictPolicy int
 
+
+//go:generate stringer -type=ChannelConflictPolicy
 const (
 	ChannelConflictPolicyError ChannelConflictPolicy = iota + 1
 	ChannelConflictPolicyDiscard

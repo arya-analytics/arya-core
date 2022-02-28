@@ -8,14 +8,13 @@ func _() {
 	// An "invalid array index" compiler error signifies that the constant values have changed.
 	// Re-run the stringer command to generate them again.
 	var x [1]struct{}
-	_ = x[TimingErrorTypeChunkDuplicate-1]
-	_ = x[TimingErrorTypeChunkOverlap-2]
-	_ = x[TimingErrorTypeChunkNonSequential-3]
+	_ = x[TimingErrorTypeChunkOverlap-1]
+	_ = x[TimingErrorTypeIncompatibleChunks-2]
 }
 
-const _TimingErrorType_name = "TimingErrorTypeChunkDuplicateTimingErrorTypeChunkOverlapTimingErrorTypeChunkNonSequential"
+const _TimingErrorType_name = "TimingErrorTypeChunkOverlapTimingErrorTypeIncompatibleChunks"
 
-var _TimingErrorType_index = [...]uint8{0, 29, 56, 89}
+var _TimingErrorType_index = [...]uint8{0, 27, 60}
 
 func (i TimingErrorType) String() string {
 	i -= 1
