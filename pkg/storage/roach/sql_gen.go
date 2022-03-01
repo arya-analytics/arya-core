@@ -2,7 +2,6 @@ package roach
 
 import (
 	"fmt"
-	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/util/caseconv"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
@@ -106,13 +105,13 @@ func (sg sqlGen) relTableName(relName string) (tableName string) {
 
 // |||| CALCULATIONS ||||
 
-func (sg sqlGen) calculate(c storage.Calculate) string {
-	calcSQL := map[storage.Calculate]string{
-		storage.CalculateSum:   "SUM",
-		storage.CalculateAVG:   "AVG",
-		storage.CalculateCount: "COUNT",
-		storage.CalculateMax:   "MAX",
-		storage.CalculateMin:   "MIN",
+func (sg sqlGen) calc(c query.Calc) string {
+	calcSQL := map[query.Calc]string{
+		query.CalcSum:   "SUM",
+		query.CalcAVG:   "AVG",
+		query.CalcCount: "COUNT",
+		query.CalcMax:   "MAX",
+		query.CalcMin:   "MIN",
 	}
 	return fmt.Sprintf("%s(?)", calcSQL[c])
 

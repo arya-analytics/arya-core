@@ -73,7 +73,7 @@ type Storage interface {
 
 type storage struct {
 	cfg        Config
-	pool       *pool
+	pool       *Pool
 	queryHooks []QueryHook
 }
 
@@ -88,7 +88,7 @@ type storage struct {
 // Storage cannot operate without Config.EngineMD,
 // as it relies on this engine to maintain consistency with other engines.
 func New(cfg Config) Storage {
-	return &storage{cfg: cfg, pool: newPool()}
+	return &storage{cfg: cfg, pool: NewPool()}
 }
 
 // NewMigrate opens a new QueryMigrate.
@@ -128,7 +128,7 @@ func (s *storage) NewTSCreate() *QueryTSCreate {
 
 func (s *storage) NewTasks(opts ...tasks.ScheduleOpt) tasks.Schedule {
 	return tasks.NewScheduleBatch(
-		s.cfg.EngineMD.NewTasks(s.adapter(s.cfg.EngineMD), opts...),
+		s.cfg.EngineMD.NewTasks(opts...),
 	)
 }
 
@@ -141,7 +141,7 @@ func (s *storage) hooks() []QueryHook {
 }
 
 func (s *storage) adapter(e Engine) (a Adapter) {
-	return s.pool.retrieve(e)
+	return s.pool.Retrieve(e)
 }
 
 func (s *storage) config() Config {

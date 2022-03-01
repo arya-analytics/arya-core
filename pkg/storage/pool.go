@@ -1,16 +1,16 @@
 package storage
 
-func newPool() *pool {
-	return &pool{
+func NewPool() *Pool {
+	return &Pool{
 		adapters: map[Adapter]bool{},
 	}
 }
 
-type pool struct {
+type Pool struct {
 	adapters map[Adapter]bool
 }
 
-func (p *pool) retrieve(e Engine) Adapter {
+func (p *Pool) Retrieve(e Engine) Adapter {
 	a, ok := p.findAdapter(e)
 	if !ok {
 		a = p.newAdapter(e)
@@ -19,7 +19,7 @@ func (p *pool) retrieve(e Engine) Adapter {
 	return a
 }
 
-func (p *pool) findAdapter(e Engine) (Adapter, bool) {
+func (p *Pool) findAdapter(e Engine) (Adapter, bool) {
 	for a := range p.adapters {
 		if e.IsAdapter(a) {
 			return a, true
@@ -28,10 +28,10 @@ func (p *pool) findAdapter(e Engine) (Adapter, bool) {
 	return nil, false
 }
 
-func (p *pool) newAdapter(e Engine) Adapter {
+func (p *Pool) newAdapter(e Engine) Adapter {
 	return e.NewAdapter()
 }
 
-func (p *pool) addAdapter(a Adapter) {
+func (p *Pool) addAdapter(a Adapter) {
 	p.adapters[a] = true
 }

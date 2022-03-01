@@ -64,8 +64,8 @@ func (q *QueryRetrieve) Relation(rel string, flds ...string) *QueryRetrieve {
 
 // Calculate executes a calculation on the specified field. It binds the calculation
 // into the argument 'into'. See Calculate for available calculations.
-func (q *QueryRetrieve) Calculate(c Calculate, fldName string, into interface{}) *QueryRetrieve {
-	q.setMDQuery(q.mdQuery().Calculate(c, fldName, into))
+func (q *QueryRetrieve) Calculate(c query.Calc, fldName string, into interface{}) *QueryRetrieve {
+	q.setMDQuery(q.mdQuery().Calc(c, fldName, into))
 	return q
 }
 
@@ -107,14 +107,14 @@ func (q *QueryRetrieve) Exec(ctx context.Context) error {
 
 // || META DATA ||
 
-func (q *QueryRetrieve) mdQuery() QueryMDRetrieve {
+func (q *QueryRetrieve) mdQuery() *query.Retrieve {
 	if q.baseMDQuery() == nil {
-		q.setMDQuery(q.baseMDEngine().NewRetrieve(q.baseMDAdapter()))
+		q.setMDQuery(q.baseMDEngine().NewRetrieve())
 	}
-	return q.baseMDQuery().(QueryMDRetrieve)
+	return q.baseMDQuery().(*query.Retrieve)
 }
 
-func (q *QueryRetrieve) setMDQuery(qmd QueryMDRetrieve) {
+func (q *QueryRetrieve) setMDQuery(qmd *query.Retrieve) {
 	q.baseSetMDQuery(qmd)
 }
 

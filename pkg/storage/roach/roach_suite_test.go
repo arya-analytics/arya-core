@@ -2,6 +2,7 @@ package roach_test
 
 import (
 	"context"
+	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/storage/mock"
 	"github.com/arya-analytics/aryacore/pkg/storage/roach"
 	"testing"
@@ -13,12 +14,13 @@ import (
 var (
 	ctx     = context.Background()
 	driver  = mock.NewDriverRoach(false, false)
-	engine  = roach.New(driver)
+	pool    = storage.NewPool()
+	engine  = roach.New(driver, pool)
 	adapter = engine.NewAdapter()
 )
 
 var _ = BeforeSuite(func() {
-	migrateErr := engine.NewMigrate(adapter).Exec(ctx)
+	migrateErr := engine.NewMigrate().Exec(ctx)
 	Expect(migrateErr).To(BeNil())
 })
 

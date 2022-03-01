@@ -17,16 +17,16 @@ var _ = Describe("QueryUpdate", func() {
 		channelConfig = &models.ChannelConfig{NodeID: node.ID, ID: uuid.New()}
 	})
 	JustBeforeEach(func() {
-		nErr := engine.NewCreate(adapter).Model(node).Exec(ctx)
+		nErr := engine.NewCreate().Model(node).Exec(ctx)
 		Expect(nErr).To(BeNil())
-		ccErr := engine.NewCreate(adapter).Model(channelConfig).Exec(ctx)
+		ccErr := engine.NewCreate().Model(channelConfig).Exec(ctx)
 		Expect(ccErr).To(BeNil())
 	})
 	JustAfterEach(func() {
-		ccErr := engine.NewDelete(adapter).Model(channelConfig).WherePK(channelConfig.
+		ccErr := engine.NewDelete().Model(channelConfig).WherePK(channelConfig.
 			ID).Exec(ctx)
 		Expect(ccErr).To(BeNil())
-		nErr := engine.NewDelete(adapter).Model(node).WherePK(node.ID).Exec(ctx)
+		nErr := engine.NewDelete().Model(node).WherePK(node.ID).Exec(ctx)
 		Expect(nErr).To(BeNil())
 	})
 	Describe("Update an item", func() {
@@ -39,13 +39,13 @@ var _ = Describe("QueryUpdate", func() {
 			}
 		})
 		JustBeforeEach(func() {
-			err := engine.NewUpdate(adapter).Model(updatedChannelConfig).WherePK(
+			err := engine.NewUpdate().Model(updatedChannelConfig).WherePK(
 				channelConfig.ID).Exec(ctx)
 			Expect(err).To(BeNil())
 		})
 		It("Should reflect updates when retrieved", func() {
 			resChannelConfig := &models.ChannelConfig{}
-			err := engine.NewRetrieve(adapter).Model(resChannelConfig).WherePK(channelConfig.
+			err := engine.NewRetrieve().Model(resChannelConfig).WherePK(channelConfig.
 				ID).Exec(ctx)
 			Expect(err).To(BeNil())
 			Expect(resChannelConfig.ID).To(Equal(updatedChannelConfig.ID))
@@ -71,7 +71,7 @@ var _ = Describe("QueryUpdate", func() {
 			}
 		})
 		JustBeforeEach(func() {
-			err := engine.NewCreate(adapter).Model(&channelConfigs).Exec(ctx)
+			err := engine.NewCreate().Model(&channelConfigs).Exec(ctx)
 			Expect(err).To(BeNil())
 			updateConfigs := []*models.ChannelConfig{
 				{
@@ -83,12 +83,12 @@ var _ = Describe("QueryUpdate", func() {
 					Name: "New Name",
 				},
 			}
-			err = engine.NewUpdate(adapter).Model(&updateConfigs).Fields("Name").Bulk().Exec(ctx)
+			err = engine.NewUpdate().Model(&updateConfigs).Fields("Name").Bulk().Exec(ctx)
 			Expect(err).To(BeNil())
 		})
 		It("Should reflect the updates when retrieved", func() {
 			var resChannelConfigs []*models.ChannelConfig
-			err := engine.NewRetrieve(adapter).
+			err := engine.NewRetrieve().
 				Model(&resChannelConfigs).
 				WherePKs(model.NewReflect(&channelConfigs).PKChain().Raw()).
 				Exec(ctx)

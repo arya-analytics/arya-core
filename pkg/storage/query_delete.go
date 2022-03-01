@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"github.com/arya-analytics/aryacore/pkg/util/query"
 )
 
 // QueryDelete deletes a model or set of models depending on the parameters passed.
@@ -61,15 +62,15 @@ func (q *QueryDelete) Exec(ctx context.Context) error {
 
 // || META DATA ||
 
-func (q *QueryDelete) mdQuery() QueryMDDelete {
+func (q *QueryDelete) mdQuery() *query.Delete {
 	if q.baseMDQuery() == nil {
-		q.setMDQuery(q.baseMDEngine().NewDelete(q.baseMDAdapter()))
+		q.setMDQuery(q.baseMDEngine().NewDelete())
 	}
 
-	return q.baseMDQuery().(QueryMDDelete)
+	return q.baseMDQuery().(*query.Delete)
 }
 
-func (q *QueryDelete) setMDQuery(qmd QueryMDDelete) {
+func (q *QueryDelete) setMDQuery(qmd *query.Delete) {
 	q.baseSetMDQuery(qmd)
 }
 

@@ -16,24 +16,24 @@ var _ = Describe("QueryDelete", func() {
 		channelConfig = &models.ChannelConfig{NodeID: node.ID}
 	})
 	JustBeforeEach(func() {
-		nErr := engine.NewCreate(adapter).Model(node).Exec(ctx)
+		nErr := engine.NewCreate().Model(node).Exec(ctx)
 		Expect(nErr).To(BeNil())
-		ccErr := engine.NewCreate(adapter).Model(channelConfig).Exec(ctx)
+		ccErr := engine.NewCreate().Model(channelConfig).Exec(ctx)
 		Expect(ccErr).To(BeNil())
 	})
 	AfterEach(func() {
-		ccErr := engine.NewDelete(adapter).Model(channelConfig).WherePK(channelConfig.
+		ccErr := engine.NewDelete().Model(channelConfig).WherePK(channelConfig.
 			ID).Exec(ctx)
 		Expect(ccErr).To(BeNil())
-		nErr := engine.NewDelete(adapter).Model(node).WherePK(node.ID).Exec(ctx)
+		nErr := engine.NewDelete().Model(node).WherePK(node.ID).Exec(ctx)
 		Expect(nErr).To(BeNil())
 	})
 	Describe("Delete an item", func() {
-		It("Should delete correctly", func() {
-			dErr := engine.NewDelete(adapter).Model(channelConfig).WherePK(
+		It("Should del correctly", func() {
+			dErr := engine.NewDelete().Model(channelConfig).WherePK(
 				channelConfig.ID).Exec(ctx)
 			Expect(dErr).To(BeNil())
-			rErr := engine.NewRetrieve(adapter).Model(channelConfig).WherePK(channelConfig.ID).
+			rErr := engine.NewRetrieve().Model(channelConfig).WherePK(channelConfig.ID).
 				Exec(ctx)
 			Expect(rErr).ToNot(BeNil())
 			Expect(rErr.(storage.Error).Type).To(Equal(storage.ErrorTypeItemNotFound))
@@ -49,17 +49,17 @@ var _ = Describe("QueryDelete", func() {
 			}
 		})
 		JustBeforeEach(func() {
-			cErr := engine.NewCreate(adapter).Model(channelConfigTwo).Exec(ctx)
+			cErr := engine.NewCreate().Model(channelConfigTwo).Exec(ctx)
 			Expect(cErr).To(BeNil())
 		})
-		It("Should delete them correctly", func() {
+		It("Should del them correctly", func() {
 			pks := []uuid.UUID{channelConfig.ID, channelConfigTwo.ID}
-			err := engine.NewDelete(adapter).Model(&models.ChannelConfig{}).
+			err := engine.NewDelete().Model(&models.ChannelConfig{}).
 				WherePKs(pks).
 				Exec(ctx)
 			Expect(err).To(BeNil())
 			var models []*models.ChannelConfig
-			e := engine.NewRetrieve(adapter).Model(&models).WherePKs(
+			e := engine.NewRetrieve().Model(&models).WherePKs(
 				[]uuid.UUID{channelConfigTwo.ID,
 					channelConfig.ID}).Exec(ctx)
 			Expect(e).To(BeNil())

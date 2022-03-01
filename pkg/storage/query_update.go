@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"github.com/arya-analytics/aryacore/pkg/util/query"
 )
 
 // QueryUpdate updates a model in storage.
@@ -60,13 +61,13 @@ func (q *QueryUpdate) Exec(ctx context.Context) error {
 
 // |||| QUERY BINDING ||||
 
-func (q *QueryUpdate) mdQuery() QueryMDUpdate {
+func (q *QueryUpdate) mdQuery() *query.Update {
 	if q.baseMDQuery() == nil {
-		q.setMDQuery(q.baseMDEngine().NewUpdate(q.baseMDAdapter()))
+		q.setMDQuery(q.baseMDEngine().NewUpdate())
 	}
-	return q.baseMDQuery().(QueryMDUpdate)
+	return q.baseMDQuery().(*query.Update)
 }
 
-func (q *QueryUpdate) setMDQuery(qmd QueryMDUpdate) {
+func (q *QueryUpdate) setMDQuery(qmd *query.Update) {
 	q.baseSetMDQuery(qmd)
 }

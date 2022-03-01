@@ -11,18 +11,6 @@ type Adapter interface {
 	ID() uuid.UUID
 }
 
-// |||| CALCULATIONS ||||
-
-type Calculate int
-
-const (
-	CalculateSum Calculate = iota
-	CalculateMax
-	CalculateMin
-	CalculateCount
-	CalculateAVG
-)
-
 // |||| ENGINE ||||
 
 // Engine is a set of general interfaces that each engine variant must meet.
@@ -44,17 +32,9 @@ type Engine interface {
 // strongly consistent data across the cluster.
 type EngineMD interface {
 	Engine
-	// NewRetrieve opens a new QueryMDRetrieve.
-	NewRetrieve(a Adapter) QueryMDRetrieve
-	// NewCreate opens a new QueryMDCreate.
-	NewCreate(a Adapter) QueryMDCreate
-	// NewDelete opens a new QueryMDDelete.
-	NewDelete(a Adapter) QueryMDDelete
-	// NewMigrate opens a new QueryMDMigrate.
-	NewMigrate(a Adapter) QueryMDMigrate
-	// NewUpdate opens a new QueryMDUpdate.
-	NewUpdate(a Adapter) QueryMDUpdate
-	NewTasks(a Adapter, opts ...tasks.ScheduleOpt) tasks.Schedule
+	query.Assemble
+	NewMigrate() QueryMDMigrate
+	NewTasks(opts ...tasks.ScheduleOpt) tasks.Schedule
 }
 
 // || OBJECT ||
@@ -94,42 +74,6 @@ type Query interface {
 
 type QueryMDBase interface {
 	Query
-}
-
-// QueryMDRetrieve is for retrieving items from metadata storage.
-type QueryMDRetrieve interface {
-	QueryMDBase
-	Model(model interface{}) QueryMDRetrieve
-	WherePK(pk interface{}) QueryMDRetrieve
-	WherePKs(pks interface{}) QueryMDRetrieve
-	Relation(rel string, fields ...string) QueryMDRetrieve
-	Fields(fields ...string) QueryMDRetrieve
-	Calculate(c Calculate, fldName string, into interface{}) QueryMDRetrieve
-	WhereFields(flds query.WhereFields) QueryMDRetrieve
-	Count(ctx context.Context) (int, error)
-}
-
-// QueryMDCreate is for creating items in metadata storage.
-type QueryMDCreate interface {
-	QueryMDBase
-	Model(model interface{}) QueryMDCreate
-}
-
-// QueryMDUpdate is for updating items in metadata storage.
-type QueryMDUpdate interface {
-	QueryMDBase
-	Model(model interface{}) QueryMDUpdate
-	Bulk() QueryMDUpdate
-	Fields(flds ...string) QueryMDUpdate
-	WherePK(pk interface{}) QueryMDUpdate
-}
-
-// QueryMDDelete is for deleting items in metadata storage.
-type QueryMDDelete interface {
-	QueryMDBase
-	Model(model interface{}) QueryMDDelete
-	WherePK(pk interface{}) QueryMDDelete
-	WherePKs(pks interface{}) QueryMDDelete
 }
 
 // QueryMDMigrate applies migration changes to metadata storage.

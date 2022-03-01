@@ -6,45 +6,43 @@ import (
 	bunMigrate "github.com/uptrace/bun/migrate"
 )
 
-type queryMigrate struct {
-	queryBase
+type migrateExec struct {
 	db     *bun.DB
 	bunQ   *bunMigrate.Migrations
 	driver Driver
 }
 
-func newMigrate(db *bun.DB, driver Driver) *queryMigrate {
-	q := &queryMigrate{
+func newMigrate(db *bun.DB, driver Driver) *migrateExec {
+	q := &migrateExec{
 		db:     db,
 		bunQ:   bunMigrate.NewMigrations(),
 		driver: driver,
 	}
-	q.baseInit(db)
 	bindMigrations(q.bunQ, q.driver)
 	return q
 }
 
-func (q *queryMigrate) bunMigrator() *bunMigrate.Migrator {
+func (q *migrateExec) bunMigrator() *bunMigrate.Migrator {
 	return bunMigrate.NewMigrator(q.db, q.bunQ)
 }
 
-func (q *queryMigrate) init(ctx context.Context) {
-	q.catcher.Exec(func() error { return q.bunMigrator().Init(ctx) })
+func (q *migrateExec) init(ctx context.Context) error {
+	return q.bunMigrator().Init(ctx)
 }
 
-func (q *queryMigrate) Exec(ctx context.Context) error {
-	q.init(ctx)
-	q.catcher.Exec(func() error {
-		_, err := q.bunMigrator().Migrate(ctx)
-		return err
-	})
-	return q.baseErr()
+func (q *migrateExec) Exec(ctx context.Context) error {
+	if err := q.init(ctx); err != nil {
+		return q.handleErr(err)
+	}
+	_, err := q.bunMigrator().Migrate(ctx)
+	return q.handleErr(err)
 }
 
-func (q *queryMigrate) Verify(ctx context.Context) error {
-	q.baseExec(func() error {
-		_, err := q.db.NewSelect().Model((*ChannelConfig)(nil)).Count(ctx)
-		return err
-	})
-	return q.baseErr()
+func (q *migrateExec) Verify(ctx context.Context) error {
+	_, err := q.db.NewSelect().Model((*ChannelConfig)(nil)).Count(ctx)
+	return q.handleErr(err)
+}
+
+func (q *migrateExec) handleErr(err error) error {
+	return newErrorHandler().Exec(err)
 }

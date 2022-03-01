@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"github.com/arya-analytics/aryacore/pkg/util/query"
 )
 
 // QueryCreate creates a new model in storage.
@@ -44,14 +45,14 @@ func (c *QueryCreate) Exec(ctx context.Context) error {
 
 // || META DATA ||
 
-func (c *QueryCreate) mdQuery() QueryMDCreate {
+func (c *QueryCreate) mdQuery() *query.Create {
 	if c.baseMDQuery() == nil {
-		c.setMDQuery(c.baseMDEngine().NewCreate(c.baseMDAdapter()))
+		c.setMDQuery(c.baseMDEngine().NewCreate())
 	}
-	return c.baseMDQuery().(QueryMDCreate)
+	return c.baseMDQuery().(*query.Create)
 }
 
-func (c *QueryCreate) setMDQuery(q QueryMDCreate) {
+func (c *QueryCreate) setMDQuery(q *query.Create) {
 	c.baseSetMDQuery(q)
 }
 

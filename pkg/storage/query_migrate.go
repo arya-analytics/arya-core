@@ -32,7 +32,7 @@ func (q *QueryMigrate) Exec(ctx context.Context) error {
 
 func (q *QueryMigrate) mdQuery() QueryMDMigrate {
 	if q.baseMDQuery() == nil {
-		q.baseSetMDQuery(q.baseMDEngine().NewMigrate(q.baseMDAdapter()))
+		q.baseSetMDQuery(q.baseMDEngine().NewMigrate())
 	}
 	return q.baseMDQuery().(QueryMDMigrate)
 }
