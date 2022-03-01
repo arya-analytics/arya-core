@@ -36,10 +36,6 @@ func (q *queryBase) baseMDEngine() EngineMD {
 	return q.storage.config().EngineMD
 }
 
-func (q *queryBase) baseMDAdapter() Adapter {
-	return q.storage.adapter(q.baseMDEngine())
-}
-
 func (q *queryBase) baseMDQuery() QueryMDBase {
 	return q._baseMDQuery
 }
@@ -52,10 +48,6 @@ func (q *queryBase) baseSetMDQuery(qmd QueryMDBase) {
 
 func (q *queryBase) baseObjEngine() EngineObject {
 	return q.storage.config().EngineObject
-}
-
-func (q *queryBase) baseObjAdapter() Adapter {
-	return q.storage.adapter(q.baseObjEngine())
 }
 
 func (q *queryBase) baseObjQuery() QueryObjectBase {
