@@ -26,7 +26,7 @@ type WhereFields map[string]interface{}
 
 type FieldOp int
 
-//go:generate stringer -type=FieldExpOp
+//go:generate stringer -type=FieldOp
 const (
 	FieldOpGreaterThan FieldOp = iota
 	FieldOpLessThan

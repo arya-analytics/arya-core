@@ -98,6 +98,10 @@ var _ = Describe("PKC", func() {
 					newPks := model.NewPKChain([]uuid.UUID{{}, {}})
 					Expect(newPks.AllZero()).To(BeTrue())
 				})
+				It("Should return true when the chain is empty", func() {
+					newPks := model.NewPKChain([]uuid.UUID{})
+					Expect(newPks.AllZero()).To(BeTrue())
+				})
 			})
 		})
 		Describe("Edge cases + errors", func() {

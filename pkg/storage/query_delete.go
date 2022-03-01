@@ -76,13 +76,13 @@ func (q *QueryDelete) setMDQuery(qmd *query.Delete) {
 
 // || OBJECT ||
 
-func (q *QueryDelete) objQuery() QueryObjectDelete {
+func (q *QueryDelete) objQuery() *query.Delete {
 	if q.baseObjQuery() == nil {
-		q.setObjQuery(q.baseObjEngine().NewDelete(q.baseObjAdapter()))
+		q.setObjQuery(q.baseObjEngine().NewDelete())
 	}
-	return q.baseObjQuery().(QueryObjectDelete)
+	return q.baseObjQuery().(*query.Delete)
 }
 
-func (q *QueryDelete) setObjQuery(qob QueryObjectDelete) {
+func (q *QueryDelete) setObjQuery(qob *query.Delete) {
 	q.baseSetObjQuery(qob)
 }

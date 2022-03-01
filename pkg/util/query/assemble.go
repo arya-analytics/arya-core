@@ -1,10 +1,26 @@
 package query
 
-type Assemble interface {
-	NewCreate() *Create
+type AssembleRetrieve interface {
 	NewRetrieve() *Retrieve
+}
+
+type AssembleCreate interface {
+	NewCreate() *Create
+}
+
+type AssembleUpdate interface {
 	NewUpdate() *Update
+}
+
+type AssembleDelete interface {
 	NewDelete() *Delete
+}
+
+type Assemble interface {
+	AssembleCreate
+	AssembleRetrieve
+	AssembleDelete
+	AssembleUpdate
 }
 
 type AssembleBase struct {

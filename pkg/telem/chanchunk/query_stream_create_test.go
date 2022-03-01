@@ -4,7 +4,6 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/telem/chanchunk"
 	"github.com/arya-analytics/aryacore/pkg/telem/rng"
-	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -66,7 +65,7 @@ var _ = Describe("QueryStreamCreate", func() {
 			resCC := &models.ChannelChunk{}
 			Expect(clust.NewRetrieve().
 				Model(resCC).
-				WhereFields(model.WhereFields{"StartTS": telem.TimeStamp(0)}).
+				WhereFields(query.WhereFields{"StartTS": telem.TimeStamp(0)}).
 				Exec(ctx)).To(BeNil())
 			Expect(resCC.Size).To(Equal(4))
 		})

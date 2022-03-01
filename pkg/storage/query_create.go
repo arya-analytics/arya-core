@@ -58,13 +58,13 @@ func (c *QueryCreate) setMDQuery(q *query.Create) {
 
 // || OBJECT ||
 
-func (c *QueryCreate) objQuery() QueryObjectCreate {
+func (c *QueryCreate) objQuery() *query.Create {
 	if c.baseObjQuery() == nil {
-		c.setObjQuery(c.baseObjEngine().NewCreate(c.baseObjAdapter()))
+		c.setObjQuery(c.baseObjEngine().NewCreate())
 	}
-	return c.baseObjQuery().(QueryObjectCreate)
+	return c.baseObjQuery().(*query.Create)
 }
 
-func (c *QueryCreate) setObjQuery(q QueryObjectCreate) {
+func (c *QueryCreate) setObjQuery(q *query.Create) {
 	c.baseSetObjQuery(q)
 }

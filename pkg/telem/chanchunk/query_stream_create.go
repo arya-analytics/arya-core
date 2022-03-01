@@ -61,7 +61,7 @@ func (qsc *QueryStreamCreate) prevChunk() *telem.Chunk {
 		if err := qsc.cluster.NewRetrieve().
 			Model(ccr).
 			Relation("ChannelChunk", "ID", "StartTS", "Size").
-			WhereFields(model.WhereFields{
+			WhereFields(query.WhereFields{
 				"ChannelChunk.ChannelConfigID": qsc.config().ID,
 				"ChannelChunk.StartTS":         model.FieldReachesMax(),
 			}).Exec(qsc.ctx); err != nil {

@@ -4,9 +4,7 @@ import (
 	"context"
 	"github.com/arya-analytics/aryacore/pkg/cluster"
 	"github.com/arya-analytics/aryacore/pkg/models"
-	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/util/errutil"
-	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/google/uuid"
 )
 
@@ -99,18 +97,18 @@ func (p *PersistCluster) RetrieveRangesByStatus(ctx context.Context) (ranges []*
 		Model(&ranges).
 		Relation("RangeLease", "ID", "RangeReplicaID").
 		Relation("RangeLease.RangeReplica", "ID", "NodeID").
-		WhereFields(model.WhereFields{"Status": models.RangeStatusOpen}).Exec(ctx)
+		WhereFields(query.WhereFields{"Status": models.RangeStatusOpen}).Exec(ctx)
 	return ranges, err
 
 }
 
 func (p *PersistCluster) ccByRangeQ(chunks interface{}, pk uuid.UUID) *cluster.QueryRetrieve {
-	return p.clust.NewRetrieve().Model(chunks).WhereFields(model.WhereFields{"RangeID": pk})
+	return p.clust.NewRetrieve().Model(chunks).WhereFields(query.WhereFields{"RangeID": pk})
 }
 
 func (p *PersistCluster) RetrieveRangeSize(ctx context.Context, pk uuid.UUID) (int64, error) {
 	var size int64 = 0
-	return size, p.ccByRangeQ(&models.ChannelChunk{}, pk).Calculate(storage.CalculateSum, "Size", &size).Exec(ctx)
+	return size, p.ccByRangeQ(&models.ChannelChunk{}, pk).Calculate(query.CalcSum, "Size", &size).Exec(ctx)
 }
 
 func (p *PersistCluster) RetrieveRangeChunks(ctx context.Context, rngPK uuid.UUID) ([]*models.ChannelChunk, error) {
@@ -120,7 +118,7 @@ func (p *PersistCluster) RetrieveRangeChunks(ctx context.Context, rngPK uuid.UUI
 
 func (p *PersistCluster) RetrieveRangeReplicas(ctx context.Context, rngPK uuid.UUID) ([]*models.RangeReplica, error) {
 	var rr []*models.RangeReplica
-	return rr, p.clust.NewRetrieve().Model(&rr).WhereFields(model.WhereFields{"RangeID": rngPK}).Exec(ctx)
+	return rr, p.clust.NewRetrieve().Model(&rr).WhereFields(query.WhereFields{"RangeID": rngPK}).Exec(ctx)
 }
 
 func (p *PersistCluster) RetrieveRangeChunkReplicas(ctx context.Context, rngPK uuid.UUID) ([]*models.ChannelChunkReplica, error) {
@@ -128,7 +126,7 @@ func (p *PersistCluster) RetrieveRangeChunkReplicas(ctx context.Context, rngPK u
 	return ccr, p.clust.
 		NewRetrieve().
 		Model(&ccr).
-		WhereFields(model.WhereFields{"ChannelChunk.RangeID": rngPK}).
+		WhereFields(query.WhereFields{"ChannelChunk.RangeID": rngPK}).
 		Fields("ID", "RangeReplicaID").Exec(ctx)
 }
 

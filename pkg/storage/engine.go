@@ -42,14 +42,10 @@ type EngineMD interface {
 // EngineObject is responsible for storing chanchunk data to node localstorage data storage.
 type EngineObject interface {
 	Engine
-	// NewRetrieve opens a new QueryObjectRetrieve.
-	NewRetrieve(a Adapter) QueryObjectRetrieve
-	// NewCreate opens a new QueryObjectCreate.
-	NewCreate(a Adapter) QueryObjectCreate
-	// NewDelete opens a new QueryObjectDelete.
-	NewDelete(a Adapter) QueryObjectDelete
-	// NewMigrate opens a new QueryObjectMigrate.
-	NewMigrate(a Adapter) QueryObjectMigrate
+	query.AssembleCreate
+	query.AssembleRetrieve
+	query.AssembleDelete
+	NewMigrate() QueryObjectMigrate
 }
 
 // || CACHE ||
@@ -86,25 +82,6 @@ type QueryMDMigrate interface {
 
 type QueryObjectBase interface {
 	Query
-}
-
-type QueryObjectCreate interface {
-	QueryObjectBase
-	Model(model interface{}) QueryObjectCreate
-}
-
-type QueryObjectRetrieve interface {
-	QueryObjectBase
-	Model(model interface{}) QueryObjectRetrieve
-	WherePK(pk interface{}) QueryObjectRetrieve
-	WherePKs(pks interface{}) QueryObjectRetrieve
-}
-
-type QueryObjectDelete interface {
-	QueryObjectBase
-	Model(model interface{}) QueryObjectDelete
-	WherePK(pk interface{}) QueryObjectDelete
-	WherePKs(pks interface{}) QueryObjectDelete
 }
 
 type QueryObjectMigrate interface {

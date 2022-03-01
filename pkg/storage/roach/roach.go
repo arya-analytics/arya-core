@@ -33,10 +33,10 @@ func New(driver Driver, pool *storage.Pool) *Engine {
 func (e *Engine) Exec(ctx context.Context, p *query.Pack) error {
 	db := conn(e.pool.Retrieve(e))
 	return query.Switch(ctx, p, query.Ops{
-		Create:   newCreate(db).Exec,
-		Retrieve: newRetrieve(db).Exec,
-		Delete:   newDelete(db).Exec,
-		Update:   newUpdate(db).Exec,
+		Create:   newCreate(db).exec,
+		Retrieve: newRetrieve(db).exec,
+		Delete:   newDelete(db).exec,
+		Update:   newUpdate(db).exec,
 	})
 }
 

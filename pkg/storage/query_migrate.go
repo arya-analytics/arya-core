@@ -41,7 +41,7 @@ func (q *QueryMigrate) mdQuery() QueryMDMigrate {
 
 func (q *QueryMigrate) objQuery() QueryObjectMigrate {
 	if q.baseObjQuery() == nil {
-		q.baseSetObjQuery(q.baseObjEngine().NewMigrate(q.baseObjAdapter()))
+		q.baseSetObjQuery(q.baseObjEngine().NewMigrate())
 	}
 	return q.baseObjQuery().(QueryObjectMigrate)
 }

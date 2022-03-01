@@ -47,7 +47,7 @@ func NewStorage(opts ...StorageOpt) *Storage {
 		Storage: storage.New(storage.Config{
 			EngineMD:     roach.New(driverRoach, pool),
 			EngineCache:  redis.New(driverRedis),
-			EngineObject: minio.New(driverMinio),
+			EngineObject: minio.New(driverMinio, pool),
 		}),
 		DriverRoach: driverRoach,
 		DriverMinio: driverMinio,

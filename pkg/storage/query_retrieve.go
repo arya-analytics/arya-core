@@ -120,13 +120,13 @@ func (q *QueryRetrieve) setMDQuery(qmd *query.Retrieve) {
 
 // || OBJECT ||
 
-func (q *QueryRetrieve) objQuery() QueryObjectRetrieve {
+func (q *QueryRetrieve) objQuery() *query.Retrieve {
 	if q.baseObjQuery() == nil {
-		q.setObjQuery(q.baseObjEngine().NewRetrieve(q.baseObjAdapter()))
+		q.setObjQuery(q.baseObjEngine().NewRetrieve())
 	}
-	return q.baseObjQuery().(QueryObjectRetrieve)
+	return q.baseObjQuery().(*query.Retrieve)
 }
 
-func (q *QueryRetrieve) setObjQuery(qob QueryObjectRetrieve) {
+func (q *QueryRetrieve) setObjQuery(qob *query.Retrieve) {
 	q.baseSetObjQuery(qob)
 }

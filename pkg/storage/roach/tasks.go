@@ -90,7 +90,7 @@ func (sn *syncNodes) createNodeWithPK(pk model.PK) {
 	}
 	newNode := &models.Node{ID: pk.Raw().(int)}
 	sn.catcher.Exec(func() error {
-		if err := query.NewCreate().BindExec(newCreate(sn.db).Exec).Model(newNode).Exec(sn.ctx); err != nil {
+		if err := query.NewCreate().BindExec(newCreate(sn.db).exec).Model(newNode).Exec(sn.ctx); err != nil {
 			sErr, ok := err.(storage.Error)
 			if !ok {
 				log.Error("Encountered un-parseable err after roach bunQ exec.")

@@ -47,7 +47,7 @@ package chanchunk_test
 //		It("Should resolve a conflict between two overlapping chunks", func() {
 //			td := telem.NewChunkData([]byte{})
 //			mock.TelemBulkPopulateRandomFloat64(td, int(chunkSize))
-//			err := timing.Exec(config.ID, lastSampleTS.Add(telem.NewTimeSpan(-1*time.Second)), td)
+//			err := timing.exec(config.ID, lastSampleTS.Add(telem.NewTimeSpan(-1*time.Second)), td)
 //			Expect(err).To(BeNil())
 //			Expect(td.Size()).To(Equal(79992))
 //		})

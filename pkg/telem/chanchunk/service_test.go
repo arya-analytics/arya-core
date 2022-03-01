@@ -20,12 +20,12 @@ package chanchunk_test
 //	})
 //	JustBeforeEach(func() {
 //		for _, item := range items {
-//			Expect(clust.NewCreate().Model(item).Exec(ctx)).To(BeNil())
+//			Expect(clust.NewCreate().Model(item).exec(ctx)).To(BeNil())
 //		}
 //	})
 //	JustAfterEach(func() {
 //		for _, item := range items {
-//			Expect(clust.NewDelete().Model(item).WherePK(model.NewReflect(item).PK().Raw()).Exec(ctx)).To(BeNil())
+//			Expect(clust.NewDelete().Model(item).WherePK(model.NewReflect(item).PK().Raw()).exec(ctx)).To(BeNil())
 //		}
 //	})
 //	Describe("Standard Usage", func() {

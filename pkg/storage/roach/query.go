@@ -2,17 +2,16 @@ package roach
 
 import (
 	"context"
+	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/uptrace/bun"
 )
 
-// |||| CREATE ||||
-
 type base struct {
-	exchange *model.Exchange
-	sqlGen   sqlGen
-	db       *bun.DB
+	exc *model.Exchange
+	sql sqlGen
+	db  *bun.DB
 }
 
 type create struct {
@@ -54,31 +53,31 @@ func newDelete(db *bun.DB) *del {
 
 // |||| EXEC ||||
 
-func (c *create) Exec(ctx context.Context, p *query.Pack) error {
+func (c *create) exec(ctx context.Context, p *query.Pack) error {
 	c.convertOpts(p)
-	c.exchange.ToDest()
-	beforeInsertSetUUID(c.exchange.Dest)
+	c.exc.ToDest()
+	beforeInsertSetUUID(c.exc.Dest)
 	_, err := c.bunQ.Exec(ctx)
-	c.exchange.ToSource()
+	c.exc.ToSource()
 	return newErrorHandler().Exec(err)
 }
 
-func (e *retrieve) Exec(ctx context.Context, p *query.Pack) error {
+func (e *retrieve) exec(ctx context.Context, p *query.Pack) error {
 	e.convertOpts(p)
 	err := e.bunQ.Scan(ctx, e.scanArgs...)
-	e.exchange.ToSource()
+	e.exc.ToSource()
 	return newErrorHandler().Exec(err)
 }
 
-func (u *update) Exec(ctx context.Context, p *query.Pack) error {
+func (u *update) exec(ctx context.Context, p *query.Pack) error {
 	u.convertOpts(p)
-	u.exchange.ToDest()
+	u.exc.ToDest()
 	_, err := u.bunQ.Exec(ctx)
-	u.exchange.ToSource()
+	u.exc.ToSource()
 	return newErrorHandler().Exec(err)
 }
 
-func (d *del) Exec(ctx context.Context, p *query.Pack) error {
+func (d *del) exec(ctx context.Context, p *query.Pack) error {
 	d.convertOpts(p)
 	_, err := d.bunQ.Exec(ctx)
 	return newErrorHandler().Exec(err)
@@ -86,47 +85,39 @@ func (d *del) Exec(ctx context.Context, p *query.Pack) error {
 
 // |||| OPT CONVERTERS ||||
 
-type OptConverter func(p *query.Pack)
-
-type OptConverters []OptConverter
-
-func (ocs OptConverters) Exec(p *query.Pack) {
-	for _, oc := range ocs {
-		oc(p)
-	}
-}
-
 func (c *create) convertOpts(p *query.Pack) {
-	OptConverters{c.model}.Exec(p)
+	storage.OptConverters{c.model}.Exec(p)
 }
 
 func (u *update) convertOpts(p *query.Pack) {
-	OptConverters{u.model, u.pk, u.fields, u.bulk}.Exec(p)
+	storage.OptConverters{u.model, u.pk, u.fields, u.bulk}.Exec(p)
 }
 
 func (e *retrieve) convertOpts(p *query.Pack) {
-	OptConverters{e.model, e.pk, e.fields, e.whereFields, e.relations, e.whereFields, e.calculate}.Exec(p)
+	storage.OptConverters{e.model, e.pk, e.fields, e.whereFields, e.relations, e.whereFields, e.calculate}.Exec(p)
 }
 
 func (d *del) convertOpts(p *query.Pack) {
-	OptConverters{d.model, d.pk}.Exec(p)
+	storage.OptConverters{d.model, d.pk}.Exec(p)
+}
+
+// |||| BASE ||||
+
+func (b *base) exchangeToDest() {
+	b.exc.ToDest()
+}
+
+func (b *base) exchangeToSource() {
+	b.exc.ToSource()
 }
 
 // |||| MODEL ||||
 
-func (b *base) exchangeToDest() {
-	b.exchange.ToDest()
-}
-
-func (b *base) exchangeToSource() {
-	b.exchange.ToSource()
-}
-
 func (b *base) model(p *query.Pack) interface{} {
 	ptr := p.Model().Pointer()
-	b.exchange = model.NewExchange(ptr, catalog().New(ptr))
-	b.sqlGen = sqlGen{db: b.db, m: b.exchange.Dest}
-	return b.exchange.Dest.Pointer()
+	b.exc = model.NewExchange(ptr, catalog().New(ptr))
+	b.sql = sqlGen{db: b.db, m: b.exc.Dest}
+	return b.exc.Dest.Pointer()
 }
 
 func (c *create) model(p *query.Pack) {
@@ -149,19 +140,19 @@ func (d *del) model(p *query.Pack) {
 
 func (u *update) pk(p *query.Pack) {
 	if pkc, ok := query.PKOpt(p); ok {
-		u.bunQ = u.bunQ.Where(u.sqlGen.pks(), bun.In(pkc.Raw()))
+		u.bunQ = u.bunQ.Where(u.sql.pks(), bun.In(pkc.Raw()))
 	}
 }
 
 func (d *del) pk(p *query.Pack) {
 	if pkc, ok := query.PKOpt(p); ok {
-		d.bunQ = d.bunQ.Where(d.sqlGen.pks(), bun.In(pkc.Raw()))
+		d.bunQ = d.bunQ.Where(d.sql.pks(), bun.In(pkc.Raw()))
 	}
 }
 
 func (e *retrieve) pk(p *query.Pack) {
 	if pkc, ok := query.PKOpt(p); ok {
-		e.bunQ = e.bunQ.Where(e.sqlGen.pks(), bun.In(pkc.Raw()))
+		e.bunQ = e.bunQ.Where(e.sql.pks(), bun.In(pkc.Raw()))
 	}
 }
 
@@ -169,13 +160,13 @@ func (e *retrieve) pk(p *query.Pack) {
 
 func (e *retrieve) fields(p *query.Pack) {
 	if f, ok := query.RetrieveFieldsOpt(p); ok {
-		e.bunQ = e.bunQ.Column(e.sqlGen.fieldNames(f...)...)
+		e.bunQ = e.bunQ.Column(e.sql.fieldNames(f...)...)
 	}
 }
 
 func (u *update) fields(p *query.Pack) {
 	if f, ok := query.RetrieveFieldsOpt(p); ok {
-		u.bunQ = u.bunQ.Column(u.sqlGen.fieldNames(f...)...)
+		u.bunQ = u.bunQ.Column(u.sql.fieldNames(f...)...)
 	}
 }
 
@@ -188,7 +179,7 @@ func (e *retrieve) whereFields(p *query.Pack) {
 			if relN != "" {
 				e.bunQ = e.bunQ.Relation(relN)
 			}
-			fldExp, args := e.sqlGen.relFldExp(fldN, fldV)
+			fldExp, args := e.sql.relFldExp(fldN, fldV)
 			e.bunQ = e.bunQ.Where(fldExp, args...)
 		}
 	}
@@ -197,7 +188,7 @@ func (e *retrieve) whereFields(p *query.Pack) {
 func (e *retrieve) relations(p *query.Pack) {
 	for _, opt := range query.RelationOpts(p) {
 		e.bunQ = e.bunQ.Relation(opt.Rel, func(sq *bun.SelectQuery) *bun.SelectQuery {
-			return sq.Column(e.sqlGen.fieldNames(opt.Fields...)...)
+			return sq.Column(e.sql.fieldNames(opt.Fields...)...)
 		})
 	}
 }
@@ -205,7 +196,7 @@ func (e *retrieve) relations(p *query.Pack) {
 func (e *retrieve) calculate(p *query.Pack) {
 	if c, ok := query.RetrieveCalcOpt(p); ok {
 		e.scanArgs = append(e.scanArgs, c.Into)
-		e.bunQ = e.bunQ.ColumnExpr(e.sqlGen.calc(c.Op), bun.Ident(e.sqlGen.fieldName(c.FldName)))
+		e.bunQ = e.bunQ.ColumnExpr(e.sql.calc(c.Op), bun.Ident(e.sql.fieldName(c.FldName)))
 	}
 }
 

@@ -225,7 +225,7 @@ var _ = Describe("QueryRetrieve", func() {
 				//	var resRanges []*models.Range
 				//	err := engine.NewRetrieve().Model(&resRanges).WhereFields(query.WhereFields{
 				//		"RangeLease.BadRel.NodeID": 1,
-				//	}).Exec(ctx)
+				//	}).exec(ctx)
 				//	Expect(err).ToNot(BeNil())
 				//	Expect(err.(storage.Error).Type).To(Equal(storage.ErrorTypeInvalidArgs))
 				//})

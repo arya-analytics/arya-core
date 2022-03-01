@@ -76,7 +76,7 @@ var _ = Describe("Service", func() {
 				By("Retrieving the channel config by the node PK")
 				ccRetrieveByNodeIDResRfl := model.NewReflect(&models.ChannelConfig{})
 				ccRetrieveByNodeIDQR := query.NewQueryRequest(query.VariantRetrieve, ccRetrieveByNodeIDResRfl)
-				query.newWhereFieldsOpt(ccRetrieveByNodeIDQR, model.WhereFields{"Node.ID": 1})
+				query.newWhereFieldsOpt(ccRetrieveByNodeIDQR, query.WhereFields{"Node.ID": 1})
 				Expect(svc.Exec(ctx, ccRetrieveByNodeIDQR)).To(BeNil())
 				Expect(ccRetrieveByNodeIDResRfl.PK().Raw()).To(Equal(channelConfig.ID))
 

@@ -36,10 +36,10 @@ func (s *Service) NewStreamCreate() *QueryStreamCreate {
 //				ChannelChunkID: chunk.ID,
 //				Telem:          tc.Telem,
 //			}
-//			c.Exec(alloc.ChunkData(cfg.NodeID, chunk).Exec)
-//			c.Exec(s.cluster.NewCreate().Model(chunk).Exec)
-//			c.Exec(alloc.ChunkReplica(repl).Exec)
-//			c.Exec(s.cluster.NewCreate().Model(repl).Exec)
+//			c.exec(alloc.ChunkData(cfg.NodeID, chunk).exec)
+//			c.exec(s.cluster.NewCreate().Model(chunk).exec)
+//			c.exec(alloc.ChunkReplica(repl).exec)
+//			c.exec(s.cluster.NewCreate().Model(repl).exec)
 //			if c.Error() != nil {
 //				errChan <- c.Error()
 //			}
@@ -61,8 +61,8 @@ func (s *Service) NewStreamCreate() *QueryStreamCreate {
 //		if err := s.cluster.NewRetrieve().
 //			Model(&replicas).
 //			Relation("ChannelChunk", "startTS").
-//			WhereFields(model.WhereFields{"ChannelChunk.startTS": model.FieldInRange(opts.startTS, opts.EndTS)}).
-//			Exec(ctx); err != nil {
+//			WhereFields(query.WhereFields{"ChannelChunk.startTS": model.FieldInRange(opts.startTS, opts.EndTS)}).
+//			exec(ctx); err != nil {
 //			errChan <- err
 //		}
 //		for _, ccr := range replicas {
