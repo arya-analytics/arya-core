@@ -8,13 +8,13 @@ import (
 var _ = Describe("QueryMigrate", func() {
 	var err error
 	BeforeEach(func() {
-		err = engine.NewMigrate(adapter).Exec(ctx)
+		err = engine.NewMigrate().Exec(ctx)
 	})
 	It("Should migrate without error", func() {
 		Expect(err).To(BeNil())
 	})
 	It("Should execute all migrations successfully", func() {
-		vErr := engine.NewMigrate(adapter).Verify(ctx)
+		vErr := engine.NewMigrate().Verify(ctx)
 		Expect(vErr).To(BeNil())
 	})
 })

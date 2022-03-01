@@ -2,6 +2,7 @@ package minio_test
 
 import (
 	"context"
+	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/storage/minio"
 	"github.com/arya-analytics/aryacore/pkg/storage/mock"
 	"testing"
@@ -11,9 +12,9 @@ import (
 )
 
 var (
-	engine  = minio.New(mock.DriverMinio{})
-	adapter = engine.NewAdapter()
-	ctx     = context.Background()
+	pool   = storage.NewPool()
+	engine = minio.New(mock.DriverMinio{}, pool)
+	ctx    = context.Background()
 )
 
 func TestMinio(t *testing.T) {

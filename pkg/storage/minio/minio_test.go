@@ -36,15 +36,6 @@ var _ = Describe("Minio Engine", func() {
 				})
 			})
 		})
-		Context("Conn", func() {
-			Describe("Binding an invalid adapter", func() {
-				e := &mock.MDEngine{}
-				ba := e.NewAdapter()
-				Expect(func() {
-					engine.NewRetrieve(ba)
-				}).To(Panic())
-			})
-		})
 	})
 	Describe("Catalog", func() {
 		Describe("Contains", func() {
