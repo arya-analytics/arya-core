@@ -13,7 +13,7 @@ package chanchunk_test
 //		node = &models.Node{ID: 1}
 //		channelConfig = &models.ChannelConfig{NodeID: node.ID}
 //		obs := rng.NewObserveMem([]rng.ObservedRange{})
-//		p := &rng.PersistCluster{Cluster: clust}
+//		p := &rng.PersistCluster{clust: clust}
 //		rngSVC = rng.NewService(obs, p)
 //		svc = chanchunk.NewService(clust, rngSVC)
 //		items = []interface{}{node, channelConfig}

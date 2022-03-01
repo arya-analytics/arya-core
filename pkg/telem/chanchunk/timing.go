@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
-	log "github.com/sirupsen/logrus"
 )
 
 // |||| ERROR ||||
@@ -71,16 +70,12 @@ func discardOverlap(rCtx CreateResolveContext) error {
 	ov := rCtx.nextChunk.Overlap(rCtx.prevChunk)
 	switch ov.Type() {
 	case telem.OverlapTypeNoneOrInvalid:
-		log.Warn("discard overlap received a non-overlapping or invalid chunk to resolve")
 		return nil
 	case telem.OverlapTypeRightPartial:
-		log.Warn("received partially overlapping chunk")
 		return ov.RemoveFromSource()
 	case telem.OverlapTypeDuplicate:
-		log.Warn("received duplicate chunk")
 		return ov.RemoveFromSource()
 	case telem.OverlapTypeSourceConsume:
-		log.Warn("received a consumed chunk")
 		return ov.RemoveFromConsumed()
 	default:
 		return TimingError{

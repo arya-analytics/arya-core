@@ -3,6 +3,7 @@ package chanchunk_test
 import (
 	"context"
 	"github.com/arya-analytics/aryacore/pkg/cluster/mock"
+	storagemock "github.com/arya-analytics/aryacore/pkg/storage/mock"
 	"testing"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -15,13 +16,13 @@ var (
 )
 
 var _ = BeforeSuite(func() {
-	//var err error
-	//clust, err = mock.New(ctx)
-	//Expect(err).To(BeNil())
+	var err error
+	clust, err = mock.New(ctx, storagemock.WithVerbose())
+	Expect(err).To(BeNil())
 })
 
 var _ = AfterSuite(func() {
-	//clust.Stop()
+	clust.Stop()
 })
 
 func TestChanchunk(t *testing.T) {

@@ -54,9 +54,13 @@ type Persist interface {
 
 // |||| CLUSTER ||||
 
-// PersistCluster implements Persist and uses a cluster.Cluster as its data store.
+// PersistCluster implements Persist and uses a cluster.clust as its data store.
 type PersistCluster struct {
-	Cluster cluster.Cluster
+	clust cluster.Cluster
+}
+
+func NewPersistCluster(clust cluster.Cluster) *PersistCluster {
+	return &PersistCluster{clust: clust}
 }
 
 // || CREATE ||
@@ -64,25 +68,25 @@ type PersistCluster struct {
 func (p *PersistCluster) CreateRange(ctx context.Context, nodePK int) (*models.Range, error) {
 	c := errutil.NewCatchWContext(ctx)
 	r := &models.Range{Status: models.RangeStatusOpen}
-	c.Exec(p.Cluster.NewCreate().Model(r).Exec)
+	c.Exec(p.clust.NewCreate().Model(r).Exec)
 	rr := &models.RangeReplica{RangeID: r.ID, NodeID: nodePK}
-	c.Exec(p.Cluster.NewCreate().Model(rr).Exec)
+	c.Exec(p.clust.NewCreate().Model(rr).Exec)
 	lease := &models.RangeLease{RangeID: r.ID, RangeReplicaID: rr.ID, RangeReplica: rr}
-	c.Exec(p.Cluster.NewCreate().Model(lease).Exec)
+	c.Exec(p.clust.NewCreate().Model(lease).Exec)
 	r.RangeLease = lease
 	return r, c.Error()
 }
 
 func (p *PersistCluster) CreateRangeReplica(ctx context.Context, rngPK uuid.UUID, nodePK int) (*models.RangeReplica, error) {
 	rr := &models.RangeReplica{RangeID: rngPK, NodeID: nodePK}
-	return rr, p.Cluster.NewCreate().Model(rr).Exec(ctx)
+	return rr, p.clust.NewCreate().Model(rr).Exec(ctx)
 }
 
 // || RETRIEVE ||
 
 func (p *PersistCluster) RetrieveRange(ctx context.Context, pk uuid.UUID) (*models.Range, error) {
 	r := &models.Range{}
-	return r, p.Cluster.NewRetrieve().
+	return r, p.clust.NewRetrieve().
 		Model(r).
 		WherePK(pk).
 		Relation("RangeLease", "ID", "RangeReplicaID").
@@ -91,7 +95,7 @@ func (p *PersistCluster) RetrieveRange(ctx context.Context, pk uuid.UUID) (*mode
 }
 
 func (p *PersistCluster) RetrieveRangesByStatus(ctx context.Context) (ranges []*models.Range, err error) {
-	err = p.Cluster.NewRetrieve().
+	err = p.clust.NewRetrieve().
 		Model(&ranges).
 		Relation("RangeLease", "ID", "RangeReplicaID").
 		Relation("RangeLease.RangeReplica", "ID", "NodeID").
@@ -101,7 +105,7 @@ func (p *PersistCluster) RetrieveRangesByStatus(ctx context.Context) (ranges []*
 }
 
 func (p *PersistCluster) ccByRangeQ(chunks interface{}, pk uuid.UUID) *cluster.QueryRetrieve {
-	return p.Cluster.NewRetrieve().Model(chunks).WhereFields(model.WhereFields{"RangeID": pk})
+	return p.clust.NewRetrieve().Model(chunks).WhereFields(model.WhereFields{"RangeID": pk})
 }
 
 func (p *PersistCluster) RetrieveRangeSize(ctx context.Context, pk uuid.UUID) (int64, error) {
@@ -116,12 +120,12 @@ func (p *PersistCluster) RetrieveRangeChunks(ctx context.Context, rngPK uuid.UUI
 
 func (p *PersistCluster) RetrieveRangeReplicas(ctx context.Context, rngPK uuid.UUID) ([]*models.RangeReplica, error) {
 	var rr []*models.RangeReplica
-	return rr, p.Cluster.NewRetrieve().Model(&rr).WhereFields(model.WhereFields{"RangeID": rngPK}).Exec(ctx)
+	return rr, p.clust.NewRetrieve().Model(&rr).WhereFields(model.WhereFields{"RangeID": rngPK}).Exec(ctx)
 }
 
 func (p *PersistCluster) RetrieveRangeChunkReplicas(ctx context.Context, rngPK uuid.UUID) ([]*models.ChannelChunkReplica, error) {
 	var ccr []*models.ChannelChunkReplica
-	return ccr, p.Cluster.
+	return ccr, p.clust.
 		NewRetrieve().
 		Model(&ccr).
 		WhereFields(model.WhereFields{"ChannelChunk.RangeID": rngPK}).
@@ -135,7 +139,7 @@ func (p *PersistCluster) ReallocateChunks(ctx context.Context, pks []uuid.UUID, 
 	for _, pk := range pks {
 		cc = append(cc, &models.ChannelChunk{ID: pk, RangeID: newRngPK})
 	}
-	return p.Cluster.NewUpdate().Model(&cc).Fields("RangeID").Bulk().Exec(ctx)
+	return p.clust.NewUpdate().Model(&cc).Fields("RangeID").Bulk().Exec(ctx)
 }
 
 func (p *PersistCluster) ReallocateChunkReplicas(ctx context.Context, pks []uuid.UUID, newRRPK uuid.UUID) error {
@@ -143,11 +147,11 @@ func (p *PersistCluster) ReallocateChunkReplicas(ctx context.Context, pks []uuid
 	for _, pk := range pks {
 		ccr = append(ccr, &models.ChannelChunkReplica{ID: pk, RangeReplicaID: newRRPK})
 	}
-	return p.Cluster.NewUpdate().Model(&ccr).Fields("RangeReplicaID").Bulk().Exec(ctx)
+	return p.clust.NewUpdate().Model(&ccr).Fields("RangeReplicaID").Bulk().Exec(ctx)
 }
 
 // || UPDATE ||
 
 func (p *PersistCluster) UpdateRangeStatus(ctx context.Context, pk uuid.UUID, status models.RangeStatus) error {
-	return p.Cluster.NewUpdate().Model(&models.Range{ID: pk, Status: status}).Fields("Status").WherePK(pk).Exec(ctx)
+	return p.clust.NewUpdate().Model(&models.Range{ID: pk, Status: status}).Fields("Status").WherePK(pk).Exec(ctx)
 }

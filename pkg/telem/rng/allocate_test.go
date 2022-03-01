@@ -17,7 +17,7 @@ var _ = Describe("Allocate", func() {
 	)
 	BeforeEach(func() {
 		obs = rng.NewObserveMem([]rng.ObservedRange{})
-		p = &mock.Persist{}
+		p = mock.NewBlankPersist()
 		svc = rng.NewService(obs, p)
 	})
 	Describe("A ChunkData", func() {

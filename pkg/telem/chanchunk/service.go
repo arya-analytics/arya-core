@@ -1,18 +1,23 @@
 package chanchunk
 
-//type Service struct {
-//	cluster cluster.Cluster
-//	rngSVC  *rng.Service
-//}
-//
-//func NewService(clust cluster.Cluster, rngSVC *rng.Service) *Service {
-//	return &Service{cluster: clust, rngSVC: rngSVC}
-//}
-//
-////type TelemChunkWrapper struct {
-////	startTS int64
-////	Telem    *telem.ChunkData
-////}
+import (
+	"github.com/arya-analytics/aryacore/pkg/cluster"
+	"github.com/arya-analytics/aryacore/pkg/telem/rng"
+)
+
+type Service struct {
+	cluster cluster.Cluster
+	rngSVC  *rng.Service
+}
+
+func NewService(clust cluster.Cluster, rngSVC *rng.Service) *Service {
+	return &Service{cluster: clust, rngSVC: rngSVC}
+}
+
+func (s *Service) NewStreamCreate() *QueryStreamCreate {
+	return newStreamCreate(s.cluster, s.rngSVC)
+}
+
 //
 //func (s *Service) CreateStream(ctx context.Context, cfg *models.ChannelConfig) (chan *TelemChunkWrapper, chan error) {
 //	stream, errChan := make(chan *TelemChunkWrapper), make(chan error)

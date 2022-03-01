@@ -9,5 +9,5 @@ import (
 
 func TestCluster(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Cluster Suite")
+	RunSpecs(t, "clust Suite")
 }

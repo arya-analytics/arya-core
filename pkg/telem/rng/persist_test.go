@@ -26,7 +26,7 @@ var _ = Describe("Persist", func() {
 				clust, err = mock.New(ctx)
 				Expect(err).To(BeNil())
 			}
-			p = &rng.PersistCluster{Cluster: clust}
+			p = rng.NewPersistCluster(clust)
 			node := &models.Node{ID: 1}
 			chanCfg = &models.ChannelConfig{ID: uuid.New(), NodeID: node.ID}
 			newRng = &models.Range{ID: uuid.New(), Status: models.RangeStatusOpen}
@@ -55,7 +55,6 @@ var _ = Describe("Persist", func() {
 		})
 		Describe("New Range Replica", func() {
 			It("Should save the replica with the correct node id", func() {
-				p := &rng.PersistCluster{Cluster: clust}
 				rngReplica, err := p.CreateRangeReplica(ctx, newRng.ID, 1)
 				Expect(err).To(BeNil())
 				Expect(rngReplica.NodeID).To(Equal(1))
