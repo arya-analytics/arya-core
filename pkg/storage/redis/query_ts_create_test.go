@@ -19,13 +19,13 @@ var _ = Describe("QueryTsCreate", func() {
 		series = &models.ChannelConfig{ID: uuid.New()}
 	})
 	JustBeforeEach(func() {
-		err := engine.NewTSCreate(adapter).Series().Model(series).Exec(ctx)
+		err := engine.NewTSCreate().Series().Model(series).Exec(ctx)
 		Expect(err).To(BeNil())
 	})
 	Describe("Standard Usage", func() {
 		Describe("Create a new series", func() {
 			It("Should exist after creation", func() {
-				exists, err := engine.NewTSRetrieve(adapter).SeriesExists(ctx, series.ID)
+				exists, err := engine.NewTSRetrieve().SeriesExists(ctx, series.ID)
 				Expect(err).To(BeNil())
 				Expect(exists).To(BeTrue())
 			})
@@ -33,7 +33,7 @@ var _ = Describe("QueryTsCreate", func() {
 		Describe("Create a new sample", func() {
 			Context("Single sample", func() {
 				JustBeforeEach(func() {
-					err := engine.NewTSCreate(adapter).Sample().Model(sample).Exec(ctx)
+					err := engine.NewTSCreate().Sample().Model(sample).Exec(ctx)
 					Expect(err).To(BeNil())
 				})
 				BeforeEach(func() {
@@ -45,7 +45,7 @@ var _ = Describe("QueryTsCreate", func() {
 				})
 				It("Should be able to re-retrieve the sample after creation", func() {
 					var resSamples []*models.ChannelSample
-					rErr := engine.NewTSRetrieve(adapter).Model(&resSamples).
+					rErr := engine.NewTSRetrieve().Model(&resSamples).
 						WherePK(series.ID).Exec(
 						ctx)
 					Expect(rErr).To(BeNil())
@@ -60,7 +60,7 @@ var _ = Describe("QueryTsCreate", func() {
 	Describe("Edge cases + errors", func() {
 		Describe("Not selecting a variant", func() {
 			It("Should return the correct storage error", func() {
-				err := engine.NewTSCreate(adapter).Model(series).Exec(ctx)
+				err := engine.NewTSCreate().Model(series).Exec(ctx)
 				Expect(err).ToNot(BeNil())
 				Expect(err.(storage.Error).Type).To(Equal(storage.ErrorTypeInvalidArgs))
 			})

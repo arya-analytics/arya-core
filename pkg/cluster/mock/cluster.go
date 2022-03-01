@@ -3,7 +3,6 @@ package mock
 import (
 	"context"
 	"github.com/arya-analytics/aryacore/pkg/cluster"
-	"github.com/arya-analytics/aryacore/pkg/cluster/base"
 	"github.com/arya-analytics/aryacore/pkg/cluster/chanchunk"
 	"github.com/arya-analytics/aryacore/pkg/rpc"
 	"github.com/arya-analytics/aryacore/pkg/storage/mock"
@@ -28,7 +27,7 @@ func New(ctx context.Context, opts ...mock.StorageOpt) (*Cluster, error) {
 	pool := &cluster.NodeRPCPool{Pool: rpc.NewPool(grpc.WithTransportCredentials(insecure.NewCredentials()))}
 	baseCluster := cluster.New()
 	baseCluster.BindService(chanchunk.NewService(chanchunk.NewServiceLocalStorage(s), chanchunk.NewServiceRemoteRPC(pool)))
-	baseCluster.BindService(base.NewService(s))
+	baseCluster.BindService(cluster.NewStorageService(s))
 	c := &Cluster{storage: s, Cluster: baseCluster}
 	return c, nil
 }

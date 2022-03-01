@@ -18,6 +18,9 @@ func New(driver Driver, pool *storage.Pool) *Engine {
 }
 
 func (e *Engine) Exec(ctx context.Context, p *query.Pack) error {
+	if !e.shouldHandle(p) {
+		return nil
+	}
 	return query.Switch(ctx, p, query.Ops{
 		Create:   newCreate(e.client()).exec,
 		Retrieve: newRetrieve(e.client()).exec,
@@ -39,14 +42,16 @@ func (e *Engine) IsAdapter(a storage.Adapter) bool {
 	return ok
 }
 
-func (e *Engine) ShouldHandle(m interface{}, flds ...string) bool {
-	if !catalog().Contains(m) {
+func (e *Engine) shouldHandle(p *query.Pack) bool {
+	if !catalog().Contains(p.Model().Pointer()) {
 		return false
 	}
-	if len(flds) == 0 {
-		return true
+	fldsOpt, ok := query.RetrieveFieldsOpt(p)
+	if ok {
+		stc := model.NewReflect(p.Model().Pointer()).StructTagChain()
+		return stc.HasAnyFields(fldsOpt.AllExcept("ID")...)
 	}
-	return model.NewReflect(catalog().New(m)).StructTagChain().HasAnyFields(flds...)
+	return true
 }
 
 func (e *Engine) NewCreate() *query.Create {

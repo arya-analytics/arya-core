@@ -76,7 +76,7 @@ var _ = Describe("QueryRetrieve", func() {
 						err := store.NewRetrieve().
 							Model(resChannelConfig).
 							WherePK(channelConfig.ID).
-							Calculate(query.CalcMax, "NodeID", &max).
+							Calc(query.CalcMax, "NodeID", &max).
 							Exec(ctx)
 						Expect(err).To(BeNil())
 						Expect(max).To(Equal(1))

@@ -2,15 +2,10 @@ package storage
 
 import (
 	"context"
-	"github.com/arya-analytics/aryacore/pkg/util/model"
+	"github.com/arya-analytics/aryacore/pkg/util/query"
 )
 
-type QueryEvent struct {
-	Query Query
-	Model *model.Reflect
-}
-
 type QueryHook interface {
-	BeforeQuery(ctx context.Context, qe *QueryEvent) error
-	AfterQuery(ctx context.Context, qe *QueryEvent) error
+	BeforeQuery(ctx context.Context, o *query.Pack) error
+	AfterQuery(ctx context.Context, qe *query.Pack) error
 }

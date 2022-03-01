@@ -8,7 +8,7 @@ type QueryTSRetrieve struct {
 	queryTSBase
 }
 
-func newTSRetrieve(s Storage) *QueryTSRetrieve {
+func newTSRetrieve(s *storage) *QueryTSRetrieve {
 	q := &QueryTSRetrieve{}
 	q.baseInit(s, q)
 	return q
@@ -52,9 +52,7 @@ func (q *QueryTSRetrieve) SeriesExists(ctx context.Context,
 }
 
 func (q *QueryTSRetrieve) Exec(ctx context.Context) error {
-	q.baseRunBeforeHooks(ctx)
 	q.baseExec(func() error { return q.cacheQuery().Exec(ctx) })
-	q.baseRunAfterHooks(ctx)
 	return q.baseErr()
 }
 
@@ -64,7 +62,7 @@ func (q *QueryTSRetrieve) Exec(ctx context.Context) error {
 
 func (q *QueryTSRetrieve) cacheQuery() QueryCacheTSRetrieve {
 	if q.baseCacheQuery() == nil {
-		q.setCacheQuery(q.baseCacheEngine().NewTSRetrieve(q.baseCacheAdapter()))
+		q.setCacheQuery(q.baseCacheEngine().NewTSRetrieve())
 	}
 	return q.baseCacheQuery().(QueryCacheTSRetrieve)
 }

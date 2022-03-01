@@ -4,6 +4,7 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/telem/chanchunk"
 	"github.com/arya-analytics/aryacore/pkg/telem/rng"
+	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"

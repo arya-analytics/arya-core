@@ -7,6 +7,7 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/telem/rng"
 	"github.com/arya-analytics/aryacore/pkg/util/errutil"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
+	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"github.com/arya-analytics/aryacore/pkg/util/validate"
 	"github.com/google/uuid"
@@ -63,7 +64,7 @@ func (qsc *QueryStreamCreate) prevChunk() *telem.Chunk {
 			Relation("ChannelChunk", "ID", "StartTS", "Size").
 			WhereFields(query.WhereFields{
 				"ChannelChunk.ChannelConfigID": qsc.config().ID,
-				"ChannelChunk.StartTS":         model.FieldReachesMax(),
+				//"ChannelChunk.StartTS":         model.Fie(),
 			}).Exec(qsc.ctx); err != nil {
 			qsc.Errors() <- err
 		}
@@ -87,7 +88,7 @@ func (qsc *QueryStreamCreate) Errors() chan error {
 
 func (qsc *QueryStreamCreate) listen() {
 	for args := range qsc.stream {
-		c := errutil.NewCatchWContext(qsc.ctx)
+		c := errutil.NewCatchWCtx(qsc.ctx)
 		alloc := qsc.rngSvc.NewAllocate()
 		cc := &models.ChannelChunk{ID: uuid.New(), ChannelConfigID: qsc.config().ID}
 		ccr := &models.ChannelChunkReplica{ID: uuid.New(), ChannelChunkID: cc.ID, Telem: args.data}

@@ -1,5 +1,6 @@
 package query
 
+// Update updates a model.
 type Update struct {
 	where
 }
@@ -21,6 +22,7 @@ func (u *Update) Model(m interface{}) *Update {
 
 // || WHERE ||
 
+// WherePK queries the primary key of the model to be deleted.
 func (u *Update) WherePK(pk interface{}) *Update {
 	u.wherePK(pk)
 	return u
@@ -28,6 +30,10 @@ func (u *Update) WherePK(pk interface{}) *Update {
 
 // || FIELDS ||
 
+// Fields marks the fields that need to be updated. If this option isn't specified,
+// will replace all fields.
+//
+// NOTE: When calling Bulk, order matters. Fields must be called before Bulk.
 func (u *Update) Fields(flds ...string) *Update {
 	newFieldsOpt(u.Pack(), flds...)
 	return u
@@ -35,6 +41,9 @@ func (u *Update) Fields(flds ...string) *Update {
 
 // || BULK ||
 
+// Bulk marks the update as a bulk update and allows for
+// the update of multiple records. When Bulk updating,
+// the primary key field of each model must be defined.
 func (u *Update) Bulk() *Update {
 	newBulkUpdateOpt(u.Pack())
 	return u

@@ -3,7 +3,7 @@ package errutil
 import "context"
 
 type Catch interface {
-	Exec(actionFunc ActionFunc)
+	Exec(actionFunc CatchAction)
 	Error() error
 	Errors() []error
 }
@@ -14,13 +14,13 @@ type CatchSimple struct {
 	err error
 }
 
-type ActionFunc func() error
+type CatchAction func() error
 
-func (c *CatchSimple) Exec(actionFunc ActionFunc) {
+func (c *CatchSimple) Exec(ca CatchAction) {
 	if c.err != nil {
 		return
 	}
-	err := actionFunc()
+	err := ca()
 	if err != nil {
 		c.err = err
 	}
@@ -40,19 +40,19 @@ func (c *CatchSimple) Errors() []error {
 
 // |||| CATCH W CONTEXT ||||
 
-type CatchWContext struct {
+type CatchWCtx struct {
 	*CatchSimple
 	ctx context.Context
 }
 
-func NewCatchWContext(ctx context.Context) *CatchWContext {
-	return &CatchWContext{CatchSimple: &CatchSimple{}, ctx: ctx}
+func NewCatchWCtx(ctx context.Context) *CatchWCtx {
+	return &CatchWCtx{CatchSimple: &CatchSimple{}, ctx: ctx}
 }
 
-type ActionFuncContext func(ctx context.Context) error
+type CatchActionCtx func(ctx context.Context) error
 
-func (c *CatchWContext) Exec(actionFunc ActionFuncContext) {
-	c.CatchSimple.Exec(func() error { return actionFunc(c.ctx) })
+func (c *CatchWCtx) Exec(ca CatchActionCtx) {
+	c.CatchSimple.Exec(func() error { return ca(c.ctx) })
 }
 
 // |||| CATCH AGGREGATE |||
@@ -61,7 +61,7 @@ type CatchAggregate struct {
 	errors []error
 }
 
-func (c *CatchAggregate) Exec(actionFunc ActionFunc) {
+func (c *CatchAggregate) Exec(actionFunc CatchAction) {
 	err := actionFunc()
 	if err != nil {
 		c.errors = append(c.errors, err)

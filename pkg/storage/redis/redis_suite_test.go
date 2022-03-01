@@ -11,14 +11,13 @@ import (
 )
 
 var (
-	ctx     = context.Background()
-	engine  storage.EngineCache
-	adapter storage.Adapter
+	ctx    = context.Background()
+	engine storage.EngineCache
 )
 
 var _ = BeforeSuite(func() {
-	engine = redis.New(mock.DriverRedis{})
-	adapter = engine.NewAdapter()
+	pool := storage.NewPool()
+	engine = redis.New(mock.DriverRedis{}, pool)
 })
 
 func TestRedis(t *testing.T) {

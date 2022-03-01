@@ -5,6 +5,7 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/cluster"
 	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/util/errutil"
+	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/google/uuid"
 )
 
@@ -64,7 +65,7 @@ func NewPersistCluster(clust cluster.Cluster) *PersistCluster {
 // || CREATE ||
 
 func (p *PersistCluster) CreateRange(ctx context.Context, nodePK int) (*models.Range, error) {
-	c := errutil.NewCatchWContext(ctx)
+	c := errutil.NewCatchWCtx(ctx)
 	r := &models.Range{Status: models.RangeStatusOpen}
 	c.Exec(p.clust.NewCreate().Model(r).Exec)
 	rr := &models.RangeReplica{RangeID: r.ID, NodeID: nodePK}
@@ -102,13 +103,13 @@ func (p *PersistCluster) RetrieveRangesByStatus(ctx context.Context) (ranges []*
 
 }
 
-func (p *PersistCluster) ccByRangeQ(chunks interface{}, pk uuid.UUID) *cluster.QueryRetrieve {
+func (p *PersistCluster) ccByRangeQ(chunks interface{}, pk uuid.UUID) *query.Retrieve {
 	return p.clust.NewRetrieve().Model(chunks).WhereFields(query.WhereFields{"RangeID": pk})
 }
 
 func (p *PersistCluster) RetrieveRangeSize(ctx context.Context, pk uuid.UUID) (int64, error) {
 	var size int64 = 0
-	return size, p.ccByRangeQ(&models.ChannelChunk{}, pk).Calculate(query.CalcSum, "Size", &size).Exec(ctx)
+	return size, p.ccByRangeQ(&models.ChannelChunk{}, pk).Calc(query.CalcSum, "Size", &size).Exec(ctx)
 }
 
 func (p *PersistCluster) RetrieveRangeChunks(ctx context.Context, rngPK uuid.UUID) ([]*models.ChannelChunk, error) {

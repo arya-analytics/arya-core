@@ -2,8 +2,7 @@ package models_test
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/models"
-	"github.com/arya-analytics/aryacore/pkg/storage"
-	"github.com/arya-analytics/aryacore/pkg/util/model"
+	"github.com/arya-analytics/aryacore/pkg/util/query"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -25,21 +24,15 @@ var _ = Describe("Node", func() {
 				It("Should set the default port when none is provided", func() {
 					n := &models.Node{ID: 1}
 					qh := &models.NodeQueryHook{}
-					qe := &storage.QueryEvent{
-						Model: model.NewReflect(n),
-						Query: &storage.QueryCreate{},
-					}
-					Expect(qh.BeforeQuery(ctx, qe)).To(BeNil())
+					p := query.NewCreate().Model(n).Pack()
+					Expect(qh.BeforeQuery(ctx, p)).To(BeNil())
 					Expect(n.RPCPort).To(Equal(models.NodeDefaultRPCPort))
 				})
 				It("Shouldn't set the port when a value is provided", func() {
 					n := &models.Node{ID: 1, RPCPort: 22}
 					qh := &models.NodeQueryHook{}
-					qe := &storage.QueryEvent{
-						Model: model.NewReflect(n),
-						Query: &storage.QueryCreate{},
-					}
-					Expect(qh.BeforeQuery(ctx, qe)).To(BeNil())
+					p := query.NewCreate().Model(n).Pack()
+					Expect(qh.BeforeQuery(ctx, p)).To(BeNil())
 					Expect(n.RPCPort).To(Equal(22))
 				})
 			})
@@ -49,11 +42,8 @@ var _ = Describe("Node", func() {
 		It("Should do nothing", func() {
 			n := &models.Node{ID: 1, RPCPort: 22}
 			qh := &models.NodeQueryHook{}
-			qe := &storage.QueryEvent{
-				Model: model.NewReflect(n),
-				Query: &storage.QueryCreate{},
-			}
-			Expect(qh.AfterQuery(ctx, qe)).To(BeNil())
+			p := query.NewRetrieve().Model(n).Pack()
+			Expect(qh.AfterQuery(ctx, p)).To(BeNil())
 		})
 	})
 

@@ -1,10 +1,8 @@
 package redis_test
 
 import (
-	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/storage/mock"
-	mock2 "github.com/arya-analytics/aryacore/pkg/util/model/mock"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -33,29 +31,6 @@ var _ = Describe("Redis Engine", func() {
 					e := &mock.MDEngine{}
 					ba := e.NewAdapter()
 					Expect(engine.IsAdapter(ba)).To(BeFalse())
-				})
-			})
-		})
-		Context("Conn", func() {
-			Describe("Binding an invalid adapter", func() {
-				e := &mock.MDEngine{}
-				ba := e.NewAdapter()
-				Expect(func() {
-					engine.NewTSCreate(ba)
-				}).To(Panic())
-			})
-		})
-	})
-	Describe("Catalog", func() {
-		Describe("Contains", func() {
-			Context("Model in catalog", func() {
-				It("Should return true", func() {
-					Expect(engine.ShouldHandle(&models.ChannelSample{})).To(BeTrue())
-				})
-			})
-			Context("Model not in catalog", func() {
-				It("Should return false", func() {
-					Expect(engine.ShouldHandle(&mock2.ModelB{})).To(BeFalse())
 				})
 			})
 		})

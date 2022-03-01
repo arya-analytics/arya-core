@@ -26,6 +26,8 @@
 package storage
 
 import (
+	"context"
+	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/arya-analytics/aryacore/pkg/util/tasks"
 )
 
@@ -57,23 +59,19 @@ import (
 // If you're working on modifying or implementing a new Engine,
 // see Engine and its sub-interfaces.
 type Storage interface {
-	NewCreate() *QueryCreate
-	NewRetrieve() *QueryRetrieve
-	NewUpdate() *QueryUpdate
-	NewDelete() *QueryDelete
+	query.Assemble
+	Exec(ctx context.Context, p *query.Pack) error
 	NewTSRetrieve() *QueryTSRetrieve
 	NewTSCreate() *QueryTSCreate
 	NewMigrate() *QueryMigrate
 	AddQueryHook(hook QueryHook)
 	NewTasks(opts ...tasks.ScheduleOpt) tasks.Schedule
 	hooks() []QueryHook
-	config() Config
-	adapter(e Engine) Adapter
 }
 
 type storage struct {
+	query.AssembleBase
 	cfg        Config
-	pool       *Pool
 	queryHooks []QueryHook
 }
 
@@ -88,32 +86,23 @@ type storage struct {
 // Storage cannot operate without Config.EngineMD,
 // as it relies on this engine to maintain consistency with other engines.
 func New(cfg Config) Storage {
-	return &storage{cfg: cfg, pool: NewPool()}
+	s := &storage{cfg: cfg}
+	s.AssembleBase = query.NewAssemble(s.Exec)
+	return s
+}
+
+func (s *storage) Exec(ctx context.Context, p *query.Pack) error {
+	return query.Switch(ctx, p, query.Ops{
+		Create:   newDef(s).exec,
+		Retrieve: newDef(s).exec,
+		Delete:   newDef(s).exec,
+		Update:   newUpdate(s).exec,
+	})
 }
 
 // NewMigrate opens a new QueryMigrate.
 func (s *storage) NewMigrate() *QueryMigrate {
 	return newMigrate(s)
-}
-
-// NewRetrieve opens a new QueryRetrieve.
-func (s *storage) NewRetrieve() *QueryRetrieve {
-	return newRetrieve(s)
-}
-
-// NewCreate opens a new QueryCreate.
-func (s *storage) NewCreate() *QueryCreate {
-	return newCreate(s)
-}
-
-// NewDelete opens a new QueryDelete.
-func (s *storage) NewDelete() *QueryDelete {
-	return newDelete(s)
-}
-
-// NewUpdate opens a new QueryUpdate.
-func (s *storage) NewUpdate() *QueryUpdate {
-	return newUpdate(s)
 }
 
 // NewTSRetrieve opens a new QueryTSRetrieve.
@@ -127,9 +116,7 @@ func (s *storage) NewTSCreate() *QueryTSCreate {
 }
 
 func (s *storage) NewTasks(opts ...tasks.ScheduleOpt) tasks.Schedule {
-	return tasks.NewScheduleBatch(
-		s.cfg.EngineMD.NewTasks(opts...),
-	)
+	return tasks.NewScheduleBatch(s.cfg.EngineMD.NewTasks(opts...))
 }
 
 func (s *storage) AddQueryHook(hook QueryHook) {
@@ -138,14 +125,6 @@ func (s *storage) AddQueryHook(hook QueryHook) {
 
 func (s *storage) hooks() []QueryHook {
 	return s.queryHooks
-}
-
-func (s *storage) adapter(e Engine) (a Adapter) {
-	return s.pool.Retrieve(e)
-}
-
-func (s *storage) config() Config {
-	return s.cfg
 }
 
 // |||| CONFIG ||||

@@ -8,14 +8,14 @@ import (
 )
 
 type StorageService struct {
-	store storage.Storage
+	storage.Storage
 }
 
 func NewStorageService(store storage.Storage) *StorageService {
-	return &StorageService{store: store}
+	return &StorageService{Storage: store}
 }
 
-func CanHandle(q *query.Pack) bool {
+func (ss *StorageService) CanHandle(q *query.Pack) bool {
 	return model.Catalog{
 		&models.Node{},
 		&models.Range{},

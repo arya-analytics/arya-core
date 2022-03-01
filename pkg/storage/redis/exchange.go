@@ -14,22 +14,22 @@ const (
 	roleValue = "tsValue"
 )
 
-type modelExchange struct {
+type exchange struct {
 	*model.Exchange
 }
 
-func newWrappedModelExchange(sma *model.Exchange) *modelExchange {
-	return &modelExchange{sma}
+func newWrappedExchange(sma *model.Exchange) *exchange {
+	return &exchange{sma}
 }
 
-func (m *modelExchange) samples() (samples []timeseries.Sample) {
+func (m *exchange) samples() (samples []timeseries.Sample) {
 	m.Dest.ForEach(func(rfl *model.Reflect, i int) {
 		samples = append(samples, m.newSampleFromRFL(rfl))
 	})
 	return samples
 }
 
-func (m *modelExchange) seriesNames() (names []string) {
+func (m *exchange) seriesNames() (names []string) {
 	m.Dest.ForEach(func(rfl *model.Reflect, i int) {
 		pk := model.NewPK(keyField(rfl).Interface())
 		names = append(names, pk.String())
@@ -37,7 +37,7 @@ func (m *modelExchange) seriesNames() (names []string) {
 	return names
 }
 
-func (m *modelExchange) bindRes(key string, res interface{}) error {
+func (m *exchange) bindRes(key string, res interface{}) error {
 	resVal := reflect.ValueOf(res)
 	if resVal.Type().Kind() != reflect.Slice {
 		panic("received unknown response from cache")
@@ -72,7 +72,7 @@ func (m *modelExchange) bindRes(key string, res interface{}) error {
 	return nil
 }
 
-func (m *modelExchange) newSampleFromRFL(rfl *model.Reflect) timeseries.Sample {
+func (m *exchange) newSampleFromRFL(rfl *model.Reflect) timeseries.Sample {
 	return timeseries.Sample{
 		Key:       model.NewPK(keyField(rfl).Interface()).String(),
 		Timestamp: stampField(rfl).Interface().(telem.TimeStamp),
@@ -80,13 +80,13 @@ func (m *modelExchange) newSampleFromRFL(rfl *model.Reflect) timeseries.Sample {
 	}
 }
 
-func (m *modelExchange) appendSample(sample timeseries.Sample) {
+func (m *exchange) appendSample(sample timeseries.Sample) {
 	newRfl := m.Dest.NewStruct()
 	m.setFields(newRfl, sample)
 	m.Dest.ChainAppend(newRfl)
 }
 
-func (m *modelExchange) setFields(rfl *model.Reflect, sample timeseries.Sample) {
+func (m *exchange) setFields(rfl *model.Reflect, sample timeseries.Sample) {
 	kf := keyField(rfl)
 	kf.Set(convertKeyString(kf.Type(), sample.Key))
 	stampField(rfl).Set(reflect.ValueOf(sample.Timestamp))

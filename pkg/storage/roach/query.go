@@ -187,9 +187,13 @@ func (e *retrieve) whereFields(p *query.Pack) {
 
 func (e *retrieve) relations(p *query.Pack) {
 	for _, opt := range query.RelationOpts(p) {
-		e.bunQ = e.bunQ.Relation(opt.Rel, func(sq *bun.SelectQuery) *bun.SelectQuery {
-			return sq.Column(e.sql.fieldNames(opt.Fields...)...)
-		})
+		// CLARIFICATION: Still don't know exactly why it needs to be called this way, but it does for the
+		// correct opt to be provided.
+		func(opt query.RelationOpt) {
+			e.bunQ = e.bunQ.Relation(opt.Rel, func(sq *bun.SelectQuery) *bun.SelectQuery {
+				return sq.Column(e.sql.fieldNames(opt.Fields...)...)
+			})
+		}(opt)
 	}
 }
 

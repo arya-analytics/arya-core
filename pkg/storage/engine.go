@@ -23,7 +23,6 @@ type Adapter interface {
 type Engine interface {
 	NewAdapter() Adapter
 	IsAdapter(a Adapter) bool
-	ShouldHandle(model interface{}, flds ...string) bool
 }
 
 // || META DATA ||
@@ -32,6 +31,7 @@ type Engine interface {
 // strongly consistent data across the cluster.
 type EngineMD interface {
 	Engine
+	Exec(ctx context.Context, p *query.Pack) error
 	query.Assemble
 	NewMigrate() QueryMDMigrate
 	NewTasks(opts ...tasks.ScheduleOpt) tasks.Schedule
@@ -42,6 +42,7 @@ type EngineMD interface {
 // EngineObject is responsible for storing chanchunk data to node localstorage data storage.
 type EngineObject interface {
 	Engine
+	Exec(ctx context.Context, p *query.Pack) error
 	query.AssembleCreate
 	query.AssembleRetrieve
 	query.AssembleDelete
@@ -55,9 +56,9 @@ type EngineObject interface {
 type EngineCache interface {
 	Engine
 	// NewTSRetrieve opens a new QueryCacheTSRetrieve.
-	NewTSRetrieve(a Adapter) QueryCacheTSRetrieve
+	NewTSRetrieve() QueryCacheTSRetrieve
 	// NewTSCreate opens a new QueryCacheTSCreate.
-	NewTSCreate(a Adapter) QueryCacheTSCreate
+	NewTSCreate() QueryCacheTSCreate
 }
 
 // |||| QUERY ||||
