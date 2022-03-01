@@ -5,6 +5,7 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/util/caseconv"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
+	"github.com/arya-analytics/aryacore/pkg/util/query"
 	log "github.com/sirupsen/logrus"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/schema"
@@ -55,18 +56,18 @@ func (sg sqlGen) relFldExp(fldName string, fldVal interface{}) (string, []interf
 }
 
 func (sg sqlGen) parseFldExp(fldName string, fldVal interface{}) (string, []interface{}) {
-	exp, ok := fldVal.(model.FieldExp)
+	exp, ok := fldVal.(query.FieldExp)
 	if !ok {
 		return fmt.Sprintf("%s = ?", fldName), []interface{}{fldVal}
 	}
 	switch exp.Op {
-	case model.FieldExpOpInRange:
+	case query.FieldOpInRange:
 		return fmt.Sprintf("%s BETWEEN ? and ?", fldName), exp.Vals
-	case model.FieldExpOpLessThan:
+	case query.FieldOpLessThan:
 		return fmt.Sprintf("%s < ?", fldName), exp.Vals
-	case model.FieldExpOpGreaterThan:
+	case query.FieldOpGreaterThan:
 		return fmt.Sprintf("%s > (?)", fldName), exp.Vals
-	case model.FieldExpOpIn:
+	case query.FieldOpIn:
 		return fmt.Sprintf("%s IN (?)", fldName), []interface{}{bun.In(exp.Vals)}
 	default:
 		log.Warnf("roach sql gen could not parse expression opt %s. attempting equality", exp.Op)

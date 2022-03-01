@@ -9,10 +9,10 @@ import (
 
 var _ = Describe("Retrieve", func() {
 	var (
-		asm query.Assemble
+		exec = &mock.Exec{}
+		asm  = query.NewAssemble(exec.Exec)
 	)
 	BeforeEach(func() {
-		asm = query.NewAssemble(&mock.Exec{})
 	})
 	Describe("Calc", func() {
 		var (

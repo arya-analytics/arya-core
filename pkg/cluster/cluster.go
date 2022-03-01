@@ -2,46 +2,34 @@ package cluster
 
 import (
 	"context"
-	"github.com/arya-analytics/aryacore/pkg/cluster/internal"
+	"github.com/arya-analytics/aryacore/pkg/util/query"
 )
 
 type Service interface {
-	CanHandle(q *internal.QueryRequest) bool
-	Exec(ctx context.Context, q *internal.QueryRequest) error
+	CanHandle(q *query.Pack) bool
+	Exec(ctx context.Context, q *query.Pack) error
 }
 
 type Cluster interface {
+	query.Assemble
 	BindService(s Service)
-	NewCreate() *QueryCreate
-	NewRetrieve() *QueryRetrieve
-	NewUpdate() *QueryUpdate
-	NewDelete() *QueryDelete
 }
 
 type cluster struct {
+	query.AssembleBase
 	svc ServiceChain
 }
 
 func New() Cluster {
-	return &cluster{}
+	c := &cluster{}
+	c.AssembleBase = query.NewAssemble(c.Exec)
+	return c
 }
 
 func (c *cluster) BindService(s Service) {
 	c.svc = append(c.svc, s)
 }
 
-func (c *cluster) NewCreate() *QueryCreate {
-	return newCreate(c.svc)
-}
-
-func (c *cluster) NewRetrieve() *QueryRetrieve {
-	return newRetrieve(c.svc)
-}
-
-func (c *cluster) NewUpdate() *QueryUpdate {
-	return newUpdate(c.svc)
-}
-
-func (c *cluster) NewDelete() *QueryDelete {
-	return newDelete(c.svc)
+func (c *cluster) Exec(ctx context.Context, p *query.Pack) error {
+	return c.svc.Exec(ctx, p)
 }

@@ -2,10 +2,8 @@ package base
 
 import (
 	"context"
-	"github.com/arya-analytics/aryacore/pkg/cluster/internal"
-	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/storage"
-	"github.com/arya-analytics/aryacore/pkg/util/model"
+	"github.com/arya-analytics/aryacore/pkg/util/query"
 )
 
 type Service struct {
@@ -16,82 +14,82 @@ func NewService(s storage.Storage) *Service {
 	return &Service{storage: s}
 }
 
-func (s *Service) CanHandle(qr *internal.QueryRequest) bool {
-	return catalog().Contains(qr.Model.Pointer())
+func (s *Service) CanHandle(p *query.Pack) bool {
+	return catalog().Contains(p.Model().Pointer())
 }
 
-func (s *Service) Exec(ctx context.Context, qr *internal.QueryRequest) error {
-	return internal.SwitchQueryRequestVariant(
+func (s *Service) Exec(ctx context.Context, p *query.Pack) error {
+	return query.Switch(
 		ctx,
-		qr,
-		internal.QueryRequestVariantOperations{
-			internal.QueryVariantCreate:   s.create,
-			internal.QueryVariantRetrieve: s.retrieve,
-			internal.QueryVariantUpdate:   s.update,
-			internal.QueryVariantDelete:   s.delete,
+		p,
+		query.Ops{
+			Create:   s.create,
+			Retrieve: s.retrieve,
+			Update:   s.update,
+			Delete:   s.delete,
 		})
 }
 
-func (s *Service) create(ctx context.Context, qr *internal.QueryRequest) error {
-	q := s.storage.NewCreate().Model(qr.Model.Pointer())
+func (s *Service) create(ctx context.Context, p *query.Pack) error {
+	q := s.storage.NewCreate().Model(p.Model().Pointer())
 	return q.Exec(ctx)
 }
 
-func (s *Service) retrieve(ctx context.Context, qr *internal.QueryRequest) error {
-	q := s.storage.NewRetrieve().Model(qr.Model.Pointer())
+func (s *Service) retrieve(ctx context.Context, p *query.Pack) error {
+	q := s.storage.NewRetrieve().Model(p.Model().Pointer())
 
 	// PK
 
-	PKC, ok := internal.PKQueryOpt(qr)
+	PKC, ok := query.PKOpt(p)
 	if ok {
 		q = q.WherePKs(PKC.Raw())
 	}
 
 	// WHERE FIELDS
 
-	wFlds, ok := internal.WhereFieldsQueryOpt(qr)
+	wFlds, ok := query.WhereFieldsOpt(p)
 	if ok {
 		q = q.WhereFields(wFlds)
 	}
 
 	// FIELDS
 
-	flds, ok := internal.RetrieveFieldsQueryOpt(qr)
+	flds, ok := query.RetrieveFieldsOpt(p)
 	if ok {
 		q = q.Fields(flds...)
 	}
 
 	// RELATIONS
 
-	for _, rel := range internal.RelationQueryOpts(qr) {
+	for _, rel := range query.RelationOpts(p) {
 		q = q.Relation(rel.Rel, rel.Fields...)
 	}
 
 	// CALCULATIONS
 
-	calc, ok := internal.RetrieveCalculateQueryOpt(qr)
-	if ok {
-		q = q.Calculate(calc.C, calc.FldName, calc.Into)
-	}
+	//calc, ok := query.RetrieveCalcOpt(p)
+	//if ok {
+	//	q = q.Calculate(calc.Op, calc.FldName, calc.Into)
+	//}
 
 	return q.Exec(ctx)
 }
 
-func (s *Service) delete(ctx context.Context, qr *internal.QueryRequest) error {
-	q := s.storage.NewDelete().Model(qr.Model.Pointer())
-	PKC, ok := internal.PKQueryOpt(qr)
+func (s *Service) delete(ctx context.Context, p *query.Pack) error {
+	q := s.storage.NewDelete().Model(p.Model().Pointer())
+	PKC, ok := query.PKOpt(p)
 	if ok {
 		q = q.WherePKs(PKC.Raw())
 	}
 	return q.Exec(ctx)
 }
 
-func (s *Service) update(ctx context.Context, qr *internal.QueryRequest) error {
-	q := s.storage.NewUpdate().Model(qr.Model.Pointer())
+func (s *Service) update(ctx context.Context, p *query.Pack) error {
+	q := s.storage.NewUpdate().Model(p.Model().Pointer())
 
 	// PK
 
-	PKC, ok := internal.PKQueryOpt(qr)
+	PKC, ok := query.PKOpt(p)
 	if len(PKC) > 1 {
 		panic("update queries can't have more than one pk!")
 	}
@@ -101,28 +99,17 @@ func (s *Service) update(ctx context.Context, qr *internal.QueryRequest) error {
 
 	// FIELDS
 
-	flds, ok := internal.RetrieveFieldsQueryOpt(qr)
+	flds, ok := query.RetrieveFieldsOpt(p)
 	if ok {
 		q = q.Fields(flds...)
 	}
 
 	// BULK
 
-	bulkOpt := internal.BulkUpdateQueryOpt(qr)
+	bulkOpt := query.BulkUpdateOpt(p)
 	if bulkOpt {
 		q = q.Bulk()
 	}
 
 	return q.Exec(ctx)
-}
-
-func catalog() model.Catalog {
-	return model.Catalog{
-		&models.Node{},
-		&models.Range{},
-		&models.RangeReplica{},
-		&models.RangeLease{},
-		&models.ChannelConfig{},
-		&models.ChannelChunk{},
-	}
 }

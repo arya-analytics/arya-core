@@ -26,6 +26,13 @@ func (u *Update) WherePK(pk interface{}) *Update {
 	return u
 }
 
+// || FIELDS ||
+
+func (u *Update) Fields(flds ...string) *Update {
+	newFieldsOpt(u.Pack(), flds...)
+	return u
+}
+
 // || BULK ||
 
 func (u *Update) Bulk() *Update {

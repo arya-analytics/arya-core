@@ -10,7 +10,8 @@ import (
 )
 
 var _ = Describe("Base", func() {
-	var asm = query.NewAssemble(&mock.Exec{})
+	var exec = &mock.Exec{}
+	var asm = query.NewAssemble(exec.Exec)
 	Describe("Common Query Functionality", func() {
 		DescribeTable("Model",
 			func(q query.Query) {

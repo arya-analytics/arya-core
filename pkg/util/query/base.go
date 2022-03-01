@@ -34,5 +34,5 @@ func (b *base) baseBindExec(e Execute) {
 }
 
 func (b *base) Exec(ctx context.Context) error {
-	return b.e.Exec(ctx, b.Pack())
+	return b.e(ctx, b.Pack())
 }

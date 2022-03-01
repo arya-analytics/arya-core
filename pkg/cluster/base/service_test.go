@@ -2,9 +2,9 @@ package base_test
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/cluster/base"
-	"github.com/arya-analytics/aryacore/pkg/cluster/internal"
 	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
+	"github.com/arya-analytics/aryacore/pkg/util/query"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -26,8 +26,8 @@ var _ = Describe("Service", func() {
 				&models.ChannelConfig{},
 			}
 			for _, m := range validModels {
-				qr := internal.NewQueryRequest(internal.QueryVariantRetrieve, model.NewReflect(m))
-				Expect(svc.CanHandle(qr)).To(BeTrue())
+				p := query.NewQueryRequest(query.VariantRetrieve, model.NewReflect(m))
+				Expect(svc.CanHandle(p)).To(BeTrue())
 			}
 		})
 	})
@@ -49,49 +49,49 @@ var _ = Describe("Service", func() {
 				By("Creating the node")
 				nodeRfl := model.NewReflect(node)
 				ccRfl := model.NewReflect(channelConfig)
-				nodeCreateQR := internal.NewQueryRequest(internal.QueryVariantCreate, nodeRfl)
+				nodeCreateQR := query.NewQueryRequest(query.VariantCreate, nodeRfl)
 				Expect(svc.Exec(ctx, nodeCreateQR)).To(BeNil())
 				By("Creating the channel config")
-				ccCreateQR := internal.NewQueryRequest(internal.QueryVariantCreate, ccRfl)
+				ccCreateQR := query.NewQueryRequest(query.VariantCreate, ccRfl)
 				Expect(svc.Exec(ctx, ccCreateQR)).To(BeNil())
 
 				// Update
 				channelConfig.Name = "Cool Name"
-				ccUpdateQR := internal.NewQueryRequest(internal.QueryVariantUpdate, ccRfl)
-				internal.NewPKQueryOpt(ccUpdateQR, channelConfig.ID)
+				ccUpdateQR := query.NewQueryRequest(query.VariantUpdate, ccRfl)
+				query.newPKOpt(ccUpdateQR, channelConfig.ID)
 				Expect(svc.Exec(ctx, ccUpdateQR)).To(BeNil())
 
 				// Retrieve
 				By("Retrieving the channel config by PK")
 				ccRetrieveByPKRes := &models.ChannelConfig{}
 				ccRetrieveByPKResRfl := model.NewReflect(ccRetrieveByPKRes)
-				ccRetrieveByPKQR := internal.NewQueryRequest(internal.QueryVariantRetrieve, ccRetrieveByPKResRfl)
-				internal.NewPKQueryOpt(ccRetrieveByPKQR, channelConfig.ID)
-				internal.NewFieldsQueryOpt(ccRetrieveByPKQR, "ID", "Name", "NodeID", "DataRate")
-				internal.NewRelationQueryOpt(ccRetrieveByPKQR, "Node", "ID")
+				ccRetrieveByPKQR := query.NewQueryRequest(query.VariantRetrieve, ccRetrieveByPKResRfl)
+				query.newPKOpt(ccRetrieveByPKQR, channelConfig.ID)
+				query.newFieldsOpt(ccRetrieveByPKQR, "ID", "Name", "NodeID", "DataRate")
+				query.newRelationOpt(ccRetrieveByPKQR, "Node", "ID")
 				Expect(svc.Exec(ctx, ccRetrieveByPKQR)).To(BeNil())
 				Expect(ccRetrieveByPKResRfl.PK().Raw()).To(Equal(channelConfig.ID))
 				Expect(ccRetrieveByPKRes.Node.ID).To(Equal(node.ID))
 
 				By("Retrieving the channel config by the node PK")
 				ccRetrieveByNodeIDResRfl := model.NewReflect(&models.ChannelConfig{})
-				ccRetrieveByNodeIDQR := internal.NewQueryRequest(internal.QueryVariantRetrieve, ccRetrieveByNodeIDResRfl)
-				internal.NewWhereFieldsQueryOpt(ccRetrieveByNodeIDQR, model.WhereFields{"Node.ID": 1})
+				ccRetrieveByNodeIDQR := query.NewQueryRequest(query.VariantRetrieve, ccRetrieveByNodeIDResRfl)
+				query.newWhereFieldsOpt(ccRetrieveByNodeIDQR, model.WhereFields{"Node.ID": 1})
 				Expect(svc.Exec(ctx, ccRetrieveByNodeIDQR)).To(BeNil())
 				Expect(ccRetrieveByNodeIDResRfl.PK().Raw()).To(Equal(channelConfig.ID))
 
 				By("Deleting the channel config")
-				ccDeleteQR := internal.NewQueryRequest(internal.QueryVariantDelete, ccRfl)
-				internal.NewPKQueryOpt(ccDeleteQR, channelConfig.ID)
+				ccDeleteQR := query.NewQueryRequest(query.VariantDelete, ccRfl)
+				query.newPKOpt(ccDeleteQR, channelConfig.ID)
 				Expect(svc.Exec(ctx, ccDeleteQR)).To(BeNil())
 				By("Deleting the node")
-				nodeDeleteQR := internal.NewQueryRequest(internal.QueryVariantDelete, nodeRfl)
-				internal.NewPKQueryOpt(nodeDeleteQR, node.ID)
+				nodeDeleteQR := query.NewQueryRequest(query.VariantDelete, nodeRfl)
+				query.newPKOpt(nodeDeleteQR, node.ID)
 				Expect(svc.Exec(ctx, nodeDeleteQR)).To(BeNil())
 			})
 		})
 	})
-	Describe("Retrieve Query", func() {
+	Describe("Retrieve Pack", func() {
 		Context("By primary key", func() {})
 	})
 

@@ -5,12 +5,13 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
+	"github.com/arya-analytics/aryacore/pkg/util/query"
 )
 
 type LocalRetrieveOpts struct {
 	PKC           model.PKChain
 	Fields        []string
-	WhereFields   model.WhereFields
+	WhereFields   query.WhereFields
 	NodeRelations bool
 }
 

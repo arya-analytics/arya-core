@@ -19,10 +19,11 @@ var _ = Describe("Where", func() {
 		Entry("In", query.In(1, 2, 3), query.FieldOpIn, []interface{}{1, 2, 3}),
 	)
 	Describe("Opt Binding", func() {
-		var asm query.Assemble
-		BeforeEach(func() {
-			asm = query.NewAssemble(&mock.Exec{})
-		})
+
+		var (
+			exec = &mock.Exec{}
+			asm  = query.NewAssemble(exec.Exec)
+		)
 		Describe("Primary Keys", func() {
 			It("Should create the correct pk opt", func() {
 				p := asm.NewRetrieve().WherePK(123).Pack()

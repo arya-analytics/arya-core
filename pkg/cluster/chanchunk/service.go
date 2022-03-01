@@ -2,10 +2,10 @@ package chanchunk
 
 import (
 	"context"
-	"github.com/arya-analytics/aryacore/pkg/cluster/internal"
 	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/util/errutil"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
+	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/arya-analytics/aryacore/pkg/util/route"
 	log "github.com/sirupsen/logrus"
 )
@@ -19,16 +19,16 @@ func NewService(local Local, remote ServiceRemote) *Service {
 	return &Service{remote: remote, local: local}
 }
 
-func (s *Service) CanHandle(q *internal.QueryRequest) bool {
-	return catalog().Contains(q.Model.Pointer())
+func (s *Service) CanHandle(p *query.Pack) bool {
+	return catalog().Contains(p.Model().Pointer())
 }
 
-func (s *Service) Exec(ctx context.Context, qr *internal.QueryRequest) error {
-	return internal.SwitchQueryRequestVariant(ctx, qr, internal.QueryRequestVariantOperations{
-		internal.QueryVariantCreate:   s.createReplica,
-		internal.QueryVariantRetrieve: s.retrieveReplica,
-		internal.QueryVariantDelete:   s.deleteReplica,
-		internal.QueryVariantUpdate:   s.updateReplica,
+func (s *Service) Exec(ctx context.Context, p *query.Pack) error {
+	return query.Switch(ctx, p, query.Ops{
+		Create:   s.createReplica,
+		Retrieve: s.retrieveReplica,
+		Delete:   s.deleteReplica,
+		Update:   s.updateReplica,
 	})
 }
 
@@ -41,19 +41,19 @@ const (
 	NodeField           = "RangeReplica.Node"
 )
 
-func (s *Service) createReplica(ctx context.Context, qr *internal.QueryRequest) error {
+func (s *Service) createReplica(ctx context.Context, p *query.Pack) error {
 	// CLARIFICATION: Retrieves information about the rng replicas and nodes model belongs to.
-	// It will bind the results to qr.Model itself.
+	// It will bind the results to p.Model itself.
 	if err := s.local.RetrieveRangeReplica(
 		ctx,
-		qr.Model.FieldsByName(RangeReplicaField).ToReflect().Pointer(),
-		qr.Model.FieldsByName(RangeReplicaIDField).ToPKChain(),
+		p.Model().FieldsByName(RangeReplicaField).ToReflect().Pointer(),
+		p.Model().FieldsByName(RangeReplicaIDField).ToPKChain(),
 	); err != nil {
 		return err
 	}
 	// CLARIFICATION: Now that we have the RangeReplicas.Node.IsHost field populated, we can switch on it.
 	return replicaNodeIsHostSwitch(
-		qr.Model,
+		p.Model(),
 		func(m *model.Reflect) error { return s.local.Create(ctx, m.Pointer()) },
 		func(m *model.Reflect) error { return s.remote.Create(ctx, remCreateOpts(m)) },
 	)
@@ -67,26 +67,26 @@ func retrieveRequiredFields() []string {
 	return []string{"ID", "ChannelChunkID", "RangeReplicaID"}
 }
 
-func (s *Service) retrieveReplica(ctx context.Context, qr *internal.QueryRequest) error {
+func (s *Service) retrieveReplica(ctx context.Context, p *query.Pack) error {
 	baseOpts := LocalRetrieveOpts{NodeRelations: true, Fields: retrieveRequiredFields()}
-	PKC, pkOK := internal.PKQueryOpt(qr)
+	PKC, pkOK := query.PKOpt(p)
 	if pkOK {
 		baseOpts.PKC = PKC
 	}
 
-	whereFldsOpt, whereFldsOK := internal.WhereFieldsQueryOpt(qr)
+	whereFldsOpt, whereFldsOK := query.WhereFieldsOpt(p)
 	if whereFldsOK {
 		baseOpts.WhereFields = whereFldsOpt
 	}
 
-	fldsOpt, fldsOptOK := internal.RetrieveFieldsQueryOpt(qr)
+	fldsOpt, fldsOptOK := query.RetrieveFieldsOpt(p)
 	if fldsOptOK {
 		baseOpts.Fields = fldsOpt.AllExcept(BulkTelemField).Append(retrieveRequiredFields()...)
 	}
 
 	// CLARIFICATION: Retrieves information about the rng replicas and nodes model belongs to.
-	// It will bind the results to qr.Model itself.
-	if err := s.local.Retrieve(ctx, qr.Model.Pointer(), baseOpts); err != nil {
+	// It will bind the results to p .Model itself.
+	if err := s.local.Retrieve(ctx, p.Model().Pointer(), baseOpts); err != nil {
 		return err
 	}
 
@@ -98,7 +98,7 @@ func (s *Service) retrieveReplica(ctx context.Context, qr *internal.QueryRequest
 
 	// CLARIFICATION: Now that we have the RangeReplicas.Node.IsHost field populated, we can switch on it.
 	return replicaNodeIsHostSwitch(
-		qr.Model,
+		p.Model(),
 		func(m *model.Reflect) error {
 			return s.local.Retrieve(ctx, m.Pointer(), LocalRetrieveOpts{PKC: m.PKChain()})
 		},
@@ -106,43 +106,43 @@ func (s *Service) retrieveReplica(ctx context.Context, qr *internal.QueryRequest
 	)
 }
 
-func (s *Service) deleteReplica(ctx context.Context, qr *internal.QueryRequest) error {
-	PKC, ok := internal.PKQueryOpt(qr)
+func (s *Service) deleteReplica(ctx context.Context, p *query.Pack) error {
+	PKC, ok := query.PKOpt(p)
 	if !ok {
 		panic("delete queries require a primary key!")
 	}
 	// CLARIFICATION: Retrieves information about the rng replicas and nodes model belongs to.
-	// It will bind the results to qr.Model itself.
-	if err := s.local.Retrieve(ctx, qr.Model.Pointer(), LocalRetrieveOpts{PKC: PKC, NodeRelations: true}); err != nil {
+	// It will bind the results to p .Model itself.
+	if err := s.local.Retrieve(ctx, p.Model().Pointer(), LocalRetrieveOpts{PKC: PKC, NodeRelations: true}); err != nil {
 		return err
 	}
 	// CLARIFICATION: Now that we have the RangeReplicas.Node.IsHost field populated, we can switch on it.
 	return replicaNodeIsHostSwitch(
-		qr.Model,
+		p.Model(),
 		func(m *model.Reflect) error { return s.local.Delete(ctx, LocalDeleteOpts{m.PKChain()}) },
 		func(m *model.Reflect) error { return s.remote.Delete(ctx, remDeleteOpts(m)) },
 	)
 }
 
-func (s *Service) updateReplica(ctx context.Context, qr *internal.QueryRequest) error {
-	opts := LocalUpdateOpts{Bulk: internal.BulkUpdateQueryOpt(qr)}
-	PKC, pkOk := internal.PKQueryOpt(qr)
+func (s *Service) updateReplica(ctx context.Context, p *query.Pack) error {
+	opts := LocalUpdateOpts{Bulk: query.BulkUpdateOpt(p)}
+	PKC, pkOk := query.PKOpt(p)
 	if pkOk {
 		if len(PKC) > 1 {
 			panic("update queries can't have more than one primary key")
 		}
 		opts.PK = PKC[0]
 	}
-	fieldsOpt, ok := internal.RetrieveFieldsQueryOpt(qr)
+	fieldsOpt, ok := query.RetrieveFieldsOpt(p)
 	if ok {
 		opts.Fields = fieldsOpt
 	}
-	if !qr.Model.FieldsByName("Telem").AllNonZero() {
+	if !p.Model().FieldsByName("Telem").AllNonZero() {
 		log.
-			WithFields(log.Fields{"ID": qr.Model.PKChain().Raw()}).
+			WithFields(log.Fields{"ID": p.Model().PKChain().Raw()}).
 			Warn("can't perform update on replica's telemetry, but was still specified!")
 	}
-	return s.local.Update(ctx, qr.Model.Pointer(), opts)
+	return s.local.Update(ctx, p.Model().Pointer(), opts)
 }
 
 // |||| ROUTING ||||

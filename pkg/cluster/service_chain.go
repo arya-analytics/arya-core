@@ -2,15 +2,15 @@ package cluster
 
 import (
 	"context"
-	"github.com/arya-analytics/aryacore/pkg/cluster/internal"
+	"github.com/arya-analytics/aryacore/pkg/util/query"
 )
 
 type ServiceChain []Service
 
-func (sc ServiceChain) Exec(ctx context.Context, qr *internal.QueryRequest) error {
+func (sc ServiceChain) Exec(ctx context.Context, p *query.Pack) error {
 	for _, s := range sc {
-		if s.CanHandle(qr) {
-			return s.Exec(ctx, qr)
+		if s.CanHandle(p) {
+			return s.Exec(ctx, p)
 		}
 	}
 	panic("no service could handle the request!")

@@ -12,7 +12,8 @@ var _ = Describe("Fields", func() {
 		asm query.Assemble
 	)
 	BeforeEach(func() {
-		asm = query.NewAssemble(&mock.Exec{})
+		exec := &mock.Exec{}
+		asm = query.NewAssemble(exec.Exec)
 	})
 	Describe("FieldsOpt", func() {
 		var (

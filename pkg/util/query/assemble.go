@@ -1,25 +1,32 @@
 package query
 
-type Assemble struct {
+type Assemble interface {
+	NewCreate() *Create
+	NewRetrieve() *Retrieve
+	NewUpdate() *Update
+	NewDelete() *Delete
+}
+
+type AssembleBase struct {
 	e Execute
 }
 
-func NewAssemble(e Execute) Assemble {
-	return Assemble{e}
+func NewAssemble(e Execute) AssembleBase {
+	return AssembleBase{e}
 }
 
-func (a Assemble) NewCreate() *Create {
+func (a AssembleBase) NewCreate() *Create {
 	return NewCreate().BindExec(a.e)
 }
 
-func (a Assemble) NewRetrieve() *Retrieve {
+func (a AssembleBase) NewRetrieve() *Retrieve {
 	return NewRetrieve().BindExec(a.e)
 }
 
-func (a Assemble) NewUpdate() *Update {
+func (a AssembleBase) NewUpdate() *Update {
 	return NewUpdate().BindExec(a.e)
 }
 
-func (a Assemble) NewDelete() *Delete {
+func (a AssembleBase) NewDelete() *Delete {
 	return NewDelete().BindExec(a.e)
 }

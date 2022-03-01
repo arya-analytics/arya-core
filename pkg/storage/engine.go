@@ -2,7 +2,7 @@ package storage
 
 import (
 	"context"
-	"github.com/arya-analytics/aryacore/pkg/util/model"
+	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/arya-analytics/aryacore/pkg/util/tasks"
 	"github.com/google/uuid"
 )
@@ -105,7 +105,7 @@ type QueryMDRetrieve interface {
 	Relation(rel string, fields ...string) QueryMDRetrieve
 	Fields(fields ...string) QueryMDRetrieve
 	Calculate(c Calculate, fldName string, into interface{}) QueryMDRetrieve
-	WhereFields(flds model.WhereFields) QueryMDRetrieve
+	WhereFields(flds query.WhereFields) QueryMDRetrieve
 	Count(ctx context.Context) (int, error)
 }
 

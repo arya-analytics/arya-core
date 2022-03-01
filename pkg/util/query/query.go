@@ -2,6 +2,7 @@ package query
 
 import (
 	"context"
+	"fmt"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 )
 
@@ -33,4 +34,28 @@ func (q *Pack) Model() *model.Reflect {
 
 func (q *Pack) Query() Query {
 	return q.query
+}
+
+// |||| SWITCH ||||
+
+type Ops struct {
+	Create   Execute
+	Retrieve Execute
+	Delete   Execute
+	Update   Execute
+}
+
+func Switch(ctx context.Context, p *Pack, ops Ops) error {
+	switch p.Query().(type) {
+	case *Create:
+		return ops.Create(ctx, p)
+	case *Retrieve:
+		return ops.Retrieve(ctx, p)
+	case *Update:
+		return ops.Update(ctx, p)
+	case *Delete:
+		return ops.Delete(ctx, p)
+	default:
+		panic(fmt.Sprintf("%T not supported for model %s", p.Query(), p.Model().Type().Name()))
+	}
 }

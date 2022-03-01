@@ -7,6 +7,7 @@ import (
 	clustermock "github.com/arya-analytics/aryacore/pkg/cluster/mock"
 	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
+	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	mockTlm "github.com/arya-analytics/aryacore/pkg/util/telem/mock"
 	"github.com/google/uuid"
@@ -137,7 +138,7 @@ var _ = Describe("Service", func() {
 			cErr := clust.NewCreate().Model(ccr).Exec(ctx)
 			Expect(cErr).To(BeNil())
 			resCCR := &models.ChannelChunkReplica{}
-			rErr := clust.NewRetrieve().Model(resCCR).WhereFields(model.WhereFields{"ID": ccr.ID}).Fields("ID").Exec(ctx)
+			rErr := clust.NewRetrieve().Model(resCCR).WhereFields(query.WhereFields{"ID": ccr.ID}).Fields("ID").Exec(ctx)
 			Expect(rErr).To(BeNil())
 			Expect(resCCR.ID).To(Equal(ccr.ID))
 			Expect(resCCR.Telem).To(BeNil())

@@ -14,7 +14,7 @@ var _ = Describe("Update", func() {
 	)
 	BeforeEach(func() {
 		exec = &mock.Exec{}
-		asm = query.NewAssemble(exec)
+		asm = query.NewAssemble(exec.Exec)
 	})
 	Describe("Bulk", func() {
 		It("Should set the bulk update opt correctly", func() {

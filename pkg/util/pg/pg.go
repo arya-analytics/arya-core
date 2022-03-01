@@ -22,7 +22,7 @@ var _errClasses = map[string]ErrorType{
 	"0B": ErrorTypeInvalidTransaction,
 	"0F": ErrorTypeLocator,
 	"0L": ErrorTypeGrantor,
-	"OP": ErrorTypeInvalidRoleSpec,
+	"Op": ErrorTypeInvalidRoleSpec,
 	"0Z": ErrorTypeDiagnosticsException,
 	"20": ErrorTypeCaseNotFound,
 	"21": ErrorTypeCardinalityViolation,

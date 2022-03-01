@@ -2,6 +2,4 @@ package query
 
 import "context"
 
-type Execute interface {
-	Exec(ctx context.Context, q *Pack) error
-}
+type Execute func(ctx context.Context, p *Pack) error

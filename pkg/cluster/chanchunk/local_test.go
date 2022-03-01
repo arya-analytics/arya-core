@@ -4,6 +4,7 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/cluster/chanchunk"
 	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
+	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
@@ -82,7 +83,7 @@ var _ = Describe("Local", func() {
 			}
 			Expect(localSvc.Update(ctx, &updateCCR, opts)).To(BeNil())
 			resCCR := &models.ChannelChunkReplica{}
-			rOpts := chanchunk.LocalRetrieveOpts{WhereFields: model.WhereFields{"RangeReplicaID": newRR.ID}}
+			rOpts := chanchunk.LocalRetrieveOpts{WhereFields: query.WhereFields{"RangeReplicaID": newRR.ID}}
 			Expect(localSvc.Retrieve(ctx, resCCR, rOpts)).To(BeNil())
 			Expect(resCCR.ID).To(Equal(ccr.ID))
 		})
