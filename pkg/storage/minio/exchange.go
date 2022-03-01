@@ -14,31 +14,28 @@ type dataValue struct {
 
 type dataValueChain []*dataValue
 
-type modelExchange struct {
+type exchange struct {
 	*model.Exchange
 }
 
-func newWrappedModelExchange(sma *model.Exchange) *modelExchange {
-	return &modelExchange{sma}
+func newWrappedExchange(sma *model.Exchange) *exchange {
+	return &exchange{sma}
 }
 
-func (m *modelExchange) Bucket() string {
+func (m *exchange) bucket() string {
 	return caseconv.PascalToKebab(m.Dest.Type().Name())
 }
 
-func (m *modelExchange) DataVals() dataValueChain {
+func (m *exchange) dataVals() dataValueChain {
 	var c dataValueChain
 	m.Dest.ForEach(func(rfl *model.Reflect, i int) {
 		data := rfl.StructFieldByRole("telemChunkData")
-		c = append(c, &dataValue{
-			PK:   rfl.PK(),
-			Data: data.Interface().(*telem.ChunkData),
-		})
+		c = append(c, &dataValue{PK: rfl.PK(), Data: data.Interface().(*telem.ChunkData)})
 	})
 	return c
 }
 
-func (m *modelExchange) BindDataVals(dvc dataValueChain) {
+func (m *exchange) bindDataVals(dvc dataValueChain) {
 	for _, dv := range dvc {
 		rfl, ok := m.Dest.ValueByPK(dv.PK)
 		if !ok {

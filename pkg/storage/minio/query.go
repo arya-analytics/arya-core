@@ -13,7 +13,7 @@ import (
 
 type base struct {
 	client *minio.Client
-	exc    *modelExchange
+	exc    *exchange
 }
 
 type create struct {
@@ -57,7 +57,7 @@ func newMigrate(client *minio.Client) *migrate {
 // |||| BASE ||||
 
 func (b *base) bucket() string {
-	return b.exc.Bucket()
+	return b.exc.bucket()
 }
 
 func (b *base) exchangeToSource() {
@@ -73,7 +73,7 @@ func (b *base) exchangeToDest() {
 func (c *create) exec(ctx context.Context, p *query.Pack) error {
 	c.convertOpts(p)
 	c.exchangeToDest()
-	for _, dv := range c.exc.DataVals() {
+	for _, dv := range c.exc.dataVals() {
 		if dv.Data == nil {
 			return storage.Error{
 				Type:    storage.ErrorTypeInvalidArgs,
@@ -125,22 +125,22 @@ func (r *retrieve) exec(ctx context.Context, p *query.Pack) error {
 		}
 		dvc = append(dvc, &dataValue{PK: pk, Data: bulk})
 	}
-	r.exc.BindDataVals(dvc)
+	r.exc.bindDataVals(dvc)
 	r.exchangeToSource()
 	return nil
 }
 
 func (m *migrate) Exec(ctx context.Context) error {
 	for _, mod := range catalog() {
-		me := newWrappedModelExchange(model.NewExchange(mod, mod))
-		bucketExists, err := m.client.BucketExists(ctx, me.Bucket())
+		me := newWrappedExchange(model.NewExchange(mod, mod))
+		bucketExists, err := m.client.BucketExists(ctx, me.bucket())
 		if err != nil {
 			return newErrorHandler().Exec(err)
 		}
 		if bucketExists {
 			break
 		}
-		if mErr := m.client.MakeBucket(ctx, me.Bucket(), minio.MakeBucketOptions{}); mErr != nil {
+		if mErr := m.client.MakeBucket(ctx, me.bucket(), minio.MakeBucketOptions{}); mErr != nil {
 			return newErrorHandler().Exec(mErr)
 		}
 	}
@@ -165,7 +165,7 @@ func (r *retrieve) convertOpts(p *query.Pack) {
 
 func (b *base) model(p *query.Pack) {
 	ptr := p.Model().Pointer()
-	b.exc = newWrappedModelExchange(model.NewExchange(ptr, catalog().New(ptr)))
+	b.exc = newWrappedExchange(model.NewExchange(ptr, catalog().New(ptr)))
 }
 
 // |||| PK ||||
@@ -180,8 +180,8 @@ func (w *where) pk(p *query.Pack) {
 
 func (m *migrate) Verify(ctx context.Context) error {
 	for _, mod := range catalog() {
-		me := newWrappedModelExchange(model.NewExchange(mod, mod))
-		exists, err := m.client.BucketExists(ctx, me.Bucket())
+		me := newWrappedExchange(model.NewExchange(mod, mod))
+		exists, err := m.client.BucketExists(ctx, me.bucket())
 		if err != nil {
 			return err
 		}
