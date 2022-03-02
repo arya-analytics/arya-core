@@ -31,6 +31,7 @@ var _ = Describe("Chunk", func() {
 				telem.DataTypeFloat32,
 				telem.DataRate(25),
 				telem.NewTimeSpan(30*time.Second),
+				telem.TimeSpan(0),
 			)
 			Expect(cc).To(HaveLen(5))
 			Expect(cc[0].Start()).To(Equal(telem.TimeStamp(0)))

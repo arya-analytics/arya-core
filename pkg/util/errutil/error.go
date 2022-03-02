@@ -6,6 +6,7 @@ type Catch interface {
 	Exec(actionFunc CatchAction)
 	Error() error
 	Errors() []error
+	Reset()
 }
 
 // |||| SIMPLE CATCH ||||
@@ -77,4 +78,8 @@ func (c *CatchAggregate) Error() error {
 
 func (c *CatchAggregate) Errors() []error {
 	return c.errors
+}
+
+func (c *CatchAggregate) Reset() {
+	c.errors = []error{}
 }

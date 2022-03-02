@@ -97,12 +97,12 @@ func (qsc *QueryStreamCreate) Errors() chan error {
 
 func (qsc *QueryStreamCreate) listen() {
 	for args := range qsc.stream {
-		c := errutil.NewCatchWCtx(qsc.ctx)
-		alloc := qsc.rngSvc.NewAllocate()
+		c, alloc := errutil.NewCatchWCtx(qsc.ctx), qsc.rngSvc.NewAllocate()
 		cc := &models.ChannelChunk{ID: uuid.New(), ChannelConfigID: qsc.config().ID}
 		ccr := &models.ChannelChunkReplica{ID: uuid.New(), ChannelChunkID: cc.ID, Telem: args.data}
 
 		c.Exec(alloc.Chunk(qsc.config().NodeID, cc).Exec)
+
 		c.Exec(alloc.ChunkReplica(ccr).Exec)
 
 		nextChunk := telem.NewChunk(args.startTS, qsc.config().DataType, qsc.config().DataRate, args.data)
@@ -117,7 +117,6 @@ func (qsc *QueryStreamCreate) listen() {
 		if c.Error() != nil {
 			qsc.Errors() <- c.Error()
 		}
-
 		qsc.setPrevChunk(nextChunk)
 	}
 	qsc.doneChan <- io.EOF

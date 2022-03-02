@@ -20,15 +20,17 @@ func NewResolve[T any](actions []func(err error, args T) (bool, error), rOpts ..
 	for _, opt := range rOpts {
 		opt(re.opts)
 	}
+	if re.opts.aggregate {
+		re.catch = &errutil.CatchAggregate{}
+	} else {
+		re.catch = &errutil.CatchSimple{}
+	}
 	return re
 }
 
 func (re *Resolve[T]) Exec(err error, args T) *Resolve[T] {
 	re.sourceErr = err
-	re.catch = &errutil.CatchSimple{}
-	if re.opts.aggregate {
-		re.catch = &errutil.CatchAggregate{}
-	}
+	re.catch.Reset()
 	for _, action := range re.actions {
 		re.catch.Exec(func() (cErr error) {
 			re.handled, cErr = action(err, args)
