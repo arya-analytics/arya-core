@@ -34,18 +34,30 @@ func (s *Service) Exec(ctx context.Context, p *query.Pack) error {
 
 // |||| REPLICA ||||
 
+// Abbreviation reminder:
+// RR - Range Replica
+// CCR - Channel Chunk Replica
 const (
-	RangeReplicaIDField = "RangeReplicaID"
-	RangeReplicaField   = "RangeReplica"
-	NodeIsHostField     = "RangeReplica.Node.IsHost"
-	NodeField           = "RangeReplica.Node"
+	ccrFieldRRID       = "RangeReplicaID"
+	ccrFieldRR         = "RangeReplica"
+	rrRelNode          = "Node"
+	ccrFieldNodeIsHost = "RangeReplica.Node.IsHost"
+	ccrRelNode         = "RangeReplica.Node"
+	ccrTelemField      = "Telem"
 )
+
+// These are the fields we need to make a remote/local decision and send a request.
+func nodeFields() []string {
+	return []string{"ID", "Address", "IsHost", "RPCPort"}
+
+}
 
 func retrieveRRQuery(m *model.Reflect) query.Query {
 	return query.NewRetrieve().
-		Model(m.FieldsByName(RangeReplicaField).ToReflect().Pointer()).
-		Relation("Node", "ID", "Address", "IsHost", "RPCPort").
-		WherePKs(m.FieldsByName(RangeReplicaIDField).ToPKChain().Raw())
+		Model(m.FieldsByName(ccrFieldRR).ToReflect()).
+		// These are the fields we need to make a remote/local decision and send a request.
+		Relation(rrRelNode, nodeFields()...).
+		WherePKs(m.FieldsByName(ccrFieldRRID).ToPKChain())
 }
 
 func (s *Service) createReplica(ctx context.Context, p *query.Pack) error {
@@ -57,12 +69,10 @@ func (s *Service) createReplica(ctx context.Context, p *query.Pack) error {
 	// CLARIFICATION: Now that we have the RangeReplicas.Node.IsHost field populated, we can switch on it.
 	return replicaNodeIsHostSwitch(
 		p.Model(),
-		func(m *model.Reflect) error { return s.localExec(ctx, query.NewCreate().Model(m.Pointer()).Pack()) },
+		func(m *model.Reflect) error { return s.localExec(ctx, query.NewCreate().Model(m).Pack()) },
 		func(m *model.Reflect) error { return s.remote.Create(ctx, remCreateOpts(m)) },
 	)
 }
-
-const BulkTelemField = "Telem"
 
 // retrieveRequiredFields returns the minimum set of fields we need to complete a channel chunk replica retrieve
 // request. We need this info to resolve the node that the replica belongs to.
@@ -72,18 +82,17 @@ func retrieveRequiredFields() []string {
 
 func augmentedRetrieveQuery(p *query.Pack) *query.Pack {
 	fldsOpt, _ := query.RetrieveFieldsOpt(p)
-	query.NewFieldsOpt(p, fldsOpt.AllExcept(BulkTelemField).Append(retrieveRequiredFields()...)...)
+	query.NewFieldsOpt(p, fldsOpt.AllExcept(ccrTelemField).Append(retrieveRequiredFields()...)...)
 	query.NewRelationOpt(p, "RangeReplica", "ID")
 	query.NewRelationOpt(p, "RangeReplica.Node", "ID", "Address", "IsHost", "RPCPort")
-	log.Info(p)
 	return p
 }
 
 func (s *Service) retrieveReplica(ctx context.Context, p *query.Pack) error {
-	log.Info("Retrieving")
 	fldsOpt, fldsOptOk := query.RetrieveFieldsOpt(p)
-	if fldsOptOk && !fldsOpt.ContainsAny(BulkTelemField) {
-		log.Info("Hello")
+	// CLARIFICATION: If we don't need to retrieve any telemetry, just
+	// run the original query and return the result.
+	if fldsOptOk && !fldsOpt.ContainsAny(ccrTelemField) {
 		return s.localExec(ctx, p)
 	}
 
@@ -97,7 +106,7 @@ func (s *Service) retrieveReplica(ctx context.Context, p *query.Pack) error {
 	return replicaNodeIsHostSwitch(
 		p.Model(),
 		func(m *model.Reflect) error {
-			return s.localExec(ctx, query.NewRetrieve().Model(m.Pointer()).WherePKs(m.PKChain().Raw()).Pack())
+			return s.localExec(ctx, query.NewRetrieve().Model(m).WherePKs(m.PKChain()).Pack())
 		},
 		func(m *model.Reflect) error { return s.remote.Retrieve(ctx, m.Pointer(), remRetrieveOpts(m)) },
 	)
@@ -116,7 +125,8 @@ func preDeleteRetrieveQuery(p *query.Pack) query.Query {
 	if !pkOk && !wfOk {
 		panic("delete queries require at lease one where")
 	}
-	q.Relation("RangeReplica", "ID").Relation("RangeReplica.Node", "ID", "Address", "IsHost", "RPCPort")
+	q.Relation(ccrFieldRR, "ID").
+		Relation(ccrRelNode, nodeFields()...)
 	return q
 }
 
@@ -130,7 +140,7 @@ func (s *Service) deleteReplica(ctx context.Context, p *query.Pack) error {
 	return replicaNodeIsHostSwitch(
 		p.Model(),
 		func(m *model.Reflect) error {
-			return s.localExec(ctx, query.NewDelete().Model(m.Pointer()).WherePKs(m.PKChain().Raw()).Pack())
+			return s.localExec(ctx, query.NewDelete().Model(m).WherePKs(m.PKChain()).Pack())
 		},
 		func(m *model.Reflect) error { return s.remote.Delete(ctx, remDeleteOpts(m)) },
 	)
@@ -150,7 +160,7 @@ func (s *Service) updateReplica(ctx context.Context, p *query.Pack) error {
 func replicaNodeIsHostSwitch(mRfl *model.Reflect, localF, remoteF func(m *model.Reflect) error) error {
 	c := errutil.CatchSimple{}
 	route.ModelSwitchBoolean(mRfl,
-		NodeIsHostField,
+		ccrFieldNodeIsHost,
 		func(_ bool, m *model.Reflect) { c.Exec(func() error { return localF(m) }) },
 		func(_ bool, m *model.Reflect) { c.Exec(func() error { return remoteF(m) }) },
 	)
@@ -158,7 +168,7 @@ func replicaNodeIsHostSwitch(mRfl *model.Reflect, localF, remoteF func(m *model.
 }
 
 func replicaNodeSwitch(rfl *model.Reflect, action func(node *models.Node, rfl *model.Reflect)) {
-	route.ModelSwitchIter(rfl, NodeField, action)
+	route.ModelSwitchIter(rfl, ccrRelNode, action)
 }
 
 /// |||| REMOTE OPTION BUILDING ||||

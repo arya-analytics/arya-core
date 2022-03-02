@@ -11,4 +11,6 @@ const (
 	fieldsOptKey      optKey = "fld"
 	calculateOptKey   optKey = "calc"
 	bulkUpdateOptKey  optKey = "bulkU"
+	orderOptKey       optKey = "order"
+	limitOptKey       optKey = "limit"
 )

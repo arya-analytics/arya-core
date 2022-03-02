@@ -23,13 +23,13 @@ func (d *Delete) Model(m interface{}) *Delete {
 
 // WherePK queries by the primary of the model to be deleted.
 func (d *Delete) WherePK(pk interface{}) *Delete {
-	newPKOpt(d.Pack(), pk)
+	d.wherePK(pk)
 	return d
 }
 
 // WherePKs queries by a set of primary keys of models to be deleted.
 func (d *Delete) WherePKs(pks interface{}) *Delete {
-	newPKsOpt(d.Pack(), pks)
+	d.wherePKs(pks)
 	return d
 }
 

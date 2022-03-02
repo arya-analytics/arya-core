@@ -50,9 +50,24 @@ func (r *Retrieve) WhereFields(flds WhereFields) *Retrieve {
 
 // Calc executes a calculation on the specified field. It binds the calculation
 // into the argument 'into'. See Calculate for available calculations.
-func (r *Retrieve) Calc(op Calc, fldName string, into interface{}) *Retrieve {
-	newCalcOpt(r.Pack(), op, fldName, into)
+func (r *Retrieve) Calc(op Calc, fld string, into interface{}) *Retrieve {
+	NewCalcOpt(r.Pack(), op, fld, into)
 	return r
+}
+
+// || ORDER ||
+
+// Order orders the results in a specific direction.
+func (r *Retrieve) Order(order Order, fld string) *Retrieve {
+	NewOrderOpt(r.Pack(), order, fld)
+	return r
+}
+
+// Limit limits the number of results returned.
+func (r *Retrieve) Limit(limit int) *Retrieve {
+	NewLimitOpt(r.Pack(), limit)
+	return r
+
 }
 
 // || FIELDS ||
@@ -101,4 +116,44 @@ func RelationOpts(p *Pack) []RelationOpt {
 		return []RelationOpt{}
 	}
 	return o.([]RelationOpt)
+}
+
+// || ORDER ||
+
+type Order int
+
+const (
+	OrderASC Order = iota + 1
+	OrderDSC
+)
+
+type OrderOpt struct {
+	Field string
+	Order Order
+}
+
+func NewOrderOpt(p *Pack, order Order, fld string) {
+	p.opts[orderOptKey] = OrderOpt{Field: fld, Order: order}
+}
+
+func RetrieveOrderOpt(p *Pack) (OrderOpt, bool) {
+	qo, ok := p.opts[orderOptKey]
+	if !ok {
+		return OrderOpt{}, false
+	}
+	return qo.(OrderOpt), true
+}
+
+// || LIMIT ||
+
+func NewLimitOpt(p *Pack, limit int) {
+	p.opts[limitOptKey] = limit
+}
+
+func LimitOpt(p *Pack) (int, bool) {
+	qo, ok := p.opts[limitOptKey]
+	if !ok {
+		return 0, false
+	}
+	return qo.(int), true
 }

@@ -94,7 +94,17 @@ func (u *update) convertOpts(p *query.Pack) {
 }
 
 func (e *retrieve) convertOpts(p *query.Pack) {
-	storage.OptConverters{e.model, e.pk, e.fields, e.whereFields, e.relations, e.whereFields, e.calculate}.Exec(p)
+	storage.OptConverters{
+		e.model,
+		e.pk,
+		e.fields,
+		e.whereFields,
+		e.relations,
+		e.whereFields,
+		e.calculate,
+		e.limit,
+		e.order,
+	}.Exec(p)
 }
 
 func (d *del) convertOpts(p *query.Pack) {
@@ -200,7 +210,19 @@ func (e *retrieve) relations(p *query.Pack) {
 func (e *retrieve) calculate(p *query.Pack) {
 	if c, ok := query.RetrieveCalcOpt(p); ok {
 		e.scanArgs = append(e.scanArgs, c.Into)
-		e.bunQ = e.bunQ.ColumnExpr(e.sql.calc(c.Op), bun.Ident(e.sql.fieldName(c.FldName)))
+		e.bunQ = e.bunQ.ColumnExpr(e.sql.calc(c.Op), bun.Ident(e.sql.fieldName(c.Field)))
+	}
+}
+
+func (e *retrieve) limit(p *query.Pack) {
+	if limit, ok := query.LimitOpt(p); ok {
+		e.bunQ = e.bunQ.Limit(limit)
+	}
+}
+
+func (e *retrieve) order(p *query.Pack) {
+	if o, ok := query.RetrieveOrderOpt(p); ok {
+		e.bunQ = e.bunQ.Order(e.sql.order(o.Order, o.Field))
 	}
 }
 

@@ -15,7 +15,7 @@ var _ = Describe("QueryRetrieve", func() {
 	var node *models.Node
 	BeforeEach(func() {
 		node = &models.Node{ID: 1}
-		channelConfig = &models.ChannelConfig{NodeID: node.ID, ID: uuid.New(), Name: "Channel Config"}
+		channelConfig = &models.ChannelConfig{NodeID: node.ID, ID: uuid.New(), Name: "B"}
 	})
 	JustBeforeEach(func() {
 		nErr := engine.NewCreate().Model(node).Exec(ctx)
@@ -50,7 +50,7 @@ var _ = Describe("QueryRetrieve", func() {
 					ID).Exec(ctx)
 				Expect(err).To(BeNil())
 				Expect(resChannelConfig.ID).To(Equal(uuid.UUID{}))
-				Expect(resChannelConfig.Name).To(Equal("Channel Config"))
+				Expect(resChannelConfig.Name).To(Equal("B"))
 			})
 		})
 		Describe("Retrieve multiple items", func() {
@@ -58,7 +58,7 @@ var _ = Describe("QueryRetrieve", func() {
 			BeforeEach(func() {
 				channelConfigTwo = &models.ChannelConfig{
 					ID:     uuid.New(),
-					Name:   "CC 45",
+					Name:   "A",
 					NodeID: 1,
 				}
 			})
@@ -69,12 +69,34 @@ var _ = Describe("QueryRetrieve", func() {
 			It("Should retrieve all the correct items", func() {
 				var models []*models.ChannelConfig
 				err := engine.NewRetrieve().Model(&models).WherePKs(
-					[]uuid.UUID{channelConfigTwo.ID,
-						channelConfig.ID}).Exec(ctx)
+					[]uuid.UUID{channelConfigTwo.ID, channelConfig.ID}).Exec(ctx)
 				Expect(err).To(BeNil())
 				Expect(models).To(HaveLen(2))
 				Expect([]string{channelConfig.Name,
 					channelConfigTwo.Name}).To(ContainElement(models[0].Name))
+			})
+			Describe("Limiting the number of results", func() {
+				It("Should limit the number of results correctly", func() {
+					var models []*models.ChannelConfig
+					err := engine.NewRetrieve().
+						Model(&models).
+						WherePKs([]uuid.UUID{channelConfig.ID, channelConfigTwo.ID}).
+						Limit(1).Exec(ctx)
+					Expect(err).To(BeNil())
+					Expect(models).To(HaveLen(1))
+				})
+			})
+			Describe("Ordering the results", func() {
+				It("Should order the results correctly", func() {
+					var models []*models.ChannelConfig
+					err := engine.NewRetrieve().
+						Model(&models).
+						WherePKs([]uuid.UUID{channelConfig.ID, channelConfigTwo.ID}).
+						Order(query.OrderASC, "Name").Exec(ctx)
+					Expect(err).To(BeNil())
+					Expect(models).To(HaveLen(2))
+					Expect(models[0].Name).To(Equal("A"))
+				})
 			})
 		})
 		Describe("Retrieve a related item", func() {
@@ -221,14 +243,6 @@ var _ = Describe("QueryRetrieve", func() {
 					Expect(resRanges).To(HaveLen(1))
 					Expect(resRanges[0].ID).To(Equal(rng.ID))
 				})
-				//It("Should return the correct error when an invalid relation is provided", func() {
-				//	var resRanges []*models.Range
-				//	err := engine.NewRetrieve().Model(&resRanges).WhereFields(query.WhereFields{
-				//		"RangeLease.BadRel.NodeID": 1,
-				//	}).exec(ctx)
-				//	Expect(err).ToNot(BeNil())
-				//	Expect(err.(storage.Error).Type).To(Equal(storage.ErrorTypeInvalidArgs))
-				//})
 			})
 
 		})

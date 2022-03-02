@@ -27,7 +27,7 @@ var _ = Describe("Create", func() {
 		BeforeEach(func() {
 			node = &models.Node{ID: 1}
 			channelConfig = &models.ChannelConfig{
-				Name:   "Channel Config",
+				Name:   "Channel Config A",
 				NodeID: node.ID,
 			}
 		})
@@ -44,7 +44,7 @@ var _ = Describe("Create", func() {
 			BeforeEach(func() {
 				node = &models.Node{ID: 1}
 				channelConfig = &models.ChannelConfig{
-					Name:   "ChannelConfig",
+					Name:   "Channel Config A",
 					NodeID: node.ID,
 				}
 			})

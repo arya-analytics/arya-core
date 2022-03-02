@@ -13,20 +13,20 @@ const (
 )
 
 type CalcOpt struct {
-	Op      Calc
-	FldName string
-	Into    interface{}
+	Op    Calc
+	Field string
+	Into  interface{}
 }
 
-func newCalcOpt(q *Pack, c Calc, fldName string, into interface{}) {
+func NewCalcOpt(p *Pack, c Calc, fld string, into interface{}) {
 	if reflect.TypeOf(into).Kind() != reflect.Ptr {
 		panic("calc into arg must be ptr")
 	}
-	q.opts[calculateOptKey] = CalcOpt{Op: c, FldName: fldName, Into: into}
+	p.opts[calculateOptKey] = CalcOpt{Op: c, Field: fld, Into: into}
 }
 
-func RetrieveCalcOpt(q *Pack) (CalcOpt, bool) {
-	qo, ok := q.opts[calculateOptKey]
+func RetrieveCalcOpt(p *Pack) (CalcOpt, bool) {
+	qo, ok := p.opts[calculateOptKey]
 	if !ok {
 		return CalcOpt{}, false
 	}

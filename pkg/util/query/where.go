@@ -1,6 +1,9 @@
 package query
 
-import "github.com/arya-analytics/aryacore/pkg/util/model"
+import (
+	"github.com/arya-analytics/aryacore/pkg/util/model"
+	"reflect"
+)
 
 // |||| QUERY ||||
 
@@ -13,11 +16,17 @@ func (w *where) whereFields(flds WhereFields) {
 }
 
 func (w *where) wherePK(pk interface{}) {
+	if reflect.TypeOf(pk).Kind() == reflect.Slice {
+		panic("wherepk can't be called with multiple primary keys!")
+	}
 	newPKOpt(w.Pack(), pk)
 }
 
 func (w *where) wherePKs(pks interface{}) {
-	newPKsOpt(w.Pack(), pks)
+	if reflect.TypeOf(pks).Kind() != reflect.Slice {
+		panic("wherepks can't be called with a single primary key!")
+	}
+	newPKOpt(w.Pack(), pks)
 }
 
 // |||| WHERE FIELDS ||||
@@ -70,12 +79,21 @@ type pkOpt struct {
 }
 
 func newPKOpt(p *Pack, pk interface{}) {
-	qo := pkOpt{model.NewPKChain([]interface{}{pk})}
-	p.opts[pkOptKey] = qo
-}
+	var pkc model.PKChain
+	switch pk.(type) {
+	case model.PK:
+		pkc = model.PKChain{pk.(model.PK)}
+	case model.PKChain:
+		pkc = pk.(model.PKChain)
+	default:
+		if reflect.TypeOf(pk).Kind() == reflect.Slice {
+			pkc = model.NewPKChain(pk)
+		} else {
+			pkc = model.NewPKChain([]interface{}{pk})
+		}
+	}
 
-func newPKsOpt(p *Pack, pks interface{}) {
-	qo := pkOpt{model.NewPKChain(pks)}
+	qo := pkOpt{pkc}
 	p.opts[pkOptKey] = qo
 }
 

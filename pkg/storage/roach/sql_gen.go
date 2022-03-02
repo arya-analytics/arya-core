@@ -48,10 +48,13 @@ func (sg sqlGen) fieldNames(fldNames ...string) (sqlNames []string) {
 	return sqlNames
 }
 
-func (sg sqlGen) relFldExp(fldName string, fldVal interface{}) (string, []interface{}) {
+func (sg sqlGen) relFldName(fldName string) string {
 	relN, baseN := model.SplitLastFieldName(fldName)
-	relFldName := sg.bindTableToField(sg.relTableName(relN), sg.fieldName(baseN))
-	return sg.parseFldExp(relFldName, fldVal)
+	return sg.bindTableToField(sg.relTableName(relN), sg.fieldName(baseN))
+}
+
+func (sg sqlGen) relFldExp(fldName string, fldVal interface{}) (string, []interface{}) {
+	return sg.parseFldExp(sg.relFldName(fldName), fldVal)
 }
 
 func (sg sqlGen) parseFldExp(fldName string, fldVal interface{}) (string, []interface{}) {
@@ -115,4 +118,21 @@ func (sg sqlGen) calc(c query.Calc) string {
 	}
 	return fmt.Sprintf("%s(?)", calcSQL[c])
 
+}
+
+// |||| ORDER ||||
+
+const (
+	orderSQLASC = "ASC"
+	orderSQLDSC = "DESC"
+)
+
+func (sg sqlGen) order(o query.Order, fld string) string {
+	var orderSQL string
+	if o == query.OrderASC {
+		orderSQL = orderSQLASC
+	} else {
+		orderSQL = orderSQLDSC
+	}
+	return fmt.Sprintf("%s %s", sg.relFldName(fld), orderSQL)
 }

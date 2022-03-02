@@ -25,7 +25,12 @@ func NewPack(q Query) *Pack {
 }
 
 func (q *Pack) bindModel(m interface{}) {
-	q.model = model.NewReflect(m)
+	switch m.(type) {
+	case *model.Reflect:
+		q.model = m.(*model.Reflect)
+	default:
+		q.model = model.NewReflect(m)
+	}
 }
 
 func (q *Pack) Model() *model.Reflect {
@@ -48,14 +53,21 @@ type Ops struct {
 func Switch(ctx context.Context, p *Pack, ops Ops) error {
 	switch p.Query().(type) {
 	case *Create:
-		return ops.Create(ctx, p)
+		if ops.Create != nil {
+			return ops.Create(ctx, p)
+		}
 	case *Retrieve:
-		return ops.Retrieve(ctx, p)
+		if ops.Retrieve != nil {
+			return ops.Retrieve(ctx, p)
+		}
 	case *Update:
-		return ops.Update(ctx, p)
+		if ops.Update != nil {
+			return ops.Update(ctx, p)
+		}
 	case *Delete:
-		return ops.Delete(ctx, p)
-	default:
-		panic(fmt.Sprintf("%T not supported for model %s", p.Query(), p.Model().Type().Name()))
+		if ops.Delete != nil {
+			return ops.Delete(ctx, p)
+		}
 	}
+	panic(fmt.Sprintf("%T not supported for model %s", p.Query(), p.Model().Type().Name()))
 }

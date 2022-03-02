@@ -1,8 +1,10 @@
 package query_test
 
 import (
+	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/arya-analytics/aryacore/pkg/util/query/mock"
+	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -38,12 +40,30 @@ var _ = Describe("Where", func() {
 				Expect(ok).To(BeTrue())
 				Expect(pkc).To(HaveLen(3))
 				Expect(pkc[0].Raw()).To(Equal(1))
+				Expect(pkc).To(Equal(model.NewPKChain([]int{1, 2, 3})))
 			})
 			It("Should return false when a pk opt wasn't specified", func() {
 				p := asm.NewRetrieve().Pack()
 				pkc, ok := query.PKOpt(p)
 				Expect(pkc).To(HaveLen(0))
 				Expect(ok).To(BeFalse())
+			})
+			It("Should allow the caller to pass in a PKChain", func() {
+				inPKC := model.NewPKChain([]uuid.UUID{uuid.New(), uuid.New()})
+				p := asm.NewRetrieve().WherePKs(inPKC).Pack()
+				pkc, ok := query.PKOpt(p)
+				Expect(ok).To(BeTrue())
+				Expect(pkc).To(HaveLen(2))
+				Expect(pkc[0]).To(Equal(inPKC[0]))
+				Expect(pkc).To(Equal(inPKC))
+			})
+			It("Should allow the caller to pass in a PK", func() {
+				inPK := model.NewPK(uuid.New())
+				p := asm.NewRetrieve().WherePK(inPK).Pack()
+				pkc, ok := query.PKOpt(p)
+				Expect(ok).To(BeTrue())
+				Expect(pkc).To(HaveLen(1))
+				Expect(pkc[0].Raw()).To(Equal(inPK.Raw()))
 			})
 			DescribeTable("Single primary keys on Query Variants", func(q query.Query) {
 				pkc, ok := query.PKOpt(q.Pack())
@@ -60,6 +80,18 @@ var _ = Describe("Where", func() {
 			},
 				Entry("Delete", asm.NewDelete().WherePKs([]int{1, 2, 3})),
 			)
+			Describe("Invalid primary keys", func() {
+				It("Should panic when the caller passes a single primary key to WherePKs", func() {
+					Expect(func() {
+						asm.NewRetrieve().WherePKs(1)
+					}).To(Panic())
+				})
+				It("Should panic when the caller passes a slice of priamry keys to WherePK", func() {
+					Expect(func() {
+						asm.NewRetrieve().WherePK([]int{1, 2, 3})
+					}).To(Panic())
+				})
+			})
 
 		})
 		Describe("Where Fields", func() {

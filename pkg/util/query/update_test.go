@@ -34,4 +34,12 @@ var _ = Describe("Update", func() {
 			}).To(Panic())
 		})
 	})
+	Describe("Fields", func() {
+		It("Should set the correct fields", func() {
+			p := asm.NewUpdate().Fields("One", "Two").Pack()
+			fo, ok := query.RetrieveFieldsOpt(p)
+			Expect(ok).To(BeTrue())
+			Expect(fo).To(HaveLen(2))
+		})
+	})
 })

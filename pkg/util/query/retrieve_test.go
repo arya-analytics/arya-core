@@ -26,7 +26,7 @@ var _ = Describe("Retrieve", func() {
 				calcOpt, ok := query.RetrieveCalcOpt(p)
 				Expect(ok).To(BeTrue())
 				Expect(calcOpt.Op).To(Equal(op))
-				Expect(calcOpt.FldName).To(Equal(field))
+				Expect(calcOpt.Field).To(Equal(field))
 				Expect(calcOpt.Into).To(Equal(into))
 			},
 			Entry("Sum", query.CalcSum),
@@ -74,5 +74,34 @@ var _ = Describe("Retrieve", func() {
 			Expect(fo).To(HaveLen(2))
 			Expect(fo).To(Equal(query.FieldsOpt{"FieldOne", "FieldTwo"}))
 		})
+	})
+	Describe("Limit", func() {
+		It("Should create the limit opt correctly", func() {
+			p := asm.NewRetrieve().Limit(1).Pack()
+			limit, ok := query.LimitOpt(p)
+			Expect(ok).To(BeTrue())
+			Expect(limit).To(Equal(1))
+		})
+		It("Should return false if no limit is specified", func() {
+			p := asm.NewRetrieve().Pack()
+			limit, ok := query.LimitOpt(p)
+			Expect(ok).To(BeFalse())
+			Expect(limit).To(Equal(0))
+		})
+	})
+	Describe("Order", func() {
+		It("Should set an order opt on the correct field", func() {
+			p := asm.NewRetrieve().Order(query.OrderASC, "Field").Pack()
+			order, ok := query.RetrieveOrderOpt(p)
+			Expect(ok).To(BeTrue())
+			Expect(order.Field).To(Equal("Field"))
+			Expect(order.Order).To(Equal(query.OrderASC))
+		})
+		It("Should return false if no order is specified", func() {
+			p := asm.NewRetrieve().Pack()
+			_, ok := query.RetrieveOrderOpt(p)
+			Expect(ok).To(BeFalse())
+		})
+
 	})
 })

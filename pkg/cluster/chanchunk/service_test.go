@@ -79,7 +79,7 @@ var _ = Describe("Service", func() {
 	})
 	JustAfterEach(func() {
 		for _, m := range items {
-			err := store.NewDelete().Model(m).WherePK(model.NewReflect(m).PK().Raw()).Exec(ctx)
+			err := store.NewDelete().Model(m).WherePK(model.NewReflect(m).PK()).Exec(ctx)
 			Expect(err).To(BeNil())
 		}
 	})
