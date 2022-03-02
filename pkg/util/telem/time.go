@@ -32,7 +32,8 @@ func (ts TimeStamp) String() string {
 	return time.UnixMicro(int64(ts)).String()
 }
 
-const SecondsToMicroSeconds = 1000000
+// SecondsToMicroseconds converts a time/duration in seconds to microseconds.
+const SecondsToMicroseconds = 1000000
 
 // |||| SPAN ||||
 
@@ -48,7 +49,7 @@ func NewTimeSpan(duration time.Duration) TimeSpan {
 //
 // Ex: a TimeSpan of 100 microseconds would be a data rate of 10 KHz
 func (ts TimeSpan) ToDataRate() DataRate {
-	return DataRate(float64(SecondsToMicroSeconds) / float64(ts))
+	return DataRate(float64(SecondsToMicroseconds) / float64(ts))
 }
 
 // ToDuration converts TimeSpan to a time.Duration.
@@ -70,7 +71,7 @@ type DataRate float64
 // Ex: a DataRate of 10 KHz would convert to a period of 100 microseconds.
 //
 func (dr DataRate) Period() TimeSpan {
-	return TimeSpan(1 / float64(dr) * SecondsToMicroSeconds)
+	return TimeSpan(1 / float64(dr) * SecondsToMicroseconds)
 }
 
 func (dr DataRate) String() string {
