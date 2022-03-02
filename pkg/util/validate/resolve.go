@@ -54,5 +54,8 @@ func (re *Resolve[T]) Errors() []error {
 }
 
 func (re *Resolve[T]) Error() error {
+	if len(re.Errors()) == 0 {
+		return nil
+	}
 	return re.Errors()[0]
 }
