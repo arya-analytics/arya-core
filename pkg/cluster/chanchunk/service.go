@@ -11,12 +11,12 @@ import (
 )
 
 type Service struct {
-	remote ServiceRemote
-	local  Local
+	localExec query.Execute
+	remote    ServiceRemote
 }
 
-func NewService(local Local, remote ServiceRemote) *Service {
-	return &Service{remote: remote, local: local}
+func NewService(local query.Execute, remote ServiceRemote) *Service {
+	return &Service{remote: remote, localExec: local}
 }
 
 func (s *Service) CanHandle(p *query.Pack) bool {
@@ -41,20 +41,23 @@ const (
 	NodeField           = "RangeReplica.Node"
 )
 
+func retrieveRRQuery(m *model.Reflect) query.Query {
+	return query.NewRetrieve().
+		Model(m.FieldsByName(RangeReplicaField).ToReflect().Pointer()).
+		Relation("Node", "ID", "Address", "IsHost", "RPCPort").
+		WherePKs(m.FieldsByName(RangeReplicaIDField).ToPKChain().Raw())
+}
+
 func (s *Service) createReplica(ctx context.Context, p *query.Pack) error {
 	// CLARIFICATION: Retrieves information about the rng replicas and nodes model belongs to.
 	// It will bind the results to p.Model itself.
-	if err := s.local.RetrieveRangeReplica(
-		ctx,
-		p.Model().FieldsByName(RangeReplicaField).ToReflect().Pointer(),
-		p.Model().FieldsByName(RangeReplicaIDField).ToPKChain(),
-	); err != nil {
+	if err := s.localExec(ctx, retrieveRRQuery(p.Model()).Pack()); err != nil {
 		return err
 	}
 	// CLARIFICATION: Now that we have the RangeReplicas.Node.IsHost field populated, we can switch on it.
 	return replicaNodeIsHostSwitch(
 		p.Model(),
-		func(m *model.Reflect) error { return s.local.Create(ctx, m.Pointer()) },
+		func(m *model.Reflect) error { return s.localExec(ctx, query.NewCreate().Model(m.Pointer()).Pack()) },
 		func(m *model.Reflect) error { return s.remote.Create(ctx, remCreateOpts(m)) },
 	)
 }
@@ -67,82 +70,79 @@ func retrieveRequiredFields() []string {
 	return []string{"ID", "ChannelChunkID", "RangeReplicaID"}
 }
 
+func augmentedRetrieveQuery(p *query.Pack) *query.Pack {
+	fldsOpt, _ := query.RetrieveFieldsOpt(p)
+	query.NewFieldsOpt(p, fldsOpt.AllExcept(BulkTelemField).Append(retrieveRequiredFields()...)...)
+	query.NewRelationOpt(p, "RangeReplica", "ID")
+	query.NewRelationOpt(p, "RangeReplica.Node", "ID", "Address", "IsHost", "RPCPort")
+	log.Info(p)
+	return p
+}
+
 func (s *Service) retrieveReplica(ctx context.Context, p *query.Pack) error {
-	baseOpts := LocalRetrieveOpts{NodeRelations: true, Fields: retrieveRequiredFields()}
-	PKC, pkOK := query.PKOpt(p)
-	if pkOK {
-		baseOpts.PKC = PKC
-	}
-
-	whereFldsOpt, whereFldsOK := query.WhereFieldsOpt(p)
-	if whereFldsOK {
-		baseOpts.WhereFields = whereFldsOpt
-	}
-
-	fldsOpt, fldsOptOK := query.RetrieveFieldsOpt(p)
-	if fldsOptOK {
-		baseOpts.Fields = fldsOpt.AllExcept(BulkTelemField).Append(retrieveRequiredFields()...)
+	log.Info("Retrieving")
+	fldsOpt, fldsOptOk := query.RetrieveFieldsOpt(p)
+	if fldsOptOk && !fldsOpt.ContainsAny(BulkTelemField) {
+		log.Info("Hello")
+		return s.localExec(ctx, p)
 	}
 
 	// CLARIFICATION: Retrieves information about the rng replicas and nodes model belongs to.
-	// It will bind the results to p .Model itself.
-	if err := s.local.Retrieve(ctx, p.Model().Pointer(), baseOpts); err != nil {
+	// It will bind the results to p.Model itself.
+	if err := s.localExec(ctx, augmentedRetrieveQuery(p)); err != nil {
 		return err
-	}
-
-	// CLARIFICATION: If we specified a fields query opt, and it doesn't contain the telem field, we don't
-	// need to fetch bulk, so we can just return here.
-	if fldsOptOK && !fldsOpt.ContainsAny(BulkTelemField) {
-		return nil
 	}
 
 	// CLARIFICATION: Now that we have the RangeReplicas.Node.IsHost field populated, we can switch on it.
 	return replicaNodeIsHostSwitch(
 		p.Model(),
 		func(m *model.Reflect) error {
-			return s.local.Retrieve(ctx, m.Pointer(), LocalRetrieveOpts{PKC: m.PKChain()})
+			return s.localExec(ctx, query.NewRetrieve().Model(m.Pointer()).WherePKs(m.PKChain().Raw()).Pack())
 		},
 		func(m *model.Reflect) error { return s.remote.Retrieve(ctx, m.Pointer(), remRetrieveOpts(m)) },
 	)
 }
 
-func (s *Service) deleteReplica(ctx context.Context, p *query.Pack) error {
-	PKC, ok := query.PKOpt(p)
-	if !ok {
-		panic("delete queries require a primary key!")
+func preDeleteRetrieveQuery(p *query.Pack) query.Query {
+	q := query.NewRetrieve().Model(p.Model().Pointer())
+	pkc, pkOk := query.PKOpt(p)
+	if pkOk {
+		q.WherePKs(pkc.Raw())
 	}
+	wf, wfOk := query.WhereFieldsOpt(p)
+	if wfOk {
+		q.WhereFields(wf)
+	}
+	if !pkOk && !wfOk {
+		panic("delete queries require at lease one where")
+	}
+	q.Relation("RangeReplica", "ID").Relation("RangeReplica.Node", "ID", "Address", "IsHost", "RPCPort")
+	return q
+}
+
+func (s *Service) deleteReplica(ctx context.Context, p *query.Pack) error {
 	// CLARIFICATION: Retrieves information about the rng replicas and nodes model belongs to.
 	// It will bind the results to p .Model itself.
-	if err := s.local.Retrieve(ctx, p.Model().Pointer(), LocalRetrieveOpts{PKC: PKC, NodeRelations: true}); err != nil {
+	if err := s.localExec(ctx, preDeleteRetrieveQuery(p).Pack()); err != nil {
 		return err
 	}
 	// CLARIFICATION: Now that we have the RangeReplicas.Node.IsHost field populated, we can switch on it.
 	return replicaNodeIsHostSwitch(
 		p.Model(),
-		func(m *model.Reflect) error { return s.local.Delete(ctx, LocalDeleteOpts{m.PKChain()}) },
+		func(m *model.Reflect) error {
+			return s.localExec(ctx, query.NewDelete().Model(m.Pointer()).WherePKs(m.PKChain().Raw()).Pack())
+		},
 		func(m *model.Reflect) error { return s.remote.Delete(ctx, remDeleteOpts(m)) },
 	)
 }
 
 func (s *Service) updateReplica(ctx context.Context, p *query.Pack) error {
-	opts := LocalUpdateOpts{Bulk: query.BulkUpdateOpt(p)}
-	PKC, pkOk := query.PKOpt(p)
-	if pkOk {
-		if len(PKC) > 1 {
-			panic("update queries can't have more than one primary key")
-		}
-		opts.PK = PKC[0]
-	}
-	fieldsOpt, ok := query.RetrieveFieldsOpt(p)
-	if ok {
-		opts.Fields = fieldsOpt
-	}
 	if !p.Model().FieldsByName("Telem").AllNonZero() {
 		log.
 			WithFields(log.Fields{"ID": p.Model().PKChain().Raw()}).
 			Warn("can't perform update on replica's telemetry, but was still specified!")
 	}
-	return s.local.Update(ctx, p.Model().Pointer(), opts)
+	return s.localExec(ctx, p)
 }
 
 // |||| ROUTING ||||

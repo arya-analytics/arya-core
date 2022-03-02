@@ -23,6 +23,7 @@ type QueryStreamCreateArgs struct {
 type QueryStreamCreate struct {
 	cluster    cluster.Cluster
 	rngSvc     *rng.Service
+	configPK   uuid.UUID
 	_config    *models.ChannelConfig
 	_prevChunk *telem.Chunk
 	prevCCPK   uuid.UUID
@@ -42,14 +43,14 @@ func newStreamCreate(cluster cluster.Cluster, rngSvc *rng.Service) *QueryStreamC
 }
 
 func (qsc *QueryStreamCreate) Start(ctx context.Context, pk uuid.UUID) *QueryStreamCreate {
-	qsc.ctx = ctx
+	qsc.ctx, qsc.configPK = ctx, pk
 	qsc.listen()
 	return qsc
 }
 
 func (qsc *QueryStreamCreate) config() *models.ChannelConfig {
 	if model.NewPK(qsc._config.ID).IsZero() {
-		if err := qsc.cluster.NewRetrieve().Model(qsc._config).Exec(qsc.ctx); err != nil {
+		if err := qsc.cluster.NewRetrieve().Model(qsc._config).WherePK(qsc.configPK).Exec(qsc.ctx); err != nil {
 			qsc.Errors() <- err
 		}
 	}
@@ -62,10 +63,7 @@ func (qsc *QueryStreamCreate) prevChunk() *telem.Chunk {
 		if err := qsc.cluster.NewRetrieve().
 			Model(ccr).
 			Relation("ChannelChunk", "ID", "StartTS", "Size").
-			WhereFields(query.WhereFields{
-				"ChannelChunk.ChannelConfigID": qsc.config().ID,
-				//"ChannelChunk.StartTS":         model.Fie(),
-			}).Exec(qsc.ctx); err != nil {
+			WhereFields(query.WhereFields{"ChannelChunk.ChannelConfigID": qsc.config().ID}).Exec(qsc.ctx); err != nil {
 			qsc.Errors() <- err
 		}
 		qsc._prevChunk = telem.NewChunk(ccr.ChannelChunk.StartTS, qsc.config().DataType, qsc.config().DataRate, ccr.Telem)
@@ -87,6 +85,7 @@ func (qsc *QueryStreamCreate) Errors() chan error {
 }
 
 func (qsc *QueryStreamCreate) listen() {
+	qsc.prevChunk()
 	for args := range qsc.stream {
 		c := errutil.NewCatchWCtx(qsc.ctx)
 		alloc := qsc.rngSvc.NewAllocate()

@@ -17,7 +17,8 @@ var (
 
 var _ = BeforeSuite(func() {
 	var err error
-	clust, err = mock.New(ctx, storagemock.WithVerbose())
+	clust, err = mock.New(ctx,
+		storagemock.WithVerbose())
 	Expect(err).To(BeNil())
 })
 

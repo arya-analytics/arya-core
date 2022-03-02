@@ -59,13 +59,13 @@ func (r *Retrieve) Calc(op Calc, fldName string, into interface{}) *Retrieve {
 
 // Fields retrieves only the fields specified.
 func (r *Retrieve) Fields(flds ...string) *Retrieve {
-	newFieldsOpt(r.Pack(), flds...)
+	NewFieldsOpt(r.Pack(), flds...)
 	return r
 }
 
 // Relation retrieves the specified fields from the relation.
 func (r *Retrieve) Relation(rel string, flds ...string) *Retrieve {
-	newRelationOpt(r.Pack(), rel, flds...)
+	NewRelationOpt(r.Pack(), rel, flds...)
 	return r
 }
 
@@ -85,7 +85,7 @@ type RelationOpt struct {
 	Fields FieldsOpt
 }
 
-func newRelationOpt(p *Pack, rel string, flds ...string) {
+func NewRelationOpt(p *Pack, rel string, flds ...string) {
 	o := RelationOpt{rel, flds}
 	_, ok := p.opts[relationOptKey]
 	if !ok {

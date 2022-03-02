@@ -24,7 +24,7 @@ func (b *base) Pack() *Pack {
 // || MODEL ||
 
 func (b *base) baseModel(m interface{}) {
-	b.Pack().BindModel(m)
+	b.Pack().bindModel(m)
 }
 
 // || EXECUTION ||

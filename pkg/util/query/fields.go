@@ -10,7 +10,7 @@ func RetrieveFieldsOpt(p *Pack) (FieldsOpt, bool) {
 
 type FieldsOpt []string
 
-func newFieldsOpt(p *Pack, flds ...string) {
+func NewFieldsOpt(p *Pack, flds ...string) {
 	p.opts[fieldsOptKey] = FieldsOpt(flds)
 }
 

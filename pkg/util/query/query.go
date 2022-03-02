@@ -24,7 +24,7 @@ func NewPack(q Query) *Pack {
 	return &Pack{query: q, opts: map[optKey]interface{}{}}
 }
 
-func (q *Pack) BindModel(m interface{}) {
+func (q *Pack) bindModel(m interface{}) {
 	q.model = model.NewReflect(m)
 }
 

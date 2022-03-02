@@ -35,7 +35,7 @@ func (u *Update) WherePK(pk interface{}) *Update {
 //
 // NOTE: When calling Bulk, order matters. Fields must be called before Bulk.
 func (u *Update) Fields(flds ...string) *Update {
-	newFieldsOpt(u.Pack(), flds...)
+	NewFieldsOpt(u.Pack(), flds...)
 	return u
 }
 

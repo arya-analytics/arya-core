@@ -23,7 +23,6 @@ var _ = Describe("Service", func() {
 	var (
 		clust         cluster.Cluster
 		remoteSvc     chanchunk.ServiceRemote
-		localSvc      chanchunk.Local
 		svc           *chanchunk.Service
 		pool          *cluster.NodeRPCPool
 		persist       *mock.ServerRPCPersist
@@ -53,8 +52,7 @@ var _ = Describe("Service", func() {
 		server = chanchunk.NewServerRPC(persist)
 		grpcServer = grpc.NewServer()
 		server.BindTo(grpcServer)
-		localSvc = chanchunk.NewServiceLocalStorage(store)
-		svc = chanchunk.NewService(localSvc, remoteSvc)
+		svc = chanchunk.NewService(store.Exec, remoteSvc)
 		clust.BindService(svc)
 		ccr = &models.ChannelChunkReplica{
 			ID:             uuid.New(),
@@ -63,7 +61,6 @@ var _ = Describe("Service", func() {
 			Telem:          telem.NewChunkData([]byte{}),
 		}
 		mockTlm.TelemBulkPopulateRandomFloat64(ccr.Telem, 500)
-		localSvc = chanchunk.NewServiceLocalStorage(store)
 	})
 	JustBeforeEach(func() {
 		var serverErr error
