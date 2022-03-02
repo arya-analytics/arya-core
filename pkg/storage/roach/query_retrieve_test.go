@@ -97,6 +97,17 @@ var _ = Describe("QueryRetrieve", func() {
 					Expect(models).To(HaveLen(2))
 					Expect(models[0].Name).To(Equal("A"))
 				})
+				It("Should order the results by a nested field correctly", func() {
+					var models []*models.ChannelConfig
+					err := engine.NewRetrieve().
+						Model(&models).
+						WherePKs([]uuid.UUID{channelConfig.ID, channelConfigTwo.ID}).
+						Relation("Node", "ID").
+						Order(query.OrderASC, "Node.ID").Exec(ctx)
+					Expect(err).To(BeNil())
+					Expect(models).To(HaveLen(2))
+					Expect(models[0].NodeID).To(Equal(1))
+				})
 			})
 		})
 		Describe("Retrieve a related item", func() {

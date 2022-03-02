@@ -25,7 +25,7 @@ var _ = Describe("Chunk", func() {
 	})
 	Describe("Contiguous Chunks", func() {
 		It("Should create a set of contiguous chunks", func() {
-			cc := mock.ContiguousChunks(
+			cc := mock.ChunkSet(
 				5,
 				telem.TimeStamp(0),
 				telem.DataTypeFloat32,

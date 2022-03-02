@@ -40,7 +40,14 @@ func spanToSampleQTY(span telem.TimeSpan, dataRate telem.DataRate) int {
 	return int(span / dataRate.Period())
 }
 
-func ContiguousChunks(chunkQty int, start telem.TimeStamp, dataType telem.DataType, dataRate telem.DataRate, chunkSpan telem.TimeSpan) (chunks []*telem.Chunk) {
+func ChunkSet(
+	chunkQty int,
+	start telem.TimeStamp,
+	dataType telem.DataType,
+	dataRate telem.DataRate,
+	chunkSpan telem.TimeSpan,
+	gap telem.TimeSpan,
+) (chunks []*telem.Chunk) {
 	sampleQty := spanToSampleQTY(chunkSpan, dataRate)
 	for i := 0; i < chunkQty; i++ {
 		cd := telem.NewChunkData([]byte{})
@@ -49,7 +56,7 @@ func ContiguousChunks(chunkQty int, start telem.TimeStamp, dataType telem.DataTy
 		if i == 0 {
 			startTS = start
 		} else {
-			startTS = chunks[i-1].End()
+			startTS = chunks[i-1].End().Add(gap)
 		}
 		chunks = append(chunks, telem.NewChunk(startTS, dataType, dataRate, cd))
 	}
