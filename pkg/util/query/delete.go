@@ -33,6 +33,8 @@ func (d *Delete) WherePKs(pks interface{}) *Delete {
 	return d
 }
 
+// BindExec binds Execute that Delete will use to run the query.
+// This method MUST be called before calling Exec.
 func (d *Delete) BindExec(e Execute) *Delete {
 	d.baseBindExec(e)
 	return d

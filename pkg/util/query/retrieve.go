@@ -86,6 +86,8 @@ func (r *Retrieve) Relation(rel string, flds ...string) *Retrieve {
 
 // || EXEC ||
 
+// BindExec binds Execute that Retrieve will use to run the query.
+// This method MUST be called before calling Exec.
 func (r *Retrieve) BindExec(e Execute) *Retrieve {
 	r.baseBindExec(e)
 	return r

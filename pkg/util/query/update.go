@@ -51,6 +51,8 @@ func (u *Update) Bulk() *Update {
 
 // || EXEC ||
 
+// BindExec binds Execute that Update will use to run the query.
+// This method MUST be called before calling Exec.
 func (u *Update) BindExec(e Execute) *Update {
 	u.baseBindExec(e)
 	return u

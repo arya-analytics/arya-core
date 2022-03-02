@@ -26,6 +26,8 @@ func (c *Create) Model(m interface{}) *Create {
 
 // || EXEC ||
 
+// BindExec binds Execute that Create will use to run the query.
+// This method MUST be called before calling Exec.
 func (c *Create) BindExec(e Execute) *Create {
 	c.baseBindExec(e)
 	return c
