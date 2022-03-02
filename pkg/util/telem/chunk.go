@@ -146,6 +146,9 @@ func (t *Chunk) Overlap(cChunk *Chunk) ChunkOverlap {
 
 // |||| UTILITIES ||||
 
+// lastValueTS returns the TimeStamp of the last value in the chunk.
+// Because chunk.End is exclusive, retrieving the value at that TimeStamp would
+// result in an error, so we need to find that last inclusive TimeStamp.
 func (t *Chunk) lastValueTS() TimeStamp {
 	return t.End().Add(-1 * t.Period())
 }
