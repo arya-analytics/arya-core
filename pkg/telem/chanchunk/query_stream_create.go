@@ -12,7 +12,6 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"github.com/arya-analytics/aryacore/pkg/util/validate"
 	"github.com/google/uuid"
-	log "github.com/sirupsen/logrus"
 	"io"
 )
 
@@ -79,12 +78,15 @@ func (qsc *QueryStreamCreate) prevChunk() *telem.Chunk {
 	return qsc._prevChunk
 }
 
+func (qsc *QueryStreamCreate) setPrevChunk(chunk *telem.Chunk) {
+	qsc._prevChunk = chunk
+}
+
 func (qsc *QueryStreamCreate) Send(startTS telem.TimeStamp, data *telem.ChunkData) {
 	qsc.stream <- QueryStreamCreateArgs{startTS: startTS, data: data}
 }
 
 func (qsc *QueryStreamCreate) Close() {
-	log.Info("Closing")
 	close(qsc.stream)
 	<-qsc.doneChan
 }
@@ -115,6 +117,8 @@ func (qsc *QueryStreamCreate) listen() {
 		if c.Error() != nil {
 			qsc.Errors() <- c.Error()
 		}
+
+		qsc.setPrevChunk(nextChunk)
 	}
 	qsc.doneChan <- io.EOF
 }

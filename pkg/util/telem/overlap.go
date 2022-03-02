@@ -117,7 +117,7 @@ func (o ChunkOverlap) removeFrom(c *Chunk) error {
 }
 
 func (o ChunkOverlap) ChunksCompatible() bool {
-	return o.dest.dataRate == o.source.dataRate && o.dest.dataType == o.source.dataType
+	return o.dest.DataRate == o.source.DataRate && o.dest.DataType == o.source.DataType
 }
 
 func (o ChunkOverlap) baseRange() (TimeRange, bool) {

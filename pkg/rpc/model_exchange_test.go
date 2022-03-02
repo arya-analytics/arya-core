@@ -20,7 +20,7 @@ var _ = Describe("ModelExchange", func() {
 	Describe("FieldHandlerTelemBulk", func() {
 		Context("Standard usage", func() {
 			blk := telem.NewChunkData([]byte{})
-			mock.TelemBulkPopulateRandomFloat64(blk, 100)
+			mock.PopulateRandFloat64(blk, 100)
 			It("Should exchange to dest correctly", func() {
 				bulkModel := &BulkTelemModel{
 					Telem: blk,

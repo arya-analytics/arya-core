@@ -71,11 +71,13 @@ type RangeReplica struct {
 // |||| CHANNEL ||||
 
 type ChannelConfig struct {
-	ID       uuid.UUID `bun:"type:UUID,pk" model:"role:pk,"`
-	Name     string
-	Node     *Node `bun:"rel:belongs-to,join:node_id=id,"`
-	NodeID   int
-	DataRate telem.DataRate
+	ID             uuid.UUID `bun:"type:UUID,pk" model:"role:pk,"`
+	Name           string
+	Node           *Node `bun:"rel:belongs-to,join:node_id=id,"`
+	NodeID         int
+	DataRate       telem.DataRate
+	DataType       telem.DataType
+	ConflictPolicy models.ChannelConflictPolicy
 }
 
 type ChannelChunk struct {

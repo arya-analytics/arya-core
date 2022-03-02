@@ -14,23 +14,23 @@ const (
 
 type Chunk struct {
 	start    TimeStamp
-	dataType DataType
-	dataRate DataRate
+	DataType DataType
+	DataRate DataRate
 	*ChunkData
 }
 
 func NewChunk(start TimeStamp, dataType DataType, dataRate DataRate, data *ChunkData) *Chunk {
-	return &Chunk{start: start, dataType: dataType, dataRate: dataRate, ChunkData: data}
+	return &Chunk{start: start, DataType: dataType, DataRate: dataRate, ChunkData: data}
 }
 
 // |||| STATIC ATTRIBUTES ||||
 
 func (t *Chunk) SampleSize() int64 {
-	return sampleSize(t.dataType)
+	return sampleSize(t.DataType)
 }
 
 func (t *Chunk) Period() TimeSpan {
-	return t.dataRate.Period()
+	return t.DataRate.Period()
 }
 
 // |||| SIZING ||||
@@ -59,7 +59,7 @@ func (t *Chunk) Range() TimeRange {
 }
 
 func (t *Chunk) Span() TimeSpan {
-	return TimeSpan(t.Len() * int64(t.dataRate.Period()))
+	return TimeSpan(t.Len() * int64(t.DataRate.Period()))
 }
 
 // |||| INDEXING ||||
@@ -76,17 +76,17 @@ func (t *Chunk) ByteIndexAtTS(ts TimeStamp) int64 {
 
 func (t *Chunk) ValueAtTS(ts TimeStamp) interface{} {
 	byteI := t.ByteIndexAtTS(ts)
-	return convertBytes(t.ReadSlice(byteI, byteI+t.SampleSize()), t.dataType)
+	return convertBytes(t.ReadSlice(byteI, byteI+t.SampleSize()), t.DataType)
 }
 
 func (t *Chunk) ValuesInRange(rng TimeRange) interface{} {
 	capped := t.capRange(rng)
 	startByteI, endByteI := t.ByteIndexAtTS(capped.Start()), t.ByteIndexAtTS(capped.End())
-	return convertBytes(t.ReadSlice(startByteI, endByteI), t.dataType)
+	return convertBytes(t.ReadSlice(startByteI, endByteI), t.DataType)
 }
 
 func (t *Chunk) AllValues() interface{} {
-	return convertBytes(t.Bytes(), t.dataType)
+	return convertBytes(t.Bytes(), t.DataType)
 }
 
 // |||| MODIFICATION ||||

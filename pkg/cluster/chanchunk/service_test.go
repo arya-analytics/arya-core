@@ -60,7 +60,7 @@ var _ = Describe("Service", func() {
 			ChannelChunkID: cc.ID,
 			Telem:          telem.NewChunkData([]byte{}),
 		}
-		mockTlm.TelemBulkPopulateRandomFloat64(ccr.Telem, 500)
+		mockTlm.PopulateRandFloat64(ccr.Telem, 500)
 	})
 	JustBeforeEach(func() {
 		var serverErr error
