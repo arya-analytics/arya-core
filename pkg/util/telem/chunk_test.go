@@ -40,7 +40,7 @@ var _ = Describe("ChunkData", func() {
 
 		})
 		Describe("Timing", func() {
-			Describe("RangeSinceStart", func() {
+			Describe("RangeFromStart", func() {
 				It("Should return the correct start", func() {
 					Expect(chunk.Start()).To(Equal(startTs))
 				})
@@ -49,9 +49,9 @@ var _ = Describe("ChunkData", func() {
 				})
 				It("Should return the correct range", func() {
 					ts := chunk.Start().Add(chunk.Period() * 30)
-					Expect(chunk.RangeSinceStart(ts).Span()).To(Equal(chunk.Period() * 30))
-					Expect(chunk.RangeSinceStart(ts).Start()).To(Equal(chunk.Start()))
-					Expect(chunk.RangeSinceStart(ts).End()).To(Equal(ts))
+					Expect(chunk.RangeFromStart(ts).Span()).To(Equal(chunk.Period() * 30))
+					Expect(chunk.RangeFromStart(ts).Start()).To(Equal(chunk.Start()))
+					Expect(chunk.RangeFromStart(ts).End()).To(Equal(ts))
 				})
 			})
 		})
@@ -75,17 +75,17 @@ var _ = Describe("ChunkData", func() {
 		Describe("IndexAt", func() {
 			It("Should return the correct sample index", func() {
 				ts := chunk.Start().Add(chunk.Period() * 30)
-				Expect(chunk.IndexAtTS(ts)).To(Equal(int64(30)))
+				Expect(chunk.IndexAt(ts)).To(Equal(int64(30)))
 			})
 			It("Should return the correct sample byte index", func() {
 				ts := chunk.Start().Add(chunk.Period() * 30)
-				Expect(chunk.ByteIndexAtTS(ts)).To(Equal(int64(30 * 8)))
+				Expect(chunk.ByteIndexAt(ts)).To(Equal(int64(30 * 8)))
 			})
 		})
 		Describe("ValueAT", func() {
 			It("Should return the correct value at the timestamp", func() {
 				ts := chunk.Start().Add(chunk.Period() * 30)
-				Expect(chunk.ValueAtTS(ts).(float64)).To(Equal(float64(30)))
+				Expect(chunk.ValueAt(ts).(float64)).To(Equal(float64(30)))
 			})
 		})
 		Describe("Remove", func() {
@@ -93,14 +93,14 @@ var _ = Describe("ChunkData", func() {
 				ts := chunk.Start().Add(chunk.Period() * 30)
 				chunk.RemoveFromStart(ts)
 				Expect(chunk.Size())
-				Expect(chunk.ValueAtTS(chunk.Start())).To(Equal(float64(30)))
+				Expect(chunk.ValueAt(chunk.Start())).To(Equal(float64(30)))
 			})
 			It("Should removeFrom from the end", func() {
 				ts := chunk.Start().Add(chunk.Period() * 400)
 				chunk.RemoveFromEnd(ts)
 				Expect(chunk.Span()).To(Equal(chunk.Period() * 400))
-				Expect(chunk.ValueAtTS(chunk.Start())).To(Equal(float64(0)))
-				Expect(chunk.ValueAtTS(chunk.End())).To(Equal(float64(400)))
+				Expect(chunk.ValueAt(chunk.Start())).To(Equal(float64(0)))
+				Expect(chunk.ValueAt(chunk.End())).To(Equal(float64(400)))
 			})
 		})
 	})
@@ -132,20 +132,20 @@ var _ = Describe("ChunkData", func() {
 		Describe("Value Access", func() {
 			Describe("Single Value", func() {
 				It("Should return the correct value at the first timestamp", func() {
-					Expect(c.ValueAtTS(telem.TimeStamp(0))).To(Equal(1.0))
+					Expect(c.ValueAt(telem.TimeStamp(0))).To(Equal(1.0))
 				})
 				It("Should panic when trying to access the value at the last timestamp", func() {
 					Expect(func() {
-						c.ValueAtTS(c.End())
+						c.ValueAt(c.End())
 					}).To(Panic())
 				})
 				It("Should return the correct last value", func() {
-					Expect(c.ValueAtTS(c.End().Add(telem.NewTimeSpan(-1 * time.Second)))).To(Equal(9.0))
+					Expect(c.ValueAt(c.End().Add(telem.NewTimeSpan(-1 * time.Second)))).To(Equal(9.0))
 				})
 			})
 			Describe("Range of SourceValues", func() {
 				It("Should return the correct values", func() {
-					rng := c.RangeSinceStart(c.Start().Add(telem.NewTimeSpan(3 * time.Second)))
+					rng := c.RangeFromStart(c.Start().Add(telem.NewTimeSpan(3 * time.Second)))
 					Expect(rng.Start()).To(Equal(c.Start()))
 					Expect(rng.End()).To(Equal(c.Start().Add(telem.NewTimeSpan(3 * time.Second))))
 					vals := c.ValuesInRange(rng).([]float64)

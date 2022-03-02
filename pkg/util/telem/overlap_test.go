@@ -25,7 +25,7 @@ var _ = Describe("Overlap", func() {
 						cdTwo := telem.NewChunkData([]byte{})
 						Expect(cdTwo.WriteData([]float64{6, 7, 8, 9, 10, 11, 12})).To(BeNil())
 						cTwo = telem.NewChunk(cOne.Start().Add(telem.NewTimeSpan(5*time.Second)), telem.DataTypeFloat64, telem.DataRate(1), cdTwo)
-						Expect(cTwo.ValueAtTS(cTwo.Start())).To(Equal(float64(6)))
+						Expect(cTwo.ValueAt(cTwo.Start())).To(Equal(float64(6)))
 						o = cOne.Overlap(cTwo)
 					})
 					It("Should be valid", func() {
@@ -53,15 +53,15 @@ var _ = Describe("Overlap", func() {
 							Expect(o.RemoveFromSource()).To(BeNil())
 							Expect(cOne.Len()).To(Equal(int64(5)))
 							Expect(cTwo.Len()).To(Equal(int64(7)))
-							Expect(cTwo.ValueAtTS(cTwo.Start())).To(Equal(float64(6)))
-							Expect(cOne.ValueAtTS(cOne.End().Add(telem.NewTimeSpan(-1 * time.Second)))).To(Equal(float64(5)))
+							Expect(cTwo.ValueAt(cTwo.Start())).To(Equal(float64(6)))
+							Expect(cOne.ValueAt(cOne.End().Add(telem.NewTimeSpan(-1 * time.Second)))).To(Equal(float64(5)))
 						})
 						It("Should remove from the dest", func() {
 							Expect(o.RemoveFromDest()).To(BeNil())
 							Expect(cOne.Len()).To(Equal(int64(9)))
 							Expect(cTwo.Len()).To(Equal(int64(3)))
-							Expect(cTwo.ValueAtTS(cTwo.Start())).To(Equal(float64(10)))
-							Expect(cOne.ValueAtTS(cOne.End().Add(telem.NewTimeSpan(-1 * time.Second)))).To(Equal(float64(9)))
+							Expect(cTwo.ValueAt(cTwo.Start())).To(Equal(float64(10)))
+							Expect(cOne.ValueAt(cOne.End().Add(telem.NewTimeSpan(-1 * time.Second)))).To(Equal(float64(9)))
 						})
 
 					})
@@ -79,7 +79,7 @@ var _ = Describe("Overlap", func() {
 						cdTwo := telem.NewChunkData([]byte{})
 						Expect(cdTwo.WriteData([]float64{7, 8, 9, 10, 11, 12})).To(BeNil())
 						cTwo = telem.NewChunk(cOne.Start().Add(telem.NewTimeSpan(5*time.Second)), telem.DataTypeFloat64, telem.DataRate(1), cdTwo)
-						Expect(cTwo.ValueAtTS(cTwo.Start())).To(Equal(float64(7)))
+						Expect(cTwo.ValueAt(cTwo.Start())).To(Equal(float64(7)))
 						o = cOne.Overlap(cTwo)
 					})
 					It("Should be valid", func() {
@@ -162,7 +162,7 @@ var _ = Describe("Overlap", func() {
 						Expect(cdTwo.WriteData([]float64{2, 3, 4, 5})).To(BeNil())
 						cTwoStart := cOne.Start().Add(telem.NewTimeSpan(1 * time.Second))
 						cTwo = telem.NewChunk(cTwoStart, telem.DataTypeFloat64, telem.DataRate(1), cdTwo)
-						Expect(cTwo.ValueAtTS(cTwo.Start())).To(Equal(float64(2)))
+						Expect(cTwo.ValueAt(cTwo.Start())).To(Equal(float64(2)))
 						o = cOne.Overlap(cTwo)
 					})
 					It("Should be valid", func() {
@@ -202,7 +202,7 @@ var _ = Describe("Overlap", func() {
 						Expect(cdTwo.WriteData([]float64{3, 4, 5, 6})).To(BeNil())
 						cTwoStart := cOne.Start().Add(telem.NewTimeSpan(1 * time.Second))
 						cTwo = telem.NewChunk(cTwoStart, telem.DataTypeFloat64, telem.DataRate(1), cdTwo)
-						Expect(cTwo.ValueAtTS(cTwo.Start())).To(Equal(float64(3)))
+						Expect(cTwo.ValueAt(cTwo.Start())).To(Equal(float64(3)))
 						o = cOne.Overlap(cTwo)
 					})
 					It("Should be valid", func() {
