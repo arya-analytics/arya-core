@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/arya-analytics/aryacore/pkg/cluster"
 	"github.com/arya-analytics/aryacore/pkg/models"
+	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/telem/rng"
 	"github.com/arya-analytics/aryacore/pkg/util/errutil"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
@@ -28,17 +29,19 @@ type QueryStreamCreate struct {
 	_prevChunk *telem.Chunk
 	prevCCPK   uuid.UUID
 	errChan    chan error
+	doneChan   chan error
 	stream     chan QueryStreamCreateArgs
 	ctx        context.Context
 }
 
 func newStreamCreate(cluster cluster.Cluster, rngSvc *rng.Service) *QueryStreamCreate {
 	return &QueryStreamCreate{
-		cluster: cluster,
-		rngSvc:  rngSvc,
-		_config: &models.ChannelConfig{},
-		errChan: make(chan error, 10),
-		stream:  make(chan QueryStreamCreateArgs),
+		cluster:  cluster,
+		rngSvc:   rngSvc,
+		_config:  &models.ChannelConfig{},
+		errChan:  make(chan error, 10),
+		stream:   make(chan QueryStreamCreateArgs),
+		doneChan: make(chan error),
 	}
 }
 
@@ -64,9 +67,14 @@ func (qsc *QueryStreamCreate) prevChunk() *telem.Chunk {
 			Model(ccr).
 			Relation("ChannelChunk", "ID", "StartTS", "Size").
 			WhereFields(query.WhereFields{"ChannelChunk.ChannelConfigID": qsc.config().ID}).Exec(qsc.ctx); err != nil {
-			qsc.Errors() <- err
+			sErr, ok := err.(storage.Error)
+			if !ok || sErr.Type != storage.ErrorTypeItemNotFound {
+				qsc.Errors() <- err
+			}
 		}
-		qsc._prevChunk = telem.NewChunk(ccr.ChannelChunk.StartTS, qsc.config().DataType, qsc.config().DataRate, ccr.Telem)
+		if ccr.Telem != nil {
+			qsc._prevChunk = telem.NewChunk(ccr.ChannelChunk.StartTS, qsc.config().DataType, qsc.config().DataRate, ccr.Telem)
+		}
 	}
 	return qsc._prevChunk
 }
@@ -76,8 +84,9 @@ func (qsc *QueryStreamCreate) Send(startTS telem.TimeStamp, data *telem.ChunkDat
 }
 
 func (qsc *QueryStreamCreate) Close() {
+	log.Info("Closing")
 	close(qsc.stream)
-	<-qsc.Errors()
+	<-qsc.doneChan
 }
 
 func (qsc *QueryStreamCreate) Errors() chan error {
@@ -85,7 +94,6 @@ func (qsc *QueryStreamCreate) Errors() chan error {
 }
 
 func (qsc *QueryStreamCreate) listen() {
-	qsc.prevChunk()
 	for args := range qsc.stream {
 		c := errutil.NewCatchWCtx(qsc.ctx)
 		alloc := qsc.rngSvc.NewAllocate()
@@ -101,7 +109,6 @@ func (qsc *QueryStreamCreate) listen() {
 
 		cc.Size, cc.StartTS = nextChunk.Size(), nextChunk.Start()
 
-		log.Info("made it here")
 		c.Exec(qsc.cluster.NewCreate().Model(cc).Exec)
 		c.Exec(qsc.cluster.NewCreate().Model(ccr).Exec)
 
@@ -109,7 +116,7 @@ func (qsc *QueryStreamCreate) listen() {
 			qsc.Errors() <- c.Error()
 		}
 	}
-	qsc.Errors() <- io.EOF
+	qsc.doneChan <- io.EOF
 }
 
 func (qsc *QueryStreamCreate) validateNextChunk(nextChunk *telem.Chunk) error {

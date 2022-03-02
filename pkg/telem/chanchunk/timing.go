@@ -32,6 +32,9 @@ const (
 // |||| VALIDATION |||||
 
 func validateTiming(vCtx CreateValidateContext) error {
+	if vCtx.prevChunk == nil {
+		return nil
+	}
 	ov := vCtx.nextChunk.Overlap(vCtx.prevChunk)
 	if !ov.ChunksCompatible() {
 		return TimingError{Type: TimingErrorTypeIncompatibleChunks}
