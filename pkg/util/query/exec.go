@@ -10,6 +10,20 @@ import (
 // during query execution.
 //
 // If you want to call different Execute based on the type of query, see Switch.
+//
+// Parsing and Executing a packed Query (Pack).
+//
+// 1. To parse the Pack, use the different opts available to retrieve options from the Pack. As an example, here's how
+// to retrieve the primary key of a query.
+//
+//		pkc, ok := query.PKOpt(p)
+//
+// pkc will hold a model.PKChain representing the primary keys of the query. ok will be false if the primary keys don't
+// exist. Repeat this process with the different options you want to provide support for to extract all the info you need.
+//
+// 2. Use the parsed options and provided context to run the query, and binds the results into the Pack.Model().
+// in the case of options with an 'into' arg (like CalcOpt), bind the result into the provided argument.
+//
 type Execute func(ctx context.Context, p *Pack) error
 
 // |||| SWITCH ||||
