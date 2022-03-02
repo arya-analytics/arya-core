@@ -84,7 +84,7 @@ var _ = Describe("QueryRetrieve", func() {
 				})
 			})
 		})
-		Context("Object Chunk + Meta Chunk", func() {
+		Context("Object + Meta Data", func() {
 			Context("Single item", func() {
 				var (
 					channelChunk        *models.ChannelChunk
@@ -133,6 +133,17 @@ var _ = Describe("QueryRetrieve", func() {
 						Expect(err).To(BeNil())
 						Expect(resCCR.ID).To(Equal(channelChunkReplica.ID))
 						Expect(resCCR.Telem).ToNot(BeNil())
+						Expect(resCCR.Telem.Bytes()).To(Equal(bytes))
+					})
+				})
+				Describe("Retrieving the chunk by a non pk field", func() {
+					It("Should Retrieve the correct item", func() {
+						resCCR := &models.ChannelChunkReplica{}
+						err := store.NewRetrieve().
+							Model(resCCR).
+							WhereFields(query.WhereFields{"ChannelChunkID": channelChunk.ID}).
+							Exec(ctx)
+						Expect(err).To(BeNil())
 						Expect(resCCR.Telem.Bytes()).To(Equal(bytes))
 					})
 				})

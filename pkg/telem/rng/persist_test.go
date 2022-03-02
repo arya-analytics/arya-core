@@ -3,7 +3,6 @@ package rng_test
 import (
 	"github.com/arya-analytics/aryacore/pkg/cluster/mock"
 	"github.com/arya-analytics/aryacore/pkg/models"
-	mockstorage "github.com/arya-analytics/aryacore/pkg/storage/mock"
 	"github.com/arya-analytics/aryacore/pkg/telem/rng"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
@@ -24,7 +23,7 @@ var _ = Describe("Persist", func() {
 		BeforeEach(func() {
 			if clust == nil {
 				var err error
-				clust, err = mock.New(ctx, mockstorage.WithVerbose())
+				clust, err = mock.New(ctx)
 				Expect(err).To(BeNil())
 			}
 			p = rng.NewPersistCluster(clust)

@@ -61,6 +61,16 @@ var _ = Describe("QueryRetrieve", func() {
 				Expect([]uuid.UUID{channelChunk.ID, channelChunkTwo.ID}).To(
 					ContainElements(models[0].ID, models[1].ID))
 			})
+			It("Should ignore the query a relevant field isn't specified", func() {
+				var models []*models.ChannelChunkReplica
+				err := engine.NewRetrieve().
+					Model(&models).
+					Fields("ID").
+					WherePKs([]uuid.UUID{channelChunk.ID, channelChunkTwo.ID}).
+					Exec(ctx)
+				Expect(err).To(BeNil())
+				Expect(models).To(HaveLen(0))
+			})
 		})
 	})
 	Describe("Edge cases + errors", func() {

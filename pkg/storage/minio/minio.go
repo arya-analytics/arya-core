@@ -48,22 +48,22 @@ func (e *Engine) shouldHandle(p *query.Pack) bool {
 	}
 	fldsOpt, ok := query.RetrieveFieldsOpt(p)
 	if ok {
-		stc := model.NewReflect(p.Model().Pointer()).StructTagChain()
-		return stc.HasAnyFields(fldsOpt.AllExcept("ID")...)
+		rfl := model.NewReflect(catalog().New(p.Model().Pointer()))
+		return rfl.StructTagChain().HasAnyFields(fldsOpt.AllExcept("ID")...)
 	}
 	return true
 }
 
 func (e *Engine) NewCreate() *query.Create {
-	return query.NewCreate().BindExec(newCreate(e.client()).exec)
+	return query.NewCreate().BindExec(e.Exec)
 }
 
 func (e *Engine) NewRetrieve() *query.Retrieve {
-	return query.NewRetrieve().BindExec(newRetrieve(e.client()).exec)
+	return query.NewRetrieve().BindExec(e.Exec)
 }
 
 func (e *Engine) NewDelete() *query.Delete {
-	return query.NewDelete().BindExec(newDelete(e.client()).exec)
+	return query.NewDelete().BindExec(e.Exec)
 }
 
 func (e *Engine) NewMigrate() storage.QueryObjectMigrate {

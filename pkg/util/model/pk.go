@@ -151,3 +151,14 @@ func (pkc PKChain) AllZero() bool {
 	}
 	return allZero
 }
+
+// AllNonZero checks if all the PK in PKChain are non zero.
+func (pkc PKChain) AllNonZero() bool {
+	allNonZero := true
+	for _, pk := range pkc {
+		if pk.IsZero() {
+			allNonZero = false
+		}
+	}
+	return allNonZero
+}

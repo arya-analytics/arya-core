@@ -32,7 +32,7 @@ func (d *def) runBeforeHooks(ctx context.Context, p *query.Pack) error {
 
 func (d *def) runAfterHooks(ctx context.Context, p *query.Pack) error {
 	for _, hook := range d.s.hooks() {
-		if err := hook.BeforeQuery(ctx, p); err != nil {
+		if err := hook.AfterQuery(ctx, p); err != nil {
 			return err
 		}
 	}

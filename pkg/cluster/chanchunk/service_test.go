@@ -63,10 +63,7 @@ var _ = Describe("Service", func() {
 			Telem:          telem.NewChunkData([]byte{}),
 		}
 		mockTlm.TelemBulkPopulateRandomFloat64(ccr.Telem, 500)
-	})
-	BeforeEach(func() {
 		localSvc = chanchunk.NewServiceLocalStorage(store)
-
 	})
 	JustBeforeEach(func() {
 		var serverErr error

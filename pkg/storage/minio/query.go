@@ -173,6 +173,12 @@ func (b *base) model(p *query.Pack) {
 func (w *where) pk(p *query.Pack) {
 	if pkc, ok := query.PKOpt(p); ok {
 		w.pkc = pkc
+	} else if p.Model().PKChain().AllNonZero() {
+		// CLARIFICATION: If there wasn't a primary key specified, try to pull the primary key
+		// from the model.
+		w.pkc = p.Model().PKChain()
+	} else {
+		panic("where queries require a primary key! tried to pull from model, but was unable to")
 	}
 }
 
