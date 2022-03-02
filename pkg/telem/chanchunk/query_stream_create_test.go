@@ -10,7 +10,6 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/util/telem/mock"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	log "github.com/sirupsen/logrus"
 	"io"
 	"time"
 )
@@ -87,7 +86,7 @@ var _ = Describe("QueryStreamCreate", func() {
 				Expect(resCC.Size).To(Equal(int64(32)))
 			})
 		})
-		FDescribe("Multiple Chunks", func() {
+		Describe("Multiple Chunks", func() {
 			It("Should create multiple contiguous chunks correctly", func() {
 				By("Creating the stream")
 				stream := svc.NewStreamCreate()
@@ -105,21 +104,20 @@ var _ = Describe("QueryStreamCreate", func() {
 					}
 				}()
 
-				cc := mock.ContiguousChunks(
-					24,
+				cc := mock.ChunkSet(
+					5,
 					telem.TimeStamp(0),
 					telem.DataTypeFloat64,
 					telem.DataRate(25),
-					telem.NewTimeSpan(60*time.Minute),
+					telem.NewTimeSpan(1*time.Minute),
+					telem.TimeSpan(0),
 				)
-				t0 := time.Now()
 				for _, c := range cc {
 					stream.Send(c.Start(), c.ChunkData)
 				}
 
 				By("Closing the stream")
 				stream.Close()
-				log.Infof("Wrote %v samples in %v", cc[0].Len()*24, time.Now().Sub(t0))
 
 				By("Being error free")
 				Expect(streamError).To(BeNil())
@@ -134,6 +132,63 @@ var _ = Describe("QueryStreamCreate", func() {
 				Expect(len(resCC)).To(Equal(5))
 				Expect(resCC[0].Size).To(Equal(cc[0].Size()))
 				Expect(resCC[4].StartTS).To(Equal(cc[4].Start()))
+			})
+			It("Should resolve issues with overlapping chunks", func() {
+				By("Creating the stream")
+				stream := svc.NewStreamCreate()
+
+				By("Starting the stream")
+				go stream.Start(ctx, config.ID)
+
+				var streamError error
+				go func() {
+					defer GinkgoRecover()
+					for err := range stream.Errors() {
+						if err != io.EOF {
+							Fail(err.Error())
+						}
+					}
+				}()
+
+				cc := mock.ChunkSet(
+					5,
+					telem.TimeStamp(0),
+					telem.DataTypeFloat64,
+					telem.DataRate(25),
+					telem.NewTimeSpan(1*time.Minute),
+					telem.NewTimeSpan(-1*time.Second),
+				)
+				for _, c := range cc {
+					stream.Send(c.Start(), c.ChunkData)
+				}
+
+				By("Closing the stream")
+				stream.Close()
+
+				By("Being error free")
+				Expect(streamError).To(BeNil())
+
+				By("Retrieving the chunk after creation")
+				var resCC []*models.ChannelChunkReplica
+				Expect(clust.NewRetrieve().
+					Model(&resCC).
+					Relation("ChannelChunk", "StartTS", "Size").
+					WhereFields(query.WhereFields{"ChannelChunk.ChannelConfigID": config.ID}).
+					Order(query.OrderASC, "ChannelChunk.StartTS").
+					Exec(ctx)).To(BeNil())
+				Expect(len(resCC)).To(Equal(5))
+				var resTC []*telem.Chunk
+				for _, ccr := range resCC {
+					resTC = append(resTC, telem.NewChunk(ccr.ChannelChunk.StartTS, config.DataType, config.DataRate, ccr.Telem))
+				}
+				for i, tc := range resTC {
+					if i == 0 {
+						Expect(tc.Start()).To(Equal(telem.TimeStamp(0)))
+						continue
+					}
+					Expect(tc.Start()).To(Equal(resTC[i-1].End()))
+					Expect(tc.Span()).To(Equal(telem.NewTimeSpan(59 * time.Second)))
+				}
 			})
 		})
 	})

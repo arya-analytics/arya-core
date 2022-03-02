@@ -75,7 +75,8 @@ func discardOverlap(rCtx CreateResolveContext) error {
 	case telem.OverlapTypeNoneOrInvalid:
 		return nil
 	case telem.OverlapTypeRightPartial:
-		return ov.RemoveFromSource()
+		err := ov.RemoveFromSource()
+		return err
 	case telem.OverlapTypeDuplicate:
 		return ov.RemoveFromSource()
 	case telem.OverlapTypeSourceConsume:
