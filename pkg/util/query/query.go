@@ -1,3 +1,22 @@
+// Package query holds utilities for assembling/writing queries, transporting them through arya's data layers,
+// and executing them.
+//
+// The foundation of this package lies in separating writing queries and executing them, to allow for patterns
+// like mediators and chains of responsibility to execute queries without needing to provide the facilities for
+// writing them.
+//
+// It supplies the following query 'writers' (types that implement the Query interface):
+// Create, Update, Retrieve, and Delete.
+// Each writer uses an ORM like interface and 'packs' the query into a Pack.
+// A Pack represents an encapsulated query that can then be transported parsed, and executed in different locations.
+// See Pack for information for parsing and executing packed queries.
+//
+// It also supplies Assemble interfaces as well as an AssembleBase implementation for adding query assembly functionality
+// to your package.
+//
+// Finally, it provides utilities for executing queries, such as Execute and Switch. See these types for more info
+// on executing a query.
+//
 package query
 
 import (
