@@ -1,12 +1,13 @@
 package query
 
-// QueryCreate creates a new model in storage.
+// Create is used for writing Queries that create/persist models to storage.
 type Create struct {
 	base
 }
 
 // || CONSTRUCTOR ||
 
+// NewCreate instantiates a new Create query.
 func NewCreate() *Create {
 	c := &Create{}
 	c.baseInit(c)

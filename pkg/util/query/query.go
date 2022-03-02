@@ -2,18 +2,34 @@ package query
 
 import (
 	"context"
-	"fmt"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 )
 
 // |||| QUERY ||||
 
+// Query is a general interface for a type that can be used to write queries. (examples within this package are
+// Create, Update, Retrieve, Delete).
+//
+//
+// Pack packs the query into a Pack. (I know, so self-explanatory!)
+//
+// Exec executes the query. A query should also provide a utility for binding Execute which can be used to execute
+// the query (this method should be named BindExec).For an example, see Retrieve.
+// It's typical for a Query to call Execute internally when the caller calls Exec.
+//
 type Query interface {
-	baseBindExec(e Execute)
 	Pack() *Pack
 	Exec(ctx context.Context) error
 }
 
+// |||| PACK ||||
+
+// Pack is a representation of a query as a struct. It stores the model, variant, and options for a query.
+// A Pack can be easily transported from where it's assembled to where it needs to be executed.
+//
+// Pack should generally not be instantiated directly, and should instead be created by using a Query such as
+// Create.
+//
 type Pack struct {
 	query Query
 	model *model.Reflect
@@ -33,41 +49,12 @@ func (q *Pack) bindModel(m interface{}) {
 	}
 }
 
+// Model returns the packed query's model.
 func (q *Pack) Model() *model.Reflect {
 	return q.model
 }
 
+// Query returns the underlying Query the pack was built off of.
 func (q *Pack) Query() Query {
 	return q.query
-}
-
-// |||| SWITCH ||||
-
-type Ops struct {
-	Create   Execute
-	Retrieve Execute
-	Delete   Execute
-	Update   Execute
-}
-
-func Switch(ctx context.Context, p *Pack, ops Ops) error {
-	switch p.Query().(type) {
-	case *Create:
-		if ops.Create != nil {
-			return ops.Create(ctx, p)
-		}
-	case *Retrieve:
-		if ops.Retrieve != nil {
-			return ops.Retrieve(ctx, p)
-		}
-	case *Update:
-		if ops.Update != nil {
-			return ops.Update(ctx, p)
-		}
-	case *Delete:
-		if ops.Delete != nil {
-			return ops.Delete(ctx, p)
-		}
-	}
-	panic(fmt.Sprintf("%T not supported for model %s", p.Query(), p.Model().Type().Name()))
 }
