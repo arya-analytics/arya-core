@@ -6,6 +6,7 @@ import (
 	"reflect"
 )
 
+// ByteOrder returns the binary.ByteOrder used to encode telemetry into bytes.
 func ByteOrder() binary.ByteOrder {
 	return binary.BigEndian
 }
