@@ -23,14 +23,14 @@ func newWrappedExchange(sma *model.Exchange) *exchange {
 }
 
 func (m *exchange) samples() (samples []timeseries.Sample) {
-	m.Dest.ForEach(func(rfl *model.Reflect, i int) {
+	m.Dest().ForEach(func(rfl *model.Reflect, i int) {
 		samples = append(samples, m.newSampleFromRFL(rfl))
 	})
 	return samples
 }
 
 func (m *exchange) seriesNames() (names []string) {
-	m.Dest.ForEach(func(rfl *model.Reflect, i int) {
+	m.Dest().ForEach(func(rfl *model.Reflect, i int) {
 		pk := model.NewPK(keyField(rfl).Interface())
 		names = append(names, pk.String())
 	})
@@ -52,7 +52,7 @@ func (m *exchange) bindRes(key string, res interface{}) error {
 			if err != nil {
 				return err
 			}
-			if m.Dest.IsChain() {
+			if m.Dest().IsChain() {
 				m.appendSample(sample)
 			} else {
 				panic("can't bind multiple result values to a non-chain")
@@ -63,10 +63,10 @@ func (m *exchange) bindRes(key string, res interface{}) error {
 		if err != nil {
 			return err
 		}
-		if m.Dest.IsChain() {
+		if m.Dest().IsChain() {
 			m.appendSample(sample)
 		} else {
-			m.setFields(m.Dest, sample)
+			m.setFields(m.Dest(), sample)
 		}
 	}
 	return nil
@@ -81,9 +81,9 @@ func (m *exchange) newSampleFromRFL(rfl *model.Reflect) timeseries.Sample {
 }
 
 func (m *exchange) appendSample(sample timeseries.Sample) {
-	newRfl := m.Dest.NewStruct()
+	newRfl := m.Dest().NewStruct()
 	m.setFields(newRfl, sample)
-	m.Dest.ChainAppend(newRfl)
+	m.Dest().ChainAppend(newRfl)
 }
 
 func (m *exchange) setFields(rfl *model.Reflect, sample timeseries.Sample) {

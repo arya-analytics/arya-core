@@ -83,7 +83,7 @@ type ServerRPCPersistCluster struct {
 
 func (sp *ServerRPCPersistCluster) RetrieveReplica(ctx context.Context, ccr *api.ChannelChunkReplica, pk model.PK) error {
 	exc := rpc.NewModelExchange(&models.ChannelChunkReplica{}, ccr)
-	if err := sp.Cluster.NewRetrieve().Model(exc.Source.Pointer()).WherePK(pk.Raw()).Exec(ctx); err != nil {
+	if err := sp.Cluster.NewRetrieve().Model(exc.Source().Pointer()).WherePK(pk.Raw()).Exec(ctx); err != nil {
 		return err
 	}
 	exc.ToDest()

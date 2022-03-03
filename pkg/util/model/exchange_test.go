@@ -315,11 +315,11 @@ var _ = Describe("Model Exchange", func() {
 					me.ToDest()
 				})
 				It("Should return the correct source", func() {
-					Expect(me.Source.Type()).To(Equal(model.NewReflect(&mock.ModelA{}).
+					Expect(me.Source().Type()).To(Equal(model.NewReflect(&mock.ModelA{}).
 						Type()))
 				})
 				It("Should return the correct dest", func() {
-					Expect(me.Dest.Type()).To(Equal(model.NewReflect(&mock.ModelB{}).Type()))
+					Expect(me.Dest().Type()).To(Equal(model.NewReflect(&mock.ModelB{}).Type()))
 				})
 			})
 			Context("Single model", func() {
@@ -341,10 +341,10 @@ var _ = Describe("Model Exchange", func() {
 					me.ToDest()
 				})
 				It("Should return the correct source", func() {
-					Expect(me.Source.Type()).To(Equal(model.NewReflect(&mock.ModelA{}).Type()))
+					Expect(me.Source().Type()).To(Equal(model.NewReflect(&mock.ModelA{}).Type()))
 				})
 				It("Should return the correct dest", func() {
-					Expect(me.Dest.Type()).To(Equal(model.NewReflect(&mock.ModelB{}).Type()))
+					Expect(me.Dest().Type()).To(Equal(model.NewReflect(&mock.ModelB{}).Type()))
 				})
 			})
 		})

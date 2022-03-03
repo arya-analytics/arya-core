@@ -77,7 +77,7 @@ func (c *create) exec(ctx context.Context, p *query.Pack) error {
 		if dv.Data == nil {
 			return storage.Error{
 				Type:    storage.ErrorTypeInvalidArgs,
-				Message: fmt.Sprintf("Minio data to write is nil! Model %s with id %s", c.exc.Dest.Type(), dv.PK),
+				Message: fmt.Sprintf("Minio data to write is nil! Model %s with id %s", c.exc.Dest().Type(), dv.PK),
 			}
 		}
 		dv.Data.Reset()

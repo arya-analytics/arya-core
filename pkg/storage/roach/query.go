@@ -56,7 +56,7 @@ func newDelete(db *bun.DB) *del {
 func (c *create) exec(ctx context.Context, p *query.Pack) error {
 	c.convertOpts(p)
 	c.exc.ToDest()
-	beforeInsertSetUUID(c.exc.Dest)
+	beforeInsertSetUUID(c.exc.Dest())
 	_, err := c.bunQ.Exec(ctx)
 	c.exc.ToSource()
 	return newErrorHandler().Exec(err)
@@ -126,8 +126,8 @@ func (b *base) exchangeToSource() {
 func (b *base) model(p *query.Pack) interface{} {
 	ptr := p.Model().Pointer()
 	b.exc = model.NewExchange(ptr, catalog().New(ptr))
-	b.sql = sqlGen{db: b.db, m: b.exc.Dest}
-	return b.exc.Dest.Pointer()
+	b.sql = sqlGen{db: b.db, m: b.exc.Dest()}
+	return b.exc.Dest().Pointer()
 }
 
 func (c *create) model(p *query.Pack) {
