@@ -2,6 +2,7 @@ package validate_test
 
 import (
 	"errors"
+	"github.com/arya-analytics/aryacore/pkg/util/errutil"
 	"github.com/arya-analytics/aryacore/pkg/util/validate"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -39,7 +40,7 @@ var _ = Describe("Resolve", func() {
 	It("Should return the original error when no resolve can handle it", func() {
 		run := validate.NewResolve([]func(err error, args string) (bool, error){
 			dummyResolveAction,
-		}, validate.WithAggregation())
+		}, errutil.WithAggregation())
 		err := run.Exec(errors.New("normal ol err"), "unresolveable").Error()
 		Expect(err.Error()).To(Equal("normal ol err"))
 		Expect(run.Handled()).To(BeFalse())

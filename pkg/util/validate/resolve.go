@@ -6,26 +6,13 @@ import (
 
 type Resolve[T any] struct {
 	actions   []func(err error, args T) (bool, error)
-	opts      *opts
 	catch     errutil.Catch
 	sourceErr error
 	handled   bool
 }
 
-func NewResolve[T any](actions []func(err error, args T) (bool, error), rOpts ...Opt) *Resolve[T] {
-	re := &Resolve[T]{
-		actions: actions,
-		opts:    &opts{},
-	}
-	for _, opt := range rOpts {
-		opt(re.opts)
-	}
-	if re.opts.aggregate {
-		re.catch = &errutil.CatchAggregate{}
-	} else {
-		re.catch = &errutil.CatchSimple{}
-	}
-	return re
+func NewResolve[T any](actions []func(err error, args T) (bool, error), opts ...errutil.CatchOpt) *Resolve[T] {
+	return &Resolve[T]{actions: actions, catch: errutil.NewCatchSimple(opts...)}
 }
 
 func (re *Resolve[T]) Exec(err error, args T) *Resolve[T] {

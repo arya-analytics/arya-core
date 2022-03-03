@@ -13,8 +13,8 @@ type Catch struct {
 }
 
 // NewCatch creates a new catch with the provided context.Context and Pack.
-func NewCatch(ctx context.Context, p *Pack) *Catch {
-	return &Catch{CatchWCtx: errutil.NewCatchWCtx(ctx), p: p}
+func NewCatch(ctx context.Context, p *Pack, opts ...errutil.CatchOpt) *Catch {
+	return &Catch{CatchWCtx: errutil.NewCatchWCtx(ctx, opts...), p: p}
 }
 
 // Exec runs the provided Execute and catches an of the errors returned.

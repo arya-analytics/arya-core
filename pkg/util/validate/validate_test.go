@@ -2,6 +2,7 @@ package validate_test
 
 import (
 	"errors"
+	"github.com/arya-analytics/aryacore/pkg/util/errutil"
 	"github.com/arya-analytics/aryacore/pkg/util/validate"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -30,7 +31,7 @@ var _ = Describe("validateStart", func() {
 				func(a string) error {
 					return errors.New("an even stranger error")
 				},
-			}, validate.WithAggregation())
+			}, errutil.WithAggregation())
 			err := v.Exec("string").Error()
 			Expect(err).ToNot(BeNil())
 			Expect(err).To(Equal(errors.New("a strange error")))

@@ -18,7 +18,7 @@ type queryBase struct {
 func (q *queryBase) baseInit(s *storage, query Query) {
 	q.storage = s
 	q._query = query
-	q._catcher = &errutil.CatchSimple{}
+	q._catcher = errutil.NewCatchSimple()
 }
 
 // |||| MODEL UTILITIES ||||

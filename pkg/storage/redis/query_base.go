@@ -15,7 +15,7 @@ type queryBase struct {
 }
 
 func (q *queryBase) baseInit(client *timeseries.Client) {
-	q.catcher = &errutil.CatchSimple{}
+	q.catcher = errutil.NewCatchSimple()
 	q.handler = newErrorHandler()
 	q._client = client
 }

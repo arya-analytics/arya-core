@@ -9,34 +9,60 @@ type Catch interface {
 	Reset()
 }
 
+// |||| OPTS ||||
+
+type catchOpts struct {
+	aggregate bool
+}
+
+type CatchOpt func(o *catchOpts)
+
+func WithAggregation() CatchOpt {
+	return func(o *catchOpts) {
+		o.aggregate = true
+	}
+}
+
 // |||| SIMPLE CATCH ||||
 
 type CatchSimple struct {
-	err error
+	errors []error
+	opts   *catchOpts
+}
+
+func NewCatchSimple(opts ...CatchOpt) *CatchSimple {
+	c := &CatchSimple{opts: &catchOpts{}}
+	for _, o := range opts {
+		o(c.opts)
+	}
+	return c
 }
 
 type CatchAction func() error
 
 func (c *CatchSimple) Exec(ca CatchAction) {
-	if c.err != nil {
+	if !c.opts.aggregate && len(c.errors) > 0 {
 		return
 	}
 	err := ca()
 	if err != nil {
-		c.err = err
+		c.errors = append(c.errors, err)
 	}
 }
 
 func (c *CatchSimple) Reset() {
-	c.err = nil
+	c.errors = []error{}
 }
 
 func (c *CatchSimple) Error() error {
-	return c.err
+	if len(c.Errors()) == 0 {
+		return nil
+	}
+	return c.Errors()[0]
 }
 
 func (c *CatchSimple) Errors() []error {
-	return []error{c.err}
+	return c.errors
 }
 
 // |||| CATCH W CONTEXT ||||
@@ -46,40 +72,12 @@ type CatchWCtx struct {
 	ctx context.Context
 }
 
-func NewCatchWCtx(ctx context.Context) *CatchWCtx {
-	return &CatchWCtx{CatchSimple: &CatchSimple{}, ctx: ctx}
+func NewCatchWCtx(ctx context.Context, opts ...CatchOpt) *CatchWCtx {
+	return &CatchWCtx{CatchSimple: NewCatchSimple(opts...), ctx: ctx}
 }
 
 type CatchActionCtx func(ctx context.Context) error
 
 func (c *CatchWCtx) Exec(ca CatchActionCtx) {
 	c.CatchSimple.Exec(func() error { return ca(c.ctx) })
-}
-
-// |||| CATCH AGGREGATE |||
-
-type CatchAggregate struct {
-	errors []error
-}
-
-func (c *CatchAggregate) Exec(actionFunc CatchAction) {
-	err := actionFunc()
-	if err != nil {
-		c.errors = append(c.errors, err)
-	}
-}
-
-func (c *CatchAggregate) Error() error {
-	if len(c.Errors()) == 0 {
-		return nil
-	}
-	return c.Errors()[0]
-}
-
-func (c *CatchAggregate) Errors() []error {
-	return c.errors
-}
-
-func (c *CatchAggregate) Reset() {
-	c.errors = []error{}
 }

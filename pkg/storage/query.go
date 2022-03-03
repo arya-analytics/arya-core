@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"github.com/arya-analytics/aryacore/pkg/util/errutil"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
 )
 
@@ -22,21 +23,19 @@ func newUpdate(s *storage) *update {
 }
 
 func (d *def) runBeforeHooks(ctx context.Context, p *query.Pack) error {
+	c := query.NewCatch(ctx, p, errutil.WithAggregation())
 	for _, hook := range d.s.hooks() {
-		if err := hook.BeforeQuery(ctx, p); err != nil {
-			return err
-		}
+		c.Exec(hook.BeforeQuery)
 	}
-	return nil
+	return c.Error()
 }
 
 func (d *def) runAfterHooks(ctx context.Context, p *query.Pack) error {
+	c := query.NewCatch(ctx, p, errutil.WithAggregation())
 	for _, hook := range d.s.hooks() {
-		if err := hook.AfterQuery(ctx, p); err != nil {
-			return err
-		}
+		c.Exec(hook.AfterQuery)
 	}
-	return nil
+	return c.Error()
 }
 
 func (d *def) exec(ctx context.Context, p *query.Pack) error {
