@@ -10,11 +10,12 @@ func _() {
 	var x [1]struct{}
 	_ = x[TimingErrorTypeChunkOverlap-1]
 	_ = x[TimingErrorTypeIncompatibleChunks-2]
+	_ = x[TimingErrorTypeNonContiguous-3]
 }
 
-const _TimingErrorType_name = "TimingErrorTypeChunkOverlapTimingErrorTypeIncompatibleChunks"
+const _TimingErrorType_name = "TimingErrorTypeChunkOverlapTimingErrorTypeIncompatibleChunksTimingErrorTypeNonContiguous"
 
-var _TimingErrorType_index = [...]uint8{0, 27, 60}
+var _TimingErrorType_index = [...]uint8{0, 27, 60, 88}
 
 func (i TimingErrorType) String() string {
 	i -= 1

@@ -2,40 +2,40 @@ package chanchunk
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/models"
-	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"github.com/google/uuid"
 	"sync"
 )
 
-type ObservedChannel struct {
-	ConfigPK       uuid.UUID
-	LatestChunkPK  uuid.UUID
-	ConflictPolicy models.ChannelConflictPolicy
-	DataType       telem.DataType
-	DataRate       telem.DataRate
-	LatestSampleTS telem.TimeStamp
+type ObservedChannelConfig struct {
+	PK    uuid.UUID
+	State models.ChannelState
 }
 
 type Observe interface {
-	//Add(oc ObservedChannel)
-	Retrieve(cfgPK uuid.UUID) (ObservedChannel, bool)
-	//RetrieveAll() []ObservedChannel
+	Add(oc ObservedChannelConfig)
+	Retrieve(pk uuid.UUID) (ObservedChannelConfig, bool)
 }
 
 type ObserveMem struct {
 	mu      sync.Mutex
-	chanMap map[uuid.UUID]ObservedChannel
+	chanMap map[uuid.UUID]ObservedChannelConfig
 }
 
-func NewObserveMem(channels []ObservedChannel) *ObserveMem {
-	chanMap := map[uuid.UUID]ObservedChannel{}
-	for _, c := range channels {
-		chanMap[c.ConfigPK] = c
+func NewObserveMem(channels []ObservedChannelConfig) *ObserveMem {
+	o := &ObserveMem{chanMap: map[uuid.UUID]ObservedChannelConfig{}}
+	for _, oc := range channels {
+		o.Add(oc)
 	}
-	return &ObserveMem{chanMap: chanMap}
+	return o
 }
 
-func (o *ObserveMem) Retrieve(cfgPk uuid.UUID) (ObservedChannel, bool) {
+func (o *ObserveMem) Retrieve(cfgPk uuid.UUID) (ObservedChannelConfig, bool) {
 	oc, ok := o.chanMap[cfgPk]
 	return oc, ok
+}
+
+func (o *ObserveMem) Add(oc ObservedChannelConfig) {
+	o.mu.Lock()
+	defer o.mu.Unlock()
+	o.chanMap[oc.PK] = oc
 }

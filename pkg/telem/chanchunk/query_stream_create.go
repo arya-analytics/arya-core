@@ -2,7 +2,7 @@ package chanchunk
 
 import (
 	"context"
-	"github.com/arya-analytics/aryacore/pkg/cluster"
+	"errors"
 	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/telem/rng"
@@ -21,7 +21,8 @@ type QueryStreamCreateArgs struct {
 }
 
 type QueryStreamCreate struct {
-	cluster    cluster.Cluster
+	obs        Observe
+	exec       query.Execute
 	rngSvc     *rng.Service
 	configPK   uuid.UUID
 	_config    *models.ChannelConfig
@@ -33,9 +34,10 @@ type QueryStreamCreate struct {
 	ctx        context.Context
 }
 
-func newStreamCreate(cluster cluster.Cluster, rngSvc *rng.Service) *QueryStreamCreate {
+func newStreamCreate(qExec query.Execute, obs Observe, rngSvc *rng.Service) *QueryStreamCreate {
 	return &QueryStreamCreate{
-		cluster:  cluster,
+		obs:      obs,
+		exec:     qExec,
 		rngSvc:   rngSvc,
 		_config:  &models.ChannelConfig{},
 		errChan:  make(chan error, 10),
@@ -44,25 +46,46 @@ func newStreamCreate(cluster cluster.Cluster, rngSvc *rng.Service) *QueryStreamC
 	}
 }
 
-func (qsc *QueryStreamCreate) Start(ctx context.Context, pk uuid.UUID) *QueryStreamCreate {
+func (qsc *QueryStreamCreate) Start(ctx context.Context, pk uuid.UUID) error {
 	qsc.ctx, qsc.configPK = ctx, pk
-	qsc.listen()
-	return qsc
+	if err := qsc.validateStart(); err != nil {
+		return err
+	}
+	go qsc.listen()
+	return nil
 }
 
 func (qsc *QueryStreamCreate) config() *models.ChannelConfig {
 	if model.NewPK(qsc._config.ID).IsZero() {
-		if err := qsc.cluster.NewRetrieve().Model(qsc._config).WherePK(qsc.configPK).Exec(qsc.ctx); err != nil {
+		if err := query.NewRetrieve().BindExec(qsc.exec).Model(qsc._config).WherePK(qsc.configPK).Exec(qsc.ctx); err != nil {
 			qsc.Errors() <- err
 		}
 	}
 	return qsc._config
 }
 
+func (qsc *QueryStreamCreate) updateConfigState(state models.ChannelState) {
+	qsc.obs.Add(ObservedChannelConfig{State: state, PK: qsc.configPK})
+	qsc._config.State = state
+	if err := query.NewUpdate().
+		BindExec(qsc.exec).
+		Model(qsc._config).
+		WherePK(qsc.configPK).
+		Fields("State").
+		Exec(qsc.ctx); err != nil {
+		qsc.Errors() <- err
+	}
+}
+
+func (qsc *QueryStreamCreate) validateStart() error {
+	return validateStart().Exec(ValidateStartContext{cfg: qsc.config(), obs: qsc.obs}).Error()
+}
+
 func (qsc *QueryStreamCreate) prevChunk() *telem.Chunk {
 	if qsc._prevChunk == nil {
 		ccr := &models.ChannelChunkReplica{}
-		if err := qsc.cluster.NewRetrieve().
+		if err := query.NewRetrieve().
+			BindExec(qsc.exec).
 			Model(ccr).
 			Relation("ChannelChunk", "ID", "StartTS", "Size").
 			WhereFields(query.WhereFields{"ChannelChunk.ChannelConfigID": qsc.config().ID}).Exec(qsc.ctx); err != nil {
@@ -97,6 +120,7 @@ func (qsc *QueryStreamCreate) Errors() chan error {
 }
 
 func (qsc *QueryStreamCreate) listen() {
+	qsc.updateConfigState(models.ChannelStateActive)
 	for args := range qsc.stream {
 		c, alloc := errutil.NewCatchWCtx(qsc.ctx), qsc.rngSvc.NewAllocate()
 
@@ -109,25 +133,32 @@ func (qsc *QueryStreamCreate) listen() {
 			StartTS:         nextChunk.Start(),
 			Size:            nextChunk.Size(),
 		}
+
+		// This means we tried to write a duplicate chunk
+		if cc.Size == 0 {
+			continue
+		}
+
 		ccr := &models.ChannelChunkReplica{ID: uuid.New(), ChannelChunkID: cc.ID, Telem: args.data}
 
 		c.Exec(alloc.Chunk(qsc.config().NodeID, cc).Exec)
 		c.Exec(alloc.ChunkReplica(ccr).Exec)
 
-		c.Exec(qsc.cluster.NewCreate().Model(cc).Exec)
-		c.Exec(qsc.cluster.NewCreate().Model(ccr).Exec)
+		c.Exec(query.NewCreate().BindExec(qsc.exec).Model(cc).Exec)
+		c.Exec(query.NewCreate().BindExec(qsc.exec).Model(ccr).Exec)
 
 		if c.Error() != nil {
 			qsc.Errors() <- c.Error()
 		}
 		qsc.setPrevChunk(nextChunk)
 	}
+	qsc.updateConfigState(models.ChannelStateInactive)
 	qsc.doneChan <- io.EOF
 }
 
 func (qsc *QueryStreamCreate) validateResolveNextChunk(nextChunk *telem.Chunk) error {
-	vCtx := CreateValidateContext{prevChunk: qsc.prevChunk(), nextChunk: nextChunk}
-	for _, err := range createValidate().Exec(vCtx).Errors() {
+	vCtx := NextChunkValidateContext{prevChunk: qsc.prevChunk(), nextChunk: nextChunk}
+	for _, err := range validateNextChunk().Exec(vCtx).Errors() {
 		if rErr := qsc.resolveNextChunkError(err, vCtx); rErr != nil {
 			return rErr
 		}
@@ -135,31 +166,51 @@ func (qsc *QueryStreamCreate) validateResolveNextChunk(nextChunk *telem.Chunk) e
 	return nil
 }
 
-func (qsc *QueryStreamCreate) resolveNextChunkError(err error, vCtx CreateValidateContext) error {
-	return createResolve().Exec(err, CreateResolveContext{config: qsc.config(), CreateValidateContext: vCtx}).Error()
+func (qsc *QueryStreamCreate) resolveNextChunkError(err error, vCtx NextChunkValidateContext) error {
+	return resolveNextChunk().Exec(err, NextChunkResolveContext{config: qsc.config(), NextChunkValidateContext: vCtx}).Error()
 }
 
-// |||| VALIDATE ||||
+// |||| VALIDATE + RESOLVE ||||
 
-type CreateValidateContext struct {
+// || START ||
+
+type ValidateStartContext struct {
+	obs Observe
+	cfg *models.ChannelConfig
+}
+
+func validateStart() *validate.Validate[ValidateStartContext] {
+	actions := []func(sCtx ValidateStartContext) error{validateConfigState}
+	return validate.New(actions)
+}
+
+func validateConfigState(sCtx ValidateStartContext) error {
+	oc, _ := sCtx.obs.Retrieve(sCtx.cfg.ID)
+	if sCtx.cfg.State == models.ChannelStateActive || oc.State == models.ChannelStateActive {
+		return errors.New("open a second stream to an active channel")
+	}
+	return nil
+}
+
+// || NEXT CHUNK ||
+
+type NextChunkValidateContext struct {
 	ctx       context.Context
 	prevChunk *telem.Chunk
 	nextChunk *telem.Chunk
 }
 
-func createValidate() *validate.Validate[CreateValidateContext] {
-	actions := []func(vCtx CreateValidateContext) error{validateTiming}
-	return validate.New[CreateValidateContext](actions, validate.WithAggregation())
+func validateNextChunk() *validate.Validate[NextChunkValidateContext] {
+	actions := []func(vCtx NextChunkValidateContext) error{validateTiming}
+	return validate.New[NextChunkValidateContext](actions, validate.WithAggregation())
 }
 
-// |||| RESOLVE ||||
-
-type CreateResolveContext struct {
+type NextChunkResolveContext struct {
 	config *models.ChannelConfig
-	CreateValidateContext
+	NextChunkValidateContext
 }
 
-func createResolve() *validate.Resolve[CreateResolveContext] {
-	actions := []func(sErr error, rCtx CreateResolveContext) (bool, error){resolveTiming}
-	return validate.NewResolve[CreateResolveContext](actions, validate.WithAggregation())
+func resolveNextChunk() *validate.Resolve[NextChunkResolveContext] {
+	actions := []func(sErr error, rCtx NextChunkResolveContext) (bool, error){resolveTiming}
+	return validate.NewResolve[NextChunkResolveContext](actions, validate.WithAggregation())
 }

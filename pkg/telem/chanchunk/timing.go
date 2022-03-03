@@ -32,7 +32,7 @@ const (
 
 // |||| VALIDATION |||||
 
-func validateTiming(vCtx CreateValidateContext) error {
+func validateTiming(vCtx NextChunkValidateContext) error {
 	if vCtx.prevChunk == nil {
 		return nil
 	}
@@ -52,7 +52,7 @@ func validateTiming(vCtx CreateValidateContext) error {
 
 // |||| RESOLUTION ||||
 
-func resolveTiming(sErr error, rCtx CreateResolveContext) (bool, error) {
+func resolveTiming(sErr error, rCtx NextChunkResolveContext) (bool, error) {
 	err, ok := sErr.(TimingError)
 	if !ok {
 		return false, sErr
@@ -65,7 +65,7 @@ func resolveTiming(sErr error, rCtx CreateResolveContext) (bool, error) {
 	return true, resolveChunkOverlap(err, rCtx)
 }
 
-func resolveChunkOverlap(err TimingError, rCtx CreateResolveContext) error {
+func resolveChunkOverlap(err TimingError, rCtx NextChunkResolveContext) error {
 	switch rCtx.config.ConflictPolicy {
 	case models.ChannelConflictPolicyDiscard:
 		return discardOverlap(rCtx)
@@ -74,7 +74,7 @@ func resolveChunkOverlap(err TimingError, rCtx CreateResolveContext) error {
 	}
 }
 
-func discardOverlap(rCtx CreateResolveContext) error {
+func discardOverlap(rCtx NextChunkResolveContext) error {
 	ov := rCtx.nextChunk.Overlap(rCtx.prevChunk)
 	switch ov.Type() {
 	case telem.OverlapTypeNoneOrInvalid:

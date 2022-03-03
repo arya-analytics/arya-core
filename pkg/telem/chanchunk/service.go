@@ -1,54 +1,24 @@
 package chanchunk
 
 import (
-	"github.com/arya-analytics/aryacore/pkg/cluster"
 	"github.com/arya-analytics/aryacore/pkg/telem/rng"
+	"github.com/arya-analytics/aryacore/pkg/util/query"
 )
 
 type Service struct {
-	cluster cluster.Cluster
-	rngSVC  *rng.Service
+	obs    Observe
+	exec   query.Execute
+	rngSVC *rng.Service
 }
 
-func NewService(clust cluster.Cluster, rngSVC *rng.Service) *Service {
-	return &Service{cluster: clust, rngSVC: rngSVC}
+func NewService(exec query.Execute, obs Observe, rngSVC *rng.Service) *Service {
+	return &Service{exec: exec, obs: obs, rngSVC: rngSVC}
 }
 
 func (s *Service) NewStreamCreate() *QueryStreamCreate {
-	return newStreamCreate(s.cluster, s.rngSVC)
+	return newStreamCreate(s.exec, s.obs, s.rngSVC)
 }
 
-//
-//func (s *Service) CreateStream(ctx context.Context, cfg *models.ChannelConfig) (chan *TelemChunkWrapper, chan error) {
-//	stream, errChan := make(chan *TelemChunkWrapper), make(chan error)
-//	go func() {
-//		for tc := range stream {
-//			c := errutil.NewContextCatcher(ctx)
-//			alloc := s.rngSVC.NewAllocate()
-//			chunk := &models.ChannelChunk{
-//				ID:              uuid.New(),
-//				ChannelConfigID: cfg.ID,
-//				startTS:         tc.startTS,
-//				Size:            tc.Telem.Size(),
-//			}
-//			repl := &models.ChannelChunkReplica{
-//				ID:             uuid.New(),
-//				ChannelChunkID: chunk.ID,
-//				Telem:          tc.Telem,
-//			}
-//			c.exec(alloc.ChunkData(cfg.NodeID, chunk).exec)
-//			c.exec(s.cluster.NewCreate().Model(chunk).exec)
-//			c.exec(alloc.ChunkReplica(repl).exec)
-//			c.exec(s.cluster.NewCreate().Model(repl).exec)
-//			if c.Error() != nil {
-//				errChan <- c.Error()
-//			}
-//		}
-//		errChan <- io.EOF
-//	}()
-//	return stream, errChan
-//}
-//
 //type RetrieveOpts struct {
 //	startTS int64
 //	EndTS   int64

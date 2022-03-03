@@ -25,7 +25,8 @@ var _ = Describe("QueryStreamCreate", func() {
 		rngObs := rng.NewObserveMem([]rng.ObservedRange{})
 		rngPst := rng.NewPersistCluster(clust)
 		rngSvc := rng.NewService(rngObs, rngPst)
-		svc = chanchunk.NewService(clust, rngSvc)
+		obs := chanchunk.NewObserveMem([]chanchunk.ObservedChannelConfig{})
+		svc = chanchunk.NewService(clust.Exec, obs, rngSvc)
 		node = &models.Node{ID: 1}
 		config = &models.ChannelConfig{
 			Name:           "Awesome Channel",
@@ -51,7 +52,7 @@ var _ = Describe("QueryStreamCreate", func() {
 		var stream *chanchunk.QueryStreamCreate
 		JustBeforeEach(func() {
 			stream = svc.NewStreamCreate()
-			go stream.Start(ctx, config.ID)
+			Expect(stream.Start(ctx, config.ID)).To(BeNil())
 
 			go func() {
 				defer GinkgoRecover()
@@ -147,13 +148,32 @@ var _ = Describe("QueryStreamCreate", func() {
 					Expect(tc.Span()).To(Equal(telem.NewTimeSpan(59 * time.Second)))
 				}
 			})
+			It("Should update the channel config states", func() {
+				data := telem.NewChunkData([]byte{})
+				Expect(data.WriteData([]float64{1, 2, 3, 4})).To(BeNil())
+
+				time.Sleep(50 * time.Millisecond)
+				resCCActive := &models.ChannelConfig{}
+				Expect(clust.NewRetrieve().Model(resCCActive).WherePK(config.ID).Exec(ctx)).To(BeNil())
+				Expect(resCCActive.ID).To(Equal(config.ID))
+				Expect(resCCActive.State).To(Equal(models.ChannelStateActive))
+
+				By("Closing the stream")
+				stream.Close()
+
+				resCCInactive := &models.ChannelConfig{}
+				Expect(clust.NewRetrieve().Model(resCCInactive).WherePK(config.ID).Exec(ctx)).To(BeNil())
+				Expect(resCCInactive.ID).To(Equal(config.ID))
+				Expect(resCCInactive.State).To(Equal(models.ChannelStateInactive))
+			})
+
 		})
 	})
 	Describe("Edge cases + errors", func() {
 		var stream *chanchunk.QueryStreamCreate
 		JustBeforeEach(func() {
 			stream = svc.NewStreamCreate()
-			go stream.Start(ctx, config.ID)
+			Expect(stream.Start(ctx, config.ID)).To(BeNil())
 		})
 		Describe("Non contiguous chunks", func() {
 			Context("Chunks in reverse order", func() {
@@ -188,6 +208,56 @@ var _ = Describe("QueryStreamCreate", func() {
 					Expect(errors).To(HaveLen(1))
 					Expect(errors[0].(chanchunk.TimingError).Type).To(Equal(chanchunk.TimingErrorTypeNonContiguous))
 				})
+			})
+			Context("Duplicate Chunks", func() {
+				It("Shouldn't write the duplicate", func() {
+					var errors []error
+					wg := &sync.WaitGroup{}
+					go func() {
+						wg.Add(1)
+						defer wg.Done()
+						for err := range stream.Errors() {
+							errors = append(errors, err)
+						}
+					}()
+
+					cc := mock.ChunkSet(
+						2,
+						telem.TimeStamp(0),
+						telem.DataTypeFloat64,
+						telem.DataRate(25),
+						telem.NewTimeSpan(1*time.Minute),
+						telem.TimeSpan(0),
+					)
+					// Reversing the right direction
+					for range cc {
+						c := cc[0]
+						stream.Send(c.Start(), c.ChunkData)
+					}
+
+					stream.Close()
+					wg.Wait()
+
+					Expect(errors).To(HaveLen(0))
+
+					var resCC []*models.ChannelChunkReplica
+					Expect(clust.NewRetrieve().
+						Model(&resCC).
+						Relation("ChannelChunk", "StartTS", "Size").
+						WhereFields(query.WhereFields{"ChannelChunk.ChannelConfigID": config.ID}).
+						Order(query.OrderASC, "ChannelChunk.StartTS").
+						Exec(ctx)).To(BeNil())
+					Expect(len(resCC)).To(Equal(1))
+					Expect(resCC[0].ChannelChunk.Size).To(Equal(int64(12000)))
+				})
+			})
+
+		})
+		Describe("Duplicate streams", func() {
+			It("Should prevent duplicate write streams to the same channel", func() {
+				streamTwo := svc.NewStreamCreate()
+				err := streamTwo.Start(ctx, config.ID)
+				Expect(err).ToNot(BeNil())
 			})
 		})
 	})
