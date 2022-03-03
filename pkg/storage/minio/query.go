@@ -1,4 +1,3 @@
-//nolint:typecheck
 package minio
 
 import (

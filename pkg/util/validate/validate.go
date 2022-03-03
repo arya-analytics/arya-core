@@ -1,4 +1,3 @@
-//nolint:typecheck
 package validate
 
 import "github.com/arya-analytics/aryacore/pkg/util/errutil"

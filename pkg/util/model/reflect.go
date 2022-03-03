@@ -384,7 +384,6 @@ func validateNonZero(r *Reflect) error {
 	return nil
 }
 
-//nolint:typecheck
 func validateReflect() *validate.Validate[*Reflect] {
 	actions := []func(r *Reflect) error{validateIsPointer, validateSliceOrStruct, validateNonZero}
 	return validate.New[*Reflect](actions)

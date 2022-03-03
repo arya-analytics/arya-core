@@ -29,7 +29,6 @@ func (m *exchange) samples() (samples []timeseries.Sample) {
 	return samples
 }
 
-//nolint:typecheck
 func (m *exchange) seriesNames() (names []string) {
 	m.Dest().ForEach(func(rfl *model.Reflect, i int) {
 		pk := model.NewPK(keyField(rfl).Interface())
@@ -38,7 +37,6 @@ func (m *exchange) seriesNames() (names []string) {
 	return names
 }
 
-//nolint:typecheck
 func (m *exchange) bindRes(key string, res interface{}) error {
 	resVal := reflect.ValueOf(res)
 	if resVal.Type().Kind() != reflect.Slice {
