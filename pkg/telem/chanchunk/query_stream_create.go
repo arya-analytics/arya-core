@@ -64,17 +64,10 @@ func (qsc *QueryStreamCreate) config() *models.ChannelConfig {
 	return qsc._config
 }
 
-func (qsc *QueryStreamCreate) updateConfigState(state models.ChannelState) {
+func (qsc *QueryStreamCreate) updateConfigState(state models.ChannelState) error {
 	qsc.obs.Add(ObservedChannelConfig{State: state, PK: qsc.configPK})
 	qsc._config.State = state
-	if err := query.NewUpdate().
-		BindExec(qsc.exec).
-		Model(qsc._config).
-		WherePK(qsc.configPK).
-		Fields("State").
-		Exec(qsc.ctx); err != nil {
-		qsc.Errors() <- err
-	}
+	return query.NewUpdate().BindExec(qsc.exec).Model(qsc._config).WherePK(qsc.configPK).Fields("State").Exec(qsc.ctx)
 }
 
 func (qsc *QueryStreamCreate) validateStart() error {
@@ -120,9 +113,10 @@ func (qsc *QueryStreamCreate) Errors() chan error {
 }
 
 func (qsc *QueryStreamCreate) listen() {
-	qsc.updateConfigState(models.ChannelStateActive)
+	c := errutil.NewCatchWCtx(qsc.ctx)
+	c.CatchSimple.Exec(func() error { return qsc.updateConfigState(models.ChannelStateActive) })
 	for args := range qsc.stream {
-		c, alloc := errutil.NewCatchWCtx(qsc.ctx), qsc.rngSvc.NewAllocate()
+		alloc := qsc.rngSvc.NewAllocate()
 
 		nextChunk := telem.NewChunk(args.startTS, qsc.config().DataType, qsc.config().DataRate, args.data)
 		c.CatchSimple.Exec(func() error { return qsc.validateResolveNextChunk(nextChunk) })
@@ -151,8 +145,9 @@ func (qsc *QueryStreamCreate) listen() {
 			qsc.Errors() <- c.Error()
 		}
 		qsc.setPrevChunk(nextChunk)
+		c.Reset()
 	}
-	qsc.updateConfigState(models.ChannelStateInactive)
+	c.CatchSimple.Exec(func() error { return qsc.updateConfigState(models.ChannelStateInactive) })
 	qsc.doneChan <- io.EOF
 }
 

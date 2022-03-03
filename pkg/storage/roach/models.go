@@ -78,6 +78,7 @@ type ChannelConfig struct {
 	DataRate       telem.DataRate
 	DataType       telem.DataType
 	ConflictPolicy models.ChannelConflictPolicy
+	State          models.ChannelState
 }
 
 type ChannelChunk struct {

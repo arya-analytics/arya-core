@@ -25,7 +25,7 @@ var _ = Describe("QueryStreamCreate", func() {
 		rngObs := rng.NewObserveMem([]rng.ObservedRange{})
 		rngPst := rng.NewPersistCluster(clust)
 		rngSvc := rng.NewService(rngObs, rngPst)
-		obs := chanchunk.NewObserveMem([]chanchunk.ObservedChannelConfig{})
+		obs := chanchunk.NewObserveMem()
 		svc = chanchunk.NewService(clust.Exec, obs, rngSvc)
 		node = &models.Node{ID: 1}
 		config = &models.ChannelConfig{
@@ -42,7 +42,6 @@ var _ = Describe("QueryStreamCreate", func() {
 			Expect(clust.NewCreate().Model(item).Exec(ctx)).To(BeNil())
 		}
 	})
-
 	JustAfterEach(func() {
 		for _, item := range items {
 			Expect(clust.NewDelete().Model(item).WherePK(model.NewReflect(item).PK()).Exec(ctx)).To(BeNil())
@@ -81,6 +80,7 @@ var _ = Describe("QueryStreamCreate", func() {
 					Exec(ctx)).To(BeNil())
 				Expect(resCC.Size).To(Equal(int64(32)))
 			})
+
 		})
 		Describe("Multiple Chunks", func() {
 			It("Should create multiple contiguous chunks correctly", func() {
@@ -166,7 +166,47 @@ var _ = Describe("QueryStreamCreate", func() {
 				Expect(resCCInactive.ID).To(Equal(config.ID))
 				Expect(resCCInactive.State).To(Equal(models.ChannelStateInactive))
 			})
+			Describe("Opening a stream to a channel that already has data", func() {
+				It("Should create all the chunks correctly", func() {
+					cc := mock.ChunkSet(
+						5,
+						telem.TimeStamp(0),
+						telem.DataTypeFloat64,
+						telem.DataRate(25),
+						telem.NewTimeSpan(1*time.Minute),
+						telem.TimeSpan(0),
+					)
+					for i, c := range cc {
+						if i == 0 {
+							stream.Send(c.Start(), c.ChunkData)
+						}
+					}
 
+					By("Closing the stream")
+					stream.Close()
+
+					stream = svc.NewStreamCreate()
+
+					Expect(stream.Start(ctx, config.ID)).To(BeNil())
+
+					for i, c := range cc {
+						if i != 0 {
+							stream.Send(c.Start(), c.ChunkData)
+						}
+					}
+
+					By("Retrieving the chunk after creation")
+					var resCC []*models.ChannelChunk
+					Expect(clust.NewRetrieve().
+						Model(&resCC).
+						WhereFields(query.WhereFields{"ChannelConfigID": config.ID}).
+						Order(query.OrderASC, "StartTS").
+						Exec(ctx)).To(BeNil())
+					Expect(len(resCC)).To(Equal(5))
+					Expect(resCC[0].Size).To(Equal(cc[0].Size()))
+					Expect(resCC[4].StartTS).To(Equal(cc[4].Start()))
+				})
+			})
 		})
 	})
 	Describe("Edge cases + errors", func() {
@@ -210,7 +250,7 @@ var _ = Describe("QueryStreamCreate", func() {
 				})
 			})
 			Context("Duplicate Chunks", func() {
-				It("Shouldn't write the duplicate", func() {
+				It("Shouldn't discard the duplicate", func() {
 					var errors []error
 					wg := &sync.WaitGroup{}
 					go func() {
@@ -229,7 +269,8 @@ var _ = Describe("QueryStreamCreate", func() {
 						telem.NewTimeSpan(1*time.Minute),
 						telem.TimeSpan(0),
 					)
-					// Reversing the right direction
+
+					// Sending the first chunk twicw
 					for range cc {
 						c := cc[0]
 						stream.Send(c.Start(), c.ChunkData)
@@ -249,6 +290,80 @@ var _ = Describe("QueryStreamCreate", func() {
 						Exec(ctx)).To(BeNil())
 					Expect(len(resCC)).To(Equal(1))
 					Expect(resCC[0].ChannelChunk.Size).To(Equal(int64(12000)))
+				})
+			})
+			Context("Consumed chunk", func() {
+				Context("Previous consumes next chunk", func() {
+					It("Shouldn discard the consumed chunk", func() {
+						var errors []error
+						wg := &sync.WaitGroup{}
+						go func() {
+							wg.Add(1)
+							defer wg.Done()
+							for err := range stream.Errors() {
+								errors = append(errors, err)
+							}
+						}()
+						cc := mock.ChunkSet(
+							2,
+							telem.TimeStamp(0),
+							telem.DataTypeFloat64,
+							telem.DataRate(25),
+							telem.NewTimeSpan(1*time.Minute),
+							telem.NewTimeSpan(-30*time.Second),
+						)
+						for i, c := range cc {
+							// Creating a consumed chunk
+							if i != 0 {
+								c.RemoveFromEnd(c.Start().Add(telem.NewTimeSpan(25 * time.Second)))
+							}
+							stream.Send(c.Start(), c.ChunkData)
+						}
+						stream.Close()
+						wg.Wait()
+						Expect(errors).To(HaveLen(0))
+						var resCC []*models.ChannelChunkReplica
+						Expect(clust.NewRetrieve().
+							Model(&resCC).
+							Relation("ChannelChunk", "StartTS", "Size").
+							WhereFields(query.WhereFields{"ChannelChunk.ChannelConfigID": config.ID}).
+							Order(query.OrderASC, "ChannelChunk.StartTS").
+							Exec(ctx)).To(BeNil())
+						Expect(len(resCC)).To(Equal(1))
+						Expect(resCC[0].ChannelChunk.Size).To(Equal(int64(12000)))
+					})
+				})
+			})
+			Context("Next chunk consumes previous chunk", func() {
+				It("Should return a non-contiguous chunk error", func() {
+					var errors []error
+					wg := &sync.WaitGroup{}
+					go func() {
+						wg.Add(1)
+						defer wg.Done()
+						for err := range stream.Errors() {
+							errors = append(errors, err)
+						}
+					}()
+					cc := mock.ChunkSet(
+						2,
+						telem.TimeStamp(0),
+						telem.DataTypeFloat64,
+						telem.DataRate(25),
+						telem.NewTimeSpan(1*time.Minute),
+						telem.NewTimeSpan(-30*time.Second),
+					)
+					for i, c := range cc {
+						// Creating a consumed chunk
+						if i == 0 {
+							c.RemoveFromStart(c.Start().Add(telem.NewTimeSpan(35 * time.Second)))
+						}
+						stream.Send(c.Start(), c.ChunkData)
+					}
+					stream.Close()
+					wg.Wait()
+					Expect(errors).To(HaveLen(1))
+					Expect(errors[0].(chanchunk.TimingError).Type).To(Equal(chanchunk.TimingErrorTypeNonContiguous))
 				})
 			})
 

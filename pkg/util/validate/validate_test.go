@@ -7,7 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Validate", func() {
+var _ = Describe("validateStart", func() {
 	Describe("With No opts", func() {
 		It("Should return the correct error", func() {
 			v := validate.New[string]([]func(string) error{

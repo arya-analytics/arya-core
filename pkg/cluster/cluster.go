@@ -7,12 +7,13 @@ import (
 
 type Service interface {
 	CanHandle(q *query.Pack) bool
-	Exec(ctx context.Context, q *query.Pack) error
+	Exec(ctx context.Context, p *query.Pack) error
 }
 
 type Cluster interface {
 	query.Assemble
 	BindService(s Service)
+	Exec(ctx context.Context, p *query.Pack) error
 }
 
 type cluster struct {
