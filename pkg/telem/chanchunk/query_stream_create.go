@@ -89,6 +89,7 @@ func (qsc *QueryStreamCreate) Send(startTS telem.TimeStamp, data *telem.ChunkDat
 func (qsc *QueryStreamCreate) Close() {
 	close(qsc.stream)
 	<-qsc.doneChan
+	close(qsc.errChan)
 }
 
 func (qsc *QueryStreamCreate) Errors() chan error {
@@ -98,18 +99,20 @@ func (qsc *QueryStreamCreate) Errors() chan error {
 func (qsc *QueryStreamCreate) listen() {
 	for args := range qsc.stream {
 		c, alloc := errutil.NewCatchWCtx(qsc.ctx), qsc.rngSvc.NewAllocate()
-		cc := &models.ChannelChunk{ID: uuid.New(), ChannelConfigID: qsc.config().ID}
+
+		nextChunk := telem.NewChunk(args.startTS, qsc.config().DataType, qsc.config().DataRate, args.data)
+		c.CatchSimple.Exec(func() error { return qsc.validateResolveNextChunk(nextChunk) })
+
+		cc := &models.ChannelChunk{
+			ID:              uuid.New(),
+			ChannelConfigID: qsc.config().ID,
+			StartTS:         nextChunk.Start(),
+			Size:            nextChunk.Size(),
+		}
 		ccr := &models.ChannelChunkReplica{ID: uuid.New(), ChannelChunkID: cc.ID, Telem: args.data}
 
 		c.Exec(alloc.Chunk(qsc.config().NodeID, cc).Exec)
-
 		c.Exec(alloc.ChunkReplica(ccr).Exec)
-
-		nextChunk := telem.NewChunk(args.startTS, qsc.config().DataType, qsc.config().DataRate, args.data)
-
-		c.CatchSimple.Exec(func() error { return qsc.validateNextChunk(nextChunk) })
-
-		cc.Size, cc.StartTS = nextChunk.Size(), nextChunk.Start()
 
 		c.Exec(qsc.cluster.NewCreate().Model(cc).Exec)
 		c.Exec(qsc.cluster.NewCreate().Model(ccr).Exec)
@@ -122,7 +125,7 @@ func (qsc *QueryStreamCreate) listen() {
 	qsc.doneChan <- io.EOF
 }
 
-func (qsc *QueryStreamCreate) validateNextChunk(nextChunk *telem.Chunk) error {
+func (qsc *QueryStreamCreate) validateResolveNextChunk(nextChunk *telem.Chunk) error {
 	vCtx := CreateValidateContext{prevChunk: qsc.prevChunk(), nextChunk: nextChunk}
 	for _, err := range createValidate().Exec(vCtx).Errors() {
 		if rErr := qsc.resolveNextChunkError(err, vCtx); rErr != nil {

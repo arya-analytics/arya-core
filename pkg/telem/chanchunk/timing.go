@@ -27,6 +27,7 @@ type TimingErrorType int
 const (
 	TimingErrorTypeChunkOverlap TimingErrorType = iota + 1
 	TimingErrorTypeIncompatibleChunks
+	TimingErrorTypeNonContiguous
 )
 
 // |||| VALIDATION |||||
@@ -42,6 +43,10 @@ func validateTiming(vCtx CreateValidateContext) error {
 	if ov.IsValid() {
 		return TimingError{Type: TimingErrorTypeChunkOverlap}
 	}
+	if vCtx.nextChunk.Start() < vCtx.prevChunk.Start() {
+		return TimingError{Type: TimingErrorTypeNonContiguous}
+	}
+
 	return nil
 }
 
