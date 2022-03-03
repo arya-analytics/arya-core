@@ -33,9 +33,6 @@ func (a *Allocate) Chunk(leaseNodePK int, chunk *models.ChannelChunk) *allocateC
 //
 // NOTE: Allocate.Chunk must be called and executed before calling this method.
 func (a *Allocate) ChunkReplica(replica *models.ChannelChunkReplica) *allocateChunkReplica {
-	if a.leaseNodePK == 0 || model.NewPK(a.rangePK).IsZero() {
-		panic("can't allocate a chunk replica before a chunk")
-	}
 	return &allocateChunkReplica{Allocate: a, replica: replica}
 }
 
@@ -66,6 +63,7 @@ type allocateChunk struct {
 
 // Exec runs the allocator, and assigns the appropriate RangeID to the ChannelChunk.
 func (ac *allocateChunk) Exec(ctx context.Context) error {
+
 	or, err := ac.retrieveObservedOrCreate(ctx, ObservedRange{LeaseNodePK: ac.leaseNodePK, Status: models.RangeStatusOpen})
 	ac.rangePK = or.PK
 	ac.chunk.RangeID = or.PK
@@ -81,6 +79,9 @@ type allocateChunkReplica struct {
 
 // Exec runs the allocator, and assigns the appropriate RangeReplicaID to the ChannelChunkReplica.
 func (ac *allocateChunkReplica) Exec(ctx context.Context) error {
+	if ac.leaseNodePK == 0 || model.NewPK(ac.rangePK).IsZero() {
+		panic("can't allocate a chunk replica before a chunk")
+	}
 	or, err := ac.retrieveObservedOrCreate(ctx, ObservedRange{PK: ac.rangePK, Status: models.RangeStatusOpen})
 	ac.replica.RangeReplicaID = or.LeaseReplicaPK
 	return err

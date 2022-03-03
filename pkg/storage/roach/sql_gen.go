@@ -2,9 +2,9 @@ package roach
 
 import (
 	"fmt"
-	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/util/caseconv"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
+	"github.com/arya-analytics/aryacore/pkg/util/query"
 	log "github.com/sirupsen/logrus"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/schema"
@@ -48,25 +48,28 @@ func (sg sqlGen) fieldNames(fldNames ...string) (sqlNames []string) {
 	return sqlNames
 }
 
-func (sg sqlGen) relFldExp(fldName string, fldVal interface{}) (string, []interface{}) {
+func (sg sqlGen) relFldName(fldName string) string {
 	relN, baseN := model.SplitLastFieldName(fldName)
-	relFldName := sg.bindTableToField(sg.relTableName(relN), sg.fieldName(baseN))
-	return sg.parseFldExp(relFldName, fldVal)
+	return sg.bindTableToField(sg.relTableName(relN), sg.fieldName(baseN))
+}
+
+func (sg sqlGen) relFldExp(fldName string, fldVal interface{}) (string, []interface{}) {
+	return sg.parseFldExp(sg.relFldName(fldName), fldVal)
 }
 
 func (sg sqlGen) parseFldExp(fldName string, fldVal interface{}) (string, []interface{}) {
-	exp, ok := fldVal.(model.FieldExp)
+	exp, ok := fldVal.(query.FieldExp)
 	if !ok {
 		return fmt.Sprintf("%s = ?", fldName), []interface{}{fldVal}
 	}
 	switch exp.Op {
-	case model.FieldExpOpInRange:
+	case query.FieldOpInRange:
 		return fmt.Sprintf("%s BETWEEN ? and ?", fldName), exp.Vals
-	case model.FieldExpOpLessThan:
+	case query.FieldOpLessThan:
 		return fmt.Sprintf("%s < ?", fldName), exp.Vals
-	case model.FieldExpOpGreaterThan:
+	case query.FieldOpGreaterThan:
 		return fmt.Sprintf("%s > (?)", fldName), exp.Vals
-	case model.FieldExpOpIn:
+	case query.FieldOpIn:
 		return fmt.Sprintf("%s IN (?)", fldName), []interface{}{bun.In(exp.Vals)}
 	default:
 		log.Warnf("roach sql gen could not parse expression opt %s. attempting equality", exp.Op)
@@ -105,14 +108,31 @@ func (sg sqlGen) relTableName(relName string) (tableName string) {
 
 // |||| CALCULATIONS ||||
 
-func (sg sqlGen) calculate(c storage.Calculate) string {
-	calcSQL := map[storage.Calculate]string{
-		storage.CalculateSum:   "SUM",
-		storage.CalculateAVG:   "AVG",
-		storage.CalculateCount: "COUNT",
-		storage.CalculateMax:   "MAX",
-		storage.CalculateMin:   "MIN",
+func (sg sqlGen) calc(c query.Calc) string {
+	calcSQL := map[query.Calc]string{
+		query.CalcSum:   "SUM",
+		query.CalcAVG:   "AVG",
+		query.CalcCount: "COUNT",
+		query.CalcMax:   "MAX",
+		query.CalcMin:   "MIN",
 	}
 	return fmt.Sprintf("%s(?)", calcSQL[c])
 
+}
+
+// |||| ORDER ||||
+
+const (
+	orderSQLASC = "ASC"
+	orderSQLDSC = "DESC"
+)
+
+func (sg sqlGen) order(o query.Order, fld string) string {
+	var orderSQL string
+	if o == query.OrderASC {
+		orderSQL = orderSQLASC
+	} else {
+		orderSQL = orderSQLDSC
+	}
+	return fmt.Sprintf("%s %s", sg.relFldName(fld), orderSQL)
 }

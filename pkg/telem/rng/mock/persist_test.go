@@ -55,7 +55,7 @@ var _ = Describe("pst", func() {
 			Expect(openRng).To(HaveLen(1))
 		})
 	})
-	Describe("Chunk Related Operations", func() {
+	Describe("ChunkData Related Operations", func() {
 		var (
 			rngID uuid.UUID
 			op    *mock.Persist
@@ -76,7 +76,7 @@ var _ = Describe("pst", func() {
 				Expect(len(chunks)).To(BeNumerically(">", 0))
 			})
 		})
-		Describe("Retrieve Range Chunk Replicas", func() {
+		Describe("Retrieve Range ChunkData Replicas", func() {
 			It("Should retrieve the correct replicas", func() {
 				repls, err := op.RetrieveRangeChunkReplicas(ctx, rngID)
 				Expect(err).To(BeNil())
@@ -118,7 +118,7 @@ var _ = Describe("pst", func() {
 				Expect(len(newSourceChunks)).To(Equal(0))
 			})
 		})
-		Describe("Reallocate Chunk Replicas", func() {
+		Describe("Reallocate ChunkData Replicas", func() {
 			It("Should reallocate chunk replicas correctly", func() {
 				orChunks, err := op.RetrieveRangeChunks(ctx, rngID)
 				Expect(err).To(BeNil())

@@ -11,7 +11,7 @@ import (
 
 var _ = Describe("Observe", func() {
 	Describe("ObserveMem", func() {
-		It("Should validate the observed ranges without panicking", func() {
+		It("Should validate the observed rngMap without panicking", func() {
 			Expect(func() {
 				rng.NewObserveMem([]rng.ObservedRange{
 					{PK: uuid.New(),
@@ -33,7 +33,7 @@ var _ = Describe("Observe", func() {
 			Entry("No Lease Replica PK", rng.ObservedRange{PK: uuid.New(), LeaseNodePK: 1, Status: models.RangeStatusOpen}),
 			Entry("No Range Status", rng.ObservedRange{PK: uuid.New(), LeaseReplicaPK: uuid.New(), LeaseNodePK: 1}),
 		)
-		Describe("Retrieving ranges", func() {
+		Describe("Retrieving rngMap", func() {
 			var (
 				or = rng.ObservedRange{
 					PK:             uuid.New(),
@@ -71,8 +71,8 @@ var _ = Describe("Observe", func() {
 					Expect(ok).To(BeFalse())
 				})
 			})
-			Describe("Retrieving all ranges", func() {
-				It("Should retrieve all ranges correctly", func() {
+			Describe("Retrieving all rngMap", func() {
+				It("Should retrieve all rngMap correctly", func() {
 					or := rng.NewObserveMem(ranges)
 					Expect(or.RetrieveAll()).To(HaveLen(2))
 				})

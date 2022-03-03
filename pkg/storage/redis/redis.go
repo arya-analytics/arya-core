@@ -2,20 +2,26 @@ package redis
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/storage/redis/timeseries"
 )
 
 // |||| ENGINE ||||
 
 type Engine struct {
+	pool   *storage.Pool
 	driver Driver
 }
 
-func New(driver Driver) *Engine {
-	return &Engine{driver}
+func New(driver Driver, pool *storage.Pool) *Engine {
+	return &Engine{driver: driver, pool: pool}
 }
 
 func (e *Engine) NewAdapter() storage.Adapter {
 	return newAdapter(e.driver)
+}
+
+func (e *Engine) client() *timeseries.Client {
+	return conn(e.pool.Retrieve(e))
 }
 
 func (e *Engine) IsAdapter(a storage.Adapter) bool {
@@ -23,14 +29,10 @@ func (e *Engine) IsAdapter(a storage.Adapter) bool {
 	return ok
 }
 
-func (e *Engine) ShouldHandle(m interface{}, _ ...string) bool {
-	return catalog().Contains(m)
+func (e *Engine) NewTSRetrieve() storage.QueryCacheTSRetrieve {
+	return newTSRetrieve(e.client())
 }
 
-func (e *Engine) NewTSRetrieve(a storage.Adapter) storage.QueryCacheTSRetrieve {
-	return newTSRetrieve(conn(a))
-}
-
-func (e *Engine) NewTSCreate(a storage.Adapter) storage.QueryCacheTSCreate {
-	return newTSCreate(conn(a))
+func (e *Engine) NewTSCreate() storage.QueryCacheTSCreate {
+	return newTSCreate(e.client())
 }

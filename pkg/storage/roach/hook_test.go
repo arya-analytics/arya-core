@@ -12,11 +12,11 @@ var _ = Describe("Hook", func() {
 		node = &models.Node{ID: 1}
 	})
 	JustBeforeEach(func() {
-		nErr := engine.NewCreate(adapter).Model(node).Exec(ctx)
+		nErr := engine.NewCreate().Model(node).Exec(ctx)
 		Expect(nErr).To(BeNil())
 	})
 	AfterEach(func() {
-		nErr := engine.NewDelete(adapter).Model(node).WherePK(node.ID).Exec(ctx)
+		nErr := engine.NewDelete().Model(node).WherePK(node.ID).Exec(ctx)
 		Expect(nErr).To(BeNil())
 	})
 	Describe("UUID auto-generation", func() {
@@ -28,12 +28,12 @@ var _ = Describe("Hook", func() {
 			}
 		})
 		JustBeforeEach(func() {
-			err := engine.NewCreate(adapter).Model(channelConfig).Exec(ctx)
+			err := engine.NewCreate().Model(channelConfig).Exec(ctx)
 			Expect(err).To(BeNil())
 		})
 		It("Should be able to be re-queried after creation", func() {
 			var retrievedCC = &models.ChannelConfig{}
-			err := engine.NewRetrieve(adapter).
+			err := engine.NewRetrieve().
 				Model(retrievedCC).
 				WherePK(channelConfig.ID).Exec(ctx)
 			Expect(err).To(BeNil())

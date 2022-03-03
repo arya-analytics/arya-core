@@ -3,6 +3,7 @@ package redis_test
 import (
 	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -19,26 +20,26 @@ var _ = Describe("QueryTsRetrieve", func() {
 		series = &models.ChannelConfig{ID: uuid.New()}
 	})
 	JustBeforeEach(func() {
-		err := engine.NewTSCreate(adapter).Series().Model(series).Exec(ctx)
+		err := engine.NewTSCreate().Series().Model(series).Exec(ctx)
 		Expect(err).To(BeNil())
 	})
 	Describe("Standard Usage", func() {
 		Context("Single sample", func() {
 			JustBeforeEach(func() {
-				sampleErr := engine.NewTSCreate(adapter).Sample().Model(sample).Exec(ctx)
+				sampleErr := engine.NewTSCreate().Sample().Model(sample).Exec(ctx)
 				Expect(sampleErr).To(BeNil())
 			})
 			BeforeEach(func() {
 				sample = &models.ChannelSample{
 					ChannelConfigID: series.ID,
 					Value:           123.2,
-					Timestamp:       time.Now().UnixNano(),
+					Timestamp:       telem.NewTimeStamp(time.Now()),
 				}
 			})
 			Describe("Retrieving the most recent sample", func() {
 				It("Should retrieve the correct item", func() {
 					var resSample = &models.ChannelSample{}
-					err := engine.NewTSRetrieve(adapter).Model(resSample).WherePK(
+					err := engine.NewTSRetrieve().Model(resSample).WherePK(
 						series.ID).Exec(ctx)
 					Expect(err).To(BeNil())
 					Expect(sample).To(Equal(resSample))
@@ -47,7 +48,7 @@ var _ = Describe("QueryTsRetrieve", func() {
 		})
 		Context("Multiple Samples", func() {
 			JustBeforeEach(func() {
-				err := engine.NewTSCreate(adapter).Sample().Model(&samples).Exec(ctx)
+				err := engine.NewTSCreate().Sample().Model(&samples).Exec(ctx)
 				Expect(err).To(BeNil())
 			})
 			Describe("Retrieving all samples", func() {
@@ -56,22 +57,22 @@ var _ = Describe("QueryTsRetrieve", func() {
 						{
 							ChannelConfigID: series.ID,
 							Value:           47.3,
-							Timestamp:       time.Now().UnixNano(),
+							Timestamp:       telem.NewTimeStamp(time.Now()),
 						},
 						{
 							ChannelConfigID: series.ID,
-							Timestamp:       time.Now().Add(1 * time.Second).UnixNano(),
+							Timestamp:       telem.NewTimeStamp(time.Now().Add(1 * time.Second)),
 						},
 						{
 							ChannelConfigID: series.ID,
-							Timestamp:       time.Now().Add(2 * time.Second).UnixNano(),
+							Timestamp:       telem.NewTimeStamp(time.Now().Add(2 * time.Second)),
 						},
 					}
 
 				})
 				It("Should retrieve the correct items", func() {
 					var resSamples []*models.ChannelSample
-					err := engine.NewTSRetrieve(adapter).Model(&resSamples).WherePK(
+					err := engine.NewTSRetrieve().Model(&resSamples).WherePK(
 						series.ID).AllTimeRange().Exec(ctx)
 					Expect(err).To(BeNil())
 					Expect(resSamples).To(HaveLen(3))
@@ -85,25 +86,25 @@ var _ = Describe("QueryTsRetrieve", func() {
 						Name: "SG_03",
 						ID:   uuid.New(),
 					}
-					err := engine.NewTSCreate(adapter).Series().Model(seriesTwo).Exec(ctx)
+					err := engine.NewTSCreate().Series().Model(seriesTwo).Exec(ctx)
 					Expect(err).To(BeNil())
 					samples = []*models.ChannelSample{
 						{
 							ChannelConfigID: series.ID,
 							Value:           47.3,
-							Timestamp:       time.Now().UnixNano(),
+							Timestamp:       telem.NewTimeStamp(time.Now()),
 						},
 						{
 							ChannelConfigID: seriesTwo.ID,
 							Value:           96.7,
-							Timestamp:       time.Now().Add(1 * time.Second).UnixNano(),
+							Timestamp:       telem.NewTimeStamp(time.Now().Add(1 * time.Second)),
 						},
 					}
 
 				})
 				It("Should retrieve the correct items", func() {
 					var resSamples []*models.ChannelSample
-					err := engine.NewTSRetrieve(adapter).Model(&resSamples).WherePKs(
+					err := engine.NewTSRetrieve().Model(&resSamples).WherePKs(
 						[]uuid.UUID{seriesTwo.ID, series.ID}).AllTimeRange().Exec(ctx)
 					Expect(err).To(BeNil())
 					Expect(samples).To(HaveLen(2))
@@ -115,17 +116,17 @@ var _ = Describe("QueryTsRetrieve", func() {
 					samples = []*models.ChannelSample{
 						{
 							ChannelConfigID: series.ID,
-							Timestamp:       time.Now().UnixNano(),
+							Timestamp:       telem.NewTimeStamp(time.Now()),
 							Value:           1251.3,
 						},
 						{
 							ChannelConfigID: series.ID,
-							Timestamp:       time.Now().Add(-12 * time.Second).UnixNano(),
+							Timestamp:       telem.NewTimeStamp(time.Now().Add(-12 * time.Second)),
 							Value:           432.3,
 						},
 						{
 							ChannelConfigID: series.ID,
-							Timestamp:       time.Now().Add(-30 * time.Second).UnixNano(),
+							Timestamp:       telem.NewTimeStamp(time.Now().Add(-30 * time.Second)),
 							Value:           322.3,
 						},
 					}
@@ -133,9 +134,9 @@ var _ = Describe("QueryTsRetrieve", func() {
 				})
 				It("Should retrieve without error", func() {
 					var resSamples []*models.ChannelSample
-					toTS := time.Now().Add(3 * time.Second).UnixNano()
-					fromTS := time.Now().Add(-15 * time.Second).UnixNano()
-					err = engine.NewTSRetrieve(adapter).Model(&resSamples).WherePK(
+					toTS := time.Now().Add(3 * time.Second).UnixMicro()
+					fromTS := time.Now().Add(-15 * time.Second).UnixMicro()
+					err = engine.NewTSRetrieve().Model(&resSamples).WherePK(
 						series.ID).WhereTimeRange(fromTS, toTS).Exec(ctx)
 					Expect(err).To(BeNil())
 					Expect(resSamples).To(HaveLen(2))
@@ -146,7 +147,7 @@ var _ = Describe("QueryTsRetrieve", func() {
 			BeforeEach(func() { series = &models.ChannelConfig{ID: uuid.New()} })
 			Context("The series does not exist", func() {
 				It("Should return false", func() {
-					e, err := engine.NewTSRetrieve(adapter).SeriesExists(ctx, uuid.New())
+					e, err := engine.NewTSRetrieve().SeriesExists(ctx, uuid.New())
 					Expect(e).To(BeFalse())
 					Expect(err).To(BeNil())
 				})
@@ -158,11 +159,11 @@ var _ = Describe("QueryTsRetrieve", func() {
 			samples = []*models.ChannelSample{{
 				ChannelConfigID: series.ID,
 				Value:           432.1,
-				Timestamp:       time.Now().UnixNano(),
+				Timestamp:       telem.NewTimeStamp(time.Now()),
 			}}
 		})
 		JustBeforeEach(func() {
-			err := engine.NewTSCreate(adapter).Sample().Model(&samples).Exec(
+			err := engine.NewTSCreate().Sample().Model(&samples).Exec(
 				ctx)
 			Expect(err).To(BeNil())
 		})
@@ -170,14 +171,14 @@ var _ = Describe("QueryTsRetrieve", func() {
 			s := &models.ChannelSample{}
 			Context("No PKC provided", func() {
 				It("Should return the correct storage error", func() {
-					err := engine.NewTSRetrieve(adapter).Model(s).Exec(ctx)
+					err := engine.NewTSRetrieve().Model(s).Exec(ctx)
 					Expect(err).ToNot(BeNil())
 					Expect(err.(storage.Error).Type).To(Equal(storage.ErrorTypeInvalidArgs))
 				})
 			})
 			Context("Invalid PKC provided", func() {
 				It("Should return the correct storage error", func() {
-					err := engine.NewTSRetrieve(adapter).WherePK(uuid.New()).Model(s).
+					err := engine.NewTSRetrieve().WherePK(uuid.New()).Model(s).
 						Exec(ctx)
 					Expect(err).ToNot(BeNil())
 					Expect(err.(storage.Error).Type).To(Equal(storage.ErrorTypeItemNotFound))

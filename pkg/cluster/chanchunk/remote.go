@@ -80,7 +80,7 @@ func (s *ServiceRemoteRPC) Retrieve(ctx context.Context, chunkReplica interface{
 				return sErr
 			}
 			inRfl := model.NewReflect(in.CCR)
-			exc.Dest.ChainAppend(inRfl)
+			exc.Dest().ChainAppend(inRfl)
 		}
 	}
 	exc.ToSource()
@@ -101,7 +101,7 @@ func (s *ServiceRemoteRPC) Create(ctx context.Context, qp []RemoteCreateOpts) er
 		}
 
 		var sErr error
-		exc.Dest.ForEach(func(rfl *model.Reflect, i int) {
+		exc.Dest().ForEach(func(rfl *model.Reflect, i int) {
 			req := &api.ChannelChunkServiceCreateReplicasRequest{CCR: rfl.Pointer().(*api.ChannelChunkReplica)}
 			if sErr == nil {
 				sErr = stream.Send(req)

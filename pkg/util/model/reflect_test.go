@@ -62,7 +62,9 @@ var _ = Describe("Reflect", func() {
 			})
 			It("Should access the correct nested struct field by name", func() {
 				Expect(rfl.StructFieldByName("InnerModel.ID").Interface()).To(Equal(23))
-
+			})
+			It("Should return a zero reflect when the value does not exist", func() {
+				Expect(rfl.StructFieldByName("InnerModel.NonExistent").IsValid()).To(BeFalse())
 			})
 			It("Should return the correct struct field by role", func() {
 				Expect(rfl.StructFieldByRole("pk").Interface()).To(Equal(22))

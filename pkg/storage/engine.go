@@ -2,7 +2,7 @@ package storage
 
 import (
 	"context"
-	"github.com/arya-analytics/aryacore/pkg/util/model"
+	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/arya-analytics/aryacore/pkg/util/tasks"
 	"github.com/google/uuid"
 )
@@ -10,18 +10,6 @@ import (
 type Adapter interface {
 	ID() uuid.UUID
 }
-
-// |||| CALCULATIONS ||||
-
-type Calculate int
-
-const (
-	CalculateSum Calculate = iota
-	CalculateMax
-	CalculateMin
-	CalculateCount
-	CalculateAVG
-)
 
 // |||| ENGINE ||||
 
@@ -35,7 +23,6 @@ const (
 type Engine interface {
 	NewAdapter() Adapter
 	IsAdapter(a Adapter) bool
-	ShouldHandle(model interface{}, flds ...string) bool
 }
 
 // || META DATA ||
@@ -44,17 +31,10 @@ type Engine interface {
 // strongly consistent data across the cluster.
 type EngineMD interface {
 	Engine
-	// NewRetrieve opens a new QueryMDRetrieve.
-	NewRetrieve(a Adapter) QueryMDRetrieve
-	// NewCreate opens a new QueryMDCreate.
-	NewCreate(a Adapter) QueryMDCreate
-	// NewDelete opens a new QueryMDDelete.
-	NewDelete(a Adapter) QueryMDDelete
-	// NewMigrate opens a new QueryMDMigrate.
-	NewMigrate(a Adapter) QueryMDMigrate
-	// NewUpdate opens a new QueryMDUpdate.
-	NewUpdate(a Adapter) QueryMDUpdate
-	NewTasks(a Adapter, opts ...tasks.ScheduleOpt) tasks.Schedule
+	Exec(ctx context.Context, p *query.Pack) error
+	query.Assemble
+	NewMigrate() QueryMDMigrate
+	NewTasks(opts ...tasks.ScheduleOpt) tasks.Schedule
 }
 
 // || OBJECT ||
@@ -62,14 +42,11 @@ type EngineMD interface {
 // EngineObject is responsible for storing chanchunk data to node localstorage data storage.
 type EngineObject interface {
 	Engine
-	// NewRetrieve opens a new QueryObjectRetrieve.
-	NewRetrieve(a Adapter) QueryObjectRetrieve
-	// NewCreate opens a new QueryObjectCreate.
-	NewCreate(a Adapter) QueryObjectCreate
-	// NewDelete opens a new QueryObjectDelete.
-	NewDelete(a Adapter) QueryObjectDelete
-	// NewMigrate opens a new QueryObjectMigrate.
-	NewMigrate(a Adapter) QueryObjectMigrate
+	Exec(ctx context.Context, p *query.Pack) error
+	query.AssembleCreate
+	query.AssembleRetrieve
+	query.AssembleDelete
+	NewMigrate() QueryObjectMigrate
 }
 
 // || CACHE ||
@@ -79,9 +56,9 @@ type EngineObject interface {
 type EngineCache interface {
 	Engine
 	// NewTSRetrieve opens a new QueryCacheTSRetrieve.
-	NewTSRetrieve(a Adapter) QueryCacheTSRetrieve
+	NewTSRetrieve() QueryCacheTSRetrieve
 	// NewTSCreate opens a new QueryCacheTSCreate.
-	NewTSCreate(a Adapter) QueryCacheTSCreate
+	NewTSCreate() QueryCacheTSCreate
 }
 
 // |||| QUERY ||||
@@ -96,42 +73,6 @@ type QueryMDBase interface {
 	Query
 }
 
-// QueryMDRetrieve is for retrieving items from metadata storage.
-type QueryMDRetrieve interface {
-	QueryMDBase
-	Model(model interface{}) QueryMDRetrieve
-	WherePK(pk interface{}) QueryMDRetrieve
-	WherePKs(pks interface{}) QueryMDRetrieve
-	Relation(rel string, fields ...string) QueryMDRetrieve
-	Fields(fields ...string) QueryMDRetrieve
-	Calculate(c Calculate, fldName string, into interface{}) QueryMDRetrieve
-	WhereFields(flds model.WhereFields) QueryMDRetrieve
-	Count(ctx context.Context) (int, error)
-}
-
-// QueryMDCreate is for creating items in metadata storage.
-type QueryMDCreate interface {
-	QueryMDBase
-	Model(model interface{}) QueryMDCreate
-}
-
-// QueryMDUpdate is for updating items in metadata storage.
-type QueryMDUpdate interface {
-	QueryMDBase
-	Model(model interface{}) QueryMDUpdate
-	Bulk() QueryMDUpdate
-	Fields(flds ...string) QueryMDUpdate
-	WherePK(pk interface{}) QueryMDUpdate
-}
-
-// QueryMDDelete is for deleting items in metadata storage.
-type QueryMDDelete interface {
-	QueryMDBase
-	Model(model interface{}) QueryMDDelete
-	WherePK(pk interface{}) QueryMDDelete
-	WherePKs(pks interface{}) QueryMDDelete
-}
-
 // QueryMDMigrate applies migration changes to metadata storage.
 type QueryMDMigrate interface {
 	QueryMDBase
@@ -142,25 +83,6 @@ type QueryMDMigrate interface {
 
 type QueryObjectBase interface {
 	Query
-}
-
-type QueryObjectCreate interface {
-	QueryObjectBase
-	Model(model interface{}) QueryObjectCreate
-}
-
-type QueryObjectRetrieve interface {
-	QueryObjectBase
-	Model(model interface{}) QueryObjectRetrieve
-	WherePK(pk interface{}) QueryObjectRetrieve
-	WherePKs(pks interface{}) QueryObjectRetrieve
-}
-
-type QueryObjectDelete interface {
-	QueryObjectBase
-	Model(model interface{}) QueryObjectDelete
-	WherePK(pk interface{}) QueryObjectDelete
-	WherePKs(pks interface{}) QueryObjectDelete
 }
 
 type QueryObjectMigrate interface {

@@ -8,7 +8,7 @@ import (
 var _ = Describe("Migrator", func() {
 	Describe("Verify Migrations", func() {
 		It("Should create all of the tables correctly", func() {
-			err := engine.NewMigrate(adapter).Verify(ctx)
+			err := engine.NewMigrate().Verify(ctx)
 			Expect(err).To(BeNil())
 		})
 	})

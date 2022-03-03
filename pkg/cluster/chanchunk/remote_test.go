@@ -79,7 +79,7 @@ var _ = Describe("ServiceRemoteRPC", func() {
 				ChunkReplica: &[]*models.ChannelChunkReplica{
 					{
 						ID:    idOne,
-						Telem: telem.NewBulk([]byte{1, 2, 3}),
+						Telem: telem.NewChunkData([]byte{1, 2, 3}),
 					},
 				},
 			},
@@ -87,7 +87,7 @@ var _ = Describe("ServiceRemoteRPC", func() {
 				Node: nodeTwo,
 				ChunkReplica: &[]*models.ChannelChunkReplica{{
 					ID:    idTwo,
-					Telem: telem.NewBulk([]byte{3, 4, 5}),
+					Telem: telem.NewChunkData([]byte{3, 4, 5}),
 				},
 				},
 			},
@@ -106,7 +106,7 @@ var _ = Describe("ServiceRemoteRPC", func() {
 				ChunkReplica: &[]*models.ChannelChunkReplica{
 					{
 						ID:    idOne,
-						Telem: telem.NewBulk([]byte{1, 2, 3}),
+						Telem: telem.NewChunkData([]byte{1, 2, 3}),
 					},
 				},
 			},
@@ -130,7 +130,7 @@ var _ = Describe("ServiceRemoteRPC", func() {
 				ChunkReplica: &[]*models.ChannelChunkReplica{
 					{
 						ID:    idOne,
-						Telem: telem.NewBulk([]byte{1, 2, 3}),
+						Telem: telem.NewChunkData([]byte{1, 2, 3}),
 					},
 				},
 			},

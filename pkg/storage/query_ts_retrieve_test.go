@@ -2,6 +2,7 @@ package storage_test
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/models"
+	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -39,21 +40,21 @@ var _ = Describe("QueryTsRetrieve", func() {
 				sample = &models.ChannelSample{
 					ChannelConfigID: channelConfig.ID,
 					Value:           124.7,
-					Timestamp:       time.Now().Unix(),
+					Timestamp:       telem.NewTimeStamp(time.Now()),
 				}
 			})
 			JustBeforeEach(func() {
 				err := store.NewTSCreate().Sample().Model(sample).Exec(ctx)
 				Expect(err).To(BeNil())
 			})
-			It("Should retrieve the correct sample", func() {
+			It("Should Retrieve the correct sample", func() {
 				resSample := &models.ChannelSample{}
 				err := store.NewTSRetrieve().Model(resSample).WherePK(channelConfig.
 					ID).Exec(ctx)
 				Expect(err).To(BeNil())
 				Expect(resSample.ChannelConfigID).To(Equal(channelConfig.ID))
 			})
-			It("Should retrieve the correct sample", func() {
+			It("Should Retrieve the correct sample", func() {
 			})
 		})
 		Describe("Retrieving a sample by time rng", func() {
@@ -62,18 +63,17 @@ var _ = Describe("QueryTsRetrieve", func() {
 					{
 						ChannelConfigID: channelConfig.ID,
 						Value:           12412.3,
-						Timestamp:       time.Now().UnixNano(),
+						Timestamp:       telem.NewTimeStamp(time.Now()),
 					},
 					{
 						ChannelConfigID: channelConfig.ID,
 						Value:           417.5,
-						Timestamp: time.Now().Add(-600 * time.Millisecond).
-							UnixNano(),
+						Timestamp:       telem.NewTimeStamp(time.Now().Add(-600 * time.Millisecond)),
 					},
 					{
 						ChannelConfigID: channelConfig.ID,
 						Value:           482.5,
-						Timestamp:       time.Now().Add(-1600 * time.Second).UnixNano(),
+						Timestamp:       telem.NewTimeStamp(time.Now().Add(-1600 * time.Second)),
 					},
 				}
 			})
@@ -81,19 +81,19 @@ var _ = Describe("QueryTsRetrieve", func() {
 				err := store.NewTSCreate().Sample().Model(&samples).Exec(ctx)
 				Expect(err).To(BeNil())
 			})
-			It("Should retrieve the samples correctly", func() {
+			It("Should Retrieve the samples correctly", func() {
 				var resSamples []*models.ChannelSample
-				sampleTime := time.Unix(0, samples[0].Timestamp)
+				sampleTime := samples[0].Timestamp.ToTime()
 				fromTs := sampleTime.Add(-800 * time.Millisecond)
 				toTs := sampleTime.Add(500 * time.Millisecond)
 				err := store.NewTSRetrieve().Model(&resSamples).WherePK(
-					channelConfig.ID).WhereTimeRange(fromTs.UnixNano(), toTs.UnixNano()).
+					channelConfig.ID).WhereTimeRange(fromTs.UnixMicro(), toTs.UnixMicro()).
 					Exec(ctx)
 				Expect(err).To(BeNil())
 				Expect(resSamples).To(HaveLen(2))
 				for _, s := range resSamples {
-					Expect(s.Timestamp).Should(BeNumerically("<", toTs.UnixNano()))
-					Expect(s.Timestamp).Should(BeNumerically(">", fromTs.UnixNano()))
+					Expect(s.Timestamp).Should(BeNumerically("<", telem.NewTimeStamp(toTs)))
+					Expect(s.Timestamp).Should(BeNumerically(">", telem.NewTimeStamp(fromTs)))
 				}
 			})
 		})

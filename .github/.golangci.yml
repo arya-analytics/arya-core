@@ -23,7 +23,8 @@ linters:
     - govet
     - staticcheck
     - nilerr
-    - typecheck
+    # Disabling for now due to generics issues
+#    - typecheck
     # COMPLEXITY
     - gocognit
     # TEST

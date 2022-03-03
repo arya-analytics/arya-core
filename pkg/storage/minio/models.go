@@ -13,6 +13,6 @@ func catalog() model.Catalog {
 }
 
 type channelChunkReplica struct {
-	ID    uuid.UUID   `model:"role:pk"`
-	Telem *telem.Bulk `model:"role:bulkTelem"`
+	ID    uuid.UUID        `model:"role:pk"`
+	Telem *telem.ChunkData `model:"role:telemChunkData,"`
 }

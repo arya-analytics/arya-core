@@ -17,10 +17,10 @@ var _ = Describe("Allocate", func() {
 	)
 	BeforeEach(func() {
 		obs = rng.NewObserveMem([]rng.ObservedRange{})
-		p = &mock.Persist{}
+		p = mock.NewBlankPersist()
 		svc = rng.NewService(obs, p)
 	})
-	Describe("A Chunk", func() {
+	Describe("A ChunkData", func() {
 		Context("When no open range is under observation", func() {
 			It("Should Allocate a new range", func() {
 				chunkToAlloc := &models.ChannelChunk{}
@@ -51,7 +51,7 @@ var _ = Describe("Allocate", func() {
 			})
 		})
 	})
-	Describe("A Chunk Replica", func() {
+	Describe("A ChunkData Replica", func() {
 		Context("When a chunk hasn't been allocated", func() {
 			It("Should panic", func() {
 				chunkReplicaToAlloc := &models.ChannelChunkReplica{}

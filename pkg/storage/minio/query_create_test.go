@@ -13,21 +13,21 @@ var _ = Describe("QueryCreate", func() {
 	BeforeEach(func() {
 		channelChunk = &models.ChannelChunkReplica{
 			ID:    uuid.New(),
-			Telem: telem.NewBulk([]byte("randomstring")),
+			Telem: telem.NewChunkData([]byte("randomstring")),
 		}
 	})
 	JustBeforeEach(func() {
-		err := engine.NewCreate(adapter).Model(channelChunk).Exec(ctx)
+		err := engine.NewCreate().Model(channelChunk).Exec(ctx)
 		Expect(err).To(BeNil())
 	})
 	AfterEach(func() {
-		err := engine.NewDelete(adapter).Model(channelChunk).WherePK(channelChunk.
+		err := engine.NewDelete().Model(channelChunk).WherePK(channelChunk.
 			ID).Exec(ctx)
 		Expect(err).To(BeNil())
 	})
 	It("Should be created correctly", func() {
 		mockModelTwo := &models.ChannelChunkReplica{}
-		err := engine.NewRetrieve(adapter).Model(mockModelTwo).WherePK(channelChunk.ID).
+		err := engine.NewRetrieve().Model(mockModelTwo).WherePK(channelChunk.ID).
 			Exec(ctx)
 		Expect(err).To(BeNil())
 		Expect(mockModelTwo.Telem).ToNot(BeNil())

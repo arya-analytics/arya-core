@@ -1,6 +1,9 @@
 package storage
 
-import "context"
+import (
+	"context"
+	"github.com/arya-analytics/aryacore/pkg/util/errutil"
+)
 
 type QueryMigrate struct {
 	queryBase
@@ -8,7 +11,7 @@ type QueryMigrate struct {
 
 // |||| CONSTRUCTOR ||||
 
-func newMigrate(s Storage) *QueryMigrate {
+func newMigrate(s *storage) *QueryMigrate {
 	q := &QueryMigrate{}
 	q.baseInit(s, q)
 	return q
@@ -17,31 +20,8 @@ func newMigrate(s Storage) *QueryMigrate {
 /// |||| INTERFACE ||||
 
 func (q *QueryMigrate) Exec(ctx context.Context) error {
-	q.baseExec(func() error {
-		return q.mdQuery().Exec(ctx)
-	})
-	q.baseExec(func() error {
-		return q.objQuery().Exec(ctx)
-	})
+	c := errutil.NewCatchWCtx(ctx)
+	c.Exec(q.storage.cfg.EngineMD.NewMigrate().Exec)
+	c.Exec(q.storage.cfg.EngineObject.NewMigrate().Exec)
 	return q.baseErr()
-}
-
-// |||| QUERY BINDING ||||
-
-// || META DATA ||
-
-func (q *QueryMigrate) mdQuery() QueryMDMigrate {
-	if q.baseMDQuery() == nil {
-		q.baseSetMDQuery(q.baseMDEngine().NewMigrate(q.baseMDAdapter()))
-	}
-	return q.baseMDQuery().(QueryMDMigrate)
-}
-
-// || OBJECT ||
-
-func (q *QueryMigrate) objQuery() QueryObjectMigrate {
-	if q.baseObjQuery() == nil {
-		q.baseSetObjQuery(q.baseObjEngine().NewMigrate(q.baseObjAdapter()))
-	}
-	return q.baseObjQuery().(QueryObjectMigrate)
 }

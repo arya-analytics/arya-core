@@ -18,7 +18,7 @@ const (
 	detectObserveInterval = 30 * time.Second
 )
 
-func newSchedulerPartition(pd *partitionDetect, opts ...tasks.ScheduleOpt) tasks.Schedule {
+func newSchedulePartition(pd *partitionDetect, opts ...tasks.ScheduleOpt) tasks.Schedule {
 	tsk := []tasks.Task{
 		{
 			Name:     "Detect Persist",
@@ -116,11 +116,11 @@ func (pd *partitionDetect) observeNewRngGroups(newRangeGroups [][]*models.Range)
 // |||| EXECUTE ||||
 
 func NewPartitionExecute(ctx context.Context, p Persist, rngPK uuid.UUID) *PartitionExecute {
-	return &PartitionExecute{pst: p, sourceRangePK: rngPK, catcher: errutil.NewContextCatcher(ctx)}
+	return &PartitionExecute{pst: p, sourceRangePK: rngPK, catcher: errutil.NewCatchWCtx(ctx)}
 }
 
 // PartitionExecute checks if a models.Range is over-allocated (i.e. exceeds models.MaxRangeSize),
-// and then splits it into smaller ranges until its no longer allocated. It will then mark the original (source)
+// and then splits it into smaller rngMap until its no longer allocated. It will then mark the original (source)
 // models.Range as closed.
 //
 // Exec runs the partition, and returns any new models.Range objects created during the partition as well as
@@ -129,7 +129,7 @@ type PartitionExecute struct {
 	pst           Persist
 	sourceRangePK uuid.UUID
 	newRanges     []*models.Range
-	catcher       *errutil.ContextCatcher
+	catcher       *errutil.CatchWCtx
 	_rngSize      int64
 }
 

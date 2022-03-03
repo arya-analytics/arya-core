@@ -2,43 +2,82 @@ package errutil
 
 import "context"
 
-// |||| CATCHER ||||
-
-type Catcher struct {
-	err error
+type Catch interface {
+	Exec(actionFunc CatchAction)
+	Error() error
+	Errors() []error
+	Reset()
 }
 
-type ActionFunc func() error
+// |||| OPTS ||||
 
-func (c *Catcher) Exec(actionFunc ActionFunc) {
-	if c.err != nil {
+type catchOpts struct {
+	aggregate bool
+}
+
+type CatchOpt func(o *catchOpts)
+
+func WithAggregation() CatchOpt {
+	return func(o *catchOpts) {
+		o.aggregate = true
+	}
+}
+
+// |||| SIMPLE CATCH ||||
+
+type CatchSimple struct {
+	errors []error
+	opts   *catchOpts
+}
+
+func NewCatchSimple(opts ...CatchOpt) *CatchSimple {
+	c := &CatchSimple{opts: &catchOpts{}}
+	for _, o := range opts {
+		o(c.opts)
+	}
+	return c
+}
+
+type CatchAction func() error
+
+func (c *CatchSimple) Exec(ca CatchAction) {
+	if !c.opts.aggregate && len(c.errors) > 0 {
 		return
 	}
-	err := actionFunc()
+	err := ca()
 	if err != nil {
-		c.err = err
+		c.errors = append(c.errors, err)
 	}
 }
 
-func (c *Catcher) Reset() {
-	c.err = nil
+func (c *CatchSimple) Reset() {
+	c.errors = []error{}
 }
 
-func (c *Catcher) Error() error {
-	return c.err
+func (c *CatchSimple) Error() error {
+	if len(c.Errors()) == 0 {
+		return nil
+	}
+	return c.Errors()[0]
 }
 
-type ContextCatcher struct {
-	*Catcher
+func (c *CatchSimple) Errors() []error {
+	return c.errors
+}
+
+// |||| CATCH W CONTEXT ||||
+
+type CatchWCtx struct {
+	*CatchSimple
 	ctx context.Context
 }
 
-func NewContextCatcher(ctx context.Context) *ContextCatcher {
-	return &ContextCatcher{Catcher: &Catcher{}, ctx: ctx}
+func NewCatchWCtx(ctx context.Context, opts ...CatchOpt) *CatchWCtx {
+	return &CatchWCtx{CatchSimple: NewCatchSimple(opts...), ctx: ctx}
 }
 
-type ActionFuncContext func(ctx context.Context) error
+type CatchActionCtx func(ctx context.Context) error
 
-func (c *ContextCatcher) Exec(actionFunc ActionFuncContext) {
-	c.Catcher.Exec(func() error { return actionFunc(c.ctx) })
+func (c *CatchWCtx) Exec(ca CatchActionCtx) {
+	c.CatchSimple.Exec(func() error { return ca(c.ctx) })
 }

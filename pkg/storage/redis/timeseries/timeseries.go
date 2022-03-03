@@ -3,6 +3,7 @@ package timeseries
 import (
 	"context"
 	"fmt"
+	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"github.com/go-redis/redis/v8"
 	"reflect"
 	"strconv"
@@ -25,7 +26,7 @@ const (
 type Sample struct {
 	Key       string
 	Value     float64
-	Timestamp int64
+	Timestamp telem.TimeStamp
 }
 
 func NewSampleFromRes(key string, res interface{}) (Sample, error) {
@@ -33,7 +34,7 @@ func NewSampleFromRes(key string, res interface{}) (Sample, error) {
 	if resVal.Kind() != reflect.Slice || resVal.Len() < 2 {
 		return Sample{}, fmt.Errorf("response invalid: %s", res)
 	}
-	ts := resVal.Index(0).Interface().(int64)
+	ts := telem.TimeStamp(resVal.Index(0).Interface().(int64))
 	val, err := strconv.ParseFloat(resVal.Index(1).Interface().(string), 64)
 	if err != nil {
 		return Sample{}, err
@@ -48,7 +49,7 @@ func NewSampleFromRes(key string, res interface{}) (Sample, error) {
 func (s Sample) args() (args []interface{}) {
 	return []interface{}{
 		s.Key,
-		s.Timestamp,
+		int64(s.Timestamp),
 		s.Value,
 	}
 }

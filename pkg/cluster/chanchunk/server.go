@@ -32,7 +32,7 @@ func (s *ServerRPC) BindTo(srv *grpc.Server) {
 }
 
 func (s *ServerRPC) CreateReplicas(stream api.ChannelChunkService_CreateReplicasServer) error {
-	c := &errutil.Catcher{}
+	c := errutil.NewCatchSimple()
 	for {
 		var req *api.ChannelChunkServiceCreateReplicasRequest
 		c.Exec(func() (err error) {
@@ -52,7 +52,7 @@ func (s *ServerRPC) CreateReplicas(stream api.ChannelChunkService_CreateReplicas
 
 func (s *ServerRPC) RetrieveReplicas(req *api.ChannelChunkServiceRetrieveReplicasRequest, stream api.ChannelChunkService_RetrieveReplicasServer) error {
 	pkc := parsePKC(req.PKC)
-	c := &errutil.Catcher{}
+	c := errutil.NewCatchSimple()
 	for _, pk := range pkc {
 		res := &api.ChannelChunkServiceRetrieveReplicasResponse{CCR: &api.ChannelChunkReplica{}}
 		c.Exec(func() error { return s.persist.RetrieveReplica(stream.Context(), res.CCR, pk) })
@@ -83,7 +83,7 @@ type ServerRPCPersistCluster struct {
 
 func (sp *ServerRPCPersistCluster) RetrieveReplica(ctx context.Context, ccr *api.ChannelChunkReplica, pk model.PK) error {
 	exc := rpc.NewModelExchange(&models.ChannelChunkReplica{}, ccr)
-	if err := sp.Cluster.NewRetrieve().Model(exc.Source.Pointer()).WherePK(pk.Raw()).Exec(ctx); err != nil {
+	if err := sp.Cluster.NewRetrieve().Model(exc.Source().Pointer()).WherePK(pk.Raw()).Exec(ctx); err != nil {
 		return err
 	}
 	exc.ToDest()

@@ -39,24 +39,24 @@ type ObservedRange struct {
 // ObserveMem implements Observe with a mutex controlled in-memory map.
 type ObserveMem struct {
 	mu     sync.Mutex
-	ranges map[uuid.UUID]ObservedRange
+	rngMap map[uuid.UUID]ObservedRange
 }
 
-// NewObserveMem creates a new ObserveMem with the preloaded ranges.
+// NewObserveMem creates a new ObserveMem with the preloaded rngMap.
 func NewObserveMem(ranges []ObservedRange) *ObserveMem {
-	rangeMap := map[uuid.UUID]ObservedRange{}
+	rngMap := map[uuid.UUID]ObservedRange{}
 	for _, rng := range ranges {
 		validateObservedRange(rng)
-		rangeMap[rng.PK] = rng
+		rngMap[rng.PK] = rng
 	}
-	return &ObserveMem{ranges: rangeMap}
+	return &ObserveMem{rngMap: rngMap}
 }
 
 func (o *ObserveMem) Add(or ObservedRange) {
 	o.mu.Lock()
 	defer o.mu.Unlock()
 	validateObservedRange(or)
-	o.ranges[or.PK] = or
+	o.rngMap[or.PK] = or
 }
 
 func (o *ObserveMem) Retrieve(q ObservedRange) (ObservedRange, bool) {
@@ -69,14 +69,14 @@ func (o *ObserveMem) Retrieve(q ObservedRange) (ObservedRange, bool) {
 
 func (o *ObserveMem) RetrieveAll() (ranges []ObservedRange) {
 	// Copying here to protect against modification
-	for _, v := range o.ranges {
+	for _, v := range o.rngMap {
 		ranges = append(ranges, v)
 	}
 	return ranges
 }
 
 func (o *ObserveMem) RetrieveFilter(q ObservedRange) (matches []ObservedRange) {
-	for _, or := range o.ranges {
+	for _, or := range o.rngMap {
 		if matchObservedRangeQuery(q, or) {
 			matches = append(matches, or)
 		}

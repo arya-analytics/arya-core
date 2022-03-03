@@ -9,13 +9,13 @@ import (
 
 type queryBase struct {
 	_client       *timeseries.Client
-	modelExchange *modelExchange
-	catcher       *errutil.Catcher
+	modelExchange *exchange
+	catcher       *errutil.CatchSimple
 	handler       storage.ErrorHandler
 }
 
 func (q *queryBase) baseInit(client *timeseries.Client) {
-	q.catcher = &errutil.Catcher{}
+	q.catcher = errutil.NewCatchSimple()
 	q.handler = newErrorHandler()
 	q._client = client
 }
@@ -33,7 +33,7 @@ func (q *queryBase) baseExchangeToSource() {
 }
 
 func (q *queryBase) baseModel(m interface{}) {
-	q.modelExchange = newWrappedModelExchange(model.NewExchange(m,
+	q.modelExchange = newWrappedExchange(model.NewExchange(m,
 		catalog().New(m)))
 }
 

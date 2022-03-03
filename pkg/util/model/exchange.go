@@ -12,8 +12,8 @@ import (
 type FieldHandler func(sourceFldST, destFldST StructTag, sourceFld, destFld reflect.Value) (cDestFld reflect.Value, ok bool)
 
 type Exchange struct {
-	Source        *Reflect
-	Dest          *Reflect
+	source        *Reflect
+	dest          *Reflect
 	FieldHandlers []FieldHandler
 }
 
@@ -26,12 +26,20 @@ func NewExchange(sourcePtr, destPtr interface{}, handlers ...FieldHandler) *Exch
 	return &Exchange{sRfl, dRfl, handlers}
 }
 
+func (m *Exchange) Source() *Reflect {
+	return m.source
+}
+
+func (m *Exchange) Dest() *Reflect {
+	return m.dest
+}
+
 func (m *Exchange) ToSource() {
-	m.exchange(m.Dest, m.Source)
+	m.exchange(m.Dest(), m.Source())
 }
 
 func (m *Exchange) ToDest() {
-	m.exchange(m.Source, m.Dest)
+	m.exchange(m.Source(), m.Dest())
 }
 
 func (m *Exchange) exchange(fromRfl, toRfl *Reflect) {

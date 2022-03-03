@@ -19,21 +19,21 @@ func (s *Storage) Stop() {
 	s.DriverRoach.Stop()
 }
 
-type StorageOpts struct {
+type storageOpts struct {
 	Verbose bool
 }
 
-type StorageOpt func(so *StorageOpts)
+type StorageOpt func(so *storageOpts)
 
 func WithVerbose() StorageOpt {
-	return func(so *StorageOpts) {
+	return func(so *storageOpts) {
 		so.Verbose = true
 	}
 
 }
 
 func NewStorage(opts ...StorageOpt) *Storage {
-	so := &StorageOpts{}
+	so := &storageOpts{}
 	for _, opt := range opts {
 		opt(so)
 	}
@@ -41,11 +41,13 @@ func NewStorage(opts ...StorageOpt) *Storage {
 	driverMinio := DriverMinio{}
 	driverRedis := DriverRedis{}
 
+	pool := storage.NewPool()
+
 	s := &Storage{
 		Storage: storage.New(storage.Config{
-			EngineMD:     roach.New(driverRoach),
-			EngineCache:  redis.New(driverRedis),
-			EngineObject: minio.New(driverMinio),
+			EngineMD:     roach.New(driverRoach, pool),
+			EngineCache:  redis.New(driverRedis, pool),
+			EngineObject: minio.New(driverMinio, pool),
 		}),
 		DriverRoach: driverRoach,
 		DriverMinio: driverMinio,

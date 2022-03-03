@@ -2,8 +2,8 @@ package storage_test
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/models"
-	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
+	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
@@ -34,28 +34,28 @@ var _ = Describe("QueryRetrieve", func() {
 		Expect(nErr).To(BeNil())
 	})
 	Describe("Standard usage", func() {
-		Context("Meta Data Only", func() {
+		Context("Meta Telem Only", func() {
 			Context("Single item", func() {
 				Describe("Retrieve a channel config", func() {
-					It("Should retrieve the correct item", func() {
+					It("Should Retrieve the correct item", func() {
 						resChannelConfig := &models.ChannelConfig{}
 						err := store.NewRetrieve().Model(resChannelConfig).WherePK(channelConfig.ID).Exec(ctx)
 						Expect(err).To(BeNil())
 						Expect(resChannelConfig.ID).To(Equal(channelConfig.ID))
 						Expect(resChannelConfig.Name).To(Equal(channelConfig.Name))
 					})
-					It("Should retrieve the channel config by a relation", func() {
+					It("Should Retrieve the channel config by a relation", func() {
 						resChannelConfig := &models.ChannelConfig{}
-						err := store.NewRetrieve().Model(resChannelConfig).WhereFields(model.WhereFields{
+						err := store.NewRetrieve().Model(resChannelConfig).WhereFields(query.WhereFields{
 							"Node.ID": 1,
 						}).Exec(ctx)
 						Expect(err).To(BeNil())
 						Expect(resChannelConfig.ID).To(Equal(channelConfig.ID))
 						Expect(resChannelConfig.Name).To(Equal(channelConfig.Name))
 					})
-					It("Should retrieve the correct relation", func() {
+					It("Should Retrieve the correct relation", func() {
 						resChannelConfig := &models.ChannelConfig{}
-						err := store.NewRetrieve().Model(resChannelConfig).Relation("Node", "id").WhereFields(model.WhereFields{
+						err := store.NewRetrieve().Model(resChannelConfig).Relation("Node", "id").WhereFields(query.WhereFields{
 							"Node.ID": 1,
 						}).Exec(ctx)
 						Expect(err).To(BeNil())
@@ -63,7 +63,7 @@ var _ = Describe("QueryRetrieve", func() {
 						Expect(resChannelConfig.Name).To(Equal(channelConfig.Name))
 						Expect(resChannelConfig.Node.ID).To(Equal(1))
 					})
-					It("Should retrieve only the specified fields", func() {
+					It("Should Retrieve only the specified fields", func() {
 						resChannelConfig := &models.ChannelConfig{}
 						err := store.NewRetrieve().Model(resChannelConfig).WherePK(channelConfig.ID).Fields("ID").Exec(ctx)
 						Expect(err).To(BeNil())
@@ -76,7 +76,7 @@ var _ = Describe("QueryRetrieve", func() {
 						err := store.NewRetrieve().
 							Model(resChannelConfig).
 							WherePK(channelConfig.ID).
-							Calculate(storage.CalculateMax, "NodeID", &max).
+							Calc(query.CalcMax, "NodeID", &max).
 							Exec(ctx)
 						Expect(err).To(BeNil())
 						Expect(max).To(Equal(1))
@@ -84,7 +84,7 @@ var _ = Describe("QueryRetrieve", func() {
 				})
 			})
 		})
-		Context("Object Telem + Meta Telem", func() {
+		Context("Object + Meta Data", func() {
 			Context("Single item", func() {
 				var (
 					channelChunk        *models.ChannelChunk
@@ -103,7 +103,7 @@ var _ = Describe("QueryRetrieve", func() {
 					}
 					channelChunkReplica = &models.ChannelChunkReplica{
 						ChannelChunkID: channelChunk.ID,
-						Telem:          telem.NewBulk(bytes),
+						Telem:          telem.NewChunkData(bytes),
 						RangeReplicaID: rngReplica.ID,
 					}
 					items = []interface{}{
@@ -126,13 +126,24 @@ var _ = Describe("QueryRetrieve", func() {
 					}
 				})
 				Describe("Retrieve a channel chunk", func() {
-					It("Should retrieve the correct item", func() {
+					It("Should Retrieve the correct item", func() {
 						resCCR := &models.ChannelChunkReplica{}
 						err := store.NewRetrieve().Model(resCCR).WherePK(
 							channelChunkReplica.ID).Exec(ctx)
 						Expect(err).To(BeNil())
 						Expect(resCCR.ID).To(Equal(channelChunkReplica.ID))
 						Expect(resCCR.Telem).ToNot(BeNil())
+						Expect(resCCR.Telem.Bytes()).To(Equal(bytes))
+					})
+				})
+				Describe("Retrieving the chunk by a non pk field", func() {
+					It("Should Retrieve the correct item", func() {
+						resCCR := &models.ChannelChunkReplica{}
+						err := store.NewRetrieve().
+							Model(resCCR).
+							WhereFields(query.WhereFields{"ChannelChunkID": channelChunk.ID}).
+							Exec(ctx)
+						Expect(err).To(BeNil())
 						Expect(resCCR.Telem.Bytes()).To(Equal(bytes))
 					})
 				})

@@ -6,6 +6,7 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/util/errutil"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
+	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/arya-analytics/aryacore/pkg/util/tasks"
 	log "github.com/sirupsen/logrus"
 	"github.com/uptrace/bun"
@@ -43,7 +44,7 @@ const (
 // joined/exited the cluster.
 func syncNodesAction(db *bun.DB) tasks.Action {
 	return func(ctx context.Context, cfg tasks.ScheduleConfig) error {
-		sn := &syncNodes{db: db, catcher: &errutil.Catcher{},
+		sn := &syncNodes{db: db, catcher: errutil.NewCatchSimple(),
 			handler: newErrorHandler(), cfg: cfg}
 		return sn.exec(ctx)
 	}
@@ -52,7 +53,7 @@ func syncNodesAction(db *bun.DB) tasks.Action {
 type syncNodes struct {
 	ctx     context.Context
 	db      *bun.DB
-	catcher *errutil.Catcher
+	catcher *errutil.CatchSimple
 	handler storage.ErrorHandler
 	cfg     tasks.ScheduleConfig
 }
@@ -89,10 +90,10 @@ func (sn *syncNodes) createNodeWithPK(pk model.PK) {
 	}
 	newNode := &models.Node{ID: pk.Raw().(int)}
 	sn.catcher.Exec(func() error {
-		if err := newCreate(sn.db).Model(newNode).Exec(sn.ctx); err != nil {
+		if err := query.NewCreate().BindExec(newCreate(sn.db).exec).Model(newNode).Exec(sn.ctx); err != nil {
 			sErr, ok := err.(storage.Error)
 			if !ok {
-				log.Error("Encountered un-parseable err after roach query exec.")
+				log.Error("Encountered un-parseable err after roach bunQ exec.")
 			}
 			if sErr.Type == storage.ErrorTypeUniqueViolation {
 				log.WithFields(fld).Warnf("someone just created the node table entry!")

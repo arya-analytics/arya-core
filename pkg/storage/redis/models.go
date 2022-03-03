@@ -2,6 +2,7 @@ package redis
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/util/model"
+	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"github.com/google/uuid"
 	"time"
 )
@@ -18,12 +19,12 @@ func catalog() model.Catalog {
 type channelConfig struct {
 	ID        uuid.UUID `model:"role:tsKey"`
 	Name      string
-	DataRate  float64
+	DataRate  telem.DataRate
 	Retention time.Duration
 }
 
 type channelSample struct {
-	ChannelConfigID uuid.UUID `model:"role:tsKey,"`
-	Value           float64   `model:"role:tsValue,"`
-	Timestamp       int64     `model:"role:tsStamp"`
+	ChannelConfigID uuid.UUID       `model:"role:tsKey,"`
+	Value           float64         `model:"role:tsValue,"`
+	Timestamp       telem.TimeStamp `model:"role:tsStamp"`
 }

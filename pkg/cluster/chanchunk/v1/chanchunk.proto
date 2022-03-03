@@ -19,7 +19,7 @@ message ChannelChunkReplica {
   string ID = 1 [(tagger.tags) = "model:\"role:pk,\""];
   string ChannelChunkID = 2;
   string RangeReplicaID = 3;
-  bytes telem = 4 [(tagger.tags) = "model:\"role:bulkTelem,\""];
+  bytes telem = 4 [(tagger.tags) = "model:\"role:telemChunkData,\""];
 }
 
 // |||| CREATE ||||

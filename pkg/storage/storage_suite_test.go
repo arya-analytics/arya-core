@@ -10,12 +10,12 @@ import (
 
 var (
 	ctx   = context.Background()
-	store = mock.NewStorage()
+	store *mock.Storage
 )
 
 var _ = BeforeSuite(func() {
-	err := store.NewMigrate().Exec(ctx)
-	Expect(err).To(BeNil())
+	store = mock.NewStorage()
+	Expect(store.NewMigrate().Exec(ctx)).To(BeNil())
 })
 
 var _ = AfterSuite(func() {

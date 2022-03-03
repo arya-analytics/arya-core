@@ -15,22 +15,22 @@ var _ = Describe("QueryDelete", func() {
 		BeforeEach(func() {
 			channelChunk = &models.ChannelChunkReplica{
 				ID:    uuid.New(),
-				Telem: telem.NewBulk([]byte("randomstring")),
+				Telem: telem.NewChunkData([]byte("randomstring")),
 			}
 		})
 		JustBeforeEach(func() {
-			err := engine.NewCreate(adapter).Model(channelChunk).Exec(ctx)
+			err := engine.NewCreate().Model(channelChunk).Exec(ctx)
 			Expect(err).To(BeNil())
 		})
 		Describe("Delete an item", func() {
 			JustBeforeEach(func() {
-				err := engine.NewDelete(adapter).Model(channelChunk).WherePK(
+				err := engine.NewDelete().Model(channelChunk).WherePK(
 					channelChunk.ID).Exec(
 					ctx)
 				Expect(err).To(BeNil())
 			})
-			It("Should not be able to be re-queried after delete", func() {
-				rErr := engine.NewRetrieve(adapter).Model(channelChunk).WherePK(
+			It("Should not be able to be re-queried after del", func() {
+				rErr := engine.NewRetrieve().Model(channelChunk).WherePK(
 					channelChunk.ID).Exec(ctx)
 				Expect(rErr).ToNot(BeNil())
 				Expect(rErr.(storage.Error).Type).To(Equal(storage.ErrorTypeItemNotFound))
@@ -41,19 +41,19 @@ var _ = Describe("QueryDelete", func() {
 			BeforeEach(func() {
 				channelChunkTwo = &models.ChannelChunkReplica{
 					ID:    uuid.New(),
-					Telem: telem.NewBulk([]byte("mock bytes")),
+					Telem: telem.NewChunkData([]byte("mock bytes")),
 				}
 			})
 			JustBeforeEach(func() {
-				cErr := engine.NewCreate(adapter).Model(channelChunkTwo).Exec(ctx)
+				cErr := engine.NewCreate().Model(channelChunkTwo).Exec(ctx)
 				Expect(cErr).To(BeNil())
 				pks := []uuid.UUID{channelChunk.ID, channelChunkTwo.ID}
-				dErr := engine.NewDelete(adapter).Model(channelChunkTwo).WherePKs(pks).Exec(ctx)
+				dErr := engine.NewDelete().Model(channelChunkTwo).WherePKs(pks).Exec(ctx)
 				Expect(dErr).To(BeNil())
 			})
-			It("Should not be able to be re-queried after delete", func() {
+			It("Should not be able to be re-queried after del", func() {
 				var models []*models.ChannelChunkReplica
-				e := engine.NewRetrieve(adapter).Model(&models).WherePKs(
+				e := engine.NewRetrieve().Model(&models).WherePKs(
 					[]uuid.UUID{channelChunkTwo.ID, channelChunk.ID}).Exec(ctx)
 				Expect(e).ToNot(BeNil())
 				Expect(e.(storage.Error).Type).To(Equal(storage.ErrorTypeItemNotFound))

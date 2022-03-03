@@ -9,18 +9,18 @@ import (
 )
 
 type BulkTelemModel struct {
-	Telem *telem.Bulk `model:"role:bulkTelem"`
+	Telem *telem.ChunkData `model:"role:telemChunkData"`
 }
 
 type BytesTelemModel struct {
-	Telem []byte `model:"role:bulkTelem"`
+	Telem []byte `model:"role:telemChunkData"`
 }
 
 var _ = Describe("ModelExchange", func() {
 	Describe("FieldHandlerTelemBulk", func() {
 		Context("Standard usage", func() {
-			blk := telem.NewBulk([]byte{})
-			mock.TelemBulkPopulateRandomFloat64(blk, 100)
+			blk := telem.NewChunkData([]byte{})
+			mock.PopulateRandFloat64(blk, 100)
 			It("Should exchange to dest correctly", func() {
 				bulkModel := &BulkTelemModel{
 					Telem: blk,
@@ -28,7 +28,7 @@ var _ = Describe("ModelExchange", func() {
 				bytesModel := &BytesTelemModel{}
 				me := rpc.NewModelExchange(bulkModel, bytesModel)
 				me.ToDest()
-				Expect(len(bytesModel.Telem)).To(Equal(blk.Len()))
+				Expect(int64(len(bytesModel.Telem))).To(Equal(blk.Size()))
 			})
 			It("Should exchange to source correctly", func() {
 				bulkModel := &BulkTelemModel{}
@@ -37,7 +37,7 @@ var _ = Describe("ModelExchange", func() {
 				}
 				me := rpc.NewModelExchange(bulkModel, bytesModel)
 				me.ToSource()
-				Expect(bulkModel.Telem.Len()).To(Equal(blk.Len()))
+				Expect(bulkModel.Telem.Size()).To(Equal(blk.Size()))
 			})
 		})
 	})

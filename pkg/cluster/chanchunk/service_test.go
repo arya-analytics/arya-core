@@ -7,6 +7,7 @@ import (
 	clustermock "github.com/arya-analytics/aryacore/pkg/cluster/mock"
 	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
+	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	mockTlm "github.com/arya-analytics/aryacore/pkg/util/telem/mock"
 	"github.com/google/uuid"
@@ -22,7 +23,6 @@ var _ = Describe("Service", func() {
 	var (
 		clust         cluster.Cluster
 		remoteSvc     chanchunk.ServiceRemote
-		localSvc      chanchunk.Local
 		svc           *chanchunk.Service
 		pool          *cluster.NodeRPCPool
 		persist       *mock.ServerRPCPersist
@@ -52,20 +52,15 @@ var _ = Describe("Service", func() {
 		server = chanchunk.NewServerRPC(persist)
 		grpcServer = grpc.NewServer()
 		server.BindTo(grpcServer)
-		localSvc = chanchunk.NewServiceLocalStorage(store)
-		svc = chanchunk.NewService(localSvc, remoteSvc)
+		svc = chanchunk.NewService(store.Exec, remoteSvc)
 		clust.BindService(svc)
 		ccr = &models.ChannelChunkReplica{
 			ID:             uuid.New(),
 			RangeReplicaID: rr.ID,
 			ChannelChunkID: cc.ID,
-			Telem:          telem.NewBulk([]byte{}),
+			Telem:          telem.NewChunkData([]byte{}),
 		}
-		mockTlm.TelemBulkPopulateRandomFloat64(ccr.Telem, 500)
-	})
-	BeforeEach(func() {
-		localSvc = chanchunk.NewServiceLocalStorage(store)
-
+		mockTlm.PopulateRandFloat64(ccr.Telem, 500)
 	})
 	JustBeforeEach(func() {
 		var serverErr error
@@ -84,7 +79,7 @@ var _ = Describe("Service", func() {
 	})
 	JustAfterEach(func() {
 		for _, m := range items {
-			err := store.NewDelete().Model(m).WherePK(model.NewReflect(m).PK().Raw()).Exec(ctx)
+			err := store.NewDelete().Model(m).WherePK(model.NewReflect(m).PK()).Exec(ctx)
 			Expect(err).To(BeNil())
 		}
 	})
@@ -97,7 +92,7 @@ var _ = Describe("Service", func() {
 		})
 		It("Should retrieve the chunk replica correctly", func() {
 			cErr := clust.NewCreate().Model(ccr).Exec(ctx)
-			ccr.Telem = telem.NewBulk([]byte{})
+			ccr.Telem = telem.NewChunkData([]byte{})
 			sCErr := store.NewCreate().Model(ccr).Exec(ctx)
 			Expect(sCErr).To(BeNil())
 			Expect(cErr).To(BeNil())
@@ -108,7 +103,7 @@ var _ = Describe("Service", func() {
 		})
 		It("Should delete the chunk replica correctly", func() {
 			cErr := clust.NewCreate().Model(ccr).Exec(ctx)
-			ccr.Telem = telem.NewBulk([]byte{})
+			ccr.Telem = telem.NewChunkData([]byte{})
 			sCErr := store.NewCreate().Model(ccr).Exec(ctx)
 			Expect(sCErr).To(BeNil())
 			Expect(cErr).To(BeNil())
@@ -137,7 +132,7 @@ var _ = Describe("Service", func() {
 			cErr := clust.NewCreate().Model(ccr).Exec(ctx)
 			Expect(cErr).To(BeNil())
 			resCCR := &models.ChannelChunkReplica{}
-			rErr := clust.NewRetrieve().Model(resCCR).WhereFields(model.WhereFields{"ID": ccr.ID}).Fields("ID").Exec(ctx)
+			rErr := clust.NewRetrieve().Model(resCCR).WhereFields(query.WhereFields{"ID": ccr.ID}).Fields("ID").Exec(ctx)
 			Expect(rErr).To(BeNil())
 			Expect(resCCR.ID).To(Equal(ccr.ID))
 			Expect(resCCR.Telem).To(BeNil())
