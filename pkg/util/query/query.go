@@ -29,7 +29,6 @@ import (
 // Query is a general interface for a type that can be used to write queries. (examples within this package are
 // Create, Update, Retrieve, Delete).
 //
-//
 // Pack packs the query into a Pack. (I know, so self-explanatory!)
 //
 // Exec executes the query. A query should also provide a utility for binding Execute which can be used to execute

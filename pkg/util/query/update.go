@@ -15,6 +15,7 @@ func NewUpdate() *Update {
 
 // || MODEL ||
 
+// Model sets the model to bind the results into. Model must be passed as a pointer or a *model.Reflect.
 func (u *Update) Model(m interface{}) *Update {
 	u.baseModel(m)
 	return u

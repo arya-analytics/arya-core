@@ -20,6 +20,7 @@ import (
 //
 // pkc will hold a model.PKChain representing the primary keys of the query. ok will be false if the primary keys don't
 // exist. Repeat this process with the different options you want to provide support for to extract all the info you need.
+// The different options available for queries are suffixed with the 'Opt' keyword.
 //
 // 2. Use the parsed options and provided context to run the query, and binds the results into the Pack.Model().
 // in the case of options with an 'into' arg (like CalcOpt), bind the result into the provided argument.
