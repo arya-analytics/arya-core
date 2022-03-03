@@ -15,6 +15,7 @@ func New[T any](actions []func(T) error, opts ...errutil.CatchOpt) *Validate[T] 
 }
 
 func (v *Validate[T]) Exec(m T) *Validate[T] {
+	v.catch.Reset()
 	for _, action := range v.actions {
 		v.catch.Exec(func() error { return action(m) })
 	}

@@ -197,7 +197,7 @@ type NextChunkValidateContext struct {
 
 func validateNextChunk() *validate.Validate[NextChunkValidateContext] {
 	actions := []func(vCtx NextChunkValidateContext) error{validateTiming}
-	return validate.New[NextChunkValidateContext](actions, validate.WithAggregation())
+	return validate.New[NextChunkValidateContext](actions, errutil.WithAggregation())
 }
 
 type NextChunkResolveContext struct {
@@ -207,5 +207,5 @@ type NextChunkResolveContext struct {
 
 func resolveNextChunk() *validate.Resolve[NextChunkResolveContext] {
 	actions := []func(sErr error, rCtx NextChunkResolveContext) (bool, error){resolveTiming}
-	return validate.NewResolve[NextChunkResolveContext](actions, validate.WithAggregation())
+	return validate.NewResolve[NextChunkResolveContext](actions, errutil.WithAggregation())
 }
