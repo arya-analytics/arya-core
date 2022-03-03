@@ -44,7 +44,7 @@ func UnsafeNewReflect(modelPtr interface{}) *Reflect {
 // Checks that the model object is either a model or a chain.
 // Panics if it isn't either of those.
 func (r *Reflect) Validate() {
-	if err := validator.Exec(r).Error(); err != nil {
+	if err := validateReflect().Exec(r).Error(); err != nil {
 		panic(err)
 	}
 }
@@ -384,8 +384,7 @@ func validateNonZero(r *Reflect) error {
 	return nil
 }
 
-var validator = validate.New[*Reflect]([]func(r *Reflect) error{
-	validateIsPointer,
-	validateSliceOrStruct,
-	validateNonZero,
-})
+func validateReflect() *validate.Validate[*Reflect] {
+	actions := []func(r *Reflect) error{validateIsPointer, validateSliceOrStruct, validateNonZero}
+	return validate.New[*Reflect](actions)
+}

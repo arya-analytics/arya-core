@@ -103,6 +103,15 @@ var _ = Describe("PKC", func() {
 					Expect(newPks.AllZero()).To(BeTrue())
 				})
 			})
+			Context("AllNonZero", func() {
+				It("Should return true when all pks are zero", func() {
+					Expect(pks.AllNonZero()).To(BeTrue())
+				})
+				It("Should return false when one of the pks is non zero", func() {
+					newPks := model.NewPKChain([]uuid.UUID{uuid.New(), {}})
+					Expect(newPks.AllNonZero()).To(BeFalse())
+				})
+			})
 		})
 		Describe("Edge cases + errors", func() {
 			It("Should panic when a non-slice is provided", func() {
