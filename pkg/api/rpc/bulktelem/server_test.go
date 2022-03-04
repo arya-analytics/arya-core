@@ -73,8 +73,7 @@ var _ = Describe("Server", func() {
 	})
 	Describe("CreateStream", func() {
 		It("Should create the chunks correctly", func() {
-			cc := mock.ChunkSet(
-				50,
+			cc := mock.ChunkSet(,
 				telem.TimeStamp(0),
 				config.DataType,
 				config.DataRate,
