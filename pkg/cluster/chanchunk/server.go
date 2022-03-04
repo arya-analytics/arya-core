@@ -20,6 +20,7 @@ type ServerRPCPersist interface {
 }
 
 type ServerRPC struct {
+	api.UnimplementedChannelChunkServiceServer
 	persist ServerRPCPersist
 }
 

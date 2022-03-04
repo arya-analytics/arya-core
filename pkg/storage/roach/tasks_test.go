@@ -2,7 +2,6 @@ package roach_test
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/models"
-	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/storage/roach"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/arya-analytics/aryacore/pkg/util/tasks"
@@ -80,13 +79,13 @@ var _ = Describe("NewTasks", func() {
 				rErr := engine.NewRetrieve().Model(extraNode).WherePK(
 					extraNode.ID).Exec(ctx)
 				Expect(rErr).ToNot(BeNil())
-				Expect(rErr.(storage.Error).Type).To(Equal(storage.ErrorTypeItemNotFound))
+				Expect(rErr.(query.Error).Type).To(Equal(query.ErrorTypeItemNotFound))
 			})
 			// Just in case we don't del the extra node
 			JustAfterEach(func() {
 				err := engine.NewDelete().Model(extraNode).WherePK(extraNode.ID).Exec(ctx)
 				if err != nil {
-					Expect(err.(storage.Error).Type).To(Equal(storage.ErrorTypeItemNotFound))
+					Expect(err.(query.Error).Type).To(Equal(query.ErrorTypeItemNotFound))
 				}
 				Expect(err).To(BeNil())
 			})

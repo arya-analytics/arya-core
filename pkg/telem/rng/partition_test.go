@@ -193,7 +193,7 @@ var _ = Describe("Partition", func() {
 				Expect(err).To(BeNil())
 				Expect(size).To(BeNumerically("<", models.MaxRangeSize))
 			})
-			It("Should add the new range to the observer", func() {
+			It("Should add the new range to the observe", func() {
 				Expect(obs.RetrieveAll()).To(HaveLen(2))
 				Expect(obs.RetrieveFilter(rng.ObservedRange{Status: models.RangeStatusOpen})).To(HaveLen(1))
 			})
@@ -227,7 +227,7 @@ var _ = Describe("Partition", func() {
 			It("Should only create one new range", func() {
 				Expect(obs.RetrieveAll()).To(HaveLen(2))
 			})
-			It("Should add the new range to the observer", func() {
+			It("Should add the new range to the observe", func() {
 				Expect(obs.RetrieveAll()).To(HaveLen(2))
 				Expect(obs.RetrieveFilter(rng.ObservedRange{Status: models.RangeStatusOpen})).To(HaveLen(1))
 			})

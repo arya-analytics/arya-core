@@ -1,4 +1,4 @@
-// Package telem holds utilities for working with telemetry, including storage, transport, traversal, and modification.
+// Package bulktelem holds utilities for working with telemetry, including storage, transport, traversal, and modification.
 package telem
 
 // |||| DATA TYPE ||||

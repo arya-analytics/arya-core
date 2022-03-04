@@ -1,19 +1,22 @@
 package redis
 
 import (
-	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/util/errutil"
+	"github.com/arya-analytics/aryacore/pkg/util/query"
 )
 
-func newErrorHandler() storage.ErrorHandler {
-	return storage.NewErrorHandler(errorTypeConverterDefault)
+func newErrorConvertChain() errutil.ConvertChain {
+	return query.NewErrorConvertChain(errorConvertDefault)
 }
 
-func errorTypeConverterDefault(err error) (storage.ErrorType, bool) {
-	ot, ok := _redisErrors[err.Error()]
-	return ot, ok
+func errorConvertDefault(err error) (error, bool) {
+	t, ok := redisErrors()[err.Error()]
+	return query.NewSimpleError(t, err), ok
 }
 
-var _redisErrors = map[string]storage.ErrorType{
-	"ERR TSDB: the key does not exist": storage.ErrorTypeItemNotFound,
-	"ERR TSDB: key already exists":     storage.ErrorTypeUniqueViolation,
+func redisErrors() map[string]query.ErrorType {
+	return map[string]query.ErrorType{
+		"ERR TSDB: the key does not exist": query.ErrorTypeItemNotFound,
+		"ERR TSDB: key already exists":     query.ErrorTypeUniqueViolation,
+	}
 }

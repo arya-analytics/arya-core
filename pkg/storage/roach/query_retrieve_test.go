@@ -2,7 +2,6 @@ package roach_test
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/models"
-	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/google/uuid"
@@ -233,7 +232,7 @@ var _ = Describe("QueryRetrieve", func() {
 					WhereFields(query.WhereFields{"RangeID": uuid.UUID{}}).
 					Exec(ctx)
 				Expect(err).ToNot(BeNil())
-				Expect(err.(storage.Error).Type).To(Equal(storage.ErrorTypeItemNotFound))
+				Expect(err.(query.Error).Type).To(Equal(query.ErrorTypeItemNotFound))
 			})
 			Context("Nested Relation", func() {
 				It("Should retrieve by a single nested relation correctly", func() {
@@ -338,7 +337,7 @@ var _ = Describe("QueryRetrieve", func() {
 					WherePK(somePKThatDoesntExist).
 					Exec(ctx)
 				Expect(err).ToNot(BeNil())
-				Expect(err.(storage.Error).Type).To(Equal(storage.ErrorTypeItemNotFound))
+				Expect(err.(query.Error).Type).To(Equal(query.ErrorTypeItemNotFound))
 			})
 		})
 	})

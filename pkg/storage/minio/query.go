@@ -75,8 +75,8 @@ func (c *create) exec(ctx context.Context, p *query.Pack) error {
 	c.exchangeToDest()
 	for _, dv := range c.exc.dataVals() {
 		if dv.Data == nil {
-			return storage.Error{
-				Type:    storage.ErrorTypeInvalidArgs,
+			return query.Error{
+				Type:    query.ErrorTypeInvalidArgs,
 				Message: fmt.Sprintf("Minio data to write is nil! Model %s with id %s", c.exc.Dest().Type(), dv.PK),
 			}
 		}
@@ -84,7 +84,7 @@ func (c *create) exec(ctx context.Context, p *query.Pack) error {
 		_, err := c.client.PutObject(ctx, c.bucket(), dv.PK.String(), dv.Data, dv.Data.Size(), minio.PutObjectOptions{})
 		dv.Data.Reset()
 		if err != nil {
-			return newErrorHandler().Exec(err)
+			return newErrorConvertChain().Exec(err)
 		}
 	}
 	c.exchangeToSource()
@@ -110,18 +110,18 @@ func (r *retrieve) exec(ctx context.Context, p *query.Pack) error {
 	for _, pk := range r.pkc {
 		resObj, gErr := r.client.GetObject(ctx, r.bucket(), pk.String(), minio.GetObjectOptions{})
 		if gErr != nil {
-			return newErrorHandler().Exec(gErr)
+			return newErrorConvertChain().Exec(gErr)
 		}
 		stat, sErr := resObj.Stat()
 		if sErr != nil {
-			return newErrorHandler().Exec(sErr)
+			return newErrorConvertChain().Exec(sErr)
 		}
 		bulk := telem.NewChunkData(make([]byte, stat.Size))
 		if _, err := bulk.ReadFrom(resObj); err != nil {
-			return newErrorHandler().Exec(err)
+			return newErrorConvertChain().Exec(err)
 		}
 		if err := resObj.Close(); err != nil {
-			return newErrorHandler().Exec(err)
+			return newErrorConvertChain().Exec(err)
 		}
 		dvc = append(dvc, &dataValue{PK: pk, Data: bulk})
 	}
@@ -135,13 +135,13 @@ func (m *migrate) Exec(ctx context.Context) error {
 		me := newWrappedExchange(model.NewExchange(mod, mod))
 		bucketExists, err := m.client.BucketExists(ctx, me.bucket())
 		if err != nil {
-			return newErrorHandler().Exec(err)
+			return newErrorConvertChain().Exec(err)
 		}
 		if bucketExists {
 			break
 		}
 		if mErr := m.client.MakeBucket(ctx, me.bucket(), minio.MakeBucketOptions{}); mErr != nil {
-			return newErrorHandler().Exec(mErr)
+			return newErrorConvertChain().Exec(mErr)
 		}
 	}
 	return nil

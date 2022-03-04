@@ -2,7 +2,7 @@ package roach_test
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/models"
-	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -36,7 +36,7 @@ var _ = Describe("QueryDelete", func() {
 			rErr := engine.NewRetrieve().Model(channelConfig).WherePK(channelConfig.ID).
 				Exec(ctx)
 			Expect(rErr).ToNot(BeNil())
-			Expect(rErr.(storage.Error).Type).To(Equal(storage.ErrorTypeItemNotFound))
+			Expect(rErr.(query.Error).Type).To(Equal(query.ErrorTypeItemNotFound))
 		})
 	})
 	Describe("Delete multiple items", func() {

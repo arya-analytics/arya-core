@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/storage/redis/timeseries"
+	"github.com/arya-analytics/aryacore/pkg/util/query"
 )
 
 type tsQueryVariant int
@@ -47,8 +48,8 @@ func (tsc *tsCreateQuery) Exec(ctx context.Context) error {
 	case tsQueryVariantSeries:
 		tsc.execSeries(ctx)
 	default:
-		return storage.Error{
-			Type:    storage.ErrorTypeInvalidArgs,
+		return query.Error{
+			Type:    query.ErrorTypeInvalidArgs,
 			Message: "ts create queries require a variant selection",
 		}
 	}

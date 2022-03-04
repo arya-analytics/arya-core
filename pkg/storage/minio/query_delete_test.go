@@ -2,7 +2,7 @@ package minio_test
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/models"
-	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
@@ -33,7 +33,7 @@ var _ = Describe("QueryDelete", func() {
 				rErr := engine.NewRetrieve().Model(channelChunk).WherePK(
 					channelChunk.ID).Exec(ctx)
 				Expect(rErr).ToNot(BeNil())
-				Expect(rErr.(storage.Error).Type).To(Equal(storage.ErrorTypeItemNotFound))
+				Expect(rErr.(query.Error).Type).To(Equal(query.ErrorTypeItemNotFound))
 			})
 		})
 		Describe("Delete multiple Items", func() {
@@ -56,7 +56,7 @@ var _ = Describe("QueryDelete", func() {
 				e := engine.NewRetrieve().Model(&models).WherePKs(
 					[]uuid.UUID{channelChunkTwo.ID, channelChunk.ID}).Exec(ctx)
 				Expect(e).ToNot(BeNil())
-				Expect(e.(storage.Error).Type).To(Equal(storage.ErrorTypeItemNotFound))
+				Expect(e.(query.Error).Type).To(Equal(query.ErrorTypeItemNotFound))
 			})
 		})
 	})

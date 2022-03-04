@@ -59,14 +59,14 @@ func (c *create) exec(ctx context.Context, p *query.Pack) error {
 	beforeInsertSetUUID(c.exc.Dest())
 	_, err := c.bunQ.Exec(ctx)
 	c.exc.ToSource()
-	return newErrorHandler().Exec(err)
+	return newErrorConvert().Exec(err)
 }
 
 func (e *retrieve) exec(ctx context.Context, p *query.Pack) error {
 	e.convertOpts(p)
 	err := e.bunQ.Scan(ctx, e.scanArgs...)
 	e.exc.ToSource()
-	return newErrorHandler().Exec(err)
+	return newErrorConvert().Exec(err)
 }
 
 func (u *update) exec(ctx context.Context, p *query.Pack) error {
@@ -74,13 +74,13 @@ func (u *update) exec(ctx context.Context, p *query.Pack) error {
 	u.exc.ToDest()
 	_, err := u.bunQ.Exec(ctx)
 	u.exc.ToSource()
-	return newErrorHandler().Exec(err)
+	return newErrorConvert().Exec(err)
 }
 
 func (d *del) exec(ctx context.Context, p *query.Pack) error {
 	d.convertOpts(p)
 	_, err := d.bunQ.Exec(ctx)
-	return newErrorHandler().Exec(err)
+	return newErrorConvert().Exec(err)
 }
 
 // |||| OPT CONVERTERS ||||

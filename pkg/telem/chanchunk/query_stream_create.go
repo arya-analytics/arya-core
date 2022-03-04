@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"github.com/arya-analytics/aryacore/pkg/models"
-	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/telem/rng"
 	"github.com/arya-analytics/aryacore/pkg/util/errutil"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
@@ -82,8 +81,8 @@ func (qsc *QueryStreamCreate) prevChunk() *telem.Chunk {
 			Model(ccr).
 			Relation("ChannelChunk", "ID", "StartTS", "Size").
 			WhereFields(query.WhereFields{"ChannelChunk.ChannelConfigID": qsc.config().ID}).Exec(qsc.ctx); err != nil {
-			sErr, ok := err.(storage.Error)
-			if !ok || sErr.Type != storage.ErrorTypeItemNotFound {
+			sErr, ok := err.(query.Error)
+			if !ok || sErr.Type != query.ErrorTypeItemNotFound {
 				qsc.Errors() <- err
 			}
 		}
@@ -128,7 +127,7 @@ func (qsc *QueryStreamCreate) listen() {
 			Size:            nextChunk.Size(),
 		}
 
-		// This means we tried to write a duplicate chunk
+		// CLARIFICATION: This means we tried to write a duplicate or consumed chunk.
 		if cc.Size == 0 {
 			continue
 		}
@@ -144,7 +143,9 @@ func (qsc *QueryStreamCreate) listen() {
 		if c.Error() != nil {
 			qsc.Errors() <- c.Error()
 		}
+
 		qsc.setPrevChunk(nextChunk)
+
 		c.Reset()
 	}
 	c.CatchSimple.Exec(func() error { return qsc.updateConfigState(models.ChannelStateInactive) })
@@ -153,12 +154,13 @@ func (qsc *QueryStreamCreate) listen() {
 
 func (qsc *QueryStreamCreate) validateResolveNextChunk(nextChunk *telem.Chunk) error {
 	vCtx := NextChunkValidateContext{prevChunk: qsc.prevChunk(), nextChunk: nextChunk}
+	c := errutil.NewCatchSimple(errutil.WithAggregation())
 	for _, err := range validateNextChunk().Exec(vCtx).Errors() {
-		if rErr := qsc.resolveNextChunkError(err, vCtx); rErr != nil {
-			return rErr
-		}
+		c.Exec(func() error {
+			return qsc.resolveNextChunkError(err, vCtx)
+		})
 	}
-	return nil
+	return c.Error()
 }
 
 func (qsc *QueryStreamCreate) resolveNextChunkError(err error, vCtx NextChunkValidateContext) error {

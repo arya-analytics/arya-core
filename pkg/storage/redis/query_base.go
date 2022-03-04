@@ -1,7 +1,6 @@
 package redis
 
 import (
-	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/storage/redis/timeseries"
 	"github.com/arya-analytics/aryacore/pkg/util/errutil"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
@@ -11,12 +10,10 @@ type queryBase struct {
 	_client       *timeseries.Client
 	modelExchange *exchange
 	catcher       *errutil.CatchSimple
-	handler       storage.ErrorHandler
 }
 
 func (q *queryBase) baseInit(client *timeseries.Client) {
 	q.catcher = errutil.NewCatchSimple()
-	q.handler = newErrorHandler()
 	q._client = client
 }
 
@@ -38,5 +35,5 @@ func (q *queryBase) baseModel(m interface{}) {
 }
 
 func (q *queryBase) baseErr() error {
-	return q.handler.Exec(q.catcher.Error())
+	return newErrorConvertChain().Exec(q.catcher.Error())
 }
