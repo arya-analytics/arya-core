@@ -2,10 +2,12 @@ package errutil_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/arya-analytics/aryacore/pkg/util/errutil"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"sync"
 )
 
 var _ = Describe("Catch", func() {
@@ -110,6 +112,27 @@ var _ = Describe("Catch", func() {
 				catcher.Reset()
 				Expect(catcher.Error()).To(BeNil())
 			})
+		})
+	})
+	Describe("Pipe Hook", func() {
+		It("Should pipe errors", func() {
+			pipe := make(chan error, 10)
+			c := errutil.NewCatchSimple(errutil.WithHooks(errutil.NewPipeHook(pipe)))
+			c.Exec(func() error {
+				return errors.New("hello")
+			})
+			var errs []error
+			wg := &sync.WaitGroup{}
+			wg.Add(1)
+			go func() {
+				for err := range pipe {
+					errs = append(errs, err)
+				}
+				wg.Done()
+			}()
+			close(pipe)
+			wg.Wait()
+			Expect(errs).To(HaveLen(1))
 		})
 	})
 })

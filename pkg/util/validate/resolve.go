@@ -6,7 +6,7 @@ import (
 
 type Resolve[T any] struct {
 	actions   []func(err error, args T) (bool, error)
-	catch     errutil.Catch
+	catch     *errutil.CatchSimple
 	sourceErr error
 	handled   bool
 }
