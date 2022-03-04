@@ -217,7 +217,7 @@ var _ = Describe("QueryStreamCreate", func() {
 		})
 		Describe("Non contiguous chunks", func() {
 			Context("Chunks in reverse order", func() {
-				It("Should return a non-contiguous chunk error", func() {
+				It("Should return a non-contiguous chunk error and not save the chunk", func() {
 					var errors []error
 					wg := &sync.WaitGroup{}
 					go func() {
@@ -247,6 +247,14 @@ var _ = Describe("QueryStreamCreate", func() {
 
 					Expect(errors).To(HaveLen(1))
 					Expect(errors[0].(chanchunk.TimingError).Type).To(Equal(chanchunk.TimingErrorTypeNonContiguous))
+
+					var resCC []*models.ChannelChunk
+					Expect(clust.NewRetrieve().
+						Model(&resCC).
+						WhereFields(query.WhereFields{"ChannelConfigID": config.ID}).
+						Order(query.OrderASC, "StartTS").
+						Exec(ctx)).To(BeNil())
+					Expect(len(resCC)).To(Equal(1))
 				})
 			})
 			Context("Duplicate Chunks", func() {
