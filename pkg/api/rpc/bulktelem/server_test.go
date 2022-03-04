@@ -73,46 +73,36 @@ var _ = Describe("Server", func() {
 	})
 	Describe("CreateStream", func() {
 		It("Should create the chunks correctly", func() {
-			cc := mock.ChunkSet(
-				5,
-				telem.TimeStamp(0),
-				config.DataType,
-				config.DataRate,
-				telem.NewTimeSpan(600*time.Second),
-				telem.TimeSpan(0),
-			)
+			cc := mock.ChunkSet(5, telem.TimeStamp(0), config.DataType, config.DataRate, telem.NewTimeSpan(600*time.Second), telem.TimeSpan(0))
 			stream, err := client.CreateStream(ctx)
 			Expect(err).To(BeNil())
+
 			wg := sync.WaitGroup{}
-			to := time.Now()
+			wg.Add(1)
+			var errors []*bulktelemv1.Error
 			go func() {
-				wg.Add(1)
 				for {
 					res, err := stream.Recv()
 					if err == io.EOF {
 						wg.Done()
 						break
 					}
-					if err != nil {
-						log.Fatalln(err)
-					}
-					log.Fatalln(res)
+					errors = append(errors, res.Error)
 				}
 			}()
+
 			for _, c := range cc {
-				if err := stream.Send(&bulktelemv1.BulkTelemServiceCreateStreamRequest{
-					ChannelConfigID: config.ID.String(),
-					StartTS:         int64(c.Start()),
+				Expect(stream.Send(&bulktelemv1.CreateStreamRequest{
+					ChannelConfigId: config.ID.String(),
+					StartTs:         int64(c.Start()),
 					Data:            c.Bytes(),
-				}); err != nil {
-					log.Fatalln(err)
-				}
+				})).To(BeNil())
 			}
-			if err := stream.CloseSend(); err != nil {
-				log.Fatalln(err)
-			}
+			Expect(stream.CloseSend()).To(BeNil())
+
 			wg.Wait()
-			log.Info(time.Now().Sub(to))
+			By("Not returning any errors")
+			Expect(errors).To(HaveLen(0))
 
 			By("Retrieving the chunk after creation")
 			var resCC []*models.ChannelChunk

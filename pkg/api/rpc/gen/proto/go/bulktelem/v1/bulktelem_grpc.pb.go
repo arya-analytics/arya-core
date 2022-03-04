@@ -39,8 +39,8 @@ func (c *bulkTelemServiceClient) CreateStream(ctx context.Context, opts ...grpc.
 }
 
 type BulkTelemService_CreateStreamClient interface {
-	Send(*BulkTelemServiceCreateStreamRequest) error
-	Recv() (*BulkTelemServiceCreateStreamResponse, error)
+	Send(*CreateStreamRequest) error
+	Recv() (*CreateStreamResponse, error)
 	grpc.ClientStream
 }
 
@@ -48,12 +48,12 @@ type bulkTelemServiceCreateStreamClient struct {
 	grpc.ClientStream
 }
 
-func (x *bulkTelemServiceCreateStreamClient) Send(m *BulkTelemServiceCreateStreamRequest) error {
+func (x *bulkTelemServiceCreateStreamClient) Send(m *CreateStreamRequest) error {
 	return x.ClientStream.SendMsg(m)
 }
 
-func (x *bulkTelemServiceCreateStreamClient) Recv() (*BulkTelemServiceCreateStreamResponse, error) {
-	m := new(BulkTelemServiceCreateStreamResponse)
+func (x *bulkTelemServiceCreateStreamClient) Recv() (*CreateStreamResponse, error) {
+	m := new(CreateStreamResponse)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
@@ -91,8 +91,8 @@ func _BulkTelemService_CreateStream_Handler(srv interface{}, stream grpc.ServerS
 }
 
 type BulkTelemService_CreateStreamServer interface {
-	Send(*BulkTelemServiceCreateStreamResponse) error
-	Recv() (*BulkTelemServiceCreateStreamRequest, error)
+	Send(*CreateStreamResponse) error
+	Recv() (*CreateStreamRequest, error)
 	grpc.ServerStream
 }
 
@@ -100,12 +100,12 @@ type bulkTelemServiceCreateStreamServer struct {
 	grpc.ServerStream
 }
 
-func (x *bulkTelemServiceCreateStreamServer) Send(m *BulkTelemServiceCreateStreamResponse) error {
+func (x *bulkTelemServiceCreateStreamServer) Send(m *CreateStreamResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func (x *bulkTelemServiceCreateStreamServer) Recv() (*BulkTelemServiceCreateStreamRequest, error) {
-	m := new(BulkTelemServiceCreateStreamRequest)
+func (x *bulkTelemServiceCreateStreamServer) Recv() (*CreateStreamRequest, error) {
+	m := new(CreateStreamRequest)
 	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
 	}

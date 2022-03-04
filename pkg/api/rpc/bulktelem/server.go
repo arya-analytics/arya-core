@@ -1,13 +1,12 @@
 package bulktelem
 
 import (
-	"errors"
+	"context"
 	bulktelemv1 "github.com/arya-analytics/aryacore/pkg/api/rpc/gen/proto/go/bulktelem/v1"
 	"github.com/arya-analytics/aryacore/pkg/telem/chanchunk"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"github.com/google/uuid"
-	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"io"
 	"sync"
@@ -27,56 +26,55 @@ func (s *Server) BindTo(srv *grpc.Server) {
 }
 
 func (s *Server) CreateStream(server bulktelemv1.BulkTelemService_CreateStreamServer) error {
-	ctx := server.Context()
 	stream := s.svc.NewStreamCreate()
-	baseReq, err := server.Recv()
-	if err != nil {
-		return err
-	}
-	pk, err := model.NewPK(uuid.UUID{}).NewFromString(baseReq.ChannelConfigID)
-	if err != nil {
-		return errors.New("Invalid channel config pk specified")
-	}
-	if err := stream.Start(ctx, pk.Raw().(uuid.UUID)); err != nil {
-		return err
-	}
-
-	data := telem.NewChunkData(make([]byte, len(baseReq.Data)))
-	if _, err := data.Write(baseReq.Data); err != nil {
-		return err
-	}
-
-	stream.Send(telem.TimeStamp(baseReq.StartTS), data)
-
-	wg := sync.WaitGroup{}
+	start := true
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
 	go func() {
-		wg.Add(1)
-		for {
-			req, err := server.Recv()
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				log.Fatalln(err)
-				stream.Errors() <- err
-			}
-			data := telem.NewChunkData(make([]byte, len(req.Data)))
-			if _, err := data.Write(req.Data); err != nil {
-				log.Fatalln(err)
-				stream.Errors() <- err
-			}
-			stream.Send(telem.TimeStamp(req.StartTS), data)
-		}
-		stream.Close()
+		relayErrors(stream, server)
 		wg.Done()
 	}()
-	wg.Wait()
-	for err := range stream.Errors() {
-		log.Fatalln(err)
-		server.Send(&bulktelemv1.BulkTelemServiceCreateStreamResponse{
-			Error: &bulktelemv1.BulkTelemServiceError{Message: err.Error()},
-		})
+	for {
+		req, err := server.Recv()
+
+		if err == io.EOF {
+			break
+		}
+
+		if err != nil {
+			stream.Errors() <- err
+		}
+
+		if start {
+			if sErr := startStream(server.Context(), stream, req); sErr != nil {
+				return sErr
+			}
+			start = false
+		}
+
+		sendData(stream, req)
 	}
+	stream.Close()
 	wg.Wait()
 	return nil
+}
+
+func startStream(ctx context.Context, stream *chanchunk.QueryStreamCreate, req *bulktelemv1.CreateStreamRequest) error {
+	pk, err := model.NewPK(uuid.UUID{}).NewFromString(req.ChannelConfigId)
+	if err != nil {
+		return err
+	}
+	return stream.Start(ctx, pk.Raw().(uuid.UUID))
+}
+
+func sendData(stream *chanchunk.QueryStreamCreate, req *bulktelemv1.CreateStreamRequest) {
+	cd := telem.NewChunkData(make([]byte, len(req.Data)))
+	cd.Write(req.Data)
+	stream.Send(telem.TimeStamp(req.StartTs), cd)
+}
+
+func relayErrors(stream *chanchunk.QueryStreamCreate, server bulktelemv1.BulkTelemService_CreateStreamServer) {
+	for err := range stream.Errors() {
+		server.Send(&bulktelemv1.CreateStreamResponse{Error: &bulktelemv1.Error{Message: err.Error()}})
+	}
 }

@@ -3,21 +3,21 @@ syntax = "proto3";
 package bulktelem.v1;
 
 service BulkTelemService {
-  rpc CreateStream(stream BulkTelemServiceCreateStreamRequest) returns (stream BulkTelemServiceCreateStreamResponse);
+  rpc CreateStream(stream CreateStreamRequest) returns (stream CreateStreamResponse);
 }
 
-message BulkTelemServiceCreateStreamRequest {
-  string ChannelConfigID = 1;
-  int64 StartTS = 2;
-  bytes Data = 3;
+message CreateStreamRequest {
+  string channel_config_id = 1;
+  int64 start_ts = 2;
+  bytes data = 3;
 }
 
-message BulkTelemServiceCreateStreamResponse {
-  BulkTelemServiceError Error = 1;
+message CreateStreamResponse {
+  error Error = 1;
 }
 
-message BulkTelemServiceError {
-  int32 Type = 1;
-  string TypeString = 2;
-  string Message = 3;
+message error {
+  int32 type = 1;
+  string type_string = 2;
+  string message = 3;
 }
