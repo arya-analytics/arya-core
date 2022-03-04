@@ -8,7 +8,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Error", func() {
+var _ = Describe("Catch", func() {
 	Describe("CatchSimple", func() {
 		Context("No error encountered", func() {
 			var (
