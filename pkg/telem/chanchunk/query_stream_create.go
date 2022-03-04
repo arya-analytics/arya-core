@@ -26,8 +26,9 @@ type QueryStreamCreate struct {
 	_config    *models.ChannelConfig
 	_prevChunk *telem.Chunk
 	prevCCPK   uuid.UUID
-	errChan    chan error
-	doneChan   chan bool
+	errPipe    chan error
+	catch      *errutil.CatchContext
+	donePipe   chan bool
 	stream     chan QueryStreamCreateArgs
 	ctx        context.Context
 }
@@ -38,14 +39,16 @@ func newStreamCreate(qExec query.Execute, obs Observe, rngSvc *rng.Service) *Que
 		exec:     qExec,
 		rngSvc:   rngSvc,
 		_config:  &models.ChannelConfig{},
-		errChan:  make(chan error, 10),
+		errPipe:  make(chan error, 10),
 		stream:   make(chan QueryStreamCreateArgs),
-		doneChan: make(chan bool),
+		donePipe: make(chan bool),
 	}
 }
 
 func (qsc *QueryStreamCreate) Start(ctx context.Context, pk uuid.UUID) error {
-	qsc.ctx, qsc.configPK = ctx, pk
+	qsc.ctx = ctx
+	qsc.configPK = pk
+	qsc.catch = errutil.NewCatchContext(ctx, errutil.WithHooks(errutil.NewPipeHook(qsc.errPipe)))
 	if err := qsc.validateStart(); err != nil {
 		return err
 	}
@@ -55,9 +58,7 @@ func (qsc *QueryStreamCreate) Start(ctx context.Context, pk uuid.UUID) error {
 
 func (qsc *QueryStreamCreate) config() *models.ChannelConfig {
 	if model.NewPK(qsc._config.ID).IsZero() {
-		if err := query.NewRetrieve().BindExec(qsc.exec).Model(qsc._config).WherePK(qsc.configPK).Exec(qsc.ctx); err != nil {
-			qsc.Errors() <- err
-		}
+		qsc.catch.Exec(query.NewRetrieve().BindExec(qsc.exec).Model(qsc._config).WherePK(qsc.configPK).Exec)
 	}
 	return qsc._config
 }
@@ -74,20 +75,25 @@ func (qsc *QueryStreamCreate) validateStart() error {
 
 func (qsc *QueryStreamCreate) prevChunk() *telem.Chunk {
 	if qsc._prevChunk == nil {
-		ccr := &models.ChannelChunkReplica{}
-		if err := query.NewRetrieve().
-			BindExec(qsc.exec).
-			Model(ccr).
-			Relation("ChannelChunk", "ID", "StartTS", "Size").
-			WhereFields(query.WhereFields{"ChannelChunk.ChannelConfigID": qsc.config().ID}).Exec(qsc.ctx); err != nil {
+		qsc.catch.Exec(func(ctx context.Context) error {
+			ccr := &models.ChannelChunkReplica{}
+			err := query.NewRetrieve().
+				BindExec(qsc.exec).
+				Model(ccr).
+				Relation("ChannelChunk", "ID", "StartTS", "Size").
+				WhereFields(query.WhereFields{"ChannelChunk.ChannelConfigID": qsc.config().ID}).Exec(qsc.ctx)
 			sErr, ok := err.(query.Error)
 			if !ok || sErr.Type != query.ErrorTypeItemNotFound {
-				qsc.Errors() <- err
+				return err
 			}
-		}
-		if ccr.Telem != nil {
+			// If we don't find the item, this isn't an exceptional case, it just means the channel doesn't have any
+			// data, so we can just return nil early.
+			if sErr.Type == query.ErrorTypeItemNotFound {
+				return nil
+			}
 			qsc._prevChunk = telem.NewChunk(ccr.ChannelChunk.StartTS, qsc.config().DataType, qsc.config().DataRate, ccr.Telem)
-		}
+			return nil
+		})
 	}
 	return qsc._prevChunk
 }
@@ -102,22 +108,21 @@ func (qsc *QueryStreamCreate) Send(startTS telem.TimeStamp, data *telem.ChunkDat
 
 func (qsc *QueryStreamCreate) Close() {
 	close(qsc.stream)
-	<-qsc.doneChan
-	close(qsc.errChan)
+	<-qsc.donePipe
+	close(qsc.errPipe)
 }
 
 func (qsc *QueryStreamCreate) Errors() chan error {
-	return qsc.errChan
+	return qsc.errPipe
 }
 
 func (qsc *QueryStreamCreate) listen() {
-	c := errutil.NewCatchContext(qsc.ctx)
-	c.CatchSimple.Exec(func() error { return qsc.updateConfigState(models.ChannelStateActive) })
+	qsc.catch.CatchSimple.Exec(func() error { return qsc.updateConfigState(models.ChannelStateActive) })
 	for args := range qsc.stream {
 		alloc := qsc.rngSvc.NewAllocate()
 
 		nextChunk := telem.NewChunk(args.startTS, qsc.config().DataType, qsc.config().DataRate, args.data)
-		c.CatchSimple.Exec(func() error { return qsc.validateResolveNextChunk(nextChunk) })
+		qsc.catch.CatchSimple.Exec(func() error { return qsc.validateResolveNextChunk(nextChunk) })
 
 		cc := &models.ChannelChunk{
 			ID:              uuid.New(),
@@ -133,22 +138,17 @@ func (qsc *QueryStreamCreate) listen() {
 
 		ccr := &models.ChannelChunkReplica{ID: uuid.New(), ChannelChunkID: cc.ID, Telem: args.data}
 
-		c.Exec(alloc.Chunk(qsc.config().NodeID, cc).Exec)
-		c.Exec(alloc.ChunkReplica(ccr).Exec)
+		qsc.catch.Exec(alloc.Chunk(qsc.config().NodeID, cc).Exec)
+		qsc.catch.Exec(alloc.ChunkReplica(ccr).Exec)
 
-		c.Exec(query.NewCreate().BindExec(qsc.exec).Model(cc).Exec)
-		c.Exec(query.NewCreate().BindExec(qsc.exec).Model(ccr).Exec)
-
-		if c.Error() != nil {
-			qsc.Errors() <- c.Error()
-		}
+		qsc.catch.Exec(query.NewCreate().BindExec(qsc.exec).Model(cc).Exec)
+		qsc.catch.Exec(query.NewCreate().BindExec(qsc.exec).Model(ccr).Exec)
 
 		qsc.setPrevChunk(nextChunk)
-
-		c.Reset()
+		qsc.catch.Reset()
 	}
-	c.CatchSimple.Exec(func() error { return qsc.updateConfigState(models.ChannelStateInactive) })
-	qsc.doneChan <- true
+	qsc.catch.CatchSimple.Exec(func() error { return qsc.updateConfigState(models.ChannelStateInactive) })
+	qsc.donePipe <- true
 }
 
 func (qsc *QueryStreamCreate) validateResolveNextChunk(nextChunk *telem.Chunk) error {
