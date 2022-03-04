@@ -80,15 +80,15 @@ var _ = Describe("Catch", func() {
 			})
 		})
 	})
-	Describe("CatchWCtx", func() {
+	Describe("CatchContext", func() {
 		var (
 			ctx     = context.Background()
 			counter int
-			catcher *errutil.CatchWCtx
+			catcher *errutil.CatchContext
 		)
 		BeforeEach(func() {
 			counter = 1
-			catcher = errutil.NewCatchWCtx(ctx)
+			catcher = errutil.NewCatchContext(ctx)
 			for i := 0; i < 4; i++ {
 				catcher.Exec(func(ctx context.Context) error {
 					if i == 2 {

@@ -65,7 +65,7 @@ func NewPersistCluster(clust cluster.Cluster) *PersistCluster {
 // || CREATE ||
 
 func (p *PersistCluster) CreateRange(ctx context.Context, nodePK int) (*models.Range, error) {
-	c := errutil.NewCatchWCtx(ctx)
+	c := errutil.NewCatchContext(ctx)
 	r := &models.Range{Status: models.RangeStatusOpen}
 	c.Exec(p.clust.NewCreate().Model(r).Exec)
 	rr := &models.RangeReplica{RangeID: r.ID, NodeID: nodePK}

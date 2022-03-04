@@ -67,17 +67,17 @@ func (c *CatchSimple) Errors() []error {
 
 // |||| CATCH W CONTEXT ||||
 
-type CatchWCtx struct {
+type CatchContext struct {
 	*CatchSimple
 	ctx context.Context
 }
 
-func NewCatchWCtx(ctx context.Context, opts ...CatchOpt) *CatchWCtx {
-	return &CatchWCtx{CatchSimple: NewCatchSimple(opts...), ctx: ctx}
+func NewCatchContext(ctx context.Context, opts ...CatchOpt) *CatchContext {
+	return &CatchContext{CatchSimple: NewCatchSimple(opts...), ctx: ctx}
 }
 
 type CatchActionCtx func(ctx context.Context) error
 
-func (c *CatchWCtx) Exec(ca CatchActionCtx) {
+func (c *CatchContext) Exec(ca CatchActionCtx) {
 	c.CatchSimple.Exec(func() error { return ca(c.ctx) })
 }

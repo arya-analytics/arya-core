@@ -11,7 +11,6 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"github.com/arya-analytics/aryacore/pkg/util/validate"
 	"github.com/google/uuid"
-	"io"
 )
 
 type QueryStreamCreateArgs struct {
@@ -28,7 +27,7 @@ type QueryStreamCreate struct {
 	_prevChunk *telem.Chunk
 	prevCCPK   uuid.UUID
 	errChan    chan error
-	doneChan   chan error
+	doneChan   chan bool
 	stream     chan QueryStreamCreateArgs
 	ctx        context.Context
 }
@@ -41,7 +40,7 @@ func newStreamCreate(qExec query.Execute, obs Observe, rngSvc *rng.Service) *Que
 		_config:  &models.ChannelConfig{},
 		errChan:  make(chan error, 10),
 		stream:   make(chan QueryStreamCreateArgs),
-		doneChan: make(chan error),
+		doneChan: make(chan bool),
 	}
 }
 
@@ -112,7 +111,7 @@ func (qsc *QueryStreamCreate) Errors() chan error {
 }
 
 func (qsc *QueryStreamCreate) listen() {
-	c := errutil.NewCatchWCtx(qsc.ctx)
+	c := errutil.NewCatchContext(qsc.ctx)
 	c.CatchSimple.Exec(func() error { return qsc.updateConfigState(models.ChannelStateActive) })
 	for args := range qsc.stream {
 		alloc := qsc.rngSvc.NewAllocate()
@@ -149,7 +148,7 @@ func (qsc *QueryStreamCreate) listen() {
 		c.Reset()
 	}
 	c.CatchSimple.Exec(func() error { return qsc.updateConfigState(models.ChannelStateInactive) })
-	qsc.doneChan <- io.EOF
+	qsc.doneChan <- true
 }
 
 func (qsc *QueryStreamCreate) validateResolveNextChunk(nextChunk *telem.Chunk) error {
