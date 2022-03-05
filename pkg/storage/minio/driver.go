@@ -1,15 +1,15 @@
 package minio
 
 import (
+	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
+	"github.com/spf13/viper"
 )
 
-type Driver interface {
-	Connect() (*minio.Client, error)
-}
+// |||| CONFIG ||||
 
-type DriverMinio struct {
+type Config struct {
 	Endpoint  string
 	AccessKey string
 	SecretKey string
@@ -17,13 +17,46 @@ type DriverMinio struct {
 	UseTLS    bool
 }
 
+const (
+	driverMinioEndpoint  = "endpoint"
+	driverMinioAccessKey = "accessKey"
+	driverMinioSecretKey = "secretKey"
+	driverMinioToken     = "token"
+	driverMinioUseTLS    = "useTLS"
+)
+
+func configLeaf(name string) string {
+	return storage.ConfigTree().Object().Leaf(name)
+}
+
+func (c Config) Viper() Config {
+	return Config{
+		Endpoint:  viper.GetString(configLeaf(driverMinioEndpoint)),
+		AccessKey: viper.GetString(configLeaf(driverMinioAccessKey)),
+		SecretKey: viper.GetString(configLeaf(driverMinioSecretKey)),
+		Token:     viper.GetString(configLeaf(driverMinioToken)),
+		UseTLS:    viper.GetBool(configLeaf(driverMinioUseTLS)),
+	}
+
+}
+
+// |||| DRIVER ||||
+
+type Driver interface {
+	Connect() (*minio.Client, error)
+}
+
+type DriverMinio struct {
+	config Config
+}
+
 func (d DriverMinio) Connect() (*minio.Client, error) {
-	return minio.New(d.Endpoint, d.buildConfig())
+	return minio.New(d.config.Endpoint, d.buildConfig())
 }
 
 func (d DriverMinio) buildConfig() *minio.Options {
 	return &minio.Options{
-		Creds:  credentials.NewStaticV4(d.AccessKey, d.SecretKey, ""),
-		Secure: d.UseTLS,
+		Creds:  credentials.NewStaticV4(d.config.AccessKey, d.config.SecretKey, ""),
+		Secure: d.config.UseTLS,
 	}
 }

@@ -7,7 +7,7 @@ import (
 
 // || GENERAL CLI ||
 
-var Cmd = &cli.Command{
+var CLI = &cli.Command{
 	Name: "dev",
 	Usage: "Provides access to development services such as Cluster provisioning, " +
 		"tools installs, and configuration management.",
