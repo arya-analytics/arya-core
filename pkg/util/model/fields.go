@@ -6,6 +6,8 @@ import (
 	"strings"
 )
 
+// |||| FIELDS ||||
+
 type Fields struct {
 	source  *Reflect
 	fldName string
@@ -54,6 +56,8 @@ func (f *Fields) ToReflect() *Reflect {
 	return newRfl
 }
 
+// ||| NAME PARSING |||
+
 func SplitFieldNames(name string) []string {
 	return strings.Split(name, ".")
 }
@@ -66,4 +70,16 @@ func SplitLastFieldName(name string) (string, string) {
 
 func SplitFirstFieldName(name string) string {
 	return SplitFieldNames(name)[0]
+}
+
+// ||| NAME MATCHING |||
+
+func matchFields(fld string) func(string) bool {
+	return func(mFld string) bool {
+		return fieldNamesEqual(fld, mFld)
+	}
+}
+
+func fieldNamesEqual(fldOne, fldTwo string) bool {
+	return strings.EqualFold(fldOne, fldTwo)
 }

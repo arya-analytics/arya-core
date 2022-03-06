@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package chanconfig.v1;
+
+service ChanConfigService {
+  rpc CreateConfig(CreateConfigRequest) returns (CreateConfigResponse);
+}
+
+message ChannelConfig {
+  string ID = 1;
+  string name = 2;
+  int32 node_id = 3;
+  double data_rate = 4;
+  enum DataType {
+    FLOAT64 = 0;
+    FLOAT32 = 1;
+  }
+  DataType data_type = 5;
+  enum ConflictPolicy {
+    ERROR = 0;
+    DISCARD = 1;
+    OVERWRITE = 2;
+  }
+  ConflictPolicy conflict_policy = 6;
+}
+
+message CreateConfigRequest {
+  ChannelConfig config = 1;
+}
+
+message CreateConfigResponse {}

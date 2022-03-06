@@ -57,26 +57,33 @@ var _ = Describe("Reflect", func() {
 			It("Should return true for IsStruct", func() {
 				Expect(rfl.IsStruct()).To(BeTrue())
 			})
-			It("Should return the correct struct field by name", func() {
-				Expect(rfl.StructFieldByName("ID").Interface()).To(Equal(22))
+			Describe("Accessing Struct fields", func() {
+
+				It("Should return the correct struct field by name", func() {
+					Expect(rfl.StructFieldByName("ID").Interface()).To(Equal(22))
+				})
+				It("Should be case agnostic when retrieving struct fields", func() {
+					Expect(rfl.StructFieldByName("id").Interface()).To(Equal(22))
+				})
+				It("Should access the correct nested struct field by name", func() {
+					Expect(rfl.StructFieldByName("InnerModel.ID").Interface()).To(Equal(23))
+				})
+				It("Should return a zero reflect when the value does not exist", func() {
+					Expect(rfl.StructFieldByName("InnerModel.NonExistent").IsValid()).To(BeFalse())
+				})
+				It("Should return the correct struct field by role", func() {
+					Expect(rfl.StructFieldByRole("pk").Interface()).To(Equal(22))
+				})
+				It("Should panic if the role doesn't exist", func() {
+					Expect(func() {
+						rfl.StructFieldByRole("nonexistentrole").Interface()
+					}).To(Panic())
+				})
+				It("Should return the correct struct field by index", func() {
+					Expect(rfl.StructValue().Field(0).Interface()).To(Equal(22))
+				})
 			})
-			It("Should access the correct nested struct field by name", func() {
-				Expect(rfl.StructFieldByName("InnerModel.ID").Interface()).To(Equal(23))
-			})
-			It("Should return a zero reflect when the value does not exist", func() {
-				Expect(rfl.StructFieldByName("InnerModel.NonExistent").IsValid()).To(BeFalse())
-			})
-			It("Should return the correct struct field by role", func() {
-				Expect(rfl.StructFieldByRole("pk").Interface()).To(Equal(22))
-			})
-			It("Should panic if the role doesn't exist", func() {
-				Expect(func() {
-					rfl.StructFieldByRole("nonexistentrole").Interface()
-				}).To(Panic())
-			})
-			It("Should return the correct struct field by index", func() {
-				Expect(rfl.StructValue().Field(0).Interface()).To(Equal(22))
-			})
+
 			It("Should return the same item for the raw Val as for the Val",
 				func() {
 					Expect(rfl.RawValue()).To(Equal(rfl.StructValue()))

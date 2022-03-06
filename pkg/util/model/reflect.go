@@ -109,17 +109,18 @@ func (r *Reflect) StructFieldByRole(role string) reflect.Value {
 }
 
 // StructFieldByName retrieves the struct field from the model object by its name.
+// NOTE: Is case agnostic.
 func (r *Reflect) StructFieldByName(name string) reflect.Value {
 	sn := SplitFieldNames(name)
 	var fld reflect.Value
 	for i, splitName := range sn {
 		if i == 0 {
-			fld = r.StructValue().FieldByName(splitName)
+			fld = r.StructValue().FieldByNameFunc(matchFields(splitName))
 		} else {
 			if fld.IsZero() {
 				return reflect.Value{}
 			}
-			fld = fld.Elem().FieldByName(splitName)
+			fld = fld.Elem().FieldByNameFunc(matchFields(splitName))
 		}
 	}
 	return fld

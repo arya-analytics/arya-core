@@ -7,7 +7,6 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"github.com/google/uuid"
-	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"io"
 	"sync"
@@ -23,12 +22,10 @@ func NewServer(svc *chanchunk.Service) *Server {
 }
 
 func (s *Server) BindTo(srv *grpc.Server) {
-	log.Info("binding")
 	bulktelemv1.RegisterBulkTelemServiceServer(srv, s)
 }
 
 func (s *Server) CreateStream(server bulktelemv1.BulkTelemService_CreateStreamServer) error {
-	log.Info("hello")
 	stream := s.svc.NewStreamCreate()
 	start := true
 	wg := &sync.WaitGroup{}

@@ -88,8 +88,10 @@ func (m *Exchange) bindToSource(sourceRfl, destRfl *Reflect) {
 		sourceFld := sourceRfl.StructFieldByName(fldName)
 		if validSourceField(sourceFld) && validDestField(destFld) {
 			if destFld.Type() != sourceFld.Type() {
-				if sourceFld.Type().Kind() == destFld.Type().Kind() {
+				if isNestedModelFld(sourceFld, destFld) {
 					destFld = exchangeNested(sourceFld, destFld)
+				} else if destFld.CanConvert(sourceFld.Type()) {
+					destFld = destFld.Convert(sourceFld.Type())
 				} else if sourceFld.Type().Kind() != reflect.Interface {
 					var ok bool
 					destFld, ok = m.execCustomHandlers(fldName, sourceRfl, destRfl, sourceFld, destFld)
@@ -103,6 +105,18 @@ func (m *Exchange) bindToSource(sourceRfl, destRfl *Reflect) {
 			sourceFld.Set(destFld)
 		}
 	}
+}
+
+func isNestedModelFld(fldOne, fldTwo reflect.Value) bool {
+	return isStructOrSlice(fldOne) && isStructOrSlice(fldTwo) && sameKind(fldOne, fldTwo)
+}
+
+func sameKind(fldOne, fldTwo reflect.Value) bool {
+	return fldOne.Type().Kind() == fldTwo.Type().Kind()
+}
+
+func isStructOrSlice(fld reflect.Value) bool {
+	return fld.Type().Kind() == reflect.Ptr || fld.Type().Kind() == reflect.Slice
 }
 
 const badFieldNameMsg = "couldn't find field name in struct. this is bad, and shouldn't be happening!"

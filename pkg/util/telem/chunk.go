@@ -3,11 +3,11 @@ package telem
 
 // |||| DATA TYPE ||||
 
-type DataType int
+type DataType int32
 
 //go:generate stringer -type=DataType
 const (
-	DataTypeFloat64 DataType = iota + 1
+	DataTypeFloat64 DataType = iota
 	DataTypeFloat32
 )
 
