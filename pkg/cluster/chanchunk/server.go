@@ -16,7 +16,7 @@ import (
 type ServerRPCPersist interface {
 	CreateReplica(ctx context.Context, ccr *api.ChannelChunkReplica) error
 	RetrieveReplica(ctx context.Context, ccr *api.ChannelChunkReplica, pk model.PK) error
-	DeleteReplicas(ctx context.Context, pkc model.PKChain) error
+	DeleteReplica(ctx context.Context, pkc model.PKChain) error
 }
 
 type ServerRPC struct {
@@ -63,7 +63,7 @@ func (s *ServerRPC) RetrieveReplicas(req *api.ChannelChunkServiceRetrieveReplica
 }
 
 func (s *ServerRPC) DeleteReplicas(ctx context.Context, req *api.ChannelChunkServiceDeleteReplicasRequest) (*api.ChannelChunkServiceDeleteReplicasResponse, error) {
-	return &api.ChannelChunkServiceDeleteReplicasResponse{}, s.persist.DeleteReplicas(ctx, parsePKC(req.PKC))
+	return &api.ChannelChunkServiceDeleteReplicasResponse{}, s.persist.DeleteReplica(ctx, parsePKC(req.PKC))
 }
 
 func parsePKC(strPKC []string) model.PKChain {

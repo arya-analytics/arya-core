@@ -29,7 +29,7 @@ func (sp *ServerRPCPersist) CreateReplica(ctx context.Context, ccr *api.ChannelC
 	return nil
 }
 
-func (sp *ServerRPCPersist) DeleteReplicas(ctx context.Context, pkc model.PKChain) error {
+func (sp *ServerRPCPersist) DeleteReplica(ctx context.Context, pkc model.PKChain) error {
 	for i, mCCR := range sp.ChunkReplicas {
 		for _, pk := range pkc {
 			if model.NewPK(mCCR.ID).Equals(pk) {

@@ -65,13 +65,16 @@ type Storage interface {
 	NewTSCreate() *QueryTSCreate
 	NewMigrate() *QueryMigrate
 	AddQueryHook(hook QueryHook)
-	NewTasks(opts ...tasks.ScheduleOpt) tasks.Schedule
+	Start(ctx context.Context, opts ...tasks.ScheduleOpt)
+	Stop()
+	Errors() chan error
 	hooks() []QueryHook
 }
 
 type storage struct {
 	query.AssembleBase
 	cfg        Config
+	tasks      tasks.Schedule
 	queryHooks []QueryHook
 }
 
@@ -115,8 +118,18 @@ func (s *storage) NewTSCreate() *QueryTSCreate {
 	return newTSCreate(s)
 }
 
-func (s *storage) NewTasks(opts ...tasks.ScheduleOpt) tasks.Schedule {
-	return tasks.NewScheduleBatch(s.cfg.EngineMD.NewTasks(opts...))
+func (s *storage) Start(ctx context.Context, opts ...tasks.ScheduleOpt) {
+	s.tasks = tasks.NewScheduleBatch(s.cfg.EngineMD.NewTasks(opts...))
+	s.tasks.Start(ctx)
+}
+
+func (s *storage) Stop() {
+	s.tasks.Stop()
+	s.tasks = nil
+}
+
+func (s *storage) Errors() chan error {
+	return s.tasks.Errors()
 }
 
 func (s *storage) AddQueryHook(hook QueryHook) {

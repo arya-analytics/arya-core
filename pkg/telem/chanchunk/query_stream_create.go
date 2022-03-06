@@ -74,11 +74,13 @@ func (qsc *QueryStreamCreate) Errors() chan error {
 
 func (qsc *QueryStreamCreate) listen() {
 	qsc.updateConfigState(models.ChannelStateActive)
+	defer func() {
+		qsc.updateConfigState(models.ChannelStateInactive)
+		qsc.donePipe <- true
+	}()
 	for args := range qsc.stream {
 		qsc.processNextChunk(args.startTS, args.data)
 	}
-	qsc.updateConfigState(models.ChannelStateInactive)
-	qsc.donePipe <- true
 }
 
 func (qsc *QueryStreamCreate) processNextChunk(startTS telem.TimeStamp, data *telem.ChunkData) {

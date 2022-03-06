@@ -2,7 +2,7 @@ package models
 
 import "github.com/google/uuid"
 
-const MaxRangeSize int64 = 512e7
+const MaxRangeSize int64 = 64e6
 
 type RangeStatus int
 

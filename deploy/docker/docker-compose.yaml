@@ -15,5 +15,59 @@ services:
       MINIO_ROOT_PASSWORD: minio123
     volumes:
       - minio-data:/data
+  roach1:
+    container_name: cockroach-db-1
+    image: cockroachdb/cockroach:latest
+    hostname: roach1
+    # Assign Container to a Network
+    networks:
+      - cockroach-net
+    ports:
+      - 26257:26257   # Cockroach Database port
+      - 9090:8080     # Cockroach UI Panel port
+    volumes:
+      - roach1-data:/cockroach/cockroach-data
+    command: start --insecure --join=roach1,roach2,roach3
+  # Node 2
+  roach2:
+    container_name: cockroach-db-2
+    image: cockroachdb/cockroach:latest
+    hostname: roach2
+    # Assign Container to a Network
+    networks:
+      - cockroach-net
+    volumes:
+      - roach2-data:/cockroach/cockroach-data
+    command: start --insecure --join=roach1,roach2,roach3
+
+  # Node 3
+  roach3:
+    container_name: cockroach-db-3
+    image: cockroachdb/cockroach:latest
+    hostname: roach3
+    # Assign Container to a Network
+    networks:
+      - cockroach-net
+    volumes:
+      - roach3-data-:/cockroach/cockroach-data
+    command: start --insecure --join=roach1,roach2,roach3
+
+  # First Time Initialization of Cockroach DB
+  init-roach1:
+    image: cockroachdb/cockroach:latest
+    container_name: init-cockroach
+    depends_on:
+      - roach1
+    restart: "no"
+    # Assign Container to a Network
+    networks:
+      - cockroach-net
+    entrypoint: [ "bash", "-c" ,"./cockroach init --insecure --host cockroach-db-1:26257 | wc || exit" ]
 volumes:
   minio-data:
+  roach3-data:
+  roach2-data:
+  roach1-data:
+networks:
+  cockroach-net:
+    driver: bridge

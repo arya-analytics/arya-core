@@ -1,6 +1,7 @@
 package rng
 
 import (
+	"context"
 	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/google/uuid"
@@ -113,4 +114,20 @@ func validateObservedRange(or ObservedRange) {
 	if reflect.ValueOf(or.Status).IsZero() {
 		panic("can't add observed range without a status")
 	}
+}
+
+func RetrieveAddOpenRanges(ctx context.Context, p Persist, o Observe) error {
+	openR, err := p.RetrieveOpenRanges(ctx)
+	if err != nil {
+		return err
+	}
+	for _, r := range openR {
+		o.Add(ObservedRange{
+			PK:             r.ID,
+			LeaseReplicaPK: r.RangeLease.RangeReplicaID,
+			LeaseNodePK:    r.RangeLease.RangeReplica.NodeID,
+			Status:         r.Status,
+		})
+	}
+	return nil
 }

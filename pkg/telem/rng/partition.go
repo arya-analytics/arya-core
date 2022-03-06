@@ -6,6 +6,7 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/util/errutil"
 	"github.com/arya-analytics/aryacore/pkg/util/tasks"
 	"github.com/google/uuid"
+	log "github.com/sirupsen/logrus"
 	"sync"
 	"time"
 )
@@ -50,7 +51,7 @@ func (pd *partitionDetect) detectObserver(ctx context.Context, opt tasks.Schedul
 }
 
 func (pd *partitionDetect) detectPersist(ctx context.Context, opt tasks.ScheduleConfig) error {
-	openRanges, err := pd.Persist.RetrieveRangesByStatus(ctx)
+	openRanges, err := pd.Persist.RetrieveOpenRanges(ctx)
 	if err != nil {
 		return err
 	}
@@ -67,6 +68,7 @@ func (pd *partitionDetect) detectPersist(ctx context.Context, opt tasks.Schedule
 }
 
 func (pd *partitionDetect) detect(ctx context.Context, openRanges []ObservedRange, _ tasks.ScheduleConfig) error {
+	log.Info("detecting partitions")
 	wg := sync.WaitGroup{}
 	newRngGroups, errs := make([][]*models.Range, len(openRanges)), make([]error, len(openRanges))
 	for i, or := range openRanges {
@@ -89,6 +91,7 @@ func (pd *partitionDetect) detect(ctx context.Context, openRanges []ObservedRang
 func (pd *partitionDetect) exec(ctx context.Context, or ObservedRange) ([]*models.Range, error) {
 	pe := NewPartitionExecute(ctx, pd.Persist, or.PK)
 	oa, err := pe.OverAllocated()
+	log.Info(or.PK, oa)
 	if !oa || err != nil {
 		return []*models.Range{}, err
 	}
@@ -160,6 +163,7 @@ func (p *PartitionExecute) Exec() ([]*models.Range, error) {
 }
 
 func (p *PartitionExecute) overAllocated() bool {
+	log.Info(p.rangeSize(), models.MaxRangeSize)
 	return p.rangeSize() > models.MaxRangeSize
 }
 

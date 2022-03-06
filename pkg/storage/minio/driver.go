@@ -47,16 +47,16 @@ type Driver interface {
 }
 
 type DriverMinio struct {
-	config Config
+	Config Config
 }
 
 func (d DriverMinio) Connect() (*minio.Client, error) {
-	return minio.New(d.config.Endpoint, d.buildConfig())
+	return minio.New(d.Config.Endpoint, d.buildConfig())
 }
 
 func (d DriverMinio) buildConfig() *minio.Options {
 	return &minio.Options{
-		Creds:  credentials.NewStaticV4(d.config.AccessKey, d.config.SecretKey, ""),
-		Secure: d.config.UseTLS,
+		Creds:  credentials.NewStaticV4(d.Config.AccessKey, d.Config.SecretKey, ""),
+		Secure: d.Config.UseTLS,
 	}
 }

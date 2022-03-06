@@ -22,8 +22,8 @@ type persistRetrieve interface {
 	RetrieveRange(ctx context.Context, pk uuid.UUID) (*models.Range, error)
 	// RetrieveRangeSize calculates and returns the size of the range with the provided pk.
 	RetrieveRangeSize(ctx context.Context, pk uuid.UUID) (int64, error)
-	// RetrieveRangesByStatus retrieves all rngMap with the provided models.RangeStatus.
-	RetrieveRangesByStatus(ctx context.Context) ([]*models.Range, error)
+	// RetrieveOpenRanges retrieves all open ranges.
+	RetrieveOpenRanges(ctx context.Context) ([]*models.Range, error)
 	// RetrieveRangeChunks retrieves all models.ChannelChunk belonging to the models.Range with primary key rngPK.
 	RetrieveRangeChunks(ctx context.Context, rngPK uuid.UUID) ([]*models.ChannelChunk, error)
 	// RetrieveRangeChunkReplicas retrieves all models.ChannelChunkReplica belonging to the models.Range
@@ -93,7 +93,7 @@ func (p *PersistCluster) RetrieveRange(ctx context.Context, pk uuid.UUID) (*mode
 		Exec(ctx)
 }
 
-func (p *PersistCluster) RetrieveRangesByStatus(ctx context.Context) (ranges []*models.Range, err error) {
+func (p *PersistCluster) RetrieveOpenRanges(ctx context.Context) (ranges []*models.Range, err error) {
 	err = p.clust.NewRetrieve().
 		Model(&ranges).
 		Relation("RangeLease", "ID", "RangeReplicaID").
