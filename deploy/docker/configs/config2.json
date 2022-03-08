@@ -1,7 +1,7 @@
 {
   "listen-addr": "core2:26258",
   "nodeID": 2,
-  "influxToken": "ZyZSQlH9UVlOSpVbBj2paAylSav0w4TiJE6aN9TPsMpxhuOipOu79zv6uLdUpp-4FEN-RhtmQ-7c1YGIF41Cgw==",
+  "influxToken": "KB3Gxdy_TpsTPbFRA-e7JbERC46t89fO9furb7GnmPwhWCPaiTUNU1_WGsBDDN6e1VOPOXT__eXzL9rnZ4bJww==",
   "storage": {
     "md": {
       "username": "root",
