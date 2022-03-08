@@ -4,6 +4,16 @@ package chanconfig.v1;
 
 service ChanConfigService {
   rpc CreateConfig(CreateConfigRequest) returns (CreateConfigResponse);
+  rpc RetrieveConfig(RetrieveConfigRequest) returns (RetrieveConfigResponse);
+}
+
+message RetrieveConfigRequest {
+  int32 node_id = 1;
+  int32 limit = 2;
+}
+
+message RetrieveConfigResponse {
+  repeated ChannelConfig configs = 1;
 }
 
 message ChannelConfig {

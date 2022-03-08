@@ -16,6 +16,7 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/storage/roach"
 	telemchanchunk "github.com/arya-analytics/aryacore/pkg/telem/chanchunk"
 	"github.com/arya-analytics/aryacore/pkg/telem/rng"
+	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -146,6 +147,14 @@ func startRngSvc(cmd *cobra.Command, clust cluster.Cluster) (*rng.Service, error
 func startChanChunkSvc(cmd *cobra.Command, rngSvc *rng.Service, clust cluster.Cluster) *telemchanchunk.Service {
 	obs := telemchanchunk.NewObserveMem()
 	svc := telemchanchunk.NewService(clust.Exec, obs, rngSvc)
+	client := influxdb2.NewClient("http://influx:8086", viper.GetString("influxToken"))
+	writeAPI := client.WriteAPIBlocking("default", "default")
+	svc.Perf = &telemchanchunk.Perf{
+		Client: writeAPI,
+		NodeID: viper.GetInt("nodeID"),
+		Data:   map[string]int64{},
+	}
+	go svc.Perf.WriteSamples()
 	return svc
 }
 
@@ -153,8 +162,8 @@ const lisNetwork = "tcp"
 
 func startGRPCServer(clust cluster.Cluster, chanChunkSvc *telemchanchunk.Service) error {
 	la := viper.GetString(listenAddrFlag)
-	log.Warn(la)
 	lis, lisErr := net.Listen(lisNetwork, la)
+	log.Infof("GRPC Server listening on %s", la)
 	if lisErr != nil {
 		return lisErr
 	}

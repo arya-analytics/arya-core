@@ -53,13 +53,13 @@ func configureRootFlags() {
 const (
 	envPrefix      = "arya"
 	configFlag     = "config"
-	configType     = "yaml"
+	configType     = "json"
 	configRelPath  = ".arya"
-	configFileName = "config"
+	configFileName = "core-config"
 )
 
 func configureConfigFlag() {
-	rootCmd.PersistentFlags().StringVar(&cfgFile, configFlag, "", "config file (default is $HOME/.arya/config.yaml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, configFlag, "", "config file (default is $HOME/.arya/core-config.json)")
 }
 
 func configName() string {

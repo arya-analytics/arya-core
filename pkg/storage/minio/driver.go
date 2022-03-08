@@ -15,6 +15,7 @@ type Config struct {
 	SecretKey string
 	Token     string
 	UseTLS    bool
+	DemandCap int
 }
 
 const (
@@ -23,6 +24,7 @@ const (
 	driverMinioSecretKey = "secretKey"
 	driverMinioToken     = "token"
 	driverMinioUseTLS    = "useTLS"
+	driverMinioDemandCap = "demandCap"
 )
 
 func configLeaf(name string) string {
@@ -36,6 +38,7 @@ func (c Config) Viper() Config {
 		SecretKey: viper.GetString(configLeaf(driverMinioSecretKey)),
 		Token:     viper.GetString(configLeaf(driverMinioToken)),
 		UseTLS:    viper.GetBool(configLeaf(driverMinioUseTLS)),
+		DemandCap: viper.GetInt(configLeaf(driverMinioDemandCap)),
 	}
 
 }
@@ -44,6 +47,7 @@ func (c Config) Viper() Config {
 
 type Driver interface {
 	Connect() (*minio.Client, error)
+	DemandCap() int
 }
 
 type DriverMinio struct {
@@ -59,4 +63,8 @@ func (d DriverMinio) buildConfig() *minio.Options {
 		Creds:  credentials.NewStaticV4(d.Config.AccessKey, d.Config.SecretKey, ""),
 		Secure: d.Config.UseTLS,
 	}
+}
+
+func (d DriverMinio) DemandCap() int {
+	return d.Config.DemandCap
 }

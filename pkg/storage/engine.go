@@ -9,6 +9,7 @@ import (
 
 type Adapter interface {
 	ID() uuid.UUID
+	DemandCap() int
 }
 
 // |||| ENGINE ||||

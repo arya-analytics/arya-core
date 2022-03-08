@@ -1,0 +1,31 @@
+{
+  "listen-addr": "core1:26258",
+  "influxToken": "ZyZSQlH9UVlOSpVbBj2paAylSav0w4TiJE6aN9TPsMpxhuOipOu79zv6uLdUpp-4FEN-RhtmQ-7c1YGIF41Cgw==",
+  "nodeID": 1,
+  "storage": {
+    "md": {
+      "username": "root",
+      "password": "",
+      "database": "defaultdb",
+      "useTLS": false,
+      "port": 26257,
+      "host": "roach1",
+      "demandCap": 500000
+    },
+    "object": {
+      "endpoint": "minio1:9000",
+      "accessKey": "minio",
+      "secretKey": "minio123",
+      "useTLS": false,
+      "demandCap": 500000
+    },
+    "cache": {
+      "host": "redistimeseries1",
+      "port": 6379,
+      "database": 0,
+      "username": "",
+      "password": "",
+      "demandCap": 500000
+    }
+  }
+}

@@ -38,6 +38,10 @@ func (a *mdAdapter) ID() uuid.UUID {
 	return a.id
 }
 
+func (a *mdAdapter) DemandCap() int {
+	return 50
+}
+
 type mdMigrate struct{}
 
 func (m *mdMigrate) Verify(ctx context.Context) error {

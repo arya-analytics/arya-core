@@ -77,8 +77,8 @@ type ChannelConfig struct {
 	NodeID         int
 	DataRate       telem.DataRate
 	DataType       telem.DataType
-	ConflictPolicy models.ChannelConflictPolicy
-	State          models.ChannelState
+	ConflictPolicy models.ChannelConflictPolicy `bun:"default:1"`
+	Status         models.ChannelStatus         `bun:"default:1"`
 }
 
 type ChannelChunk struct {

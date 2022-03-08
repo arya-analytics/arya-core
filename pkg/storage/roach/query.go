@@ -180,7 +180,7 @@ func (u *update) fields(p *query.Pack) {
 	}
 }
 
-// |||| CUSTOM RETRIEVE OPTS ||||
+// |||| WHERE FIELDS
 
 func (e *retrieve) whereFields(p *query.Pack) {
 	if wf, ok := query.WhereFieldsOpt(p); ok {
@@ -194,6 +194,8 @@ func (e *retrieve) whereFields(p *query.Pack) {
 		}
 	}
 }
+
+// |||| CUSTOM RETRIEVE OPTS ||||
 
 func (e *retrieve) relations(p *query.Pack) {
 	for _, opt := range query.RelationOpts(p) {

@@ -12,6 +12,7 @@ import (
 
 type Driver interface {
 	Connect() (*bun.DB, error)
+	DemandCap() int
 }
 
 // |||| ENGINE ||||
@@ -31,7 +32,8 @@ func New(driver Driver, pool *storage.Pool) *Engine {
 }
 
 func (e *Engine) Exec(ctx context.Context, p *query.Pack) error {
-	db := conn(e.pool.Retrieve(e))
+	a := e.pool.Retrieve(e)
+	db := conn(a)
 	return query.Switch(ctx, p, query.Ops{
 		Create:   newCreate(db).exec,
 		Retrieve: newRetrieve(db).exec,
@@ -57,7 +59,8 @@ func (e *Engine) ShouldHandle(m interface{}, _ ...string) bool {
 
 // NewMigrate opens a new migrateExec with the provided storage.Adapter.
 func (e *Engine) NewMigrate() storage.QueryMDMigrate {
-	return newMigrate(conn(e.pool.Retrieve(e)), e.driver)
+	a := e.pool.Retrieve(e)
+	return newMigrate(conn(a), e.driver)
 }
 
 func (e *Engine) NewTasks(opts ...tasks.ScheduleOpt) tasks.Schedule {

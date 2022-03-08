@@ -26,6 +26,7 @@ type QueryStreamCreate struct {
 	donePipe   chan bool
 	stream     chan queryStreamCreateArgs
 	ctx        context.Context
+	Perf       *Perf
 }
 
 type queryStreamCreateArgs struct {
@@ -73,9 +74,9 @@ func (qsc *QueryStreamCreate) Errors() chan error {
 // |||| PROCESS ||||
 
 func (qsc *QueryStreamCreate) listen() {
-	qsc.updateConfigState(models.ChannelStateActive)
+	qsc.updateConfigStatus(models.ChannelStatusActive)
 	defer func() {
-		qsc.updateConfigState(models.ChannelStateInactive)
+		qsc.updateConfigStatus(models.ChannelStatusInactive)
 		qsc.donePipe <- true
 	}()
 	for args := range qsc.stream {
@@ -84,7 +85,10 @@ func (qsc *QueryStreamCreate) listen() {
 }
 
 func (qsc *QueryStreamCreate) processNextChunk(startTS telem.TimeStamp, data *telem.ChunkData) {
+	qsc.catch.Exec(qsc.obs.AcquireSem)
+	defer qsc.obs.ReleaseSem()
 	nextChunk := telem.NewChunk(startTS, qsc.config().DataType, qsc.config().DataRate, data)
+	len := nextChunk.Len()
 	qsc.validateResolveNextChunk(nextChunk)
 
 	cc := &models.ChannelChunk{
@@ -109,6 +113,9 @@ func (qsc *QueryStreamCreate) processNextChunk(startTS telem.TimeStamp, data *te
 
 	qsc.setPrevChunk(nextChunk)
 	qsc.catch.Reset()
+	if qsc.Perf != nil {
+		qsc.Perf.IncrementSample("sample/s", len)
+	}
 }
 
 // ||| VALUE ACCESS |||
@@ -120,10 +127,14 @@ func (qsc *QueryStreamCreate) config() *models.ChannelConfig {
 	return qsc._config
 }
 
-func (qsc *QueryStreamCreate) updateConfigState(state models.ChannelState) {
-	qsc.obs.Add(ObservedChannelConfig{State: state, PK: qsc.configPK})
-	qsc._config.State = state
-	qsc.catch.Exec(query.NewUpdate().BindExec(qsc.exec).Model(qsc._config).WherePK(qsc.configPK).Fields("State").Exec)
+func (qsc *QueryStreamCreate) updateConfigStatus(status models.ChannelStatus) {
+	qsc.obs.Add(ObservedChannelConfig{Status: status, PK: qsc.configPK})
+	qsc._config.Status = status
+	qsc.catch.CatchSimple.Exec(func() error {
+		ctx := context.Background()
+		err := query.NewUpdate().BindExec(qsc.exec).Model(qsc._config).WherePK(qsc.configPK).Fields("Status").Exec(ctx)
+		return err
+	})
 }
 
 func (qsc *QueryStreamCreate) prevChunk() *telem.Chunk {
@@ -191,7 +202,7 @@ func validateStart() *validate.Validate[ValidateStartContext] {
 
 func validateConfigState(sCtx ValidateStartContext) error {
 	oc, _ := sCtx.obs.Retrieve(sCtx.cfg.ID)
-	if sCtx.cfg.State == models.ChannelStateActive || oc.State == models.ChannelStateActive {
+	if sCtx.cfg.Status == models.ChannelStatusActive || oc.Status == models.ChannelStatusActive {
 		return errors.New("open a second stream to an active channel")
 	}
 	return nil

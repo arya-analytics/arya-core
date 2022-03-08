@@ -27,6 +27,8 @@ type Config struct {
 	Database string
 	// Whether to open a TLS connection or not.
 	UseTLS bool
+	// Demand Cap
+	DemandCap int
 	// TransactionLogLevel
 	TransactionLogLevel TransactionLogLevel
 }
@@ -40,6 +42,7 @@ const (
 	driverRoachDatabase            = "database"
 	driverRoachUseTLS              = "useTLS"
 	driverRoachTransactionLogLevel = "transactionLogLevel"
+	driverRoachDemandCap           = "demandCap"
 )
 
 func configLeaf(name string) string {
@@ -55,6 +58,7 @@ func (c Config) Viper() Config {
 		Port:                viper.GetInt(configLeaf(driverRoachPort)),
 		Database:            viper.GetString(configLeaf(driverRoachDatabase)),
 		UseTLS:              viper.GetBool(configLeaf(driverRoachUseTLS)),
+		DemandCap:           viper.GetInt(configLeaf(driverRoachDemandCap)),
 		TransactionLogLevel: TransactionLogLevel(viper.GetInt(configLeaf(driverRoachTransactionLogLevel))),
 	}
 }
@@ -69,6 +73,10 @@ func (d DriverRoach) Connect() (*bun.DB, error) {
 	bunDB := bun.NewDB(db, pgdialect.New())
 	setLogLevel(d.Config.TransactionLogLevel, bunDB)
 	return bunDB, nil
+}
+
+func (d DriverRoach) DemandCap() int {
+	return d.Config.DemandCap
 }
 
 func (d DriverRoach) addr() string {

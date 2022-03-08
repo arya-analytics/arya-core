@@ -19,6 +19,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ChanConfigServiceClient interface {
 	CreateConfig(ctx context.Context, in *CreateConfigRequest, opts ...grpc.CallOption) (*CreateConfigResponse, error)
+	RetrieveConfig(ctx context.Context, in *RetrieveConfigRequest, opts ...grpc.CallOption) (*RetrieveConfigResponse, error)
 }
 
 type chanConfigServiceClient struct {
@@ -38,11 +39,21 @@ func (c *chanConfigServiceClient) CreateConfig(ctx context.Context, in *CreateCo
 	return out, nil
 }
 
+func (c *chanConfigServiceClient) RetrieveConfig(ctx context.Context, in *RetrieveConfigRequest, opts ...grpc.CallOption) (*RetrieveConfigResponse, error) {
+	out := new(RetrieveConfigResponse)
+	err := c.cc.Invoke(ctx, "/chanconfig.v1.ChanConfigService/RetrieveConfig", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ChanConfigServiceServer is the server API for ChanConfigService service.
 // All implementations should embed UnimplementedChanConfigServiceServer
 // for forward compatibility
 type ChanConfigServiceServer interface {
 	CreateConfig(context.Context, *CreateConfigRequest) (*CreateConfigResponse, error)
+	RetrieveConfig(context.Context, *RetrieveConfigRequest) (*RetrieveConfigResponse, error)
 }
 
 // UnimplementedChanConfigServiceServer should be embedded to have forward compatible implementations.
@@ -51,6 +62,9 @@ type UnimplementedChanConfigServiceServer struct {
 
 func (UnimplementedChanConfigServiceServer) CreateConfig(context.Context, *CreateConfigRequest) (*CreateConfigResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateConfig not implemented")
+}
+func (UnimplementedChanConfigServiceServer) RetrieveConfig(context.Context, *RetrieveConfigRequest) (*RetrieveConfigResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RetrieveConfig not implemented")
 }
 
 // UnsafeChanConfigServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -82,6 +96,24 @@ func _ChanConfigService_CreateConfig_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ChanConfigService_RetrieveConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RetrieveConfigRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChanConfigServiceServer).RetrieveConfig(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/chanconfig.v1.ChanConfigService/RetrieveConfig",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChanConfigServiceServer).RetrieveConfig(ctx, req.(*RetrieveConfigRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ChanConfigService_ServiceDesc is the grpc.ServiceDesc for ChanConfigService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -92,6 +124,10 @@ var ChanConfigService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateConfig",
 			Handler:    _ChanConfigService_CreateConfig_Handler,
+		},
+		{
+			MethodName: "RetrieveConfig",
+			Handler:    _ChanConfigService_RetrieveConfig_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

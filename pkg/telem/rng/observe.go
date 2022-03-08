@@ -69,6 +69,8 @@ func (o *ObserveMem) Retrieve(q ObservedRange) (ObservedRange, bool) {
 }
 
 func (o *ObserveMem) RetrieveAll() (ranges []ObservedRange) {
+	o.mu.Lock()
+	defer o.mu.Unlock()
 	// Copying here to protect against modification
 	for _, v := range o.rngMap {
 		ranges = append(ranges, v)
@@ -77,6 +79,8 @@ func (o *ObserveMem) RetrieveAll() (ranges []ObservedRange) {
 }
 
 func (o *ObserveMem) RetrieveFilter(q ObservedRange) (matches []ObservedRange) {
+	o.mu.Lock()
+	defer o.mu.Unlock()
 	for _, or := range o.rngMap {
 		if matchObservedRangeQuery(q, or) {
 			matches = append(matches, or)

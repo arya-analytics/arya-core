@@ -156,7 +156,7 @@ var _ = Describe("QueryStreamCreate", func() {
 				resCCActive := &models.ChannelConfig{}
 				Expect(clust.NewRetrieve().Model(resCCActive).WherePK(config.ID).Exec(ctx)).To(BeNil())
 				Expect(resCCActive.ID).To(Equal(config.ID))
-				Expect(resCCActive.State).To(Equal(models.ChannelStateActive))
+				Expect(resCCActive.Status).To(Equal(models.ChannelStatusActive))
 
 				By("Closing the stream")
 				stream.Close()
@@ -164,7 +164,7 @@ var _ = Describe("QueryStreamCreate", func() {
 				resCCInactive := &models.ChannelConfig{}
 				Expect(clust.NewRetrieve().Model(resCCInactive).WherePK(config.ID).Exec(ctx)).To(BeNil())
 				Expect(resCCInactive.ID).To(Equal(config.ID))
-				Expect(resCCInactive.State).To(Equal(models.ChannelStateInactive))
+				Expect(resCCInactive.Status).To(Equal(models.ChannelStatusInactive))
 			})
 			Describe("Opening a stream to a channel that already has data", func() {
 				It("Should create all the chunks correctly", func() {

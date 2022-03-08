@@ -9,17 +9,21 @@ import (
 )
 
 type Config struct {
-	Host     string
-	Port     int
-	Password string
-	Database int
+	Host      string
+	Port      int
+	Password  string
+	Database  int
+	Username  string
+	DemandCap int
 }
 
 const (
-	driverRedisHost     = "host"
-	driverRedisPort     = "port"
-	driverRedisDatabase = "database"
-	driverRedisPassword = "password"
+	driverRedisHost      = "host"
+	driverRedisPort      = "port"
+	driverRedisDatabase  = "database"
+	driverRedisPassword  = "password"
+	driverRedisUsername  = "username"
+	driverRedisDemandCap = "demandCap"
 )
 
 func configLeaf(name string) string {
@@ -28,19 +32,26 @@ func configLeaf(name string) string {
 
 func (c Config) Viper() Config {
 	return Config{
-		Host:     viper.GetString(configLeaf(driverRedisHost)),
-		Port:     viper.GetInt(configLeaf(driverRedisPort)),
-		Database: viper.GetInt(configLeaf(driverRedisDatabase)),
-		Password: viper.GetString(configLeaf(driverRedisPassword)),
+		Host:      viper.GetString(configLeaf(driverRedisHost)),
+		Port:      viper.GetInt(configLeaf(driverRedisPort)),
+		Database:  viper.GetInt(configLeaf(driverRedisDatabase)),
+		Password:  viper.GetString(configLeaf(driverRedisPassword)),
+		Username:  viper.GetString(configLeaf(driverRedisUsername)),
+		DemandCap: viper.GetInt(configLeaf(driverRedisDemandCap)),
 	}
 }
 
 type Driver interface {
 	Connect() (*timeseries.Client, error)
+	DemandCap() int
 }
 
 type DriverRedis struct {
 	Config Config
+}
+
+func (d DriverRedis) DemandCap() int {
+	return d.Config.DemandCap
 }
 
 func (d DriverRedis) addr() string {
@@ -57,5 +68,6 @@ func (d DriverRedis) buildConfig() *redis.Options {
 		Addr:     d.addr(),
 		DB:       d.Config.Database,
 		Password: d.Config.Password,
+		Username: d.Config.Username,
 	}
 }

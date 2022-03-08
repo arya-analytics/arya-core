@@ -41,7 +41,9 @@ func (s *Server) CreateStream(server bulktelemv1.BulkTelemService_CreateStreamSe
 		}
 
 		if err != nil {
-			stream.Errors() <- err
+			stream.Close()
+			wg.Wait()
+			return err
 		}
 
 		if start {
@@ -50,7 +52,6 @@ func (s *Server) CreateStream(server bulktelemv1.BulkTelemService_CreateStreamSe
 			}
 			start = false
 		}
-
 		sendData(stream, req)
 	}
 	stream.Close()

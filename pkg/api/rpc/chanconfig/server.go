@@ -6,6 +6,7 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/cluster"
 	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/rpc"
+	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"google.golang.org/grpc"
 )
 
@@ -26,4 +27,12 @@ func (s *Server) CreateConfig(ctx context.Context, req *chanconfigv1.CreateConfi
 	exc := rpc.NewModelExchange(&models.ChannelConfig{}, req.Config)
 	exc.ToSource()
 	return &chanconfigv1.CreateConfigResponse{}, s.clust.NewCreate().Model(exc.Source()).Exec(ctx)
+}
+
+func (s *Server) RetrieveConfig(ctx context.Context, req *chanconfigv1.RetrieveConfigRequest) (*chanconfigv1.RetrieveConfigResponse, error) {
+	var resCC []*chanconfigv1.ChannelConfig
+	exc := rpc.NewModelExchange(&resCC, &[]*models.ChannelConfig{})
+	err := s.clust.NewRetrieve().Model(exc.Dest()).WhereFields(query.WhereFields{"NodeID": req.NodeId}).Limit(int(req.Limit)).Exec(ctx)
+	exc.ToSource()
+	return &chanconfigv1.RetrieveConfigResponse{Configs: resCC}, err
 }
