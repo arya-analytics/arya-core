@@ -68,7 +68,6 @@ type Storage interface {
 	Start(ctx context.Context, opts ...tasks.ScheduleOpt)
 	Stop()
 	Errors() chan error
-	hooks() []QueryHook
 }
 
 type storage struct {
@@ -94,6 +93,7 @@ func New(cfg Config) Storage {
 	return s
 }
 
+// Exec implements query.Execute
 func (s *storage) Exec(ctx context.Context, p *query.Pack) error {
 	return query.Switch(ctx, p, query.Ops{
 		Create:   newDef(s).exec,
@@ -118,6 +118,7 @@ func (s *storage) NewTSCreate() *QueryTSCreate {
 	return newTSCreate(s)
 }
 
+// Start starts
 func (s *storage) Start(ctx context.Context, opts ...tasks.ScheduleOpt) {
 	s.tasks = tasks.NewScheduleBatch(s.cfg.EngineMD.NewTasks(opts...))
 	s.tasks.Start(ctx)
@@ -134,10 +135,6 @@ func (s *storage) Errors() chan error {
 
 func (s *storage) AddQueryHook(hook QueryHook) {
 	s.queryHooks = append(s.queryHooks, hook)
-}
-
-func (s *storage) hooks() []QueryHook {
-	return s.queryHooks
 }
 
 // |||| CONFIG ||||

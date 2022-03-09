@@ -10,20 +10,20 @@ services:
       - arya-net
   core1:
     <<: *core-common
-    command: bash -c "./main start --config=./deploy/docker/configs/config1.json"
+    command: bash -c "./main start --config=./deploy/docker/configs/node1.json"
     container_name: core1
     ports:
       - "26261:26258"
   core2:
     <<: *core-common
     container_name: core2
-    command: bash -c "./main start --config=./deploy/docker/configs/config2.json"
+    command: bash -c "./main start --config=./deploy/docker/configs/node2.json"
     ports:
       - "26259:26258"
   core3:
     <<: *core-common
     container_name: core3
-    command: bash -c "./main start --config=./deploy/docker/configs/config3.json"
+    command: bash -c "./main start --config=./deploy/docker/configs/node3.json"
     ports:
       - "26260:26258"
   # // |||| REDIS ||||
