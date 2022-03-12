@@ -13,17 +13,13 @@ var _ = Describe("Tasks", func() {
 		var storeTwo = mock.NewStorage()
 		mErr := storeTwo.NewMigrate().Exec(ctx)
 		Expect(mErr).To(BeNil())
-		tasks := storeTwo.NewTasks(
-			tasks.ScheduleWithAccel(100),
-			tasks.ScheduleWithSilence(),
-		)
-		go tasks.Start(ctx)
+		storeTwo.Start(ctx, tasks.ScheduleWithAccel(100), tasks.ScheduleWithSilence())
 		var err error
 		go func() {
-			err = <-tasks.Errors()
+			err = <-storeTwo.Errors()
 		}()
 		time.Sleep(300 * time.Millisecond)
-		tasks.Stop()
+		storeTwo.Stop()
 		Expect(err).To(BeNil())
 	})
 })

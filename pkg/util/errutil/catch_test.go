@@ -2,13 +2,15 @@ package errutil_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/arya-analytics/aryacore/pkg/util/errutil"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"sync"
 )
 
-var _ = Describe("Error", func() {
+var _ = Describe("Catch", func() {
 	Describe("CatchSimple", func() {
 		Context("No error encountered", func() {
 			var (
@@ -80,15 +82,15 @@ var _ = Describe("Error", func() {
 			})
 		})
 	})
-	Describe("CatchWCtx", func() {
+	Describe("CatchContext", func() {
 		var (
 			ctx     = context.Background()
 			counter int
-			catcher *errutil.CatchWCtx
+			catcher *errutil.CatchContext
 		)
 		BeforeEach(func() {
 			counter = 1
-			catcher = errutil.NewCatchWCtx(ctx)
+			catcher = errutil.NewCatchContext(ctx)
 			for i := 0; i < 4; i++ {
 				catcher.Exec(func(ctx context.Context) error {
 					if i == 2 {
@@ -110,6 +112,27 @@ var _ = Describe("Error", func() {
 				catcher.Reset()
 				Expect(catcher.Error()).To(BeNil())
 			})
+		})
+	})
+	Describe("Pipe Hook", func() {
+		It("Should pipe errors", func() {
+			pipe := make(chan error, 10)
+			c := errutil.NewCatchSimple(errutil.WithHooks(errutil.NewPipeHook(pipe)))
+			c.Exec(func() error {
+				return errors.New("hello")
+			})
+			var errs []error
+			wg := &sync.WaitGroup{}
+			wg.Add(1)
+			go func() {
+				for err := range pipe {
+					errs = append(errs, err)
+				}
+				wg.Done()
+			}()
+			close(pipe)
+			wg.Wait()
+			Expect(errs).To(HaveLen(1))
 		})
 	})
 })

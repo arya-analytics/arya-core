@@ -9,6 +9,7 @@ import (
 
 type Adapter interface {
 	ID() uuid.UUID
+	DemandCap() int
 }
 
 // |||| ENGINE ||||
@@ -39,7 +40,7 @@ type EngineMD interface {
 
 // || OBJECT ||
 
-// EngineObject is responsible for storing chanchunk data to node localstorage data storage.
+// EngineObject is responsible for storing bulktelem data to node localstorage data storage.
 type EngineObject interface {
 	Engine
 	Exec(ctx context.Context, p *query.Pack) error

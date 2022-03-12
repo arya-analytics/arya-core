@@ -60,7 +60,7 @@ func (nqh *NodeQueryHook) AfterQuery(ctx context.Context, p *query.Pack) error {
 	return nil
 }
 
-const NodeDefaultRPCPort = 26258
+const NodeDefaultRPCPort int = 26258
 
 func beforeNodeCreateSetDefaultRPCPort(rfl *model.Reflect) error {
 	rfl.ForEach(func(nRfl *model.Reflect, _ int) {

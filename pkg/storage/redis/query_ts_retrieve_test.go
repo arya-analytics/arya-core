@@ -2,7 +2,7 @@ package redis_test
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/models"
-	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
@@ -173,7 +173,7 @@ var _ = Describe("QueryTsRetrieve", func() {
 				It("Should return the correct storage error", func() {
 					err := engine.NewTSRetrieve().Model(s).Exec(ctx)
 					Expect(err).ToNot(BeNil())
-					Expect(err.(storage.Error).Type).To(Equal(storage.ErrorTypeInvalidArgs))
+					Expect(err.(query.Error).Type).To(Equal(query.ErrorTypeInvalidArgs))
 				})
 			})
 			Context("Invalid PKC provided", func() {
@@ -181,7 +181,7 @@ var _ = Describe("QueryTsRetrieve", func() {
 					err := engine.NewTSRetrieve().WherePK(uuid.New()).Model(s).
 						Exec(ctx)
 					Expect(err).ToNot(BeNil())
-					Expect(err.(storage.Error).Type).To(Equal(storage.ErrorTypeItemNotFound))
+					Expect(err.(query.Error).Type).To(Equal(query.ErrorTypeItemNotFound))
 				})
 			})
 		})

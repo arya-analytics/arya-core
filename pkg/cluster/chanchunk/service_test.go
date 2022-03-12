@@ -128,7 +128,7 @@ var _ = Describe("Service", func() {
 			Expect(rErr).To(BeNil())
 			Expect(resCCR.ID).To(Equal(ccr.ID))
 		})
-		It("Should retrieve only meta data when bulk telem field not specified", func() {
+		It("Should retrieve only meta data when bulk bulktelem field not specified", func() {
 			cErr := clust.NewCreate().Model(ccr).Exec(ctx)
 			Expect(cErr).To(BeNil())
 			resCCR := &models.ChannelChunkReplica{}

@@ -66,7 +66,7 @@ func (x *channelChunkServiceCreateReplicasClient) CloseAndRecv() (*ChannelChunkS
 }
 
 func (c *channelChunkServiceClient) RetrieveReplicas(ctx context.Context, in *ChannelChunkServiceRetrieveReplicasRequest, opts ...grpc.CallOption) (ChannelChunkService_RetrieveReplicasClient, error) {
-	stream, err := c.cc.NewStream(ctx, &ChannelChunkService_ServiceDesc.Streams[1], "/chanchunk.v1.ChannelChunkService/RetrieveReplica", opts...)
+	stream, err := c.cc.NewStream(ctx, &ChannelChunkService_ServiceDesc.Streams[1], "/chanchunk.v1.ChannelChunkService/RetrieveReplicas", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +99,7 @@ func (x *channelChunkServiceRetrieveReplicasClient) Recv() (*ChannelChunkService
 
 func (c *channelChunkServiceClient) DeleteReplicas(ctx context.Context, in *ChannelChunkServiceDeleteReplicasRequest, opts ...grpc.CallOption) (*ChannelChunkServiceDeleteReplicasResponse, error) {
 	out := new(ChannelChunkServiceDeleteReplicasResponse)
-	err := c.cc.Invoke(ctx, "/chanchunk.v1.ChannelChunkService/DeleteReplicas", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/chanchunk.v1.ChannelChunkService/DeleteReplica", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -123,10 +123,10 @@ func (UnimplementedChannelChunkServiceServer) CreateReplicas(ChannelChunkService
 	return status.Errorf(codes.Unimplemented, "method CreateReplicas not implemented")
 }
 func (UnimplementedChannelChunkServiceServer) RetrieveReplicas(*ChannelChunkServiceRetrieveReplicasRequest, ChannelChunkService_RetrieveReplicasServer) error {
-	return status.Errorf(codes.Unimplemented, "method RetrieveReplica not implemented")
+	return status.Errorf(codes.Unimplemented, "method RetrieveReplicas not implemented")
 }
 func (UnimplementedChannelChunkServiceServer) DeleteReplicas(context.Context, *ChannelChunkServiceDeleteReplicasRequest) (*ChannelChunkServiceDeleteReplicasResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteReplicas not implemented")
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteReplica not implemented")
 }
 
 // UnsafeChannelChunkServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -197,7 +197,7 @@ func _ChannelChunkService_DeleteReplicas_Handler(srv interface{}, ctx context.Co
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/chanchunk.v1.ChannelChunkService/DeleteReplicas",
+		FullMethod: "/chanchunk.v1.ChannelChunkService/DeleteReplica",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ChannelChunkServiceServer).DeleteReplicas(ctx, req.(*ChannelChunkServiceDeleteReplicasRequest))
@@ -213,7 +213,7 @@ var ChannelChunkService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*ChannelChunkServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "DeleteReplicas",
+			MethodName: "DeleteReplica",
 			Handler:    _ChannelChunkService_DeleteReplicas_Handler,
 		},
 	},
@@ -224,7 +224,7 @@ var ChannelChunkService_ServiceDesc = grpc.ServiceDesc{
 			ClientStreams: true,
 		},
 		{
-			StreamName:    "RetrieveReplica",
+			StreamName:    "RetrieveReplicas",
 			Handler:       _ChannelChunkService_RetrieveReplicas_Handler,
 			ServerStreams: true,
 		},

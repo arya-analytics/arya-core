@@ -11,3 +11,6 @@ volumes:
   name: data
   containerPath: /minio/minio-data
   hostPath: /minio/minio-data
+auth:
+  accessKey: arya-master
+  secretKey: arya-dummy-pass

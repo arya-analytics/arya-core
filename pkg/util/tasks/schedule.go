@@ -85,6 +85,7 @@ func (s *ScheduleSimple) Start(ctx context.Context) {
 	}
 }
 
+// Stop implements Schedule.
 func (s *ScheduleSimple) Stop() {
 	s.chanStop <- true
 }
@@ -233,7 +234,7 @@ func ScheduleWithSilence() ScheduleOpt {
 
 func durationGCD(durs ...time.Duration) time.Duration {
 	if len(durs) == 0 {
-		panic("cannot get the duration g with no arguments")
+		return time.Duration(0)
 	}
 	if len(durs) < 2 {
 		return durs[0]

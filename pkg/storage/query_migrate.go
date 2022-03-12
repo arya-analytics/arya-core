@@ -20,7 +20,7 @@ func newMigrate(s *storage) *QueryMigrate {
 /// |||| INTERFACE ||||
 
 func (q *QueryMigrate) Exec(ctx context.Context) error {
-	c := errutil.NewCatchWCtx(ctx)
+	c := errutil.NewCatchContext(ctx)
 	c.Exec(q.storage.cfg.EngineMD.NewMigrate().Exec)
 	c.Exec(q.storage.cfg.EngineObject.NewMigrate().Exec)
 	return q.baseErr()

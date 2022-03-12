@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package bulktelem.v1;
+
+service BulkTelemService {
+  rpc CreateStream(stream CreateStreamRequest) returns (stream CreateStreamResponse);
+}
+
+message CreateStreamRequest {
+  string channel_config_id = 1;
+  int64 start_ts = 2;
+  bytes data = 3;
+}
+
+message CreateStreamResponse {
+  error Error = 1;
+}
+
+message error {
+  int32 type = 1;
+  string type_string = 2;
+  string message = 3;
+}

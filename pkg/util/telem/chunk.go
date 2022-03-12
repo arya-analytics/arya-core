@@ -1,13 +1,13 @@
-// Package telem holds utilities for working with telemetry, including storage, transport, traversal, and modification.
+// Package bulktelem holds utilities for working with telemetry, including storage, transport, traversal, and modification.
 package telem
 
 // |||| DATA TYPE ||||
 
-type DataType int
+type DataType int32
 
 //go:generate stringer -type=DataType
 const (
-	DataTypeFloat64 DataType = iota + 1
+	DataTypeFloat64 DataType = iota
 	DataTypeFloat32
 )
 

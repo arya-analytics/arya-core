@@ -8,9 +8,9 @@ func _() {
 	// An "invalid array index" compiler error signifies that the constant values have changed.
 	// Re-run the stringer command to generate them again.
 	var x [1]struct{}
-	_ = x[ChannelConflictPolicyError-1]
-	_ = x[ChannelConflictPolicyDiscard-2]
-	_ = x[ChannelConflictPolicyOverwrite-3]
+	_ = x[ChannelConflictPolicyError-0]
+	_ = x[ChannelConflictPolicyDiscard-1]
+	_ = x[ChannelConflictPolicyOverwrite-2]
 }
 
 const _ChannelConflictPolicy_name = "ChannelConflictPolicyErrorChannelConflictPolicyDiscardChannelConflictPolicyOverwrite"
@@ -18,9 +18,8 @@ const _ChannelConflictPolicy_name = "ChannelConflictPolicyErrorChannelConflictPo
 var _ChannelConflictPolicy_index = [...]uint8{0, 26, 54, 84}
 
 func (i ChannelConflictPolicy) String() string {
-	i -= 1
 	if i < 0 || i >= ChannelConflictPolicy(len(_ChannelConflictPolicy_index)-1) {
-		return "ChannelConflictPolicy(" + strconv.FormatInt(int64(i+1), 10) + ")"
+		return "ChannelConflictPolicy(" + strconv.FormatInt(int64(i), 10) + ")"
 	}
 	return _ChannelConflictPolicy_name[_ChannelConflictPolicy_index[i]:_ChannelConflictPolicy_index[i+1]]
 }

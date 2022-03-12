@@ -10,6 +10,10 @@ redistimeseries:
   auth:
     username: *username
     password: *password
+minio:
+  auth:
+    accessKey: *username
+    secretKey: *password
 cockroachdb:
   join: 192.168.64.11
 imagePullSecrets:

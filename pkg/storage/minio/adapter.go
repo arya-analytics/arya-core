@@ -39,6 +39,10 @@ func (a *adapter) ID() uuid.UUID {
 	return a.id
 }
 
+func (a *adapter) DemandCap() int {
+	return a.driver.DemandCap()
+}
+
 func (a *adapter) conn() *minio.Client {
 	return a.client
 }

@@ -28,6 +28,11 @@ spec:
               --console-address \":{{.Values.ports.console}}\"
               {{ .Values.volumes.containerPath }}
               "
+          env:
+            - name: MINIO_ROOT_USER
+              value: {{.Values.auth.accessKey}}
+            - name: MINIO_ROOT_PASSWORD
+              value: {{.Values.auth.secretKey}}
           volumeMounts:
             - name: {{$volumeName}}
               mountPath: {{.Values.volumes.containerPath}}

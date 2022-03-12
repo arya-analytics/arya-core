@@ -2,7 +2,7 @@ package storage_test
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/models"
-	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/util/query"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -35,7 +35,7 @@ var _ = Describe("QueryDelete", func() {
 				rErr := store.NewRetrieve().Model(channelConfig).WherePK(
 					channelConfig.ID).Exec(ctx)
 				Expect(rErr).ToNot(BeNil())
-				Expect(rErr.(storage.Error).Type).To(Equal(storage.ErrorTypeItemNotFound))
+				Expect(rErr.(query.Error).Type).To(Equal(query.ErrorTypeItemNotFound))
 			})
 		})
 	})
@@ -44,7 +44,7 @@ var _ = Describe("QueryDelete", func() {
 			It("Should return an error", func() {
 				err := store.NewDelete().Model(&models.ChannelConfig{}).Exec(ctx)
 				Expect(err).ToNot(BeNil())
-				Expect(err.(storage.Error).Type).To(Equal(storage.ErrorTypeInvalidArgs))
+				Expect(err.(query.Error).Type).To(Equal(query.ErrorTypeInvalidArgs))
 			})
 		})
 	})

@@ -44,5 +44,5 @@ func (q *migrateExec) Verify(ctx context.Context) error {
 }
 
 func (q *migrateExec) handleErr(err error) error {
-	return newErrorHandler().Exec(err)
+	return newErrorConvert().Exec(err)
 }

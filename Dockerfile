@@ -1,7 +1,5 @@
-FROM golang:1.17.0
+FROM golang:1.18beta1
 
 WORKDIR /arya-core
 
 ADD ../.. /arya-core
-
-RUN go build -o main .

@@ -3,8 +3,8 @@ package mock
 import (
 	"context"
 	"github.com/arya-analytics/aryacore/pkg/models"
-	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
+	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/google/uuid"
 	"math/rand"
 	"time"
@@ -68,10 +68,10 @@ func (p *Persist) RetrieveRange(ctx context.Context, PK uuid.UUID) (*models.Rang
 			return rng, nil
 		}
 	}
-	return nil, storage.Error{Type: storage.ErrorTypeItemNotFound}
+	return nil, query.Error{Type: query.ErrorTypeItemNotFound}
 }
 
-func (p *Persist) RetrieveRangesByStatus(ctx context.Context) ([]*models.Range, error) {
+func (p *Persist) RetrieveOpenRanges(ctx context.Context) ([]*models.Range, error) {
 	var ranges []*models.Range
 	for _, rng := range p.Ranges {
 		if rng.Status == models.RangeStatusOpen {
@@ -135,7 +135,7 @@ func (p *Persist) ReallocateChunkReplicas(ctx context.Context, pks []uuid.UUID, 
 		}
 	}
 	if replica == nil {
-		return storage.Error{Type: storage.ErrorTypeItemNotFound}
+		return query.Error{Type: query.ErrorTypeItemNotFound}
 	}
 	for _, PK := range model.NewPKChain(pks) {
 		for _, ccr := range p.ChunkReplicas {
@@ -167,7 +167,7 @@ func (p *Persist) UpdateRangeStatus(ctx context.Context, PK uuid.UUID, status mo
 		}
 	}
 	if !found {
-		return storage.Error{Type: storage.ErrorTypeItemNotFound}
+		return query.Error{Type: query.ErrorTypeItemNotFound}
 	}
 	return nil
 }

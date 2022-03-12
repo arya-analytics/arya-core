@@ -23,14 +23,14 @@ func newWrappedExchange(sma *model.Exchange) *exchange {
 }
 
 func (m *exchange) samples() (samples []timeseries.Sample) {
-	m.Dest().ForEach(func(rfl *model.Reflect, i int) {
+	m.Exchange.Dest().ForEach(func(rfl *model.Reflect, i int) {
 		samples = append(samples, m.newSampleFromRFL(rfl))
 	})
 	return samples
 }
 
 func (m *exchange) seriesNames() (names []string) {
-	m.Dest().ForEach(func(rfl *model.Reflect, i int) {
+	m.Exchange.Dest().ForEach(func(rfl *model.Reflect, i int) {
 		pk := model.NewPK(keyField(rfl).Interface())
 		names = append(names, pk.String())
 	})

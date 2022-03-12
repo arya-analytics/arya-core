@@ -5,8 +5,8 @@ import (
 	api "github.com/arya-analytics/aryacore/pkg/cluster/gen/proto/go/chanchunk/v1"
 	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/rpc"
-	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
+	"github.com/arya-analytics/aryacore/pkg/util/query"
 )
 
 type ServerRPCPersist struct {
@@ -20,7 +20,7 @@ func (sp *ServerRPCPersist) RetrieveReplica(ctx context.Context, ccr *api.Channe
 			return nil
 		}
 	}
-	return storage.Error{Type: storage.ErrorTypeItemNotFound}
+	return query.Error{Type: query.ErrorTypeItemNotFound}
 }
 func (sp *ServerRPCPersist) CreateReplica(ctx context.Context, ccr *api.ChannelChunkReplica) error {
 	mCCR := &models.ChannelChunkReplica{}
@@ -29,7 +29,7 @@ func (sp *ServerRPCPersist) CreateReplica(ctx context.Context, ccr *api.ChannelC
 	return nil
 }
 
-func (sp *ServerRPCPersist) DeleteReplicas(ctx context.Context, pkc model.PKChain) error {
+func (sp *ServerRPCPersist) DeleteReplica(ctx context.Context, pkc model.PKChain) error {
 	for i, mCCR := range sp.ChunkReplicas {
 		for _, pk := range pkc {
 			if model.NewPK(mCCR.ID).Equals(pk) {

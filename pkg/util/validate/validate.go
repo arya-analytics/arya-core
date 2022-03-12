@@ -6,7 +6,7 @@ import "github.com/arya-analytics/aryacore/pkg/util/errutil"
 
 type Validate[T any] struct {
 	actions []func(T) error
-	catch   errutil.Catch
+	catch   *errutil.CatchSimple
 }
 
 func New[T any](actions []func(T) error, opts ...errutil.CatchOpt) *Validate[T] {

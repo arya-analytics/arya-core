@@ -8,8 +8,8 @@ func _() {
 	// An "invalid array index" compiler error signifies that the constant values have changed.
 	// Re-run the stringer command to generate them again.
 	var x [1]struct{}
-	_ = x[DataTypeFloat64-1]
-	_ = x[DataTypeFloat32-2]
+	_ = x[DataTypeFloat64-0]
+	_ = x[DataTypeFloat32-1]
 }
 
 const _DataType_name = "DataTypeFloat64DataTypeFloat32"
@@ -17,9 +17,8 @@ const _DataType_name = "DataTypeFloat64DataTypeFloat32"
 var _DataType_index = [...]uint8{0, 15, 30}
 
 func (i DataType) String() string {
-	i -= 1
 	if i < 0 || i >= DataType(len(_DataType_index)-1) {
-		return "DataType(" + strconv.FormatInt(int64(i+1), 10) + ")"
+		return "DataType(" + strconv.FormatInt(int64(i), 10) + ")"
 	}
 	return _DataType_name[_DataType_index[i]:_DataType_index[i+1]]
 }

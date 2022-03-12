@@ -24,7 +24,7 @@ func newUpdate(s *storage) *update {
 
 func (d *def) runBeforeHooks(ctx context.Context, p *query.Pack) error {
 	c := query.NewCatch(ctx, p, errutil.WithAggregation())
-	for _, hook := range d.s.hooks() {
+	for _, hook := range d.s.queryHooks {
 		c.Exec(hook.BeforeQuery)
 	}
 	return c.Error()
@@ -32,7 +32,7 @@ func (d *def) runBeforeHooks(ctx context.Context, p *query.Pack) error {
 
 func (d *def) runAfterHooks(ctx context.Context, p *query.Pack) error {
 	c := query.NewCatch(ctx, p, errutil.WithAggregation())
-	for _, hook := range d.s.hooks() {
+	for _, hook := range d.s.queryHooks {
 		c.Exec(hook.AfterQuery)
 	}
 	return c.Error()

@@ -19,6 +19,6 @@ spec:
           image: {{.Values.image.repository}}:{{.Values.image.tag}}
           imagePullPolicy: {{.Values.image.pullPolicy}}
           command: [ "/bin/bash", "-c", "--" ]
-          args: [ "./main" ]
+          args: [ "./main start --config=./config.json" ]
       imagePullSecrets:
         - name: {{.Values.imagePullSecrets.name }}

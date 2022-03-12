@@ -9,17 +9,17 @@ type ChannelConflictPolicy int
 
 //go:generate stringer -type=ChannelConflictPolicy
 const (
-	ChannelConflictPolicyError ChannelConflictPolicy = iota + 1
+	ChannelConflictPolicyError ChannelConflictPolicy = iota
 	ChannelConflictPolicyDiscard
 	ChannelConflictPolicyOverwrite
 )
 
-type ChannelState int
+type ChannelStatus int
 
 //go:generate stringer -type=ChannelState
 const (
-	ChannelStateInactive ChannelState = iota + 1
-	ChannelStateActive
+	ChannelStatusInactive ChannelStatus = iota + 1
+	ChannelStatusActive
 )
 
 type ChannelConfig struct {
@@ -29,8 +29,8 @@ type ChannelConfig struct {
 	NodeID         int
 	DataRate       telem.DataRate
 	DataType       telem.DataType
-	ConflictPolicy ChannelConflictPolicy `bun:"default:1"`
-	State          ChannelState          `bun:"default:1"`
+	ConflictPolicy ChannelConflictPolicy
+	Status         ChannelStatus
 }
 
 const MaxChunkSize = 2e7

@@ -13,7 +13,7 @@
 // Engines (Engine) can fulfill one of three roles:
 //
 // EngineMD - Reads and writes lightweight, strongly consistent data to storage.
-// EngineObject - Saves chanchunk data to node localstorage data storage.
+// EngineObject - Saves bulktelem data to node localstorage data storage.
 // EngineCache - High speed cache that can read and write time series data.
 //
 // Initialization
@@ -65,13 +65,15 @@ type Storage interface {
 	NewTSCreate() *QueryTSCreate
 	NewMigrate() *QueryMigrate
 	AddQueryHook(hook QueryHook)
-	NewTasks(opts ...tasks.ScheduleOpt) tasks.Schedule
-	hooks() []QueryHook
+	Start(ctx context.Context, opts ...tasks.ScheduleOpt)
+	Stop()
+	Errors() chan error
 }
 
 type storage struct {
 	query.AssembleBase
 	cfg        Config
+	tasks      tasks.Schedule
 	queryHooks []QueryHook
 }
 
@@ -91,6 +93,7 @@ func New(cfg Config) Storage {
 	return s
 }
 
+// Exec implements query.Execute
 func (s *storage) Exec(ctx context.Context, p *query.Pack) error {
 	return query.Switch(ctx, p, query.Ops{
 		Create:   newDef(s).exec,
@@ -115,16 +118,24 @@ func (s *storage) NewTSCreate() *QueryTSCreate {
 	return newTSCreate(s)
 }
 
-func (s *storage) NewTasks(opts ...tasks.ScheduleOpt) tasks.Schedule {
-	return tasks.NewScheduleBatch(s.cfg.EngineMD.NewTasks(opts...))
+// Start starts storage internal tasks.
+func (s *storage) Start(ctx context.Context, opts ...tasks.ScheduleOpt) {
+	s.tasks = tasks.NewScheduleBatch(s.cfg.EngineMD.NewTasks(opts...))
+	go s.tasks.Start(ctx)
+}
+
+// Stop stops storage internal tasks.
+func (s *storage) Stop() {
+	s.tasks.Stop()
+	s.tasks = nil
+}
+
+func (s *storage) Errors() chan error {
+	return s.tasks.Errors()
 }
 
 func (s *storage) AddQueryHook(hook QueryHook) {
 	s.queryHooks = append(s.queryHooks, hook)
-}
-
-func (s *storage) hooks() []QueryHook {
-	return s.queryHooks
 }
 
 // |||| CONFIG ||||

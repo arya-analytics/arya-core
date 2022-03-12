@@ -5,6 +5,7 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/storage/redis/timeseries"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
+	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/arya-analytics/aryacore/pkg/util/validate"
 	"github.com/go-redis/redis/v8"
 )
@@ -95,8 +96,8 @@ var tsRetrieveQueryReqValidator = validate.New[*tsRetrieveQuery]([]func(q *tsRet
 
 func validatePKProvided(q *tsRetrieveQuery) error {
 	if (len(q.PKChain)) == 0 {
-		return storage.Error{
-			Type:    storage.ErrorTypeInvalidArgs,
+		return query.Error{
+			Type:    query.ErrorTypeInvalidArgs,
 			Message: "no PKC provided to ts retrieve query",
 		}
 	}

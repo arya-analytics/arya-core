@@ -3,7 +3,6 @@ package roach
 import (
 	"context"
 	"github.com/arya-analytics/aryacore/pkg/models"
-	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/util/errutil"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
@@ -44,8 +43,7 @@ const (
 // joined/exited the cluster.
 func syncNodesAction(db *bun.DB) tasks.Action {
 	return func(ctx context.Context, cfg tasks.ScheduleConfig) error {
-		sn := &syncNodes{db: db, catcher: errutil.NewCatchSimple(),
-			handler: newErrorHandler(), cfg: cfg}
+		sn := &syncNodes{db: db, catcher: errutil.NewCatchSimple(), cfg: cfg}
 		return sn.exec(ctx)
 	}
 }
@@ -54,7 +52,6 @@ type syncNodes struct {
 	ctx     context.Context
 	db      *bun.DB
 	catcher *errutil.CatchSimple
-	handler storage.ErrorHandler
 	cfg     tasks.ScheduleConfig
 }
 
@@ -63,7 +60,7 @@ func (sn *syncNodes) exec(ctx context.Context) error {
 	gnPKC, nodePKC := sn.retrieveGossipNodePKChain(), sn.retrieveNodePKChain()
 	sn.runNodeAction(gnPKC, nodePKC, sn.createNodeWithPK)
 	sn.runNodeAction(nodePKC, gnPKC, sn.deleteNodeWithPK)
-	return sn.handler.Exec(sn.catcher.Error())
+	return newErrorConvert().Exec(sn.catcher.Error())
 }
 
 func (sn *syncNodes) runNodeAction(sourcePKC model.PKChain, destPKC model.PKChain,
@@ -91,11 +88,11 @@ func (sn *syncNodes) createNodeWithPK(pk model.PK) {
 	newNode := &models.Node{ID: pk.Raw().(int)}
 	sn.catcher.Exec(func() error {
 		if err := query.NewCreate().BindExec(newCreate(sn.db).exec).Model(newNode).Exec(sn.ctx); err != nil {
-			sErr, ok := err.(storage.Error)
+			sErr, ok := err.(query.Error)
 			if !ok {
 				log.Error("Encountered un-parseable err after roach bunQ exec.")
 			}
-			if sErr.Type == storage.ErrorTypeUniqueViolation {
+			if sErr.Type == query.ErrorTypeUniqueViolation {
 				log.WithFields(fld).Warnf("someone just created the node table entry!")
 			} else {
 				return err

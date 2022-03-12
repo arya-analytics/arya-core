@@ -1,19 +1,144 @@
 version: "3.9"
 services:
-  redistimeseries:
+  # |||| CORE ||||
+  core-common: &core-common
+    build: ../../
+    working_dir: /arya-core
+    volumes:
+      - ../../:/arya-core
+    networks:
+      - arya-net
+  core1:
+    <<: *core-common
+    command: bash -c "./main start --config=./deploy/docker/configs/node1.json"
+    container_name: core1
+    ports:
+      - "26261:26258"
+  core2:
+    <<: *core-common
+    container_name: core2
+    command: bash -c "./main start --config=./deploy/docker/configs/node2.json"
+    ports:
+      - "26259:26258"
+  core3:
+    <<: *core-common
+    container_name: core3
+    command: bash -c "./main start --config=./deploy/docker/configs/node3.json"
+    ports:
+      - "26260:26258"
+  # // |||| REDIS ||||
+  redistimeseries1:
+    container_name: redistimeseries1
     image: redislabs/redistimeseries
     ports:
       - "6379:6379"
-  minio:
+  redistimeseries2:
+    container_name: redistimeseries2
+    image: redislabs/redistimeseries
+  redistimeseries3:
+    container_name: redistimeseries3
+    image: redislabs/redistimeseries
+  minio-common: &minio-common
     image: quay.io/minio/minio
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio123
+    networks:
+      - arya-net
+  minio1:
+    <<: *minio-common
+    container_name: minio1
     command: server --console-address ":9001" /data
     ports:
       - "9000:9000"
       - "9001:9001"
-    environment:
-      MINIO_ROOT_USER: minio
-      MINIO_ROOT_PASSWORD: minio123
     volumes:
-      - minio-data:/data
+      - minio1-data:/data
+  minio2:
+    <<: *minio-common
+    container_name: minio2
+    command: server --console-address ":9001" /data
+    ports:
+      - "9002:9000"
+      - "9003:9001"
+    volumes:
+      - minio2-data:/data
+  minio3:
+    <<: *minio-common
+    container_name: minio3
+    command: server --console-address ":9001" /data
+    ports:
+      - "9004:9000"
+      - "9005:9001"
+    volumes:
+      - minio3-data:/data
+  roach-common: &roach-common
+    image: cockroachdb/cockroach:latest
+    networks:
+      - arya-net
+  roach1:
+    <<: *roach-common
+    container_name: roach1
+    command: start --insecure --join=roach1,roach2,roach3
+    ports:
+      - "26257:26257"
+      - "9090:8080"
+    volumes:
+      - roach1-data:/cockroach/cockroach-data
+  # |||| COCKROACH ||||
+  roach2:
+    <<: *roach-common
+    container_name: roach2
+    command: start --insecure --join=roach1,roach2,roach3
+    volumes:
+      - roach2-data:/cockroach/cockroach-data
+  roach3:
+    <<: *roach-common
+    container_name: roach3
+    volumes:
+      - roach3-data:/cockroach/cockroach-data
+    command: start --insecure --join=roach1,roach2,roach3
+  init-roach1:
+    image: cockroachdb/cockroach:latest
+    container_name: init-cockroach
+    depends_on:
+      - roach1
+    restart: "no"
+    # Assign Container to a Network
+    networks:
+      - arya-net
+    entrypoint: [ "bash", "-c" ,"./cockroach init --insecure --host roach1:26257 | wc || exit" ]
+  influx:
+    image: influxdb:latest
+    ports:
+      - "8086:8086"
+    environment:
+      DOCKER_INFLUXDB_INIT_USERNAME: root
+      DOCKER_INFLUXDB_INIT_PASSWORD: root123
+      DOCKER_INFLUXDB_INIT_BUCKET: default
+      DOCKER_INFLUXDB_INIT_ORG: default
+    networks:
+      - arya-net
+    volumes:
+      - influxdb-data:/var/lib/influxdb2
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    volumes:
+      - grafana-data:/var/lib/grafana
+    networks:
+      - arya-net
 volumes:
-  minio-data:
+  minio1-data:
+  minio2-data:
+  minio3-data:
+  roach3-data:
+  roach2-data:
+  roach1-data:
+  grafana-data:
+  influxdb-data:
+networks:
+  arya-net:
+    driver: bridge

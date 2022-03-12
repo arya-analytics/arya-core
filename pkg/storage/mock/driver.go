@@ -80,6 +80,10 @@ func (d *DriverRoach) Connect() (*bun.DB, error) {
 	return bunDB, nil
 }
 
+func (d *DriverRoach) DemandCap() int {
+	return 5000000
+}
+
 func (d *DriverRoach) Stop() {
 	for _, ts := range d.servers {
 		ts.Stop()
@@ -117,6 +121,10 @@ func (d DriverRedis) buildConfig() *redis.Options {
 	}
 }
 
+func (d DriverRedis) DemandCap() int {
+	return 50
+}
+
 // |||| MINIO ||||
 
 type DriverMinio struct{}
@@ -130,4 +138,8 @@ func (d DriverMinio) buildConfig() *minio.Options {
 		Creds:  credentials.NewStaticV4("minio", "minio123", ""),
 		Secure: false,
 	}
+}
+
+func (d DriverMinio) DemandCap() int {
+	return 50
 }

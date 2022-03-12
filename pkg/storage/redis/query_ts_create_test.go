@@ -2,7 +2,7 @@ package redis_test
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/models"
-	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
@@ -62,7 +62,7 @@ var _ = Describe("QueryTsCreate", func() {
 			It("Should return the correct storage error", func() {
 				err := engine.NewTSCreate().Model(series).Exec(ctx)
 				Expect(err).ToNot(BeNil())
-				Expect(err.(storage.Error).Type).To(Equal(storage.ErrorTypeInvalidArgs))
+				Expect(err.(query.Error).Type).To(Equal(query.ErrorTypeInvalidArgs))
 			})
 		})
 	})

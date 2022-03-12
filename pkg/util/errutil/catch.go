@@ -1,11 +1,13 @@
 package errutil
 
-import "context"
+import (
+	"context"
+)
 
 type Catch interface {
-	Exec(actionFunc CatchAction)
 	Error() error
 	Errors() []error
+	AddHook(hook CatchHook)
 	Reset()
 }
 
@@ -13,6 +15,7 @@ type Catch interface {
 
 type catchOpts struct {
 	aggregate bool
+	hooks     []CatchHook
 }
 
 type CatchOpt func(o *catchOpts)
@@ -23,7 +26,15 @@ func WithAggregation() CatchOpt {
 	}
 }
 
-// |||| SIMPLE CATCH ||||
+type CatchHook func(err error)
+
+func WithHooks(hooks ...CatchHook) CatchOpt {
+	return func(o *catchOpts) {
+		o.hooks = hooks
+	}
+}
+
+// |||| SIMPLE ||||
 
 type CatchSimple struct {
 	errors []error
@@ -32,13 +43,17 @@ type CatchSimple struct {
 
 func NewCatchSimple(opts ...CatchOpt) *CatchSimple {
 	c := &CatchSimple{opts: &catchOpts{}}
-	for _, o := range opts {
-		o(c.opts)
-	}
+	c.bindOpts(opts...)
 	return c
 }
 
 type CatchAction func() error
+
+func (c *CatchSimple) bindOpts(opts ...CatchOpt) {
+	for _, o := range opts {
+		o(c.opts)
+	}
+}
 
 func (c *CatchSimple) Exec(ca CatchAction) {
 	if !c.opts.aggregate && len(c.errors) > 0 {
@@ -46,7 +61,18 @@ func (c *CatchSimple) Exec(ca CatchAction) {
 	}
 	err := ca()
 	if err != nil {
+		c.runHooks(err)
 		c.errors = append(c.errors, err)
+	}
+}
+
+func (c *CatchSimple) AddHook(hook CatchHook) {
+	c.bindOpts(WithHooks(hook))
+}
+
+func (c *CatchSimple) runHooks(err error) {
+	for _, h := range c.opts.hooks {
+		h(err)
 	}
 }
 
@@ -65,19 +91,27 @@ func (c *CatchSimple) Errors() []error {
 	return c.errors
 }
 
-// |||| CATCH W CONTEXT ||||
+// |||| CONTEXT ||||
 
-type CatchWCtx struct {
+type CatchContext struct {
 	*CatchSimple
 	ctx context.Context
 }
 
-func NewCatchWCtx(ctx context.Context, opts ...CatchOpt) *CatchWCtx {
-	return &CatchWCtx{CatchSimple: NewCatchSimple(opts...), ctx: ctx}
+func NewCatchContext(ctx context.Context, opts ...CatchOpt) *CatchContext {
+	return &CatchContext{CatchSimple: NewCatchSimple(opts...), ctx: ctx}
 }
 
 type CatchActionCtx func(ctx context.Context) error
 
-func (c *CatchWCtx) Exec(ca CatchActionCtx) {
+func (c *CatchContext) Exec(ca CatchActionCtx) {
 	c.CatchSimple.Exec(func() error { return ca(c.ctx) })
+}
+
+// |||| PIPE ||||
+
+func NewPipeHook(pipe chan error) func(err error) {
+	return func(err error) {
+		pipe <- err
+	}
 }

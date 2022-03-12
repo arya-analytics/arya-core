@@ -50,7 +50,7 @@ func (pd *partitionDetect) detectObserver(ctx context.Context, opt tasks.Schedul
 }
 
 func (pd *partitionDetect) detectPersist(ctx context.Context, opt tasks.ScheduleConfig) error {
-	openRanges, err := pd.Persist.RetrieveRangesByStatus(ctx)
+	openRanges, err := pd.Persist.RetrieveOpenRanges(ctx)
 	if err != nil {
 		return err
 	}
@@ -116,7 +116,7 @@ func (pd *partitionDetect) observeNewRngGroups(newRangeGroups [][]*models.Range)
 // |||| EXECUTE ||||
 
 func NewPartitionExecute(ctx context.Context, p Persist, rngPK uuid.UUID) *PartitionExecute {
-	return &PartitionExecute{pst: p, sourceRangePK: rngPK, catcher: errutil.NewCatchWCtx(ctx)}
+	return &PartitionExecute{pst: p, sourceRangePK: rngPK, catcher: errutil.NewCatchContext(ctx)}
 }
 
 // PartitionExecute checks if a models.Range is over-allocated (i.e. exceeds models.MaxRangeSize),
@@ -129,7 +129,7 @@ type PartitionExecute struct {
 	pst           Persist
 	sourceRangePK uuid.UUID
 	newRanges     []*models.Range
-	catcher       *errutil.CatchWCtx
+	catcher       *errutil.CatchContext
 	_rngSize      int64
 }
 
