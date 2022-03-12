@@ -9,7 +9,6 @@ type Service struct {
 	obs    Observe
 	exec   query.Execute
 	rngSVC *rng.Service
-	Perf   *Perf
 }
 
 func NewService(exec query.Execute, obs Observe, rngSVC *rng.Service) *Service {
@@ -17,7 +16,5 @@ func NewService(exec query.Execute, obs Observe, rngSVC *rng.Service) *Service {
 }
 
 func (s *Service) NewStreamCreate() *QueryStreamCreate {
-	c := newStreamCreate(s.exec, s.obs, s.rngSVC)
-	c.Perf = s.Perf
-	return c
+	return newStreamCreate(s.exec, s.obs, s.rngSVC)
 }
