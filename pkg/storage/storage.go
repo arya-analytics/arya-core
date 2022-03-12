@@ -118,12 +118,13 @@ func (s *storage) NewTSCreate() *QueryTSCreate {
 	return newTSCreate(s)
 }
 
-// Start starts
+// Start starts storage internal tasks.
 func (s *storage) Start(ctx context.Context, opts ...tasks.ScheduleOpt) {
 	s.tasks = tasks.NewScheduleBatch(s.cfg.EngineMD.NewTasks(opts...))
-	s.tasks.Start(ctx)
+	go s.tasks.Start(ctx)
 }
 
+// Stop stops storage internal tasks.
 func (s *storage) Stop() {
 	s.tasks.Stop()
 	s.tasks = nil

@@ -26,7 +26,6 @@ type QueryStreamCreate struct {
 	donePipe   chan bool
 	stream     chan queryStreamCreateArgs
 	ctx        context.Context
-	Perf       *Perf
 }
 
 type queryStreamCreateArgs struct {
@@ -87,15 +86,14 @@ func (qsc *QueryStreamCreate) listen() {
 func (qsc *QueryStreamCreate) processNextChunk(startTS telem.TimeStamp, data *telem.ChunkData) {
 	qsc.catch.Exec(qsc.obs.AcquireSem)
 	defer qsc.obs.ReleaseSem()
-	nextChunk := telem.NewChunk(startTS, qsc.config().DataType, qsc.config().DataRate, data)
-	len := nextChunk.Len()
-	qsc.validateResolveNextChunk(nextChunk)
+	nc := telem.NewChunk(startTS, qsc.config().DataType, qsc.config().DataRate, data)
+	qsc.validateResolveNextChunk(nc)
 
 	cc := &models.ChannelChunk{
 		ID:              uuid.New(),
 		ChannelConfigID: qsc.config().ID,
-		StartTS:         nextChunk.Start(),
-		Size:            nextChunk.Size(),
+		StartTS:         nc.Start(),
+		Size:            nc.Size(),
 	}
 	ccr := &models.ChannelChunkReplica{ID: uuid.New(), ChannelChunkID: cc.ID, Telem: data}
 
@@ -111,11 +109,8 @@ func (qsc *QueryStreamCreate) processNextChunk(startTS telem.TimeStamp, data *te
 	qsc.catch.Exec(query.NewCreate().BindExec(qsc.exec).Model(cc).Exec)
 	qsc.catch.Exec(query.NewCreate().BindExec(qsc.exec).Model(ccr).Exec)
 
-	qsc.setPrevChunk(nextChunk)
+	qsc.setPrevChunk(nc)
 	qsc.catch.Reset()
-	if qsc.Perf != nil {
-		qsc.Perf.IncrementSample("sample/s", len)
-	}
 }
 
 // ||| VALUE ACCESS |||
