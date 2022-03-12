@@ -5,6 +5,7 @@ package rng
 
 import (
 	"context"
+	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/arya-analytics/aryacore/pkg/util/tasks"
 )
 
@@ -12,14 +13,14 @@ import (
 // as well as starting and stopping rng specific tasks, such as partitioning rngMap.
 // ONLY one Service should exist per core instance.
 type Service struct {
-	ps  tasks.Schedule
-	obs Observe
-	pst Persist
+	ps   tasks.Schedule
+	obs  Observe
+	exec query.Execute
 }
 
 // NewService creates a new rng.Service. Requires a val.
-func NewService(obs Observe, p Persist) *Service {
-	return &Service{obs: obs, pst: p}
+func NewService(obs Observe, exec query.Execute) *Service {
+	return &Service{obs: obs, exec: exec}
 }
 
 // NewAllocate creates a new Allocate and returns it.

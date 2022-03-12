@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
+	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/google/uuid"
 )
 
@@ -15,8 +16,8 @@ import (
 //
 // A new Allocate should be created for every unique ChannelChunk.
 type Allocate struct {
-	pst         persistCreate
 	obs         Observe
+	exec        query.Execute
 	leaseNodePK int
 	rangePK     uuid.UUID
 }
@@ -39,7 +40,7 @@ func (a *Allocate) ChunkReplica(replica *models.ChannelChunkReplica) *allocateCh
 func (a *Allocate) retrieveObservedOrCreate(ctx context.Context, q ObservedRange) (ObservedRange, error) {
 	or, ok := a.obs.Retrieve(q)
 	if !ok {
-		newRng, err := a.pst.CreateRange(ctx, a.leaseNodePK)
+		newRng, err := createRange(ctx, a.exec, a.leaseNodePK)
 		if err != nil {
 			return ObservedRange{}, err
 		}

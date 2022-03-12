@@ -64,14 +64,14 @@ func NewPersistCluster(clust cluster.Cluster) *PersistCluster {
 
 // || CREATE ||
 
-func (p *PersistCluster) CreateRange(ctx context.Context, nodePK int) (*models.Range, error) {
-	c := errutil.NewCatchContext(ctx)
+func createRange(ctx context.Context, exec query.Execute, nodePK int) (*models.Range, error) {
 	r := &models.Range{Status: models.RangeStatusOpen}
-	c.Exec(p.clust.NewCreate().Model(r).Exec)
+	c := errutil.NewCatchContext(ctx)
+	c.Exec(query.NewCreate().BindExec(exec).Model(r).Exec)
 	rr := &models.RangeReplica{RangeID: r.ID, NodeID: nodePK}
-	c.Exec(p.clust.NewCreate().Model(rr).Exec)
+	c.Exec(query.NewCreate().BindExec(exec).Model(rr).Exec)
 	lease := &models.RangeLease{RangeID: r.ID, RangeReplicaID: rr.ID, RangeReplica: rr}
-	c.Exec(p.clust.NewCreate().Model(lease).Exec)
+	c.Exec(query.NewCreate().BindExec(exec).Model(lease).Exec)
 	r.RangeLease = lease
 	return r, c.Error()
 }
