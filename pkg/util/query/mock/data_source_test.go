@@ -66,5 +66,17 @@ var _ = Describe("DataSourceMem", func() {
 			Expect(asm.NewRetrieve().Model(resR).WherePK(r.ID).Relation("RangeLease", "ID").Exec(ctx)).To(BeNil())
 			Expect(resR.RangeLease.ID).To(Equal(rl.ID))
 		})
+		It("Should retrieve the correct nested relation", func() {
+			r := &models.Range{ID: uuid.New()}
+			rr := &models.RangeReplica{NodeID: 1}
+			rl := &models.RangeLease{RangeID: r.ID, ID: uuid.New(), RangeReplicaID: rr.ID}
+			Expect(asm.NewCreate().Model(r).Exec(ctx)).To(BeNil())
+			Expect(asm.NewCreate().Model(rr).Exec(ctx)).To(BeNil())
+			Expect(asm.NewCreate().Model(rl).Exec(ctx)).To(BeNil())
+			resR := &models.Range{}
+			Expect(asm.NewRetrieve().Model(resR).WherePK(r.ID).Relation("RangeLease.RangeReplica", "ID").Exec(ctx)).To(BeNil())
+			Expect(resR.RangeLease.RangeReplica.ID).To(Equal(rr.ID))
+			Expect(resR.RangeLease.RangeReplica.NodeID).To(Equal(1))
+		})
 	})
 })

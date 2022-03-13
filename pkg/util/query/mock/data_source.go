@@ -75,15 +75,15 @@ func (s *DataSourceMem) runCalculations(sRfl *model.Reflect, calc query.CalcOpt)
 }
 
 func (s *DataSourceMem) retrieveRelation(sRfl *model.Reflect, rel query.RelationOpt) {
-	fldT := sRfl.FieldTypeByName(rel.Rel)
+	names := model.SplitFieldNames(rel.Rel)
+	name := names[0]
+	fldT := sRfl.FieldTypeByName(name)
+	st, ok := sRfl.StructTagChain().RetrieveByFieldName(name)
+	if !ok {
+		panic(fmt.Sprintf("field %s couldn't be found on model %s", name, sRfl.Type()))
+	}
 	if fldT.Kind() == reflect.Ptr {
 		fldT = fldT.Elem()
-	}
-	dRfl := s.Data.Retrieve(fldT)
-	_, ln := model.SplitLastFieldName(rel.Rel)
-	st, ok := sRfl.StructTagChain().RetrieveByFieldName(ln)
-	if !ok {
-		panic(fmt.Sprintf("field %s couldn't be found on model", rel.Fields))
 	}
 	joinStr, ok := st.Retrieve("model", "join")
 	if !ok {
@@ -93,11 +93,17 @@ func (s *DataSourceMem) retrieveRelation(sRfl *model.Reflect, rel query.Relation
 	if len(str) != 2 {
 		panic(fmt.Sprintf("struct tag join improperlly formatted: %s", joinStr))
 	}
-	dRfl.ForEach(func(nDRfl *model.Reflect, i int) {
+	s.Data.Retrieve(fldT).ForEach(func(nDRfl *model.Reflect, i int) {
 		dFld := nDRfl.StructFieldByName(str[1])
 		sRfl.ForEach(func(nSRfl *model.Reflect, i int) {
 			sFld := nSRfl.StructFieldByName(str[0])
 			if sFld.Interface() == dFld.Interface() {
+				if len(names) > 1 {
+					s.retrieveRelation(nDRfl, query.RelationOpt{
+						Rel:    strings.Join(names[1:], "."),
+						Fields: rel.Fields,
+					})
+				}
 				nSRfl.StructFieldByName(rel.Rel).Set(nDRfl.PointerValue())
 			}
 		})

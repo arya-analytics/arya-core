@@ -25,7 +25,7 @@ const (
 type ChannelConfig struct {
 	ID             uuid.UUID `model:"role:pk,"`
 	Name           string
-	Node           *Node
+	Node           *Node `model:"rel:belongs-to,join:NodeID=ID"`
 	NodeID         int
 	DataRate       telem.DataRate
 	DataType       telem.DataType
@@ -39,17 +39,17 @@ type ChannelChunk struct {
 	ID              uuid.UUID `model:"role:pk,"`
 	Range           *Range
 	RangeID         uuid.UUID
-	ChannelConfig   *ChannelConfig
+	ChannelConfig   *ChannelConfig `model:"rel:belongs-to,join:RangeID=ID"`
 	ChannelConfigID uuid.UUID
 	Size            int64
 	StartTS         telem.TimeStamp
 }
 
 type ChannelChunkReplica struct {
-	ID             uuid.UUID `model:"role:pk,"`
-	ChannelChunk   *ChannelChunk
+	ID             uuid.UUID     `model:"role:pk,"`
+	ChannelChunk   *ChannelChunk `model:"rel-belongs-to,join:ChannelChunkID=ID"`
 	ChannelChunkID uuid.UUID
-	RangeReplica   *RangeReplica
+	RangeReplica   *RangeReplica `model:"rel:belongs-to,join:RangeReplicaID=ID"`
 	RangeReplicaID uuid.UUID
 	Telem          *telem.ChunkData `storage:"re:object," model:"role:telemChunkData,"`
 }

@@ -21,14 +21,14 @@ type Range struct {
 type RangeLease struct {
 	ID             uuid.UUID `model:"role:pk,"`
 	RangeID        uuid.UUID
-	RangeReplica   *RangeReplica
+	RangeReplica   *RangeReplica `model:"rel:belongs-to,join:RangeReplicaID=ID"`
 	RangeReplicaID uuid.UUID
 }
 
 type RangeReplica struct {
 	ID      uuid.UUID `model:"role:pk"`
-	Range   *Range
+	Range   *Range    `model:"rel:belongs-to,join:RangeID=ID"`
 	RangeID uuid.UUID
-	Node    *Node
+	Node    *Node `model:"rel:belongs-to,join:NodeID=ID"`
 	NodeID  int
 }
