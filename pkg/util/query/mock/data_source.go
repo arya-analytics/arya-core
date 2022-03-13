@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
-	log "github.com/sirupsen/logrus"
 	"reflect"
 	"strings"
 )
@@ -147,18 +146,14 @@ func (s *DataSourceMem) filterByPK(sRfl *model.Reflect, pkc model.PKChain) *mode
 func (s *DataSourceMem) filterByWhereFields(sRfl *model.Reflect, wFld query.WhereFields) *model.Reflect {
 	nRfl := sRfl.NewChain()
 	sRfl.ForEach(func(rfl *model.Reflect, i int) {
-		match := true
+		match := false
 		for k, v := range wFld {
-			fn, ln := model.SplitLastFieldName(k)
+			fn, _ := model.SplitLastFieldName(k)
 			if fn != "" {
-				log.Info(rfl.FieldTypeByName(k))
-				dRfl := s.Data.Retrieve(rfl.FieldTypeByName(k))
-				fDrl := s.filterByWhereFields(dRfl, query.WhereFields{ln: v})
-				if fDrl.ChainValue().Len() == 0 {
-					match = false
-				}
-			} else if !fieldExpMatch(k, v, rfl) {
-				match = false
+				s.retrieveRelation(sRfl, query.RelationOpt{Rel: fn})
+			}
+			if fieldExpMatch(k, v, rfl) {
+				match = true
 			}
 		}
 		if match {

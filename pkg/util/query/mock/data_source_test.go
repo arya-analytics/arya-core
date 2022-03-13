@@ -48,15 +48,17 @@ var _ = Describe("DataSourceMem", func() {
 			Expect(resR).To(HaveLen(1))
 			Expect(resR[0].ID).To(Equal(cR[0].ID))
 		})
-		//It("Should retrieve by a nested where field", func() {
-		//	r := &models.Range{ID: uuid.New()}
-		//	rl := &models.RangeLease{RangeID: r.ID, ID: uuid.New()}
-		//	Expect(asm.NewCreate().Model(r).Exec(ctx)).To(BeNil())
-		//	Expect(asm.NewCreate().Model(rl).Exec(ctx)).To(BeNil())
-		//	resR := &models.Range{}
-		//	Expect(asm.NewRetrieve().Model(resR).WhereFields(query.WhereFields{"RangeLease.ID": rl.ID}).Exec(ctx)).To(BeNil())
-		//	Expect(resR.ID).To(Equal(r.ID))
-		//})
+		It("Should retrieve by a nested where field", func() {
+			r := &models.Range{ID: uuid.New()}
+			rl := &models.RangeLease{RangeID: r.ID, ID: uuid.New()}
+			Expect(asm.NewCreate().Model(r).Exec(ctx)).To(BeNil())
+			Expect(asm.NewCreate().Model(&models.Range{ID: uuid.New()}).Exec(ctx)).To(BeNil())
+			Expect(asm.NewCreate().Model(rl).Exec(ctx)).To(BeNil())
+			var resR []*models.Range
+			Expect(asm.NewRetrieve().Model(&resR).WhereFields(query.WhereFields{"RangeLease.ID": rl.ID}).Exec(ctx)).To(BeNil())
+			Expect(resR).To(HaveLen(1))
+			Expect(resR[0].ID).To(Equal(r.ID))
+		})
 		It("Should retrieve the correct relation", func() {
 			r := &models.Range{ID: uuid.New()}
 			rl := &models.RangeLease{RangeID: r.ID, ID: uuid.New()}
