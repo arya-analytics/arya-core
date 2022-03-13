@@ -52,7 +52,7 @@ func (pd *partitionDetect) detectObserver(ctx context.Context, opt tasks.Schedul
 
 func (pd *partitionDetect) detectPersist(ctx context.Context, opt tasks.ScheduleConfig) error {
 	var openRng []*models.Range
-	if err := openRangeQuery(pd.qExec, openRng).Exec(ctx); err != nil {
+	if err := retrieveOpenRangesQuery(pd.qExec, openRng).Exec(ctx); err != nil {
 		return err
 	}
 	var obsRng []ObservedRange

@@ -3,7 +3,8 @@ package rng_test
 import (
 	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/telem/rng"
-	"github.com/arya-analytics/aryacore/pkg/telem/rng/mock"
+	"github.com/arya-analytics/aryacore/pkg/util/query"
+	"github.com/arya-analytics/aryacore/pkg/util/query/mock"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -12,13 +13,13 @@ import (
 var _ = Describe("Allocate", func() {
 	var (
 		obs rng.Observe
-		p   *mock.Persist
 		svc *rng.Service
+		ds  *mock.DataSourceMem
 	)
 	BeforeEach(func() {
+		ds = mock.NewDataSourceMem()
 		obs = rng.NewObserveMem([]rng.ObservedRange{})
-		p = mock.NewBlankPersist()
-		svc = rng.NewService(obs, p)
+		svc = rng.NewService(obs, ds.Exec)
 	})
 	Describe("A ChunkData", func() {
 		Context("When no open range is under observation", func() {
@@ -26,7 +27,9 @@ var _ = Describe("Allocate", func() {
 				chunkToAlloc := &models.ChannelChunk{}
 				err := svc.NewAllocate().Chunk(1, chunkToAlloc).Exec(ctx)
 				Expect(err).To(BeNil())
-				Expect(p.Ranges).To(HaveLen(1))
+				var resRng []*models.Range
+				Expect(ds.NewRetrieve().Model(&resRng).Exec(ctx)).To(BeNil())
+				Expect(resRng).To(HaveLen(1))
 				Expect(obs.RetrieveAll()).To(HaveLen(1))
 				_, ok := obs.Retrieve(rng.ObservedRange{Status: models.RangeStatusOpen, LeaseNodePK: 1})
 				Expect(ok).To(BeTrue())
@@ -43,7 +46,8 @@ var _ = Describe("Allocate", func() {
 				chunkToAlloc := &models.ChannelChunk{}
 				err := svc.NewAllocate().Chunk(1, chunkToAlloc).Exec(ctx)
 				Expect(err).To(BeNil())
-				Expect(p.Ranges).To(HaveLen(0))
+				rErr := ds.NewRetrieve().Model(&models.Range{}).Exec(ctx)
+				Expect(rErr.(query.Error).Type).To(Equal(query.ErrorTypeItemNotFound))
 				Expect(obs.RetrieveAll()).To(HaveLen(1))
 				or, ok := obs.Retrieve(rng.ObservedRange{Status: models.RangeStatusOpen, LeaseNodePK: 1})
 				Expect(ok).To(BeTrue())
@@ -70,7 +74,9 @@ var _ = Describe("Allocate", func() {
 					chunkReplicaToAlloc := &models.ChannelChunkReplica{}
 					crErr := alloc.ChunkReplica(chunkReplicaToAlloc).Exec(ctx)
 					Expect(crErr).To(BeNil())
-					Expect(p.Ranges).To(HaveLen(1))
+					var resRng []*models.Range
+					Expect(ds.NewRetrieve().Model(&resRng).Exec(ctx)).To(BeNil())
+					Expect(resRng).To(HaveLen(1))
 					Expect(obs.RetrieveAll()).To(HaveLen(1))
 					or, ok := obs.Retrieve(rng.ObservedRange{Status: models.RangeStatusOpen, LeaseNodePK: 1})
 					Expect(ok).To(BeTrue())
@@ -83,17 +89,20 @@ var _ = Describe("Allocate", func() {
 					alloc := svc.NewAllocate()
 					err := alloc.Chunk(1, chunkToAlloc).Exec(ctx)
 					Expect(err).To(BeNil())
-					Expect(p.Ranges).To(HaveLen(1))
+					resRng := &models.Range{}
+					Expect(ds.NewRetrieve().Model(resRng).Exec(ctx))
 					obs.Add(rng.ObservedRange{
-						PK:             p.Ranges[0].ID,
-						LeaseReplicaPK: p.Ranges[0].RangeLease.RangeReplica.ID,
-						LeaseNodePK:    p.Ranges[0].RangeLease.RangeReplica.NodeID,
+						PK:             resRng.ID,
+						LeaseReplicaPK: resRng.RangeLease.RangeReplica.ID,
+						LeaseNodePK:    resRng.RangeLease.RangeReplica.NodeID,
 						Status:         models.RangeStatusClosed,
 					})
 					chunkReplicaToAlloc := &models.ChannelChunkReplica{}
 					crErr := alloc.ChunkReplica(chunkReplicaToAlloc).Exec(ctx)
 					Expect(crErr).To(BeNil())
-					Expect(p.Ranges).To(HaveLen(2))
+					var resRanges []*models.Range
+					Expect(ds.NewRetrieve().Model(&resRanges).Exec(ctx)).To(BeNil())
+					Expect(resRanges).To(HaveLen(2))
 					Expect(obs.RetrieveAll()).To(HaveLen(2))
 					or, ok := obs.Retrieve(rng.ObservedRange{Status: models.RangeStatusOpen, LeaseNodePK: 1})
 					Expect(ok).To(BeTrue())

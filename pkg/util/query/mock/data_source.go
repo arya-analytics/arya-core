@@ -10,7 +10,14 @@ import (
 )
 
 type DataSourceMem struct {
+	query.AssembleBase
 	Data model.DataSource
+}
+
+func NewDataSourceMem() *DataSourceMem {
+	ds := &DataSourceMem{Data: map[reflect.Type]*model.Reflect{}}
+	ds.AssembleBase = query.NewAssemble(ds.Exec)
+	return ds
 }
 
 func (s *DataSourceMem) Exec(ctx context.Context, p *query.Pack) error {
