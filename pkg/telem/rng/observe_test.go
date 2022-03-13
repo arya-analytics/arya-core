@@ -9,7 +9,7 @@ import (
 	"sync"
 )
 
-var _ = Describe("Observe", func() {
+var _ = Describe("observe", func() {
 	Describe("ObserveMem", func() {
 		It("Should validate the observed rngMap without panicking", func() {
 			Expect(func() {

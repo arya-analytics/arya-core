@@ -25,13 +25,13 @@ func NewService(obs Observe, exec query.Execute) *Service {
 
 // NewAllocate creates a new Allocate and returns it.
 func (s *Service) NewAllocate() *Allocate {
-	return &Allocate{obs: s.obs, pst: s.pst}
+	return &Allocate{obs: s.obs, exec: s.exec}
 }
 
 // Start starts Service internal tasks.
 // NOTE: If restarting the Service, call Stop before calling Start again.
 func (s *Service) Start(ctx context.Context, opts ...tasks.ScheduleOpt) {
-	s.ps = newSchedulePartition(&partitionDetect{Persist: s.pst, Observe: s.obs}, opts...)
+	s.ps = newSchedulePartition(&partitionDetect{qExec: s.exec, observe: s.obs}, opts...)
 	go s.ps.Start(ctx)
 }
 

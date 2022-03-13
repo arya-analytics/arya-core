@@ -34,3 +34,13 @@ func (mc Catalog) retrieveCM(t reflect.Type) (*Reflect, bool) {
 	}
 	return nil, false
 }
+
+type DataSource map[reflect.Type]*Reflect
+
+func (ds DataSource) Retrieve(t reflect.Type) *Reflect {
+	_, ok := ds[t]
+	if !ok {
+		ds[t] = NewReflectFromType(t).NewChain()
+	}
+	return ds[t]
+}

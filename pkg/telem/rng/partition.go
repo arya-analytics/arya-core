@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/util/errutil"
+	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/arya-analytics/aryacore/pkg/util/tasks"
 	"github.com/google/uuid"
 	"sync"
@@ -26,7 +27,7 @@ func newSchedulePartition(pd *partitionDetect, opts ...tasks.ScheduleOpt) tasks.
 			Interval: detectPersistInterval,
 		},
 		{
-			Name:     "Detect Observe",
+			Name:     "Detect observe",
 			Action:   pd.detectObserver,
 			Interval: detectObserveInterval,
 		},
@@ -40,30 +41,30 @@ func newSchedulePartition(pd *partitionDetect, opts ...tasks.ScheduleOpt) tasks.
 // |||| DETECT ||||
 
 type partitionDetect struct {
-	Observe Observe
-	Persist Persist
+	observe Observe
+	qExec   query.Execute
 }
 
 func (pd *partitionDetect) detectObserver(ctx context.Context, opt tasks.ScheduleConfig) error {
-	openRanges := pd.Observe.RetrieveFilter(ObservedRange{Status: models.RangeStatusOpen})
+	openRanges := pd.observe.RetrieveFilter(ObservedRange{Status: models.RangeStatusOpen})
 	return pd.detect(ctx, openRanges, opt)
 }
 
 func (pd *partitionDetect) detectPersist(ctx context.Context, opt tasks.ScheduleConfig) error {
-	openRanges, err := pd.Persist.RetrieveOpenRanges(ctx)
-	if err != nil {
+	var openRng []*models.Range
+	if err := openRangeQuery(pd.qExec, openRng).Exec(ctx); err != nil {
 		return err
 	}
-	var or []ObservedRange
-	for _, openRange := range openRanges {
-		or = append(or, ObservedRange{
+	var obsRng []ObservedRange
+	for _, openRange := range openRng {
+		obsRng = append(obsRng, ObservedRange{
 			PK:             openRange.ID,
 			LeaseNodePK:    openRange.RangeLease.RangeReplica.NodeID,
 			LeaseReplicaPK: openRange.RangeLease.RangeReplica.ID,
 			Status:         openRange.Status,
 		})
 	}
-	return pd.detect(ctx, or, opt)
+	return pd.detect(ctx, obsRng, opt)
 }
 
 func (pd *partitionDetect) detect(ctx context.Context, openRanges []ObservedRange, _ tasks.ScheduleConfig) error {
@@ -87,23 +88,23 @@ func (pd *partitionDetect) detect(ctx context.Context, openRanges []ObservedRang
 }
 
 func (pd *partitionDetect) exec(ctx context.Context, or ObservedRange) ([]*models.Range, error) {
-	pe := NewPartitionExecute(ctx, pd.Persist, or.PK)
+	pe := NewPartitionExecute(ctx, pd.qExec, or.PK)
 	oa, err := pe.OverAllocated()
 	if !oa || err != nil {
 		return []*models.Range{}, err
 	}
 	or.Status = models.RangeStatusPartition
-	pd.Observe.Add(or)
+	pd.observe.Add(or)
 	newRng, err := pe.Exec()
 	or.Status = models.RangeStatusClosed
-	pd.Observe.Add(or)
+	pd.observe.Add(or)
 	return newRng, err
 }
 
 func (pd *partitionDetect) observeNewRngGroups(newRangeGroups [][]*models.Range) {
 	for _, rangeGroup := range newRangeGroups {
 		for _, rng := range rangeGroup {
-			pd.Observe.Add(ObservedRange{
+			pd.observe.Add(ObservedRange{
 				PK:             rng.ID,
 				Status:         rng.Status,
 				LeaseReplicaPK: rng.RangeLease.RangeReplica.ID,
@@ -115,8 +116,8 @@ func (pd *partitionDetect) observeNewRngGroups(newRangeGroups [][]*models.Range)
 
 // |||| EXECUTE ||||
 
-func NewPartitionExecute(ctx context.Context, p Persist, rngPK uuid.UUID) *PartitionExecute {
-	return &PartitionExecute{pst: p, sourceRangePK: rngPK, catcher: errutil.NewCatchContext(ctx)}
+func NewPartitionExecute(ctx context.Context, qExec query.Execute, rngPK uuid.UUID) *PartitionExecute {
+	return &PartitionExecute{qExec: qExec, sourceRangePK: rngPK, catcher: errutil.NewCatchContext(ctx)}
 }
 
 // PartitionExecute checks if a models.Range is over-allocated (i.e. exceeds models.MaxRangeSize),
@@ -126,7 +127,7 @@ func NewPartitionExecute(ctx context.Context, p Persist, rngPK uuid.UUID) *Parti
 // Exec runs the partition, and returns any new models.Range objects created during the partition as well as
 // any errors encountered.
 type PartitionExecute struct {
-	pst           Persist
+	qExec         query.Execute
 	sourceRangePK uuid.UUID
 	newRanges     []*models.Range
 	catcher       *errutil.CatchContext
@@ -147,7 +148,7 @@ func (p *PartitionExecute) Exec() ([]*models.Range, error) {
 	sourceRng, sourceRR, cc, ccr := p.retrievePartitionInfo()
 	excCC := excessChunks(p.rangeSize(), cc)
 	excCCR := excessChunkReplicas(sourceRR, ccr, excCC)
-	newRng := p.newRange(sourceRng.RangeLease.RangeReplica.NodeID)
+	newRng := p.createRange(sourceRng.RangeLease.RangeReplica.NodeID)
 	p.reallocateChunks(excCC, newRng.ID)
 	for nodePK, ccrPKC := range excCCR {
 		newRRPK := p.newReplicaPK(newRng.RangeLease.RangeReplica, nodePK)
@@ -155,7 +156,7 @@ func (p *PartitionExecute) Exec() ([]*models.Range, error) {
 	}
 	p.newRanges = append(p.newRanges, newRng)
 	p.updateRangeStatus(p.sourceRangePK, models.RangeStatusClosed)
-	nextP := &PartitionExecute{pst: p.pst, sourceRangePK: newRng.ID, newRanges: p.newRanges, catcher: p.catcher}
+	nextP := &PartitionExecute{qExec: p.qExec, sourceRangePK: newRng.ID, newRanges: p.newRanges, catcher: p.catcher}
 	return nextP.Exec()
 }
 
@@ -164,28 +165,25 @@ func (p *PartitionExecute) overAllocated() bool {
 }
 
 func (p *PartitionExecute) rangeSize() (size int64) {
-	p.catcher.Exec(func(ctx context.Context) (err error) {
-		p._rngSize, err = p.pst.RetrieveRangeSize(ctx, p.sourceRangePK)
-		return err
-	})
+	p.catcher.Exec(retrieveRangeSizeQuery(p.qExec, p.sourceRangePK, &p._rngSize).Exec)
 	return p._rngSize
 }
 
 func (p *PartitionExecute) updateRangeStatus(rngPK uuid.UUID, status models.RangeStatus) {
-	p.catcher.Exec(func(ctx context.Context) error { return p.pst.UpdateRangeStatus(ctx, rngPK, status) })
+	p.catcher.Exec(updateRangeStatusQuery(p.qExec, rngPK, status).Exec)
 }
 
-func (p *PartitionExecute) reallocateChunks(ccPKs []uuid.UUID, rngPK uuid.UUID) {
-	p.catcher.Exec(func(ctx context.Context) error { return p.pst.ReallocateChunks(ctx, ccPKs, rngPK) })
+func (p *PartitionExecute) reallocateChunks(pks []uuid.UUID, rngPK uuid.UUID) {
+	p.catcher.Exec(reallocateChunksQuery(p.qExec, pks, rngPK).Exec)
 }
 
-func (p *PartitionExecute) reallocateChunkReplicas(ccrPKC []uuid.UUID, RRPK uuid.UUID) {
-	p.catcher.Exec(func(ctx context.Context) error { return p.pst.ReallocateChunkReplicas(ctx, ccrPKC, RRPK) })
+func (p *PartitionExecute) reallocateChunkReplicas(pks []uuid.UUID, rrPK uuid.UUID) {
+	p.catcher.Exec(reallocateChunkReplicasQuery(p.qExec, pks, rrPK).Exec)
 }
 
-func (p *PartitionExecute) newRange(nodePK int) (newRng *models.Range) {
+func (p *PartitionExecute) createRange(nodePK int) (newRng *models.Range) {
 	p.catcher.Exec(func(ctx context.Context) (err error) {
-		newRng, err = p.pst.CreateRange(ctx, nodePK)
+		newRng, err = createRange(ctx, p.qExec, nodePK)
 		return err
 	})
 	return newRng
@@ -195,7 +193,7 @@ func (p *PartitionExecute) newReplicaPK(leaseRR *models.RangeReplica, nodeID int
 	newReplicaID := leaseRR.ID
 	if nodeID != leaseRR.NodeID {
 		p.catcher.Exec(func(ctx context.Context) error {
-			newRR, err := p.pst.CreateRangeReplica(ctx, leaseRR.RangeID, nodeID)
+			newRR, err := createRangeReplica(ctx, p.qExec, leaseRR.RangeID, nodeID)
 			newReplicaID = newRR.ID
 			return err
 		})
@@ -209,22 +207,10 @@ func (p *PartitionExecute) retrievePartitionInfo() (
 	cc []*models.ChannelChunk,
 	ccr []*models.ChannelChunkReplica,
 ) {
-	p.catcher.Exec(func(ctx context.Context) (cErr error) {
-		sourceRng, cErr = p.pst.RetrieveRange(ctx, p.sourceRangePK)
-		return cErr
-	})
-	p.catcher.Exec(func(ctx context.Context) (cErr error) {
-		cc, cErr = p.pst.RetrieveRangeChunks(ctx, p.sourceRangePK)
-		return cErr
-	})
-	p.catcher.Exec(func(ctx context.Context) (cErr error) {
-		sourceRR, cErr = p.pst.RetrieveRangeReplicas(ctx, p.sourceRangePK)
-		return cErr
-	})
-	p.catcher.Exec(func(ctx context.Context) (cErr error) {
-		ccr, cErr = p.pst.RetrieveRangeChunkReplicas(ctx, p.sourceRangePK)
-		return cErr
-	})
+	p.catcher.Exec(retrieveRangeQuery(p.qExec, sourceRng, p.sourceRangePK).Exec)
+	p.catcher.Exec(retrieveRangeChunksQuery(p.qExec, cc, p.sourceRangePK).Exec)
+	p.catcher.Exec(retrieveRangeReplicasQuery(p.qExec, sourceRR, p.sourceRangePK).Exec)
+	p.catcher.Exec(retrieveRangeChunkReplicasQuery(p.qExec, ccr, p.sourceRangePK).Exec)
 	return sourceRng, sourceRR, cc, ccr
 }
 

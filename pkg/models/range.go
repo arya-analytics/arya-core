@@ -15,7 +15,7 @@ const (
 type Range struct {
 	ID         uuid.UUID `model:"role:pk,"`
 	Status     RangeStatus
-	RangeLease *RangeLease
+	RangeLease *RangeLease `model:"rel:has-one,join:ID=RangeID"`
 }
 
 type RangeLease struct {

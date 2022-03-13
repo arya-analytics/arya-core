@@ -50,7 +50,7 @@ type Range struct {
 	ID         uuid.UUID          `bun:"type:UUID,pk" model:"role:pk,"`
 	Status     models.RangeStatus `bun:"type:SMALLINT,default:2"`
 	Open       bool               `bun:"default:TRUE,"`
-	RangeLease *RangeLease        `bun:"rel:has-one,join:id=range_id"`
+	RangeLease *RangeLease        `bun:"rel:has-one,join:id=range_id" model:"rel:has-one,join:ID=RangeID"`
 }
 
 type RangeLease struct {

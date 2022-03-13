@@ -27,7 +27,7 @@ var _ = Describe("Partition", func() {
 			BeforeEach(func() {
 				sourceChunkReplicaNodeIDs = map[uuid.UUID]int{}
 				p, rngId = mock.NewPersistOverallocatedRange()
-				part = rng.NewPartitionExecute(ctx, p, rngId)
+				part = rng.NewPartitionExecute(ctx, clust.Exec, rngId)
 				chunks, err := p.RetrieveRangeChunks(ctx, rngId)
 				Expect(err).To(BeNil())
 				rangeReplicas, err := p.RetrieveRangeReplicas(ctx, rngId)

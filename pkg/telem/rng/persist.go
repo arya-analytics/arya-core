@@ -76,81 +76,67 @@ func createRange(ctx context.Context, exec query.Execute, nodePK int) (*models.R
 	return r, c.Error()
 }
 
-func (p *PersistCluster) CreateRangeReplica(ctx context.Context, rngPK uuid.UUID, nodePK int) (*models.RangeReplica, error) {
+func createRangeReplica(ctx context.Context, qExec query.Execute, rngPK uuid.UUID, nodePK int) (*models.RangeReplica, error) {
 	rr := &models.RangeReplica{RangeID: rngPK, NodeID: nodePK}
-	return rr, p.clust.NewCreate().Model(rr).Exec(ctx)
+	return rr, query.NewCreate().Model(rr).BindExec(qExec).Exec(ctx)
 }
 
 // || RETRIEVE ||
 
-func (p *PersistCluster) RetrieveRange(ctx context.Context, pk uuid.UUID) (*models.Range, error) {
-	r := &models.Range{}
-	return r, p.clust.NewRetrieve().
-		Model(r).
-		WherePK(pk).
+func retrieveRangeQuery(qExec query.Execute, rng *models.Range, pk uuid.UUID) *query.Retrieve {
+	return rangeLeaseReplicaRelationQuery(qExec, rng).WherePK(pk)
+}
+
+func retrieveRangeReplicasQuery(qExec query.Execute, rr []*models.RangeReplica, rngPK uuid.UUID) *query.Retrieve {
+	return query.NewRetrieve().BindExec(qExec).Model(&rr).WhereFields(query.WhereFields{"RangeID": rngPK})
+}
+
+func openRangeQuery(qExec query.Execute, rng []*models.Range) *query.Retrieve {
+	return rangeLeaseReplicaRelationQuery(qExec, &rng).WhereFields(query.WhereFields{"Status": models.RangeStatusOpen})
+}
+
+func rangeLeaseReplicaRelationQuery(qExec query.Execute, rng interface{}) *query.Retrieve {
+	return query.NewRetrieve().
+		BindExec(qExec).
+		Model(rng).
 		Relation("RangeLease", "ID", "RangeReplicaID").
-		Relation("RangeLease.RangeReplica", "ID", "NodeID").
-		Exec(ctx)
+		Relation("RangeLease.RangeReplica", "ID", "NodeID")
 }
 
-func (p *PersistCluster) RetrieveOpenRanges(ctx context.Context) (ranges []*models.Range, err error) {
-	err = p.clust.NewRetrieve().
-		Model(&ranges).
-		Relation("RangeLease", "ID", "RangeReplicaID").
-		Relation("RangeLease.RangeReplica", "ID", "NodeID").
-		WhereFields(query.WhereFields{"Status": models.RangeStatusOpen}).Exec(ctx)
-	return ranges, err
-
+func retrieveRangeChunksQuery(qExec query.Execute, chunks interface{}, pk uuid.UUID) *query.Retrieve {
+	return query.NewRetrieve().BindExec(qExec).Model(chunks).WhereFields(query.WhereFields{"RangeID": pk})
 }
 
-func (p *PersistCluster) ccByRangeQ(chunks interface{}, pk uuid.UUID) *query.Retrieve {
-	return p.clust.NewRetrieve().Model(chunks).WhereFields(query.WhereFields{"RangeID": pk})
+func retrieveRangeSizeQuery(qExec query.Execute, pk uuid.UUID, into *int64) *query.Retrieve {
+	return retrieveRangeChunksQuery(qExec, &models.ChannelChunk{}, pk).Calc(query.CalcSum, "Size", &into)
 }
 
-func (p *PersistCluster) RetrieveRangeSize(ctx context.Context, pk uuid.UUID) (int64, error) {
-	var size int64 = 0
-	return size, p.ccByRangeQ(&models.ChannelChunk{}, pk).Calc(query.CalcSum, "Size", &size).Exec(ctx)
+func updateRangeStatusQuery(qExec query.Execute, pk uuid.UUID, status models.RangeStatus) *query.Update {
+	return query.NewUpdate().BindExec(qExec).Model(&models.Range{ID: pk, Status: status}).Fields("Status").WherePK(pk)
 }
 
-func (p *PersistCluster) RetrieveRangeChunks(ctx context.Context, rngPK uuid.UUID) ([]*models.ChannelChunk, error) {
+func reallocateChunksQuery(qExec query.Execute, pks []uuid.UUID, rngPK uuid.UUID) *query.Update {
 	var cc []*models.ChannelChunk
-	return cc, p.ccByRangeQ(&cc, rngPK).Exec(ctx)
+	for _, pk := range pks {
+		cc = append(cc, &models.ChannelChunk{ID: pk, RangeID: rngPK})
+	}
+	return query.NewUpdate().BindExec(qExec).Model(&cc).Fields("RangeID").Bulk()
 }
 
-func (p *PersistCluster) RetrieveRangeReplicas(ctx context.Context, rngPK uuid.UUID) ([]*models.RangeReplica, error) {
-	var rr []*models.RangeReplica
-	return rr, p.clust.NewRetrieve().Model(&rr).WhereFields(query.WhereFields{"RangeID": rngPK}).Exec(ctx)
-}
-
-func (p *PersistCluster) RetrieveRangeChunkReplicas(ctx context.Context, rngPK uuid.UUID) ([]*models.ChannelChunkReplica, error) {
-	var ccr []*models.ChannelChunkReplica
-	return ccr, p.clust.
-		NewRetrieve().
+func retrieveRangeChunkReplicasQuery(qExec query.Execute, ccr []*models.ChannelChunkReplica, rngPK uuid.UUID) *query.Retrieve {
+	return query.NewRetrieve().
+		BindExec(qExec).
 		Model(&ccr).
 		WhereFields(query.WhereFields{"ChannelChunk.RangeID": rngPK}).
-		Fields("ID", "RangeReplicaID").Exec(ctx)
+		Fields("ID", "RangeReplicaID")
 }
 
 // || RE-ALLOCATE ||
 
-func (p *PersistCluster) ReallocateChunks(ctx context.Context, pks []uuid.UUID, newRngPK uuid.UUID) error {
-	var cc []*models.ChannelChunk
-	for _, pk := range pks {
-		cc = append(cc, &models.ChannelChunk{ID: pk, RangeID: newRngPK})
-	}
-	return p.clust.NewUpdate().Model(&cc).Fields("RangeID").Bulk().Exec(ctx)
-}
-
-func (p *PersistCluster) ReallocateChunkReplicas(ctx context.Context, pks []uuid.UUID, newRRPK uuid.UUID) error {
+func reallocateChunkReplicasQuery(qExec query.Execute, pks []uuid.UUID, rrPK uuid.UUID) *query.Update {
 	var ccr []*models.ChannelChunkReplica
 	for _, pk := range pks {
-		ccr = append(ccr, &models.ChannelChunkReplica{ID: pk, RangeReplicaID: newRRPK})
+		ccr = append(ccr, &models.ChannelChunkReplica{ID: pk, RangeReplicaID: rrPK})
 	}
-	return p.clust.NewUpdate().Model(&ccr).Fields("RangeReplicaID").Bulk().Exec(ctx)
-}
-
-// || UPDATE ||
-
-func (p *PersistCluster) UpdateRangeStatus(ctx context.Context, pk uuid.UUID, status models.RangeStatus) error {
-	return p.clust.NewUpdate().Model(&models.Range{ID: pk, Status: status}).Fields("Status").WherePK(pk).Exec(ctx)
+	return query.NewUpdate().BindExec(qExec).Model(&ccr).Fields("RangeReplicaID").Bulk()
 }

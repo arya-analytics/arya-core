@@ -7,6 +7,7 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/google/uuid"
 	"math/rand"
+	"reflect"
 	"time"
 )
 
@@ -28,50 +29,61 @@ func NewBlankPersist() *Persist {
 	}
 }
 
-func (p *Persist) CreateRange(ctx context.Context, nodePK int) (*models.Range, error) {
-	id := uuid.New()
-	rr := &models.RangeReplica{
-		ID:      uuid.New(),
-		RangeID: id,
-		NodeID:  nodePK,
-	}
-	lease := &models.RangeLease{
-		ID:             uuid.New(),
-		RangeID:        id,
-		RangeReplica:   rr,
-		RangeReplicaID: rr.ID,
-	}
-	r := &models.Range{
-		ID:         id,
-		Status:     models.RangeStatusOpen,
-		RangeLease: lease,
-	}
-	p.Ranges = append(p.Ranges, r)
-	p.RangeReplicas = append(p.RangeReplicas, rr)
-	p.RangeLeases = append(p.RangeLeases, lease)
-	return r, nil
+func (p *Persist) Exec(ctx context.Context, qp *query.Pack) error {
+	return query.Switch(ctx, qp, query.Ops{
+		Create: p.create,
+	})
 }
 
-func (p *Persist) CreateRangeReplica(ctx context.Context, rngPK uuid.UUID, nodePK int) (*models.RangeReplica, error) {
-	rr := &models.RangeReplica{
-		ID:      uuid.New(),
-		RangeID: rngPK,
-		NodeID:  nodePK,
+func (p *Persist) create(ctx context.Context, qp *query.Pack) error {
+	switch qp.Model().Type() {
+	case reflect.TypeOf(models.Range{}):
+		return p.createRange(ctx, qp)
+	case reflect.TypeOf(models.RangeReplica{}):
+		return p.createRangeReplica(ctx, qp)
+	case reflect.TypeOf(models.RangeLease{}):
+		return p.createRangeLease(ctx, qp)
+	default:
+		panic("mock create received unknown model")
 	}
-	p.RangeReplicas = append(p.RangeReplicas, rr)
-	return rr, nil
 }
 
-func (p *Persist) RetrieveRange(ctx context.Context, PK uuid.UUID) (*models.Range, error) {
+func (p *Persist) createRange(ctx context.Context, qp *query.Pack) error {
+	model.NewReflect(p.Ranges).ChainAppendEach(qp.Model())
+	return nil
+}
+
+func (p *Persist) createRangeReplica(ctx context.Context, qp *query.Pack) error {
+	model.NewReflect(p.RangeReplicas).ChainAppendEach(qp.Model())
+	return nil
+}
+
+func (p *Persist) createRangeLease(ctx context.Context, qp *query.Pack) error {
+	model.NewReflect(p.RangeLeases).ChainAppendEach(qp.Model())
+	return nil
+}
+
+func (p *Persist) retrieveRange(ctx context.Context, qp *query.Pack) error {
+	pkc, ok := query.PKOpt(qp)
+	if ok {
+		return p.retrieveRangesByPK(qp, pkc)
+	}
+}
+
+func (p *Persist) retrieveRangesByPK(qp *query.Pack, pkc model.PKChain) error {
+	exc := model.NewExchange(qp.Model().Pointer(), &[]*models.Range{})
 	for _, rng := range p.Ranges {
-		if rng.ID == PK {
-			return rng, nil
+		for _, pk := range pkc {
+			if model.NewPK(rng.ID).Equals(pk) {
+				exc.Dest().ChainAppend(model.NewReflect(rng))
+			}
 		}
 	}
-	return nil, query.Error{Type: query.ErrorTypeItemNotFound}
+	exc.ToSource()
+	return nil
 }
 
-func (p *Persist) RetrieveOpenRanges(ctx context.Context) ([]*models.Range, error) {
+func retrieveRangesByStatus(ctx context.Context) ([]*models.Range, error) {
 	var ranges []*models.Range
 	for _, rng := range p.Ranges {
 		if rng.Status == models.RangeStatusOpen {

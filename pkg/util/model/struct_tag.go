@@ -1,6 +1,7 @@
 package model
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 )
@@ -21,6 +22,20 @@ func (s StructTag) RetrieveKVChain(cat string) (kvc []string, ok bool) {
 	}
 	kvc = strings.Split(valString, kvChainSeparator)
 	return kvc, true
+}
+
+func (s StructTag) Retrieve(cat, key string) (string, bool) {
+	kvc, ok := s.RetrieveKVChain(cat)
+	if !ok {
+		return "", false
+	}
+	for _, kv := range kvc {
+		kOpt, val := splitKVPair(kv)
+		if kOpt == key {
+			return val, true
+		}
+	}
+	return "", false
 }
 
 const allMatchIndicator = "*"
@@ -119,4 +134,12 @@ const (
 
 func constructKVPair(key string, value string) string {
 	return key + kvPairSeparator + value
+}
+
+func splitKVPair(kvp string) (string, string) {
+	s := strings.Split(kvp, kvPairSeparator)
+	if len(s) != 2 {
+		panic(fmt.Sprintf("key value pair %s", kvp))
+	}
+	return s[0], s[1]
 }
