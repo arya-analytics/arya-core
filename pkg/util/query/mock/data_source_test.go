@@ -81,4 +81,48 @@ var _ = Describe("DataSourceMem", func() {
 			Expect(resR.RangeLease.RangeReplica.NodeID).To(Equal(1))
 		})
 	})
+	Describe("Update", func() {
+		It("Should update a single item correctly", func() {
+			r := &models.Range{ID: uuid.New()}
+			rr := &models.RangeReplica{ID: uuid.New(), NodeID: 1}
+			rl := &models.RangeLease{ID: uuid.New(), RangeID: r.ID, RangeReplicaID: rr.ID}
+			Expect(asm.NewCreate().Model(r).Exec(ctx)).To(BeNil())
+			Expect(asm.NewCreate().Model(rr).Exec(ctx)).To(BeNil())
+			Expect(asm.NewCreate().Model(rl).Exec(ctx)).To(BeNil())
+			updateRR := &models.RangeReplica{NodeID: 2}
+			Expect(asm.NewUpdate().Model(updateRR).WherePK(rr.ID).Fields("NodeID").Exec(ctx)).To(BeNil())
+			resRR := &models.RangeReplica{}
+			Expect(asm.NewRetrieve().Model(resRR).WherePK(rr.ID).Exec(ctx)).To(BeNil())
+			Expect(resRR.NodeID).To(Equal(2))
+		})
+		It("Should bulk update items correctly", func() {
+			r := &models.Range{ID: uuid.New()}
+			rr := []*models.RangeReplica{
+				{
+					ID:     uuid.New(),
+					NodeID: 1,
+				},
+				{
+					ID:     uuid.New(),
+					NodeID: 2,
+				},
+			}
+			Expect(asm.NewCreate().Model(r).Exec(ctx)).To(BeNil())
+			Expect(asm.NewCreate().Model(&rr).Exec(ctx)).To(BeNil())
+			updateRR := []*models.RangeReplica{
+				{
+					ID:     rr[0].ID,
+					NodeID: 3,
+				},
+				{
+					ID:     rr[1].ID,
+					NodeID: 4,
+				},
+			}
+			Expect(asm.NewUpdate().Model(&updateRR).Fields("NodeID").Bulk().Exec(ctx)).To(BeNil())
+			resRR := &models.RangeReplica{}
+			Expect(asm.NewRetrieve().Model(resRR).WherePK(rr[0].ID).Exec(ctx)).To(BeNil())
+			Expect(resRR.NodeID).To(Equal(3))
+		})
+	})
 })

@@ -45,6 +45,7 @@ const (
 	ErrorTypeMigration
 	ErrorTypeInvalidArgs
 	ErrorTypeConnection
+	ErrorTypeMultipleResults
 )
 
 func injectErrKey(errStr string, args ...interface{}) string {

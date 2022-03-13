@@ -61,7 +61,7 @@ var _ = Describe("pst", func() {
 			op    *mock.Persist
 		)
 		BeforeEach(func() {
-			op, rngID = mock.NewPersistOverallocatedRange()
+			op, rngID = mock.PopulateOverallocatedRange()
 		})
 		Describe("Retrieve Range Size", func() {
 			It("Should retrieve the correct range size", func() {

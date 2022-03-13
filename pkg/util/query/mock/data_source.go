@@ -24,6 +24,7 @@ func (s *DataSourceMem) Exec(ctx context.Context, p *query.Pack) error {
 	return query.Switch(ctx, p, query.Ops{
 		Create:   s.create,
 		Retrieve: s.retrieve,
+		Update:   s.update,
 	})
 }
 
@@ -46,6 +47,54 @@ func (s *DataSourceMem) create(ctx context.Context, p *query.Pack) error {
 	dRfl := s.Data.Retrieve(p.Model().Type())
 	p.Model().ForEach(func(rfl *model.Reflect, i int) {
 		dRfl.ChainAppendEach(rfl)
+	})
+	return nil
+}
+
+func (s *DataSourceMem) update(ctx context.Context, p *query.Pack) error {
+	bulk := query.BulkUpdateOpt(p)
+	if bulk {
+		return s.bulkUpdate(ctx, p)
+	}
+	pk, ok := query.PKOpt(p)
+	if !ok {
+		panic("non-bulk update must havea pk")
+	}
+	dRfl := s.filterByPK(s.Data.Retrieve(p.Model().Type()), pk)
+	if dRfl.ChainValue().Len() == 0 {
+		return query.NewSimpleError(query.ErrorTypeItemNotFound, nil)
+	}
+	if dRfl.ChainValue().Len() > 1 {
+		return query.NewSimpleError(query.ErrorTypeMultipleResults, nil)
+	}
+	fo, ok := query.RetrieveFieldsOpt(p)
+	if !ok {
+		panic("fields must be specified for updates")
+	}
+	p.Model().ForEach(func(nSRfl *model.Reflect, i int) {
+		dRfl.ForEach(func(nDRfl *model.Reflect, i int) {
+			for _, f := range fo {
+				nDRfl.StructFieldByName(f).Set(nSRfl.StructFieldByName(f))
+			}
+		})
+	})
+	return nil
+}
+
+func (s *DataSourceMem) bulkUpdate(ctx context.Context, p *query.Pack) error {
+	dRfl := s.Data.Retrieve(p.Model().Type())
+	fo, ok := query.RetrieveFieldsOpt(p)
+	if !ok {
+		panic("fields must be specified for bulk updates")
+	}
+	p.Model().ForEach(func(nSRfl *model.Reflect, i int) {
+		dRfl.ForEach(func(nDRfl *model.Reflect, i int) {
+			if nDRfl.PK() == nSRfl.PK() {
+				for _, f := range fo {
+					nDRfl.StructFieldByName(f).Set(nSRfl.StructFieldByName(f))
+				}
+			}
+		})
 	})
 	return nil
 }

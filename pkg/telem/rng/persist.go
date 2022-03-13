@@ -61,14 +61,6 @@ func updateRangeStatusQuery(qExec query.Execute, pk uuid.UUID, status models.Ran
 	return query.NewUpdate().BindExec(qExec).Model(&models.Range{ID: pk, Status: status}).Fields("Status").WherePK(pk)
 }
 
-func reallocateChunksQuery(qExec query.Execute, pks []uuid.UUID, rngPK uuid.UUID) *query.Update {
-	var cc []*models.ChannelChunk
-	for _, pk := range pks {
-		cc = append(cc, &models.ChannelChunk{ID: pk, RangeID: rngPK})
-	}
-	return query.NewUpdate().BindExec(qExec).Model(&cc).Fields("RangeID").Bulk()
-}
-
 func retrieveRangeChunkReplicasQuery(qExec query.Execute, ccr []*models.ChannelChunkReplica, rngPK uuid.UUID) *query.Retrieve {
 	return query.NewRetrieve().
 		BindExec(qExec).
@@ -85,4 +77,12 @@ func reallocateChunkReplicasQuery(qExec query.Execute, pks []uuid.UUID, rrPK uui
 		ccr = append(ccr, &models.ChannelChunkReplica{ID: pk, RangeReplicaID: rrPK})
 	}
 	return query.NewUpdate().BindExec(qExec).Model(&ccr).Fields("RangeReplicaID").Bulk()
+}
+
+func reallocateChunksQuery(qExec query.Execute, pks []uuid.UUID, rngPK uuid.UUID) *query.Update {
+	var cc []*models.ChannelChunk
+	for _, pk := range pks {
+		cc = append(cc, &models.ChannelChunk{ID: pk, RangeID: rngPK})
+	}
+	return query.NewUpdate().BindExec(qExec).Model(&cc).Fields("RangeID").Bulk()
 }
