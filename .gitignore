@@ -1,6 +1,13 @@
 .idea/
 coverprofile.out
 coverage.txt
-heap_profiler/
+
+# |||| MEMORY PROFILING ||||
+
+heap_profiler
 goroutine_dump
 inflight_trace_dump
+
+# |||| EXECUTABLE ||||
+
+main
