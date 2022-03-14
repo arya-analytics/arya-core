@@ -123,7 +123,7 @@ func validateObservedRange(or ObservedRange) {
 
 func RetrieveAddOpenRanges(ctx context.Context, qExec query.Execute, o Observe) error {
 	var openR []*models.Range
-	if err := retrieveOpenRangesQuery(qExec, openR).Exec(ctx); err != nil {
+	if err := NewQueryAssemble(qExec).RetrieveOpenRangesQuery(openR).Exec(ctx); err != nil {
 		return err
 	}
 	for _, r := range openR {

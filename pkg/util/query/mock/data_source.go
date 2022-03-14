@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
+	log "github.com/sirupsen/logrus"
 	"reflect"
 	"strings"
 )
@@ -169,22 +170,24 @@ func (s *DataSourceMem) calcSum(sRfl *model.Reflect, field string, into interfac
 	intoRfl := reflect.ValueOf(into)
 	sRfl.ForEach(func(rfl *model.Reflect, i int) {
 		fld := rfl.StructFieldByName(field)
-		if !fld.CanFloat() {
-			panic("cant run a calculation on a non float!")
+		if !fld.CanFloat() && !fld.CanInt() {
+			panic("cant run a calculation on a non number!")
 		}
-		if intoRfl.CanFloat() {
+		if fld.CanFloat() {
+			log.Error(fld.Float())
 			fldFloat := fld.Float()
-			intoRflFloat := intoRfl.Float()
+			intoRflFloat := intoRfl.Elem().Float()
 			intoRflFloat += fldFloat
-			intoRfl.Set(reflect.ValueOf(intoRflFloat))
+			intoRfl.Elem().Set(reflect.ValueOf(intoRflFloat))
 		}
-		if intoRfl.CanInt() {
+		if fld.CanInt() {
 			fldInt := fld.Int()
-			intoRflInt := intoRfl.Int()
+			intoRflInt := intoRfl.Elem().Int()
 			intoRflInt += fldInt
-			intoRfl.Set(reflect.ValueOf(fldInt))
+			intoRfl.Elem().Set(reflect.ValueOf(intoRflInt))
 		}
 	})
+
 }
 
 func (s *DataSourceMem) filterByPK(sRfl *model.Reflect, pkc model.PKChain) *model.Reflect {

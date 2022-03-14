@@ -10,8 +10,11 @@ import (
 	"time"
 )
 
-func PopulateOverallocatedRange(ctx context.Context, asm query.Assemble) uuid.UUID {
-	rng := &models.Range{
+func PopulateOverallocatedRange(
+	ctx context.Context,
+	asm query.Assemble,
+) (uuid.UUID, []*models.RangeReplica, []*models.ChannelChunk, []*models.ChannelChunkReplica) {
+	r := &models.Range{
 		ID:     uuid.New(),
 		Status: models.RangeStatusOpen,
 	}
@@ -19,17 +22,17 @@ func PopulateOverallocatedRange(ctx context.Context, asm query.Assemble) uuid.UU
 	for i := 0; i < 3; i++ {
 		rangeReplicas = append(rangeReplicas, &models.RangeReplica{
 			ID:      uuid.New(),
-			RangeID: rng.ID,
+			RangeID: r.ID,
 			NodeID:  i + 1,
 		})
 	}
 	lease := &models.RangeLease{
-		RangeID:        rng.ID,
+		RangeID:        r.ID,
 		RangeReplicaID: rangeReplicas[0].ID,
 		RangeReplica:   rangeReplicas[0],
 	}
 
-	rng.RangeLease = lease
+	r.RangeLease = lease
 
 	rand.Seed(time.Now().UnixNano())
 
@@ -41,7 +44,7 @@ func PopulateOverallocatedRange(ctx context.Context, asm query.Assemble) uuid.UU
 		size += chunkSize
 		chunk := &models.ChannelChunk{
 			ID:      uuid.New(),
-			RangeID: rng.ID,
+			RangeID: r.ID,
 			Size:    chunkSize,
 		}
 		for i := 0; i < 3; i++ {
@@ -57,9 +60,12 @@ func PopulateOverallocatedRange(ctx context.Context, asm query.Assemble) uuid.UU
 		chunks = append(chunks, chunk)
 	}
 	c := errutil.NewCatchContext(ctx)
-	c.Exec(asm.NewCreate().Model(rng).Exec)
-	c.Exec(asm.NewCreate().Model(rangeReplicas).Exec)
-	c.Exec(asm.NewCreate().Model(chunks).Exec)
+
+	c.Exec(asm.NewCreate().Model(r).Exec)
+	c.Exec(asm.NewCreate().Model(&rangeReplicas).Exec)
+	c.Exec(asm.NewCreate().Model(&chunks).Exec)
+	c.Exec(asm.NewCreate().Model(&chunkReplicas).Exec)
 	c.Exec(asm.NewCreate().Model(lease).Exec)
-	return rng.ID
+
+	return r.ID, rangeReplicas, chunks, chunkReplicas
 }

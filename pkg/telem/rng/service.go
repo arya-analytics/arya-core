@@ -13,25 +13,25 @@ import (
 // as well as starting and stopping rng specific tasks, such as partitioning rngMap.
 // ONLY one Service should exist per core instance.
 type Service struct {
-	ps   tasks.Schedule
-	obs  Observe
-	exec query.Execute
+	ps  tasks.Schedule
+	obs Observe
+	qa  *QueryAssemble
 }
 
 // NewService creates a new rng.Service. Requires a val.
-func NewService(obs Observe, exec query.Execute) *Service {
-	return &Service{obs: obs, exec: exec}
+func NewService(obs Observe, qExec query.Execute) *Service {
+	return &Service{obs: obs, qa: NewQueryAssemble(qExec)}
 }
 
 // NewAllocate creates a new Allocate and returns it.
 func (s *Service) NewAllocate() *Allocate {
-	return &Allocate{obs: s.obs, exec: s.exec}
+	return &Allocate{obs: s.obs, qa: s.qa}
 }
 
 // Start starts Service internal tasks.
 // NOTE: If restarting the Service, call Stop before calling Start again.
 func (s *Service) Start(ctx context.Context, opts ...tasks.ScheduleOpt) {
-	s.ps = newSchedulePartition(&partitionDetect{qExec: s.exec, observe: s.obs}, opts...)
+	s.ps = newSchedulePartition(&partitionDetect{qa: s.qa, observe: s.obs}, opts...)
 	go s.ps.Start(ctx)
 }
 

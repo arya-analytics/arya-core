@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/util/errutil"
-	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/arya-analytics/aryacore/pkg/util/tasks"
 	"github.com/google/uuid"
 	"sync"
@@ -42,7 +41,7 @@ func newSchedulePartition(pd *partitionDetect, opts ...tasks.ScheduleOpt) tasks.
 
 type partitionDetect struct {
 	observe Observe
-	qExec   query.Execute
+	qa      *QueryAssemble
 }
 
 func (pd *partitionDetect) detectObserver(ctx context.Context, opt tasks.ScheduleConfig) error {
@@ -52,7 +51,7 @@ func (pd *partitionDetect) detectObserver(ctx context.Context, opt tasks.Schedul
 
 func (pd *partitionDetect) detectPersist(ctx context.Context, opt tasks.ScheduleConfig) error {
 	var openRng []*models.Range
-	if err := retrieveOpenRangesQuery(pd.qExec, openRng).Exec(ctx); err != nil {
+	if err := pd.qa.RetrieveOpenRangesQuery(openRng).Exec(ctx); err != nil {
 		return err
 	}
 	var obsRng []ObservedRange
@@ -88,7 +87,7 @@ func (pd *partitionDetect) detect(ctx context.Context, openRanges []ObservedRang
 }
 
 func (pd *partitionDetect) exec(ctx context.Context, or ObservedRange) ([]*models.Range, error) {
-	pe := NewPartitionExecute(ctx, pd.qExec, or.PK)
+	pe := NewPartitionExecute(ctx, pd.qa, or.PK)
 	oa, err := pe.OverAllocated()
 	if !oa || err != nil {
 		return []*models.Range{}, err
@@ -116,8 +115,8 @@ func (pd *partitionDetect) observeNewRngGroups(newRangeGroups [][]*models.Range)
 
 // |||| EXECUTE ||||
 
-func NewPartitionExecute(ctx context.Context, qExec query.Execute, rngPK uuid.UUID) *PartitionExecute {
-	return &PartitionExecute{qExec: qExec, sourceRangePK: rngPK, catcher: errutil.NewCatchContext(ctx)}
+func NewPartitionExecute(ctx context.Context, qa *QueryAssemble, rngPK uuid.UUID) *PartitionExecute {
+	return &PartitionExecute{qa: qa, sourceRangePK: rngPK, catcher: errutil.NewCatchContext(ctx)}
 }
 
 // PartitionExecute checks if a models.Range is over-allocated (i.e. exceeds models.MaxRangeSize),
@@ -127,7 +126,7 @@ func NewPartitionExecute(ctx context.Context, qExec query.Execute, rngPK uuid.UU
 // Exec runs the partition, and returns any new models.Range objects created during the partition as well as
 // any errors encountered.
 type PartitionExecute struct {
-	qExec         query.Execute
+	qa            *QueryAssemble
 	sourceRangePK uuid.UUID
 	newRanges     []*models.Range
 	catcher       *errutil.CatchContext
@@ -156,34 +155,35 @@ func (p *PartitionExecute) Exec() ([]*models.Range, error) {
 	}
 	p.newRanges = append(p.newRanges, newRng)
 	p.updateRangeStatus(p.sourceRangePK, models.RangeStatusClosed)
-	nextP := &PartitionExecute{qExec: p.qExec, sourceRangePK: newRng.ID, newRanges: p.newRanges, catcher: p.catcher}
+	nextP := &PartitionExecute{qa: p.qa, sourceRangePK: newRng.ID, newRanges: p.newRanges, catcher: p.catcher}
 	return nextP.Exec()
 }
 
 func (p *PartitionExecute) overAllocated() bool {
-	return p.rangeSize() > models.MaxRangeSize
+	rs := p.rangeSize()
+	return rs > models.MaxRangeSize
 }
 
 func (p *PartitionExecute) rangeSize() (size int64) {
-	p.catcher.Exec(retrieveRangeSizeQuery(p.qExec, p.sourceRangePK, &p._rngSize).Exec)
+	p.catcher.Exec(p.qa.RetrieveRangeSizeQuery(p.sourceRangePK, &p._rngSize).Exec)
 	return p._rngSize
 }
 
 func (p *PartitionExecute) updateRangeStatus(rngPK uuid.UUID, status models.RangeStatus) {
-	p.catcher.Exec(updateRangeStatusQuery(p.qExec, rngPK, status).Exec)
+	p.catcher.Exec(p.qa.UpdateRangeStatusQuery(rngPK, status).Exec)
 }
 
 func (p *PartitionExecute) reallocateChunks(pks []uuid.UUID, rngPK uuid.UUID) {
-	p.catcher.Exec(reallocateChunksQuery(p.qExec, pks, rngPK).Exec)
+	p.catcher.Exec(p.qa.ReallocateChunksQuery(pks, rngPK).Exec)
 }
 
 func (p *PartitionExecute) reallocateChunkReplicas(pks []uuid.UUID, rrPK uuid.UUID) {
-	p.catcher.Exec(reallocateChunkReplicasQuery(p.qExec, pks, rrPK).Exec)
+	p.catcher.Exec(p.qa.ReallocateChunkReplicasQuery(pks, rrPK).Exec)
 }
 
 func (p *PartitionExecute) createRange(nodePK int) (newRng *models.Range) {
 	p.catcher.Exec(func(ctx context.Context) (err error) {
-		newRng, err = createRange(ctx, p.qExec, nodePK)
+		newRng, err = p.qa.CreateRange(ctx, nodePK)
 		return err
 	})
 	return newRng
@@ -193,7 +193,7 @@ func (p *PartitionExecute) newReplicaPK(leaseRR *models.RangeReplica, nodeID int
 	newReplicaID := leaseRR.ID
 	if nodeID != leaseRR.NodeID {
 		p.catcher.Exec(func(ctx context.Context) error {
-			newRR, err := createRangeReplica(ctx, p.qExec, leaseRR.RangeID, nodeID)
+			newRR, err := p.qa.CreateRangeReplica(ctx, leaseRR.RangeID, nodeID)
 			newReplicaID = newRR.ID
 			return err
 		})
@@ -207,10 +207,11 @@ func (p *PartitionExecute) retrievePartitionInfo() (
 	cc []*models.ChannelChunk,
 	ccr []*models.ChannelChunkReplica,
 ) {
-	p.catcher.Exec(retrieveRangeQuery(p.qExec, sourceRng, p.sourceRangePK).Exec)
-	p.catcher.Exec(retrieveRangeChunksQuery(p.qExec, cc, p.sourceRangePK).Exec)
-	p.catcher.Exec(retrieveRangeReplicasQuery(p.qExec, sourceRR, p.sourceRangePK).Exec)
-	p.catcher.Exec(retrieveRangeChunkReplicasQuery(p.qExec, ccr, p.sourceRangePK).Exec)
+	sourceRng = &models.Range{}
+	p.catcher.Exec(p.qa.RetrieveRangeQuery(sourceRng, p.sourceRangePK).Exec)
+	p.catcher.Exec(p.qa.RetrieveRangeChunksQuery(cc, p.sourceRangePK).Exec)
+	p.catcher.Exec(p.qa.RetrieveRangeReplicasQuery(sourceRR, p.sourceRangePK).Exec)
+	p.catcher.Exec(p.qa.RetrieveRangeChunkReplicasQuery(ccr, p.sourceRangePK).Exec)
 	return sourceRng, sourceRR, cc, ccr
 }
 
