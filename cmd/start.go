@@ -133,12 +133,11 @@ func startNodeRPCPool() *cluster.NodeRPCPool {
 }
 
 func startRngSvc(cmd *cobra.Command, clust cluster.Cluster) (*rng.Service, error) {
-	pst := rng.NewPersistCluster(clust)
 	obs := rng.NewObserveMem([]rng.ObservedRange{})
-	if err := rng.RetrieveAddOpenRanges(cmd.Context(), pst, obs); err != nil {
+	if err := rng.RetrieveAddOpenRanges(cmd.Context(), clust.Exec, obs); err != nil {
 		return nil, err
 	}
-	rngSvc := rng.NewService(obs, pst)
+	rngSvc := rng.NewService(obs, clust.Exec)
 	rngSvc.Start(cmd.Context())
 	return rngSvc, nil
 }

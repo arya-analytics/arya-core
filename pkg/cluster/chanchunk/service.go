@@ -67,6 +67,7 @@ func (s *Service) createReplica(ctx context.Context, p *query.Pack) error {
 		return err
 	}
 	// CLARIFICATION: Now that we have the RangeReplicas.Node.IsHost field populated, we can switch on it.
+
 	return replicaNodeIsHostSwitch(
 		p.Model(),
 		func(m *model.Reflect) error { return s.localExec(ctx, query.NewCreate().Model(m).Pack()) },

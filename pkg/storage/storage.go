@@ -60,7 +60,6 @@ import (
 // see Engine and its sub-interfaces.
 type Storage interface {
 	query.Assemble
-	Exec(ctx context.Context, p *query.Pack) error
 	NewTSRetrieve() *QueryTSRetrieve
 	NewTSCreate() *QueryTSCreate
 	NewMigrate() *QueryMigrate

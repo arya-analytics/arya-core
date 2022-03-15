@@ -80,6 +80,22 @@ var _ = Describe("DataSourceMem", func() {
 			Expect(resR.RangeLease.RangeReplica.ID).To(Equal(rr.ID))
 			Expect(resR.RangeLease.RangeReplica.NodeID).To(Equal(1))
 		})
+		It("Should calculate a value correctly", func() {
+			cc := []*models.ChannelChunk{
+				{
+					ID:   uuid.New(),
+					Size: 10000,
+				},
+				{
+					ID:   uuid.New(),
+					Size: 10000,
+				},
+			}
+			Expect(asm.NewCreate().Model(&cc).Exec(ctx)).To(BeNil())
+			var size int64
+			Expect(asm.NewRetrieve().Model(&models.ChannelChunk{}).Calc(query.CalcSum, "Size", &size).Exec(ctx))
+			Expect(size).To(Equal(int64(20000)))
+		})
 	})
 	Describe("Update", func() {
 		It("Should update a single item correctly", func() {
@@ -123,6 +139,10 @@ var _ = Describe("DataSourceMem", func() {
 			resRR := &models.RangeReplica{}
 			Expect(asm.NewRetrieve().Model(resRR).WherePK(rr[0].ID).Exec(ctx)).To(BeNil())
 			Expect(resRR.NodeID).To(Equal(3))
+			resRRTwo := &models.RangeReplica{}
+			err := asm.NewRetrieve().Model(resRRTwo).WhereFields(query.WhereFields{"NodeID": 2}).Exec(ctx)
+			Expect(err).ToNot(BeNil())
+			Expect(err.(query.Error).Type).To(Equal(query.ErrorTypeItemNotFound))
 		})
 	})
 })

@@ -13,7 +13,6 @@ type Service interface {
 type Cluster interface {
 	query.Assemble
 	BindService(s Service)
-	Exec(ctx context.Context, p *query.Pack) error
 }
 
 type cluster struct {

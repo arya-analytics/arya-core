@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
-	log "github.com/sirupsen/logrus"
 	"reflect"
 	"strings"
 )
@@ -122,6 +121,7 @@ func (s *DataSourceMem) filter(p *query.Pack) *model.Reflect {
 }
 
 func (s *DataSourceMem) runCalculations(sRfl *model.Reflect, calc query.CalcOpt) {
+	reflect.ValueOf(calc.Into).Elem().Set(reflect.Zero(reflect.TypeOf(calc.Into).Elem()))
 	switch calc.Op {
 	case query.CalcSum:
 		s.calcSum(sRfl, calc.Field, calc.Into)
@@ -160,7 +160,7 @@ func (s *DataSourceMem) retrieveRelation(sRfl *model.Reflect, rel query.Relation
 						Fields: rel.Fields,
 					})
 				}
-				nSRfl.StructFieldByName(rel.Rel).Set(nDRfl.PointerValue())
+				nSRfl.StructFieldByName(names[0]).Set(nDRfl.PointerValue())
 			}
 		})
 	})
@@ -174,7 +174,6 @@ func (s *DataSourceMem) calcSum(sRfl *model.Reflect, field string, into interfac
 			panic("cant run a calculation on a non number!")
 		}
 		if fld.CanFloat() {
-			log.Error(fld.Float())
 			fldFloat := fld.Float()
 			intoRflFloat := intoRfl.Elem().Float()
 			intoRflFloat += fldFloat
@@ -204,13 +203,15 @@ func (s *DataSourceMem) filterByPK(sRfl *model.Reflect, pkc model.PKChain) *mode
 
 func (s *DataSourceMem) filterByWhereFields(sRfl *model.Reflect, wFld query.WhereFields) *model.Reflect {
 	nRfl := sRfl.NewChain()
+	for k, _ := range wFld {
+		fn, ln := model.SplitLastFieldName(k)
+		if fn != "" {
+			s.retrieveRelation(sRfl, query.RelationOpt{Rel: fn, Fields: query.FieldsOpt{ln}})
+		}
+	}
 	sRfl.ForEach(func(rfl *model.Reflect, i int) {
 		match := false
 		for k, v := range wFld {
-			fn, _ := model.SplitLastFieldName(k)
-			if fn != "" {
-				s.retrieveRelation(sRfl, query.RelationOpt{Rel: fn})
-			}
 			if fieldExpMatch(k, v, rfl) {
 				match = true
 			}

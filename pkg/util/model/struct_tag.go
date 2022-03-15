@@ -139,7 +139,7 @@ func constructKVPair(key string, value string) string {
 func splitKVPair(kvp string) (string, string) {
 	s := strings.Split(kvp, kvPairSeparator)
 	if len(s) != 2 {
-		panic(fmt.Sprintf("key value pair %s", kvp))
+		panic(fmt.Sprintf("key value pair %s improperly formatted", kvp))
 	}
 	return s[0], s[1]
 }

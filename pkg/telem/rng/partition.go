@@ -51,7 +51,7 @@ func (pd *partitionDetect) detectObserver(ctx context.Context, opt tasks.Schedul
 
 func (pd *partitionDetect) detectPersist(ctx context.Context, opt tasks.ScheduleConfig) error {
 	var openRng []*models.Range
-	if err := pd.qa.RetrieveOpenRangesQuery(openRng).Exec(ctx); err != nil {
+	if err := pd.qa.RetrieveOpenRangesQuery(&openRng).Exec(ctx); err != nil {
 		return err
 	}
 	var obsRng []ObservedRange
@@ -190,15 +190,15 @@ func (p *PartitionExecute) createRange(nodePK int) (newRng *models.Range) {
 }
 
 func (p *PartitionExecute) newReplicaPK(leaseRR *models.RangeReplica, nodeID int) uuid.UUID {
-	newReplicaID := leaseRR.ID
+	newReplica := leaseRR
 	if nodeID != leaseRR.NodeID {
 		p.catcher.Exec(func(ctx context.Context) error {
 			newRR, err := p.qa.CreateRangeReplica(ctx, leaseRR.RangeID, nodeID)
-			newReplicaID = newRR.ID
+			newReplica = newRR
 			return err
 		})
 	}
-	return newReplicaID
+	return newReplica.ID
 }
 
 func (p *PartitionExecute) retrievePartitionInfo() (
@@ -209,9 +209,9 @@ func (p *PartitionExecute) retrievePartitionInfo() (
 ) {
 	sourceRng = &models.Range{}
 	p.catcher.Exec(p.qa.RetrieveRangeQuery(sourceRng, p.sourceRangePK).Exec)
-	p.catcher.Exec(p.qa.RetrieveRangeChunksQuery(cc, p.sourceRangePK).Exec)
-	p.catcher.Exec(p.qa.RetrieveRangeReplicasQuery(sourceRR, p.sourceRangePK).Exec)
-	p.catcher.Exec(p.qa.RetrieveRangeChunkReplicasQuery(ccr, p.sourceRangePK).Exec)
+	p.catcher.Exec(p.qa.RetrieveRangeChunksQuery(&cc, p.sourceRangePK).Exec)
+	p.catcher.Exec(p.qa.RetrieveRangeReplicasQuery(&sourceRR, p.sourceRangePK).Exec)
+	p.catcher.Exec(p.qa.RetrieveRangeChunkReplicasQuery(&ccr, p.sourceRangePK).Exec)
 	return sourceRng, sourceRR, cc, ccr
 }
 

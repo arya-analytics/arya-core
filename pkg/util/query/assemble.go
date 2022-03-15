@@ -1,5 +1,7 @@
 package query
 
+import "context"
+
 type AssembleRetrieve interface {
 	NewRetrieve() *Retrieve
 }
@@ -21,6 +23,7 @@ type Assemble interface {
 	AssembleRetrieve
 	AssembleDelete
 	AssembleUpdate
+	Exec(ctx context.Context, p *Pack) error
 }
 
 type AssembleBase struct {
@@ -29,6 +32,10 @@ type AssembleBase struct {
 
 func NewAssemble(e Execute) AssembleBase {
 	return AssembleBase{e}
+}
+
+func (a AssembleBase) Exec(ctx context.Context, p *Pack) error {
+	return a.e(ctx, p)
 }
 
 func (a AssembleBase) NewCreate() *Create {

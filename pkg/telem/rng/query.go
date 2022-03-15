@@ -31,7 +31,7 @@ func (qa *QueryAssemble) CreateRange(ctx context.Context, nodePK int) (*models.R
 }
 
 func (qa *QueryAssemble) CreateRangeReplica(ctx context.Context, rngPK uuid.UUID, nodePK int) (*models.RangeReplica, error) {
-	rr := &models.RangeReplica{RangeID: rngPK, NodeID: nodePK}
+	rr := &models.RangeReplica{ID: uuid.New(), RangeID: rngPK, NodeID: nodePK}
 	return rr, qa.NewCreate().Model(rr).Exec(ctx)
 }
 
@@ -41,12 +41,12 @@ func (qa *QueryAssemble) RetrieveRangeQuery(rng *models.Range, pk uuid.UUID) *qu
 	return qa.RetrieveRangeLeaseReplicaRelationQuery(rng).WherePK(pk)
 }
 
-func (qa *QueryAssemble) RetrieveRangeReplicasQuery(rr []*models.RangeReplica, rngPK uuid.UUID) *query.Retrieve {
-	return qa.NewRetrieve().Model(&rr).WhereFields(query.WhereFields{"RangeID": rngPK})
+func (qa *QueryAssemble) RetrieveRangeReplicasQuery(rr *[]*models.RangeReplica, rngPK uuid.UUID) *query.Retrieve {
+	return qa.NewRetrieve().Model(rr).WhereFields(query.WhereFields{"RangeID": rngPK})
 }
 
-func (qa *QueryAssemble) RetrieveOpenRangesQuery(rng []*models.Range) *query.Retrieve {
-	return qa.RetrieveRangeLeaseReplicaRelationQuery(&rng).WhereFields(query.WhereFields{"Status": models.RangeStatusOpen})
+func (qa *QueryAssemble) RetrieveOpenRangesQuery(rng *[]*models.Range) *query.Retrieve {
+	return qa.RetrieveRangeLeaseReplicaRelationQuery(rng).WhereFields(query.WhereFields{"Status": models.RangeStatusOpen})
 }
 
 func (qa *QueryAssemble) RetrieveRangeLeaseReplicaRelationQuery(rng interface{}) *query.Retrieve {
@@ -68,11 +68,12 @@ func (qa *QueryAssemble) UpdateRangeStatusQuery(pk uuid.UUID, status models.Rang
 	return qa.NewUpdate().Model(&models.Range{ID: pk, Status: status}).Fields("Status").WherePK(pk)
 }
 
-func (qa *QueryAssemble) RetrieveRangeChunkReplicasQuery(ccr []*models.ChannelChunkReplica, rngPK uuid.UUID) *query.Retrieve {
-	return qa.NewRetrieve().
-		Model(&ccr).
+func (qa *QueryAssemble) RetrieveRangeChunkReplicasQuery(ccr *[]*models.ChannelChunkReplica, rngPK uuid.UUID) *query.Retrieve {
+	err := qa.NewRetrieve().
+		Model(ccr).
 		WhereFields(query.WhereFields{"ChannelChunk.RangeID": rngPK}).
 		Fields("ID", "RangeReplicaID")
+	return err
 }
 
 // || RE-ALLOCATE ||
@@ -90,5 +91,5 @@ func (qa *QueryAssemble) ReallocateChunksQuery(pks []uuid.UUID, rngPK uuid.UUID)
 	for _, pk := range pks {
 		cc = append(cc, &models.ChannelChunk{ID: pk, RangeID: rngPK})
 	}
-	return query.NewUpdate().Model(&cc).Fields("RangeID").Bulk()
+	return qa.NewUpdate().Model(&cc).Fields("RangeID").Bulk()
 }

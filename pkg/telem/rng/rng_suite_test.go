@@ -14,6 +14,9 @@ var (
 	clust *mock.Cluster
 )
 
+var _ = BeforeSuite(func() {
+})
+
 var _ = AfterSuite(func() {
 	if clust != nil {
 		clust.Stop()
