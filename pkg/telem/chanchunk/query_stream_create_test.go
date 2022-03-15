@@ -23,8 +23,7 @@ var _ = Describe("QueryStreamCreate", func() {
 	)
 	BeforeEach(func() {
 		rngObs := rng.NewObserveMem([]rng.ObservedRange{})
-		rngPst := rng.NewPersistCluster(clust)
-		rngSvc := rng.NewService(rngObs, rngPst)
+		rngSvc := rng.NewService(rngObs, clust.Exec)
 		obs := chanchunk.NewObserveMem()
 		svc = chanchunk.NewService(clust.Exec, obs, rngSvc)
 		node = &models.Node{ID: 1}
