@@ -24,7 +24,7 @@ linters:
     - staticcheck
     - nilerr
     # Disabling for now due to generics issues
-#    - typecheck
+    - typecheck
     # COMPLEXITY
     - gocognit
     # TEST
