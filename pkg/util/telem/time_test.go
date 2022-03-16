@@ -34,7 +34,7 @@ var _ = Describe("Time", func() {
 			rng := telem.NewTimeRange(telem.NewTimeStamp(t0), telem.NewTimeStamp(t1))
 			Expect(int64(rng.Start())).To(Equal(t0.UnixMicro()))
 			Expect(int64(rng.End())).To(Equal(t1.UnixMicro()))
-			Expect(rng.Span()).To(Equal(telem.NewTimeSpan(1 * time.Second)))
+			Expect(rng.Span()).To(BeNumerically(">", telem.NewTimeSpan(900*time.Millisecond)))
 		})
 		Describe("ChunkOverlap", func() {
 			Context("No overlap", func() {
