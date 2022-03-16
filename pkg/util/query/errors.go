@@ -18,7 +18,11 @@ type Error struct {
 }
 
 func NewSimpleError(t ErrorType, base error) Error {
-	return Error{Type: t, Base: base, Message: base.Error()}
+	e := Error{Type: t, Base: base}
+	if e.Base != nil {
+		e.Message = e.Base.Error()
+	}
+	return e
 }
 
 func NewUnknownError(base error) Error {
@@ -41,6 +45,7 @@ const (
 	ErrorTypeMigration
 	ErrorTypeInvalidArgs
 	ErrorTypeConnection
+	ErrorTypeMultipleResults
 )
 
 func injectErrKey(errStr string, args ...interface{}) string {

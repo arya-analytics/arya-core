@@ -11,11 +11,14 @@ import (
 type HostInterceptQueryHook int
 
 func (h HostInterceptQueryHook) AfterQuery(ctx context.Context, p *query.Pack) error {
-	switch p.Model().Type() {
-	case reflect.TypeOf(models.ChannelChunkReplica{}):
-		h.setNodeIsHost(p.Model(), "RangeReplica.Node.ID", "RangeReplica.Node.IsHost")
-	case reflect.TypeOf(models.RangeReplica{}):
-		h.setNodeIsHost(p.Model(), "Node.ID", "Node.IsHost")
+	switch p.Query().(type) {
+	case *query.Retrieve:
+		switch p.Model().Type() {
+		case reflect.TypeOf(models.ChannelChunkReplica{}):
+			h.setNodeIsHost(p.Model(), "RangeReplica.Node.ID", "RangeReplica.Node.IsHost")
+		case reflect.TypeOf(models.RangeReplica{}):
+			h.setNodeIsHost(p.Model(), "Node.ID", "Node.IsHost")
+		}
 	}
 	return nil
 }

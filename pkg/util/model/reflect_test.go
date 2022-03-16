@@ -226,6 +226,11 @@ var _ = Describe("Reflect", func() {
 				rfl.ChainAppend(model.NewReflect(mTwo))
 				Expect(rfl.ChainValueByIndex(2).Pointer()).To(Equal(mTwo))
 			})
+			It("Should append each to the chain correctly", func() {
+				mTwo := &mock.ModelA{ID: 1}
+				rfl.ChainAppendEach(model.NewReflect(mTwo))
+				Expect(rfl.ChainValueByIndex(2).Pointer()).To(Equal(mTwo))
+			})
 		})
 		Describe("New Chain", func() {
 			It("Should return the correct type", func() {

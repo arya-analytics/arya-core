@@ -29,7 +29,7 @@ func (fo FieldsOpt) ContainsAny(flds ...string) (contains bool) {
 	return contains
 }
 
-// ContainsAll returns true if FieldsOpt contains all of the provided fields.
+// ContainsAll returns true if FieldsOpt contains all provided fields.
 func (fo FieldsOpt) ContainsAll(flds ...string) bool {
 	for _, fld := range flds {
 		present := false

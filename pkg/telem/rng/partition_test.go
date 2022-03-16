@@ -5,6 +5,8 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/telem/rng"
 	"github.com/arya-analytics/aryacore/pkg/telem/rng/mock"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
+	"github.com/arya-analytics/aryacore/pkg/util/query"
+	querymock "github.com/arya-analytics/aryacore/pkg/util/query/mock"
 	"github.com/arya-analytics/aryacore/pkg/util/tasks"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
@@ -13,10 +15,17 @@ import (
 )
 
 var _ = Describe("Partition", func() {
+	var (
+		ds query.Assemble
+		qa *rng.QueryAssemble
+	)
+	BeforeEach(func() {
+		ds = querymock.NewDataSourceMem()
+		qa = rng.NewQueryAssemble(ds.Exec)
+	})
 	Describe("PartitionExecute", func() {
 		Context("Over Allocated Range", func() {
 			var (
-				p                         rng.Persist
 				rngId                     uuid.UUID
 				part                      *rng.PartitionExecute
 				newRanges                 []*models.Range
@@ -26,23 +35,23 @@ var _ = Describe("Partition", func() {
 			)
 			BeforeEach(func() {
 				sourceChunkReplicaNodeIDs = map[uuid.UUID]int{}
-				p, rngId = mock.NewPersistOverallocatedRange()
-				part = rng.NewPartitionExecute(ctx, p, rngId)
-				chunks, err := p.RetrieveRangeChunks(ctx, rngId)
-				Expect(err).To(BeNil())
-				rangeReplicas, err := p.RetrieveRangeReplicas(ctx, rngId)
-				Expect(err).To(BeNil())
+				rId, rangeReplicas, chunks, chunkReplicas := mock.PopulateOverallocatedRange(ctx, ds)
+				rngId = rId
+				part = rng.NewPartitionExecute(ctx, qa, rngId)
 				sourceChunkCount = len(chunks)
-				chunkReplicas, err := p.RetrieveRangeChunkReplicas(ctx, rngId)
 				Expect(len(chunkReplicas)).To(BeNumerically(">", 0))
 				for _, ccr := range chunkReplicas {
 					rr, ok := findRangeReplica(ccr.RangeReplicaID, rangeReplicas)
 					Expect(ok).To(BeTrue())
 					sourceChunkReplicaNodeIDs[ccr.ID] = rr.NodeID
 				}
-				Expect(err).To(BeNil())
 				sourceChunkReplicaCount = len(chunkReplicas)
+				var err error
+				var size int64
+				Expect(qa.RetrieveRangeSizeQuery(rngId, &size).Exec(ctx)).To(BeNil())
+
 				newRanges, err = part.Exec()
+				Expect(qa.RetrieveRangeSizeQuery(rngId, &size).Exec(ctx)).To(BeNil())
 				Expect(err).To(BeNil())
 
 			})
@@ -58,7 +67,8 @@ var _ = Describe("Partition", func() {
 				})
 				Specify("Lease on correct node", func() {
 					newRng := newRanges[0]
-					sourceRng, err := p.RetrieveRange(ctx, rngId)
+					sourceRng := &models.Range{}
+					err := qa.NewRetrieve().Model(sourceRng).WherePK(rngId).Exec(ctx)
 					Expect(err).To(BeNil())
 					Expect(newRng.RangeLease.RangeReplica.NodeID).To(Equal(sourceRng.RangeLease.RangeReplica.NodeID))
 				})
@@ -66,13 +76,15 @@ var _ = Describe("Partition", func() {
 			Context("New Range Size", func() {
 				It("Should be smaller than the max range size", func() {
 					newRng := newRanges[0]
-					size, err := p.RetrieveRangeSize(ctx, newRng.ID)
+					var size int64
+					err := qa.RetrieveRangeSizeQuery(newRng.ID, &size).Exec(ctx)
 					Expect(err).To(BeNil())
 					Expect(size).To(BeNumerically("<", models.MaxRangeSize))
 				})
 				It("Should be roughly 1/4 the size of the max range", func() {
 					newRng := newRanges[0]
-					size, err := p.RetrieveRangeSize(ctx, newRng.ID)
+					var size int64
+					err := qa.RetrieveRangeSizeQuery(newRng.ID, &size).Exec(ctx)
 					Expect(err).To(BeNil())
 					Expect(size).To(BeNumerically(">", float64(models.MaxRangeSize)*0.2))
 					Expect(size).To(BeNumerically("<", float64(models.MaxRangeSize)*0.3))
@@ -80,28 +92,34 @@ var _ = Describe("Partition", func() {
 			})
 			Context("Source range size", func() {
 				It("Should be smaller than the max range size", func() {
-					size, err := p.RetrieveRangeSize(ctx, rngId)
+					var size int64
+					err := qa.RetrieveRangeSizeQuery(rngId, &size).Exec(ctx)
 					Expect(err).To(BeNil())
 					Expect(size).To(BeNumerically("<", models.MaxRangeSize))
 				})
 				It("Should be pretty close to the max range size", func() {
-					size, err := p.RetrieveRangeSize(ctx, rngId)
+					var size int64
+					err := qa.RetrieveRangeSizeQuery(rngId, &size).Exec(ctx)
 					Expect(err).To(BeNil())
-					Expect(size).To(BeNumerically(">", float64(models.MaxRangeSize)*0.98))
+					Expect(size).To(BeNumerically(">", float64(models.MaxRangeSize)*0.95))
 				})
 			})
 			Context("New Range Replicas", func() {
 				Specify("There should be one new replica per source replica", func() {
-					sourceReplicas, err := p.RetrieveRangeReplicas(ctx, rngId)
+					var sourceReplicas []*models.RangeReplica
+					err := qa.RetrieveRangeReplicasQuery(&sourceReplicas, rngId).Exec(ctx)
 					Expect(err).To(BeNil())
 					Expect(sourceReplicas).To(HaveLen(3))
-					newReplicas, err := p.RetrieveRangeReplicas(ctx, newRanges[0].ID)
-					Expect(len(newReplicas)).To(Equal(len(sourceReplicas)))
+					var newReplicas []*models.RangeReplica
+					err = qa.RetrieveRangeReplicasQuery(&newReplicas, newRanges[0].ID).Exec(ctx)
+					Expect(err).To(BeNil())
+					Expect(newReplicas).To(HaveLen(3))
 				})
 				Specify("The node PK of each new range replica must the same as the original replica", func() {
-					sourceReplicas, err := p.RetrieveRangeReplicas(ctx, rngId)
+					var sourceReplicas, newReplicas []*models.RangeReplica
+					err := qa.RetrieveRangeReplicasQuery(&sourceReplicas, rngId).Exec(ctx)
 					Expect(err).To(BeNil())
-					newReplicas, err := p.RetrieveRangeReplicas(ctx, newRanges[0].ID)
+					err = qa.RetrieveRangeReplicasQuery(&newReplicas, newRanges[0].ID).Exec(ctx)
 					Expect(err).To(BeNil())
 					for _, newRR := range newReplicas {
 						match := false
@@ -116,25 +134,33 @@ var _ = Describe("Partition", func() {
 			})
 			Context("Reallocated chunks", func() {
 				Specify("The amount of chunks in the source range and the new range should equal the total chunks", func() {
-					sourceChunks, err := p.RetrieveRangeChunks(ctx, rngId)
+					var sourceChunks, newChunks []*models.ChannelChunk
+					err := qa.RetrieveRangeChunksQuery(&sourceChunks, rngId).Exec(ctx)
 					Expect(err).To(BeNil())
-					newChunks, err := p.RetrieveRangeChunks(ctx, newRanges[0].ID)
+					err = qa.RetrieveRangeChunksQuery(&newChunks, newRanges[0].ID).Exec(ctx)
+					Expect(err).To(BeNil())
 					Expect(len(sourceChunks)).To(BeNumerically("<", sourceChunkCount))
 					Expect(len(sourceChunks) + len(newChunks)).To(Equal(sourceChunkCount))
 				})
 			})
 			Context("Reallocated ChunkData Replicas", func() {
 				Specify("The amount of chunk replicas should remain the same", func() {
-					sourceCCRs, err := p.RetrieveRangeChunkReplicas(ctx, rngId)
+					var sourceCCRs, newCCRs []*models.ChannelChunkReplica
+					err := qa.RetrieveRangeChunkReplicasQuery(&sourceCCRs, rngId).Exec(ctx)
 					Expect(err).To(BeNil())
-					newCCRs, err := p.RetrieveRangeChunkReplicas(ctx, newRanges[0].ID)
+					err = qa.RetrieveRangeChunkReplicasQuery(&newCCRs, newRanges[0].ID).Exec(ctx)
+					Expect(err).To(BeNil())
 					Expect(len(sourceCCRs)).To(BeNumerically("<", sourceChunkReplicaCount))
 					Expect(len(sourceCCRs) + len(newCCRs)).To(Equal(sourceChunkReplicaCount))
 				})
 				Specify("Each reallocated chunk replica should belong to the same node as it did before realloc", func() {
-					newReplicas, err := p.RetrieveRangeReplicas(ctx, newRanges[0].ID)
+					var (
+						newReplicas []*models.RangeReplica
+						newCCRs     []*models.ChannelChunkReplica
+					)
+					err := qa.RetrieveRangeReplicasQuery(&newReplicas, newRanges[0].ID).Exec(ctx)
 					Expect(err).To(BeNil())
-					newCCRs, err := p.RetrieveRangeChunkReplicas(ctx, newRanges[0].ID)
+					err = qa.RetrieveRangeChunkReplicasQuery(&newCCRs, newRanges[0].ID).Exec(ctx)
 					Expect(err).To(BeNil())
 					for _, newCCR := range newCCRs {
 						repl, ok := findRangeReplica(newCCR.RangeReplicaID, newReplicas)
@@ -148,12 +174,14 @@ var _ = Describe("Partition", func() {
 			})
 			Context("Range Status", func() {
 				It("Should close the source range", func() {
-					sourceRng, err := p.RetrieveRange(ctx, rngId)
+					sourceRng := &models.Range{}
+					err := qa.RetrieveRangeQuery(sourceRng, rngId).Exec(ctx)
 					Expect(err).To(BeNil())
 					Expect(sourceRng.Status).To(Equal(models.RangeStatusClosed))
 				})
 				It("Should open the new range", func() {
-					newRng, err := p.RetrieveRange(ctx, newRanges[0].ID)
+					newRng := &models.Range{}
+					err := qa.RetrieveRangeQuery(newRng, newRanges[0].ID).Exec(ctx)
 					Expect(err).To(BeNil())
 					Expect(newRng.Status).To(Equal(models.RangeStatusOpen))
 				})
@@ -167,7 +195,6 @@ var _ = Describe("Partition", func() {
 		)
 		var (
 			rngPK uuid.UUID
-			pst   rng.Persist
 			svc   *rng.Service
 			obs   rng.Observe
 		)
@@ -184,12 +211,13 @@ var _ = Describe("Partition", func() {
 		})
 		Describe("Persisted Detection", func() {
 			BeforeEach(func() {
-				pst, rngPK = mock.NewPersistOverallocatedRange()
+				rngPK, _, _, _ = mock.PopulateOverallocatedRange(ctx, ds)
 				obs = rng.NewObserveMem([]rng.ObservedRange{})
-				svc = rng.NewService(obs, pst)
+				svc = rng.NewService(obs, ds.Exec)
 			})
-			It("Should reallocate the overallocated range", func() {
-				size, err := pst.RetrieveRangeSize(ctx, rngPK)
+			It("Should reallocate the over-allocated range", func() {
+				var size int64
+				err := qa.RetrieveRangeSizeQuery(rngPK, &size).Exec(ctx)
 				Expect(err).To(BeNil())
 				Expect(size).To(BeNumerically("<", models.MaxRangeSize))
 			})
@@ -206,21 +234,15 @@ var _ = Describe("Partition", func() {
 		})
 		Describe("Observed Detection", func() {
 			BeforeEach(func() {
-				pst, rngPK = mock.NewPersistOverallocatedRange()
-				newRng, err := pst.RetrieveRange(ctx, rngPK)
-				Expect(err).To(BeNil())
-				obs = rng.NewObserveMem([]rng.ObservedRange{
-					{
-						PK:             newRng.ID,
-						Status:         models.RangeStatusOpen,
-						LeaseNodePK:    newRng.RangeLease.RangeReplica.NodeID,
-						LeaseReplicaPK: newRng.RangeLease.RangeReplica.ID,
-					},
-				})
-				svc = rng.NewService(obs, pst)
+				rngPK, _, _, _ = mock.PopulateOverallocatedRange(ctx, ds)
+				obs = rng.NewObserveMem([]rng.ObservedRange{})
+				svc = rng.NewService(obs, ds.Exec)
+				Expect(rng.RetrieveAddOpenRanges(ctx, ds.Exec, obs)).To(BeNil())
+				svc = rng.NewService(obs, ds.Exec)
 			})
-			It("Should reallocate the overallocated range", func() {
-				size, err := pst.RetrieveRangeSize(ctx, rngPK)
+			It("Should reallocate the over-allocated range", func() {
+				var size int64
+				err := qa.RetrieveRangeSizeQuery(rngPK, &size).Exec(ctx)
 				Expect(err).To(BeNil())
 				Expect(size).To(BeNumerically("<", models.MaxRangeSize))
 			})

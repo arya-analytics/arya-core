@@ -2,7 +2,7 @@ package models
 
 import "github.com/google/uuid"
 
-const MaxRangeSize int64 = 512e7
+const MaxRangeSize int64 = 64e7
 
 type RangeStatus int
 
@@ -15,20 +15,20 @@ const (
 type Range struct {
 	ID         uuid.UUID `model:"role:pk,"`
 	Status     RangeStatus
-	RangeLease *RangeLease
+	RangeLease *RangeLease `model:"rel:has-one,join:ID=RangeID"`
 }
 
 type RangeLease struct {
 	ID             uuid.UUID `model:"role:pk,"`
 	RangeID        uuid.UUID
-	RangeReplica   *RangeReplica
+	RangeReplica   *RangeReplica `model:"rel:belongs-to,join:RangeReplicaID=ID"`
 	RangeReplicaID uuid.UUID
 }
 
 type RangeReplica struct {
 	ID      uuid.UUID `model:"role:pk"`
-	Range   *Range
+	Range   *Range    `model:"rel:belongs-to,join:RangeID=ID"`
 	RangeID uuid.UUID
-	Node    *Node
+	Node    *Node `model:"rel:belongs-to,join:NodeID=ID"`
 	NodeID  int
 }

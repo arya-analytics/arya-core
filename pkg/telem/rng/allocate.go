@@ -15,8 +15,8 @@ import (
 //
 // A new Allocate should be created for every unique ChannelChunk.
 type Allocate struct {
-	pst         persistCreate
 	obs         Observe
+	qa          *QueryAssemble
 	leaseNodePK int
 	rangePK     uuid.UUID
 }
@@ -39,7 +39,7 @@ func (a *Allocate) ChunkReplica(replica *models.ChannelChunkReplica) *allocateCh
 func (a *Allocate) retrieveObservedOrCreate(ctx context.Context, q ObservedRange) (ObservedRange, error) {
 	or, ok := a.obs.Retrieve(q)
 	if !ok {
-		newRng, err := a.pst.CreateRange(ctx, a.leaseNodePK)
+		newRng, err := a.qa.CreateRange(ctx, a.leaseNodePK)
 		if err != nil {
 			return ObservedRange{}, err
 		}
@@ -63,7 +63,6 @@ type allocateChunk struct {
 
 // Exec runs the allocator, and assigns the appropriate RangeID to the ChannelChunk.
 func (ac *allocateChunk) Exec(ctx context.Context) error {
-
 	or, err := ac.retrieveObservedOrCreate(ctx, ObservedRange{LeaseNodePK: ac.leaseNodePK, Status: models.RangeStatusOpen})
 	ac.rangePK = or.PK
 	ac.chunk.RangeID = or.PK

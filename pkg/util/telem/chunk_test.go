@@ -110,7 +110,7 @@ var _ = Describe("ChunkData", func() {
 		)
 		BeforeEach(func() {
 			cd := telem.NewChunkData([]byte{})
-			cd.WriteData([]float64{1, 2, 3, 4, 5, 6, 7, 8, 9})
+			Expect(cd.WriteData([]float64{1, 2, 3, 4, 5, 6, 7, 8, 9})).To(BeNil())
 			c = telem.NewChunk(
 				telem.TimeStamp(0),
 				telem.DataTypeFloat64,
@@ -186,7 +186,7 @@ var _ = Describe("ChunkData", func() {
 					cc := telem.NewChunk(telem.TimeStamp(0), telem.DataTypeFloat64, telem.DataRate(25000), cd)
 					ts := time.Now()
 					cc.AllValues()
-					Expect(time.Now().Sub(ts)).To(BeNumerically("<", 5*time.Millisecond))
+					Expect(time.Since(ts)).To(BeNumerically("<", 5*time.Millisecond))
 				})
 			})
 		})

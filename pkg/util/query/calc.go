@@ -5,6 +5,7 @@ import "reflect"
 // Calc represents a calculation to perform on items in a data store.
 type Calc int
 
+//go:generate stringer -type=Calc
 const (
 	// CalcSum calculates the sum of items.
 	CalcSum Calc = iota

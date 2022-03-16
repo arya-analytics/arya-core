@@ -5,6 +5,7 @@ package rng
 
 import (
 	"context"
+	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/arya-analytics/aryacore/pkg/util/tasks"
 )
 
@@ -14,23 +15,23 @@ import (
 type Service struct {
 	ps  tasks.Schedule
 	obs Observe
-	pst Persist
+	qa  *QueryAssemble
 }
 
 // NewService creates a new rng.Service. Requires a val.
-func NewService(obs Observe, p Persist) *Service {
-	return &Service{obs: obs, pst: p}
+func NewService(obs Observe, qExec query.Execute) *Service {
+	return &Service{obs: obs, qa: NewQueryAssemble(qExec)}
 }
 
 // NewAllocate creates a new Allocate and returns it.
 func (s *Service) NewAllocate() *Allocate {
-	return &Allocate{obs: s.obs, pst: s.pst}
+	return &Allocate{obs: s.obs, qa: s.qa}
 }
 
 // Start starts Service internal tasks.
 // NOTE: If restarting the Service, call Stop before calling Start again.
 func (s *Service) Start(ctx context.Context, opts ...tasks.ScheduleOpt) {
-	s.ps = newSchedulePartition(&partitionDetect{Persist: s.pst, Observe: s.obs}, opts...)
+	s.ps = newSchedulePartition(&partitionDetect{qa: s.qa, observe: s.obs}, opts...)
 	go s.ps.Start(ctx)
 }
 

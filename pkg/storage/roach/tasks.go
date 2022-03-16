@@ -88,13 +88,7 @@ func (sn *syncNodes) createNodeWithPK(pk model.PK) {
 	newNode := &models.Node{ID: pk.Raw().(int)}
 	sn.catcher.Exec(func() error {
 		if err := query.NewCreate().BindExec(newCreate(sn.db).exec).Model(newNode).Exec(sn.ctx); err != nil {
-			sErr, ok := err.(query.Error)
-			if !ok {
-				log.Error("Encountered un-parseable err after roach bunQ exec.")
-			}
-			if sErr.Type == query.ErrorTypeUniqueViolation {
-				log.WithFields(fld).Warnf("someone just created the node table entry!")
-			} else {
+			if sErr, ok := err.(query.Error); !ok || sErr.Type != query.ErrorTypeUniqueViolation {
 				return err
 			}
 		}
@@ -104,9 +98,7 @@ func (sn *syncNodes) createNodeWithPK(pk model.PK) {
 
 func (sn *syncNodes) deleteNodeWithPK(pk model.PK) {
 	if !sn.cfg.Silent {
-		log.WithFields(log.Fields{
-			"pk": pk.Raw(),
-		}).Info("A node left the cluster. Removing table entry.")
+		log.WithFields(log.Fields{"pk": pk.Raw()}).Info("A node left the cluster. Removing table entry.")
 	}
 	sn.catcher.Exec(func() error {
 		_, err := sn.db.NewDelete().

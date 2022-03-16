@@ -32,6 +32,18 @@ func NewReflect(modelPtr interface{}) *Reflect {
 	return r
 }
 
+// NewReflectFromType initializes, validates, and returns a model Reflect
+// based on the provided type.
+func NewReflectFromType(t reflect.Type) *Reflect {
+	if t.Kind() != reflect.Struct {
+		panic("provided type must be of struct kind")
+	}
+	rfl := newReflectNilNonPtr(reflect.New(t).Interface())
+	rfl.Validate()
+	return rfl
+
+}
+
 // UnsafeNewReflect initializes and returns an unvalidated model
 // Reflect. If you don't have a good reason to do this, don't.
 // The main reason for bypassing validation is to construct a pointer from a
@@ -117,7 +129,7 @@ func (r *Reflect) StructFieldByName(name string) reflect.Value {
 		if i == 0 {
 			fld = r.StructValue().FieldByNameFunc(matchFields(splitName))
 		} else {
-			if fld.IsZero() {
+			if fld.IsNil() {
 				return reflect.Value{}
 			}
 			fld = fld.Elem().FieldByNameFunc(matchFields(splitName))
@@ -142,7 +154,7 @@ func (r *Reflect) ChainValue() reflect.Value {
 // ChainAppend appends another Reflect to the model object.
 // Panics if the model object is a struct.
 //
-// Panics if Reflect to append rta is a chain.
+// Panics if Reflect to append rta is a chain or the model object is a chain.
 //
 // This operation would panic:
 // 		rStruct := model.UnsafeNewReflect(&ExampleStruct{})
@@ -152,6 +164,14 @@ func (r *Reflect) ChainAppend(rta *Reflect) {
 	rta.panicIfChain()
 	r.panicIfStruct()
 	r.ChainValue().Set(reflect.Append(r.ChainValue(), rta.PointerValue()))
+}
+
+// ChainAppendEach appends all models in Reflect rta to the model object.
+// Panics if Reflect is a chain.
+func (r *Reflect) ChainAppendEach(rta *Reflect) {
+	rta.ForEach(func(rfl *Reflect, i int) {
+		r.ChainAppend(rfl)
+	})
 }
 
 // ChainValueByIndex retrieves Reflect from the model objet by index.

@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
+	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/google/uuid"
 	"reflect"
 	"sync"
@@ -120,9 +121,9 @@ func validateObservedRange(or ObservedRange) {
 	}
 }
 
-func RetrieveAddOpenRanges(ctx context.Context, p Persist, o Observe) error {
-	openR, err := p.RetrieveOpenRanges(ctx)
-	if err != nil {
+func RetrieveAddOpenRanges(ctx context.Context, qExec query.Execute, o Observe) error {
+	var openR []*models.Range
+	if err := NewQueryAssemble(qExec).RetrieveOpenRangesQuery(&openR).Exec(ctx); err != nil {
 		return err
 	}
 	for _, r := range openR {

@@ -26,14 +26,13 @@ var _ = Describe("Server", func() {
 		node   *models.Node
 		config *models.ChannelConfig
 		svc    *chanchunk.Service
-		client bulktelemv1.BulkTelemServiceClient
+		cl     bulktelemv1.BulkTelemServiceClient
 		items  []interface{}
 	)
 	BeforeEach(func() {
 		// || MODEL DEFINITIONS ||
 		rngObs := rng.NewObserveMem([]rng.ObservedRange{})
-		rngPst := rng.NewPersistCluster(clust)
-		rngSvc := rng.NewService(rngObs, rngPst)
+		rngSvc := rng.NewService(rngObs, clust.Exec)
 		obs := chanchunk.NewObserveMem()
 		svc = chanchunk.NewService(clust.Exec, obs, rngSvc)
 		node = &models.Node{ID: 1}
@@ -59,7 +58,7 @@ var _ = Describe("Server", func() {
 		}()
 		conn, err := grpc.Dial(lis.Addr().String(), grpc.WithTransportCredentials(insecure.NewCredentials()))
 		Expect(err).To(BeNil())
-		client = bulktelemv1.NewBulkTelemServiceClient(conn)
+		cl = bulktelemv1.NewBulkTelemServiceClient(conn)
 	})
 	JustBeforeEach(func() {
 		for _, item := range items {
@@ -74,7 +73,7 @@ var _ = Describe("Server", func() {
 	Describe("CreateStream", func() {
 		It("Should create the chunks correctly", func() {
 			cc := mock.ChunkSet(5, telem.TimeStamp(0), config.DataType, config.DataRate, telem.NewTimeSpan(600*time.Second), telem.TimeSpan(0))
-			stream, err := client.CreateStream(ctx)
+			stream, err := cl.CreateStream(ctx)
 			Expect(err).To(BeNil())
 
 			wg := sync.WaitGroup{}

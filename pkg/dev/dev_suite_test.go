@@ -37,7 +37,6 @@ func provisionDummyAryaClusterIfNotExists() (*dev.AryaCluster, error) {
 	c.Bind()
 	var cErr error
 	if !c.Exists() {
-		log.Info("Test Cluster does not exist")
 		cErr = c.Provision()
 		for _, c := range c.Nodes() {
 			dev.MergeClusterConfig(*c)
@@ -48,7 +47,6 @@ func provisionDummyAryaClusterIfNotExists() (*dev.AryaCluster, error) {
 }
 
 var _ = BeforeSuite(func() {
-	log.Info("Bootstrapping test suite")
 	tooling = dev.NewTooling()
 	if !tooling.Installed(testTool) {
 		if err := tooling.Install(testTool); err != nil {
@@ -70,7 +68,6 @@ var _ = BeforeSuite(func() {
 	if err != nil {
 		log.Fatalln("Failed to pull info from test VM")
 	}
-	log.Info("Test suite bootstrapped successfully")
 })
 
 var _ = AfterSuite(func() {

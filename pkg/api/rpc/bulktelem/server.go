@@ -7,6 +7,7 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"github.com/google/uuid"
+	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"io"
 	"sync"
@@ -69,12 +70,16 @@ func startStream(ctx context.Context, stream *chanchunk.QueryStreamCreate, req *
 
 func sendData(stream *chanchunk.QueryStreamCreate, req *bulktelemv1.CreateStreamRequest) {
 	cd := telem.NewChunkData(make([]byte, len(req.Data)))
-	cd.Write(req.Data)
+	if _, err := cd.Write(req.Data); err != nil {
+		log.Fatalln(err)
+	}
 	stream.Send(telem.TimeStamp(req.StartTs), cd)
 }
 
 func relayErrors(stream *chanchunk.QueryStreamCreate, server bulktelemv1.BulkTelemService_CreateStreamServer) {
 	for err := range stream.Errors() {
-		server.Send(&bulktelemv1.CreateStreamResponse{Error: &bulktelemv1.Error{Message: err.Error()}})
+		if err := server.Send(&bulktelemv1.CreateStreamResponse{Error: &bulktelemv1.Error{Message: err.Error()}}); err != nil {
+			log.Fatalln(err)
+		}
 	}
 }

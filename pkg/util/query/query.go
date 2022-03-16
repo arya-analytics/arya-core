@@ -21,6 +21,7 @@ package query
 
 import (
 	"context"
+	"fmt"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 )
 
@@ -58,21 +59,30 @@ func NewPack(q Query) *Pack {
 	return &Pack{query: q, opts: map[optKey]interface{}{}}
 }
 
-func (q *Pack) bindModel(m interface{}) {
+func (p *Pack) bindModel(m interface{}) {
 	switch m.(type) {
 	case *model.Reflect:
-		q.model = m.(*model.Reflect)
+		p.model = m.(*model.Reflect)
 	default:
-		q.model = model.NewReflect(m)
+		p.model = model.NewReflect(m)
 	}
 }
 
 // Model returns the packed query's model.
-func (q *Pack) Model() *model.Reflect {
-	return q.model
+func (p *Pack) Model() *model.Reflect {
+	return p.model
 }
 
 // Query returns the underlying Query the pack was built off of.
-func (q *Pack) Query() Query {
-	return q.query
+func (p *Pack) Query() Query {
+	return p.query
+}
+
+// String stringifies information about the Query
+func (p *Pack) String() string {
+	var count = 1
+	if p.Model().IsChain() {
+		count = p.Model().ChainValue().Len()
+	}
+	return fmt.Sprintf("Variant: %T, Model: %s, Count: %v, Opts: %s", p.query, p.model.Type(), count, p.opts)
 }
