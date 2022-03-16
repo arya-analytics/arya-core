@@ -225,7 +225,7 @@ func (s *DataSourceMem) filterByWhereFields(sRfl *model.Reflect, wFld query.Wher
 
 func fieldExpMatch(wFldName string, wFldVal interface{}, source *model.Reflect) bool {
 	fldVal := source.StructFieldByName(wFldName)
-	if fldVal.IsZero() {
+	if !fldVal.IsValid() {
 		return false
 	}
 	_, ok := wFldVal.(query.FieldExp)

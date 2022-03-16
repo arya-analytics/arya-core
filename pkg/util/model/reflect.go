@@ -129,8 +129,8 @@ func (r *Reflect) StructFieldByName(name string) reflect.Value {
 		if i == 0 {
 			fld = r.StructValue().FieldByNameFunc(matchFields(splitName))
 		} else {
-			if fld.IsZero() {
-				break
+			if fld.IsNil() {
+				return reflect.Value{}
 			}
 			fld = fld.Elem().FieldByNameFunc(matchFields(splitName))
 		}
