@@ -203,7 +203,7 @@ func (s *DataSourceMem) filterByPK(sRfl *model.Reflect, pkc model.PKChain) *mode
 
 func (s *DataSourceMem) filterByWhereFields(sRfl *model.Reflect, wFld query.WhereFields) *model.Reflect {
 	nRfl := sRfl.NewChain()
-	for k, _ := range wFld {
+	for k := range wFld {
 		fn, ln := model.SplitLastFieldName(k)
 		if fn != "" {
 			s.retrieveRelation(sRfl, query.RelationOpt{Rel: fn, Fields: query.FieldsOpt{ln}})
