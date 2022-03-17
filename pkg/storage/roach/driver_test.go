@@ -1,9 +1,9 @@
-package minio_test
+package roach_test
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/storage"
-	"github.com/arya-analytics/aryacore/pkg/storage/minio"
+	"github.com/arya-analytics/aryacore/pkg/storage/roach"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
@@ -17,23 +17,26 @@ var _ = Describe("Driver", func() {
 		Expect(viper.ReadInConfig()).To(BeNil())
 	})
 	Describe("Config", func() {
-		It("Shoild load the viper config correctly", func() {
-			cfg := minio.Config{}.Viper()
-			Expect(cfg.Endpoint).To(Equal("badep:9000"))
+		It("Should load the viper config correctly", func() {
+			cfg := roach.Config{}.Viper()
+			Expect(cfg.Host).To(Equal("badhost"))
 		})
 	})
-	Describe("Connection Errors", func() {
+	Describe("Connection errors", func() {
 		It("Should return the correct query error", func() {
 			pool := storage.NewPool()
-			driver := &minio.DriverMinio{Config: minio.Config{}.Viper()}
-			engine := minio.New(driver, pool)
-			err := engine.NewRetrieve().Model(&models.ChannelChunkReplica{}).WherePK(uuid.New()).Exec(ctx)
+			cfg := roach.Config{}.Viper()
+			driver := &roach.DriverRoach{Config: cfg}
+			engine := roach.New(driver, pool)
+			err := engine.NewRetrieve().Model(&models.ChannelChunk{}).WherePK(uuid.New()).Exec(ctx)
+			Expect(err).ToNot(BeNil())
 			Expect(err.(query.Error).Type).To(Equal(query.ErrorTypeConnection))
 		})
 	})
 	Describe("DemandCap", func() {
 		It("Should return the correct demand cap", func() {
-			driver := &minio.DriverMinio{Config: minio.Config{}.Viper()}
+			cfg := roach.Config{}.Viper()
+			driver := &roach.DriverRoach{Config: cfg}
 			Expect(driver.DemandCap()).To(Equal(500))
 		})
 	})

@@ -1,0 +1,11 @@
+{
+  "storage": {
+    "object": {
+      "endpoint": "badep:9000",
+      "accessKey": "minio",
+      "secretKey": "minio123",
+      "useTLS": false,
+      "demandCap": 500
+    }
+  }
+}
