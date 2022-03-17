@@ -26,13 +26,14 @@ func (m *exchange) bucket() string {
 	return caseconv.PascalToKebab(m.Dest().Type().Name())
 }
 
-func (m *exchange) dataVals() dataValueChain {
-	var c dataValueChain
+func (m *exchange) dataVals() (dvc dataValueChain) {
 	m.Dest().ForEach(func(rfl *model.Reflect, i int) {
-		data := rfl.StructFieldByRole("telemChunkData")
-		c = append(c, &dataValue{PK: rfl.PK(), Data: data.Interface().(*telem.ChunkData)})
+		dvc = append(dvc, &dataValue{
+			PK:   rfl.PK(),
+			Data: rfl.StructFieldByRole("telemChunkData").Interface().(*telem.ChunkData),
+		})
 	})
-	return c
+	return dvc
 }
 
 func (m *exchange) bindDataVals(dvc dataValueChain) {
