@@ -132,7 +132,7 @@ func (r *retrieve) exec(ctx context.Context, p *query.Pack) error {
 
 func (m *migrate) exec(ctx context.Context, p *query.Pack) error {
 	for _, mod := range catalog() {
-		me := newWrappedExchange(model.NewExchange(mod, mod))
+		me := wrapExchange(model.NewExchange(mod, mod))
 		exists, err := m.client.BucketExists(ctx, me.bucket())
 		if err != nil {
 			return newErrorConvert().Exec(err)
@@ -169,7 +169,7 @@ func (r *retrieve) convertOpts(p *query.Pack) {
 
 func (b *base) model(p *query.Pack) {
 	ptr := p.Model().Pointer()
-	b.exc = newWrappedExchange(model.NewExchange(ptr, catalog().New(ptr)))
+	b.exc = wrapExchange(model.NewExchange(ptr, catalog().New(ptr)))
 }
 
 // |||| PK ||||

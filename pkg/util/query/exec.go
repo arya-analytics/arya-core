@@ -35,6 +35,7 @@ type Ops struct {
 	Retrieve Execute
 	Delete   Execute
 	Update   Execute
+	Migrate  Execute
 }
 
 // Switch switches a Pack to a configured set of Execute. Switch allows the caller to implement different query Execute
@@ -56,6 +57,10 @@ func Switch(ctx context.Context, p *Pack, ops Ops) error {
 	case *Delete:
 		if ops.Delete != nil {
 			return ops.Delete(ctx, p)
+		}
+	case *Migrate:
+		if ops.Migrate != nil {
+			return ops.Migrate(ctx, p)
 		}
 	}
 	panic(fmt.Sprintf("%T not supported for model %s", p.Query(), p.Model().Type().Name()))

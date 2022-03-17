@@ -18,11 +18,16 @@ type AssembleDelete interface {
 	NewDelete() *Delete
 }
 
+type AssembleMigrate interface {
+	NewMigrate() *Migrate
+}
+
 type Assemble interface {
 	AssembleCreate
 	AssembleRetrieve
 	AssembleDelete
 	AssembleUpdate
+	AssembleMigrate
 	Exec(ctx context.Context, p *Pack) error
 }
 
@@ -52,4 +57,8 @@ func (a AssembleBase) NewUpdate() *Update {
 
 func (a AssembleBase) NewDelete() *Delete {
 	return NewDelete().BindExec(a.e)
+}
+
+func (a AssembleBase) NewMigrate() *Migrate {
+	return NewMigrate().BindExec(a.e)
 }

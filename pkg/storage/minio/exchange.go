@@ -18,7 +18,7 @@ type exchange struct {
 	*model.Exchange
 }
 
-func newWrappedExchange(sma *model.Exchange) *exchange {
+func wrapExchange(sma *model.Exchange) *exchange {
 	return &exchange{sma}
 }
 

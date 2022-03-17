@@ -22,20 +22,14 @@ var _ = Describe("Hook", func() {
 	Describe("UUID auto-generation", func() {
 		var channelConfig *models.ChannelConfig
 		BeforeEach(func() {
-			channelConfig = &models.ChannelConfig{
-				Name:   "Auto-generated UUID",
-				NodeID: node.ID,
-			}
+			channelConfig = &models.ChannelConfig{Name: "Auto-generated UUID", NodeID: node.ID}
 		})
 		JustBeforeEach(func() {
 			Expect(engine.NewCreate().Model(channelConfig).Exec(ctx)).To(BeNil())
 		})
 		It("Should be able to be re-queried after creation", func() {
 			var retrievedCC = &models.ChannelConfig{}
-			err := engine.NewRetrieve().
-				Model(retrievedCC).
-				WherePK(channelConfig.ID).Exec(ctx)
-			Expect(err).To(BeNil())
+			Expect(engine.NewRetrieve().Model(retrievedCC).WherePK(channelConfig.ID).Exec(ctx)).To(BeNil())
 			Expect(retrievedCC.Name).To(Equal(channelConfig.Name))
 		})
 	})
