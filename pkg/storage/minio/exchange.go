@@ -7,12 +7,10 @@ import (
 	"reflect"
 )
 
-type dataValue struct {
+type data struct {
 	PK   model.PK
 	Data *telem.ChunkData
 }
-
-type dataValueChain []*dataValue
 
 type exchange struct {
 	*model.Exchange
@@ -26,9 +24,9 @@ func (m *exchange) bucket() string {
 	return caseconv.PascalToKebab(m.Dest().Type().Name())
 }
 
-func (m *exchange) dataVals() (dvc dataValueChain) {
+func (m *exchange) dataVals() (dvc []data) {
 	m.Dest().ForEach(func(rfl *model.Reflect, i int) {
-		dvc = append(dvc, &dataValue{
+		dvc = append(dvc, data{
 			PK:   rfl.PK(),
 			Data: rfl.StructFieldByRole("telemChunkData").Interface().(*telem.ChunkData),
 		})
@@ -36,7 +34,7 @@ func (m *exchange) dataVals() (dvc dataValueChain) {
 	return dvc
 }
 
-func (m *exchange) bindDataVals(dvc dataValueChain) {
+func (m *exchange) bindDataVals(dvc []data) {
 	for _, dv := range dvc {
 		rfl, ok := m.Dest().ValueByPK(dv.PK)
 		if ok {

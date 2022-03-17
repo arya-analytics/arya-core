@@ -40,7 +40,7 @@ func newDelete(client *minio.Client) *del {
 
 type retrieve struct {
 	where
-	dvc dataValueChain
+	dvc []data
 }
 
 func newRetrieve(client *minio.Client) *retrieve {
@@ -107,13 +107,13 @@ func (r *retrieve) exec(ctx context.Context, p *query.Pack) error {
 	if err := whereReqValidator().Exec(r.where).Error(); err != nil {
 		return newErrorConvert().Exec(err)
 	}
-	var dvc dataValueChain
+	var dvc []data
 	for _, pk := range r.pkc {
 		bulk, err := r.getObject(ctx, pk)
 		if err != nil {
 			return newErrorConvert().Exec(err)
 		}
-		dvc = append(dvc, &dataValue{PK: pk, Data: bulk})
+		dvc = append(dvc, data{PK: pk, Data: bulk})
 	}
 	r.exc.bindDataVals(dvc)
 	r.exchangeToSource()
