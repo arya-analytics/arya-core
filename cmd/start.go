@@ -11,6 +11,7 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/rpc"
 	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/storage/internal"
 	"github.com/arya-analytics/aryacore/pkg/storage/minio"
 	"github.com/arya-analytics/aryacore/pkg/storage/redis"
 	"github.com/arya-analytics/aryacore/pkg/storage/roach"
@@ -96,7 +97,7 @@ func runStart(cmd *cobra.Command, _ []string) error {
 }
 
 func startStorage(cmd *cobra.Command) (storage.Storage, error) {
-	pool := storage.NewPool()
+	pool := internal.NewPool()
 
 	mdDriver := roach.DriverRoach{Config: roach.Config{}.Viper()}
 	mdEngine := roach.New(mdDriver, pool)

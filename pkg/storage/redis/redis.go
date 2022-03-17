@@ -1,7 +1,6 @@
 package redis
 
 import (
-	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/storage/internal"
 	"github.com/arya-analytics/aryacore/pkg/storage/redis/timeseries"
 	log "github.com/sirupsen/logrus"
@@ -10,11 +9,11 @@ import (
 // |||| ENGINE ||||
 
 type Engine struct {
-	pool   *storage.Pool
+	pool   *internal.Pool
 	driver Driver
 }
 
-func New(driver Driver, pool *storage.Pool) *Engine {
+func New(driver Driver, pool *internal.Pool) *Engine {
 	return &Engine{driver: driver, pool: pool}
 }
 

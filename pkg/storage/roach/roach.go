@@ -2,7 +2,6 @@ package roach
 
 import (
 	"context"
-	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/storage/internal"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/arya-analytics/aryacore/pkg/util/tasks"
@@ -23,10 +22,10 @@ type Driver interface {
 type Engine struct {
 	query.AssembleBase
 	driver Driver
-	pool   *storage.Pool
+	pool   *internal.Pool
 }
 
-func New(driver Driver, pool *storage.Pool) *Engine {
+func New(driver Driver, pool *internal.Pool) *Engine {
 	e := &Engine{driver: driver, pool: pool}
 	e.AssembleBase = query.NewAssemble(e.Exec)
 	return e

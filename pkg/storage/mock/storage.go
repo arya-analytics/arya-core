@@ -3,6 +3,7 @@ package mock
 import (
 	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/storage/internal"
 	"github.com/arya-analytics/aryacore/pkg/storage/minio"
 	"github.com/arya-analytics/aryacore/pkg/storage/redis"
 	"github.com/arya-analytics/aryacore/pkg/storage/roach"
@@ -41,7 +42,7 @@ func NewStorage(opts ...StorageOpt) *Storage {
 	driverMinio := DriverMinio{}
 	driverRedis := DriverRedis{}
 
-	pool := storage.NewPool()
+	pool := internal.NewPool()
 
 	s := &Storage{
 		Storage: storage.New(storage.Config{

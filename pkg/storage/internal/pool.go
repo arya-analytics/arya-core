@@ -1,7 +1,6 @@
-package storage
+package internal
 
 import (
-	"github.com/arya-analytics/aryacore/pkg/storage/internal"
 	"sync"
 )
 
@@ -19,16 +18,16 @@ func (as *adapterState) Release() {
 
 func NewPool() *Pool {
 	return &Pool{
-		adapters: map[internal.Adapter]*adapterState{},
+		adapters: map[Adapter]*adapterState{},
 	}
 }
 
 type Pool struct {
 	mu       sync.RWMutex
-	adapters map[internal.Adapter]*adapterState
+	adapters map[Adapter]*adapterState
 }
 
-func (p *Pool) Retrieve(e internal.Engine) (a internal.Adapter, err error) {
+func (p *Pool) Retrieve(e Engine) (a Adapter, err error) {
 	a, ok := p.findAdapter(e)
 	if !ok {
 		a, err = e.NewAdapter()
@@ -37,11 +36,11 @@ func (p *Pool) Retrieve(e internal.Engine) (a internal.Adapter, err error) {
 	return a, err
 }
 
-func (p *Pool) Release(a internal.Adapter) {
+func (p *Pool) Release(a Adapter) {
 	p.adapters[a].Release()
 }
 
-func (p *Pool) findAdapter(e internal.Engine) (internal.Adapter, bool) {
+func (p *Pool) findAdapter(e Engine) (Adapter, bool) {
 	p.mu.RLock()
 	defer p.mu.RUnlock()
 	for a, s := range p.adapters {
@@ -53,7 +52,7 @@ func (p *Pool) findAdapter(e internal.Engine) (internal.Adapter, bool) {
 	return nil, false
 }
 
-func (p *Pool) addAdapter(a internal.Adapter) {
+func (p *Pool) addAdapter(a Adapter) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	p.adapters[a] = &adapterState{}
