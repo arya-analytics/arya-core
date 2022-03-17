@@ -150,36 +150,4 @@ var _ = Describe("Catch", func() {
 			Expect(c.Error()).To(Equal(errors.New("random error")))
 		})
 	})
-	Describe("AddError", func() {
-		It("Should be able to take a function with arbitrary return values", func() {
-			c := errutil.NewCatchSimple()
-			c.AddError(func() (int, error) { return 1, nil }())
-			Expect(c.Error()).To(BeNil())
-		})
-
-		It("Should do nothing when no arguments are passed", func() {
-			c := errutil.NewCatchSimple()
-			c.AddError()
-			Expect(c.Error()).To(BeNil())
-		})
-		It("Should bin a non nil error", func() {
-			c := errutil.NewCatchSimple()
-			c.AddError(errors.New("error"))
-			Expect(c.Error()).ToNot(BeNil())
-		})
-		Describe("Edge cases + errors", func() {
-			It("Should panic when the function passed isn't called", func() {
-				c := errutil.NewCatchSimple()
-				Expect(func() {
-					c.AddError(func() (int, error) { return 1, nil })
-				}).To(PanicWith("function must be called when running AddError!"))
-			})
-			It("Should panic when a non-error is returned as the last value", func() {
-				c := errutil.NewCatchSimple()
-				Expect(func() {
-					c.AddError("a", "b")
-				}).To(PanicWith("catch function didn't return an error as its last value!"))
-			})
-		})
-	})
 })

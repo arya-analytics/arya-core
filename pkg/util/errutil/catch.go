@@ -1,15 +1,128 @@
+// Package errutil contains utilities for error catching, handling, inspection, conversion, etc.
+//
+// Catch -> Interface and implementations for catching errors returned by a set of similar operations.
+// Convert -> Converts errors from one type to another.
+// Inspect -> Inspects and prints debugging information about an error.
+//
 package errutil
 
 import (
 	"context"
-	"reflect"
 )
 
+// Catch provides an interface for catching errors returned by a set of operations.
+//
+// c := errutil.NewCatchSimple()
+// c.Exec(myFunc1)  // Returns an error
+// c.Exec(myFunc2)
+// fmt.Println(c.Error())
+// Output:
+// 		error returned by func1
+//
+// The Catch will execute all functions until a function returns a non-nil error. In this case, if myFunc1 returns an
+// error, myFunc2 will not execute.
+//
+// Types that implement the Catch interface should also implement a set of functions that
+// execute actions (such as CatchSimple.Exec). They are excluded from this interface
+// as to support variable interfaces.
 type Catch interface {
+	// Error returns the most recent error caught.
 	Error() error
+	// Errors returns all errors caught. Will only have len > 0 if WithAggregation opt is used on instantiation.
 	Errors() []error
+	// Reset resets the Catch so it becomes error free.
 	Reset()
-	AddError(args ...interface{})
+}
+
+// |||| SIMPLE ||||
+
+// CatchSimple is a simple implementation of Catch,
+// Direct instantiation should be avoided, and
+// should instead be constructed using NewCatchSimple.
+type CatchSimple struct {
+	errors []error
+	opts   *catchOpts
+}
+
+// NewCatchSimple instantiates a CatchSimple with the provided options.
+func NewCatchSimple(opts ...CatchOpt) *CatchSimple {
+	c := &CatchSimple{opts: &catchOpts{}}
+	c.bindOpts(opts...)
+	return c
+}
+
+type CatchAction func() error
+
+// Exec runs a CatchAction and catches any errors that it may return.
+// See Catch interface for more info on how this works.
+func (c *CatchSimple) Exec(ca CatchAction) {
+	if !c.opts.aggregate && len(c.errors) > 0 {
+		return
+	}
+	err := ca()
+	if err != nil {
+		c.runHooks(err)
+		c.errors = append(c.errors, c.convert(err))
+	}
+}
+
+// Reset implements Catch.
+func (c *CatchSimple) Reset() {
+	c.errors = []error{}
+}
+
+// Error implements Catch.
+func (c *CatchSimple) Error() error {
+	if len(c.Errors()) == 0 {
+		return nil
+	}
+	return c.Errors()[0]
+}
+
+// Errors implements Catch.
+func (c *CatchSimple) Errors() []error {
+	return c.errors
+}
+
+func (c *CatchSimple) runHooks(err error) {
+	for _, h := range c.opts.hooks {
+		h(err)
+	}
+}
+
+func (c *CatchSimple) bindOpts(opts ...CatchOpt) {
+	for _, o := range opts {
+		o(c.opts)
+	}
+}
+
+func (c *CatchSimple) convert(err error) error {
+	if c.opts.convert != nil {
+		return c.opts.convert.Exec(err)
+	}
+	return err
+}
+
+// |||| CONTEXT ||||
+
+// CatchContext extends CatchSimple by receiving a context.Context as an argument
+// and running an action that requires that ctx (CatchActionCtx).
+type CatchContext struct {
+	*CatchSimple
+	ctx context.Context
+}
+
+// NewCatchContext creates a new CatchContext with the provided context and options.
+func NewCatchContext(ctx context.Context, opts ...CatchOpt) *CatchContext {
+	return &CatchContext{CatchSimple: NewCatchSimple(opts...), ctx: ctx}
+}
+
+type CatchActionCtx func(ctx context.Context) error
+
+// Exec runs a CatchActionCtx and catches any errors that it may return.
+// See Catch interface for more info on how this works.
+func (c *CatchContext) Exec(ca CatchActionCtx) {
+	c.CatchSimple.Exec(func() error { return ca(c.ctx) })
 }
 
 // |||| OPTS ||||
@@ -22,125 +135,47 @@ type catchOpts struct {
 
 type CatchOpt func(o *catchOpts)
 
+// WithAggregation causes the Catch to execute all functions and aggregate the errors caught.
+// For Example:
+//
+// 		c := errutil.NewCatchSimple(errutil.WithAggregation())
+// 		c.Exec(myFunc1)  // Returns an error
+// 		c.Exec(myFunc2)
+// 		fmt.Println(c.Errors())
+//
+// 	Output:
+// 		errors returned by myFunc1 and myFunc2
+//
+// In this case, if myFunc1 returns an error, the Catch will execute and catch any errors returned by myFunc2.
 func WithAggregation() CatchOpt {
 	return func(o *catchOpts) {
 		o.aggregate = true
 	}
 }
 
+// WithConvert binds a ConvertChain to the Catch. When an error is returned by any executed function, the Catch
+// will convert the error by running it through the ConvertChain.
 func WithConvert(cc ConvertChain) CatchOpt {
 	return func(o *catchOpts) {
 		o.convert = cc
 	}
 }
 
+// CatchHook is executed any time an error is caught by the Catch. Receives the caught error as first argument.
 type CatchHook func(err error)
 
+// WithHooks binds a set of CatchHook to the Catch.
 func WithHooks(hooks ...CatchHook) CatchOpt {
 	return func(o *catchOpts) {
 		o.hooks = hooks
 	}
 }
 
-// |||| SIMPLE ||||
-
-type CatchSimple struct {
-	errors []error
-	opts   *catchOpts
-}
-
-func NewCatchSimple(opts ...CatchOpt) *CatchSimple {
-	c := &CatchSimple{opts: &catchOpts{}}
-	c.bindOpts(opts...)
-	return c
-}
-
-type CatchAction func() error
-
-func (c *CatchSimple) bindOpts(opts ...CatchOpt) {
-	for _, o := range opts {
-		o(c.opts)
-	}
-}
-
-func (c *CatchSimple) Exec(ca CatchAction) {
-	if !c.opts.aggregate && len(c.errors) > 0 {
-		return
-	}
-	err := ca()
-	if err != nil {
-		c.runHooks(err)
-		c.errors = append(c.errors, c.convert(err))
-	}
-}
-
-func (c *CatchSimple) convert(err error) error {
-	if c.opts.convert != nil {
-		return c.opts.convert.Exec(err)
-	}
-	return err
-}
-
-func (c *CatchSimple) AddError(args ...interface{}) {
-	if len(args) == 0 {
-		return
-	}
-	la := args[len(args)-1]
-	if la == nil {
-		return
-	}
-	err, ok := la.(error)
-	if !ok {
-		if reflect.TypeOf(args[0]).Kind() == reflect.Func {
-			panic("function must be called when running AddError!")
-		}
-		panic("catch function didn't return an error as its last value!")
-	}
-	c.Exec(func() error { return err })
-}
-
-func (c *CatchSimple) runHooks(err error) {
-	for _, h := range c.opts.hooks {
-		h(err)
-	}
-}
-
-func (c *CatchSimple) Reset() {
-	c.errors = []error{}
-}
-
-func (c *CatchSimple) Error() error {
-	if len(c.Errors()) == 0 {
-		return nil
-	}
-	return c.Errors()[0]
-}
-
-func (c *CatchSimple) Errors() []error {
-	return c.errors
-}
-
-// |||| CONTEXT ||||
-
-type CatchContext struct {
-	*CatchSimple
-	ctx context.Context
-}
-
-func NewCatchContext(ctx context.Context, opts ...CatchOpt) *CatchContext {
-	return &CatchContext{CatchSimple: NewCatchSimple(opts...), ctx: ctx}
-}
-
-type CatchActionCtx func(ctx context.Context) error
-
-func (c *CatchContext) Exec(ca CatchActionCtx) {
-	c.CatchSimple.Exec(func() error { return ca(c.ctx) })
-}
-
 // |||| HOOKS ||||
 
 // || PIPE ||
 
+// NewPipeHook pipes errors caught by the catch into the provided pipe.
 func NewPipeHook(pipe chan error) func(err error) {
 	return func(err error) {
 		pipe <- err
