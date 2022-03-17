@@ -114,9 +114,7 @@ func startStorage(cmd *cobra.Command) (storage.Storage, error) {
 		return s, err
 	}
 
-	s.Start(cmd.Context())
-
-	return s, nil
+	return s, s.Start(cmd.Context())
 }
 
 func startCluster(cmd *cobra.Command, store storage.Storage) cluster.Cluster {

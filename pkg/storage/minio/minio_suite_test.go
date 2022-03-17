@@ -17,6 +17,10 @@ var (
 	ctx    = context.Background()
 )
 
+var _ = BeforeSuite(func() {
+	Expect(engine.NewMigrate().Exec(ctx)).To(BeNil())
+})
+
 func TestMinio(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Minio Suite")

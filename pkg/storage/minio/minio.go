@@ -55,7 +55,8 @@ func (e *Engine) IsAdapter(a internal.Adapter) bool {
 }
 
 func (e *Engine) shouldHandle(p *query.Pack) bool {
-	if p.Model() == nil {
+	_, ok := p.Query().(*query.Migrate)
+	if ok {
 		return true
 	}
 	if !catalog().Contains(p.Model().Pointer()) {
