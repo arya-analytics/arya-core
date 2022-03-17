@@ -19,6 +19,7 @@ func errorConvertDefault(err error) (error, bool) {
 
 func minioErrors() map[string]query.ErrorType {
 	return map[string]query.ErrorType{
-		"NoSuchKey": query.ErrorTypeItemNotFound,
+		"NoSuchKey":       query.ErrorTypeItemNotFound,
+		"InvalidArgument": query.ErrorTypeInvalidArgs,
 	}
 }

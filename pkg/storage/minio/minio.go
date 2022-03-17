@@ -25,7 +25,7 @@ func (e *Engine) Exec(ctx context.Context, p *query.Pack) error {
 
 	c, err := e.client()
 	if err != nil {
-		return err
+		return newErrorConvert().Exec(err)
 	}
 
 	return query.Switch(ctx, p, query.Ops{

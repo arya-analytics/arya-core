@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/arya-analytics/aryacore/pkg/storage/internal"
+	"github.com/arya-analytics/aryacore/pkg/util/errutil"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
@@ -93,37 +94,31 @@ func (c *create) exec(ctx context.Context, p *query.Pack) error {
 
 func (d *del) exec(ctx context.Context, p *query.Pack) error {
 	d.convertOpts(p)
+	c := errutil.NewCatchSimple(errutil.WithConvert(newErrorConvert()))
 	for _, pk := range d.pkc {
-		if err := d.client.RemoveObject(ctx, d.bucket(), pk.String(), minio.RemoveObjectOptions{}); err != nil {
-			return err
-		}
+		c.AddError(d.client.RemoveObject(ctx, d.bucket(), pk.String(), minio.RemoveObjectOptions{}))
 	}
-	return nil
+	return c.Error()
 }
 
 func (r *retrieve) exec(ctx context.Context, p *query.Pack) error {
 	r.convertOpts(p)
-	if err := whereReqValidator().Exec(r.where).Error(); err != nil {
-		return err
-	}
+	c := errutil.NewCatchSimple(errutil.WithConvert(newErrorConvert()))
+	c.AddError(whereReqValidator().Exec(r.where).Error())
 	var dvc dataValueChain
 	for _, pk := range r.pkc {
 		resObj, gErr := r.client.GetObject(ctx, r.bucket(), pk.String(), minio.GetObjectOptions{})
-		if gErr != nil {
-			return newErrorConvert().Exec(gErr)
-		}
+		c.AddError(gErr)
 		stat, sErr := resObj.Stat()
-		if sErr != nil {
-			return newErrorConvert().Exec(sErr)
-		}
+		c.AddError(sErr)
 		bulk := telem.NewChunkData(make([]byte, stat.Size))
-		if _, err := bulk.ReadFrom(resObj); err != nil {
-			return newErrorConvert().Exec(err)
-		}
-		if err := resObj.Close(); err != nil {
-			return newErrorConvert().Exec(err)
-		}
+		_, err := bulk.ReadFrom(resObj)
+		c.AddError(err)
+		c.Exec(resObj.Close)
 		dvc = append(dvc, &dataValue{PK: pk, Data: bulk})
+	}
+	if err := c.Error(); err != nil {
+		return err
 	}
 	r.exc.bindDataVals(dvc)
 	r.exchangeToSource()
@@ -131,24 +126,19 @@ func (r *retrieve) exec(ctx context.Context, p *query.Pack) error {
 }
 
 func (m *migrate) exec(ctx context.Context, p *query.Pack) error {
+	c := errutil.NewCatchSimple(errutil.WithConvert(newErrorConvert()))
 	for _, mod := range catalog() {
 		me := wrapExchange(model.NewExchange(mod, mod))
 		exists, err := m.client.BucketExists(ctx, me.bucket())
-		if err != nil {
-			return newErrorConvert().Exec(err)
-		}
+		c.AddError(err)
 		if !exists {
 			if m.verify(p) {
-
-				return fmt.Errorf("bucket %s does not exist", err)
+				c.AddError(fmt.Errorf("bucket %s does not exist", err))
 			}
-			if mErr := m.client.MakeBucket(ctx, me.bucket(), minio.MakeBucketOptions{}); mErr != nil {
-				return newErrorConvert().Exec(mErr)
-			}
+			c.AddError(m.client.MakeBucket(ctx, me.bucket(), minio.MakeBucketOptions{}))
 		}
-
 	}
-	return nil
+	return c.Error()
 }
 
 // |||| OPT CONVERTERS ||||

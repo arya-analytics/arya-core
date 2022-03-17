@@ -30,6 +30,17 @@ var _ = Describe("Driver", func() {
 			err := engine.NewRetrieve().Model(&models.ChannelChunkReplica{}).WherePK(uuid.New()).Exec(ctx)
 			Expect(err.(query.Error).Type).To(Equal(query.ErrorTypeConnection))
 		})
+		Context("Config Formatting Error", func() {
+			It("Should return the correct query error", func() {
+				pool := storage.NewPool()
+				cfg := minio.Config{}.Viper()
+				cfg.Endpoint = "//awdawd"
+				driver := &minio.DriverMinio{Config: cfg}
+				engine := minio.New(driver, pool)
+				err := engine.NewRetrieve().Model(&models.ChannelChunkReplica{}).WherePK(uuid.New()).Exec(ctx)
+				Expect(err.(query.Error).Type).To(Equal(query.ErrorTypeInvalidArgs))
+			})
+		})
 	})
 	Describe("DemandCap", func() {
 		It("Should return the correct demand cap", func() {
