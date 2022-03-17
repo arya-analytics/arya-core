@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"github.com/arya-analytics/aryacore/pkg/storage/internal"
 	"github.com/arya-analytics/aryacore/pkg/util/errutil"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 )
@@ -8,14 +9,12 @@ import (
 type queryBase struct {
 	storage         *storage
 	modelRfl        *model.Reflect
-	_query          Query
-	_baseMDQuery    QueryMDBase
-	_baseObjQuery   QueryObjectBase
-	_baseCacheQuery QueryCacheBase
+	_query          internal.Query
+	_baseCacheQuery internal.QueryCacheBase
 	_catcher        *errutil.CatchSimple
 }
 
-func (q *queryBase) baseInit(s *storage, query Query) {
+func (q *queryBase) baseInit(s *storage, query internal.Query) {
 	q.storage = s
 	q._query = query
 	q._catcher = errutil.NewCatchSimple()
@@ -29,15 +28,15 @@ func (q *queryBase) baseBindModel(m interface{}) {
 
 // || CACHE ||
 
-func (q *queryBase) baseCacheEngine() EngineCache {
+func (q *queryBase) baseCacheEngine() internal.EngineCache {
 	return q.storage.cfg.EngineCache
 }
 
-func (q *queryBase) baseCacheQuery() QueryCacheBase {
+func (q *queryBase) baseCacheQuery() internal.QueryCacheBase {
 	return q._baseCacheQuery
 }
 
-func (q *queryBase) baseSetCacheQuery(qca QueryCacheBase) {
+func (q *queryBase) baseSetCacheQuery(qca internal.QueryCacheBase) {
 	q._baseCacheQuery = qca
 }
 

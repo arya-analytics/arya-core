@@ -1,7 +1,7 @@
 package redis
 
 import (
-	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/storage/internal"
 	"github.com/arya-analytics/aryacore/pkg/storage/redis/timeseries"
 	"github.com/google/uuid"
 )
@@ -20,12 +20,12 @@ func newAdapter(driver Driver) (*adapter, error) {
 	return a, a.open()
 }
 
-func bindAdapter(a storage.Adapter) (*adapter, bool) {
+func bindAdapter(a internal.Adapter) (*adapter, bool) {
 	ra, ok := a.(*adapter)
 	return ra, ok
 }
 
-func conn(a storage.Adapter) *timeseries.Client {
+func conn(a internal.Adapter) *timeseries.Client {
 	ra, ok := bindAdapter(a)
 	if !ok {
 		panic("couldn't bind redis adapter.")

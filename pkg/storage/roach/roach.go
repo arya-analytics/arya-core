@@ -3,6 +3,7 @@ package roach
 import (
 	"context"
 	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/storage/internal"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/arya-analytics/aryacore/pkg/util/tasks"
 	"github.com/uptrace/bun"
@@ -47,12 +48,12 @@ func (e *Engine) Exec(ctx context.Context, p *query.Pack) error {
 }
 
 // NewAdapter opens a new connection with the data store and returns a storage.Adapter.
-func (e *Engine) NewAdapter() (storage.Adapter, error) {
+func (e *Engine) NewAdapter() (internal.Adapter, error) {
 	return newAdapter(e.driver)
 }
 
 // IsAdapter checks if the provided adapter is a roach adapter.
-func (e *Engine) IsAdapter(a storage.Adapter) bool {
+func (e *Engine) IsAdapter(a internal.Adapter) bool {
 	_, ok := bindAdapter(a)
 	return ok
 }

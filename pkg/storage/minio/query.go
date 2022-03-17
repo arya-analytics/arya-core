@@ -3,7 +3,7 @@ package minio
 import (
 	"context"
 	"fmt"
-	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/storage/internal"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
@@ -154,15 +154,15 @@ func (m *migrate) exec(ctx context.Context, p *query.Pack) error {
 // |||| OPT CONVERTERS ||||
 
 func (c *create) convertOpts(p *query.Pack) {
-	storage.OptConverters{c.model}.Exec(p)
+	internal.OptConverters{c.model}.Exec(p)
 }
 
 func (d *del) convertOpts(p *query.Pack) {
-	storage.OptConverters{d.model, d.pk}.Exec(p)
+	internal.OptConverters{d.model, d.pk}.Exec(p)
 }
 
 func (r *retrieve) convertOpts(p *query.Pack) {
-	storage.OptConverters{r.model, r.pk}.Exec(p)
+	internal.OptConverters{r.model, r.pk}.Exec(p)
 }
 
 // |||| MODEL ||||

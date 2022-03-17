@@ -2,7 +2,7 @@ package roach
 
 import (
 	"context"
-	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/storage/internal"
 	"github.com/arya-analytics/aryacore/pkg/util/errutil"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
@@ -113,15 +113,15 @@ func (m *migrate) exec(ctx context.Context, p *query.Pack) error {
 // |||| OPT CONVERTERS ||||
 
 func (c *create) convertOpts(p *query.Pack) {
-	storage.OptConverters{c.model}.Exec(p)
+	internal.OptConverters{c.model}.Exec(p)
 }
 
 func (u *update) convertOpts(p *query.Pack) {
-	storage.OptConverters{u.model, u.pk, u.fields, u.bulk}.Exec(p)
+	internal.OptConverters{u.model, u.pk, u.fields, u.bulk}.Exec(p)
 }
 
 func (e *retrieve) convertOpts(p *query.Pack) {
-	storage.OptConverters{
+	internal.OptConverters{
 		e.model,
 		e.pk,
 		e.fields,
@@ -135,7 +135,7 @@ func (e *retrieve) convertOpts(p *query.Pack) {
 }
 
 func (d *del) convertOpts(p *query.Pack) {
-	storage.OptConverters{d.model, d.pk}.Exec(p)
+	internal.OptConverters{d.model, d.pk}.Exec(p)
 }
 
 // |||| BASE ||||

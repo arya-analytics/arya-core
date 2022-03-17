@@ -3,6 +3,7 @@ package minio
 import (
 	"context"
 	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/storage/internal"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/minio/minio-go/v7"
@@ -44,11 +45,11 @@ func (e *Engine) client() (*minio.Client, error) {
 
 }
 
-func (e *Engine) NewAdapter() (storage.Adapter, error) {
+func (e *Engine) NewAdapter() (internal.Adapter, error) {
 	return newAdapter(e.driver)
 }
 
-func (e *Engine) IsAdapter(a storage.Adapter) bool {
+func (e *Engine) IsAdapter(a internal.Adapter) bool {
 	_, ok := bindAdapter(a)
 	return ok
 }

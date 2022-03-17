@@ -1,7 +1,7 @@
 package minio
 
 import (
-	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/storage/internal"
 	"github.com/google/uuid"
 	"github.com/minio/minio-go/v7"
 )
@@ -21,12 +21,12 @@ func newAdapter(driver Driver) (*adapter, error) {
 	return a, a.open()
 }
 
-func bindAdapter(a storage.Adapter) (*adapter, bool) {
+func bindAdapter(a internal.Adapter) (*adapter, bool) {
 	me, ok := a.(*adapter)
 	return me, ok
 }
 
-func conn(a storage.Adapter) *minio.Client {
+func conn(a internal.Adapter) *minio.Client {
 	me, ok := bindAdapter(a)
 	if !ok {
 		panic("couldn't bind minio adapter")

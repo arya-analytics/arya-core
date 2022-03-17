@@ -27,6 +27,7 @@ package storage
 
 import (
 	"context"
+	"github.com/arya-analytics/aryacore/pkg/storage/internal"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/arya-analytics/aryacore/pkg/util/tasks"
 )
@@ -142,7 +143,7 @@ func (s *storage) AddQueryHook(hook QueryHook) {
 // Config holds the configuration information for Storage.
 // See New for information on creating Config.
 type Config struct {
-	EngineMD     EngineMD
-	EngineObject EngineObject
-	EngineCache  EngineCache
+	EngineMD     internal.EngineMD
+	EngineObject internal.EngineObject
+	EngineCache  internal.EngineCache
 }

@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"github.com/arya-analytics/aryacore/pkg/storage/internal"
 )
 
 type QueryTSRetrieve struct {
@@ -60,13 +61,13 @@ func (q *QueryTSRetrieve) Exec(ctx context.Context) error {
 
 // || CACHE ||
 
-func (q *QueryTSRetrieve) cacheQuery() QueryCacheTSRetrieve {
+func (q *QueryTSRetrieve) cacheQuery() internal.QueryCacheTSRetrieve {
 	if q.baseCacheQuery() == nil {
 		q.setCacheQuery(q.baseCacheEngine().NewTSRetrieve())
 	}
-	return q.baseCacheQuery().(QueryCacheTSRetrieve)
+	return q.baseCacheQuery().(internal.QueryCacheTSRetrieve)
 }
 
-func (q *QueryTSRetrieve) setCacheQuery(qca QueryCacheTSRetrieve) {
+func (q *QueryTSRetrieve) setCacheQuery(qca internal.QueryCacheTSRetrieve) {
 	q.baseSetCacheQuery(qca)
 }

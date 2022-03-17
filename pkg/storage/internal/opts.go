@@ -1,4 +1,4 @@
-package storage
+package internal
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/util/query"

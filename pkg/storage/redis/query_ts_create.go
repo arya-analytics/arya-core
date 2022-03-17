@@ -2,7 +2,7 @@ package redis
 
 import (
 	"context"
-	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/storage/internal"
 	"github.com/arya-analytics/aryacore/pkg/storage/redis/timeseries"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
 )
@@ -25,17 +25,17 @@ func newTSCreate(client *timeseries.Client) *tsCreateQuery {
 	return tsc
 }
 
-func (tsc *tsCreateQuery) Series() storage.QueryCacheTSCreate {
+func (tsc *tsCreateQuery) Series() internal.QueryCacheTSCreate {
 	tsc.variant = tsQueryVariantSeries
 	return tsc
 }
 
-func (tsc *tsCreateQuery) Sample() storage.QueryCacheTSCreate {
+func (tsc *tsCreateQuery) Sample() internal.QueryCacheTSCreate {
 	tsc.variant = tsQueryVariantSample
 	return tsc
 }
 
-func (tsc *tsCreateQuery) Model(m interface{}) storage.QueryCacheTSCreate {
+func (tsc *tsCreateQuery) Model(m interface{}) internal.QueryCacheTSCreate {
 	tsc.baseModel(m)
 	tsc.baseExchangeToDest()
 	return tsc

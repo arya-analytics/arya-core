@@ -1,6 +1,9 @@
 package storage
 
-import "context"
+import (
+	"context"
+	"github.com/arya-analytics/aryacore/pkg/storage/internal"
+)
 
 type QueryTSCreate struct {
 	queryTSBase
@@ -37,13 +40,13 @@ func (q *QueryTSCreate) Exec(ctx context.Context) error {
 
 // || CACHE ||
 
-func (q *QueryTSCreate) cacheQuery() QueryCacheTSCreate {
+func (q *QueryTSCreate) cacheQuery() internal.QueryCacheTSCreate {
 	if q.baseCacheQuery() == nil {
 		q.setCacheQuery(q.baseCacheEngine().NewTSCreate())
 	}
-	return q.baseCacheQuery().(QueryCacheTSCreate)
+	return q.baseCacheQuery().(internal.QueryCacheTSCreate)
 }
 
-func (q *QueryTSCreate) setCacheQuery(qca QueryCacheTSCreate) {
+func (q *QueryTSCreate) setCacheQuery(qca internal.QueryCacheTSCreate) {
 	q.baseSetCacheQuery(qca)
 }

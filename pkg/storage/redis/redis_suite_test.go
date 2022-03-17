@@ -3,6 +3,7 @@ package redis_test
 import (
 	"context"
 	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/storage/internal"
 	"github.com/arya-analytics/aryacore/pkg/storage/mock"
 	"github.com/arya-analytics/aryacore/pkg/storage/redis"
 	. "github.com/onsi/ginkgo/v2"
@@ -12,7 +13,7 @@ import (
 
 var (
 	ctx    = context.Background()
-	engine storage.EngineCache
+	engine internal.EngineCache
 )
 
 var _ = BeforeSuite(func() {
