@@ -42,11 +42,11 @@ type EngineMD interface {
 // EngineObject is responsible for storing bulktelem data to node localstorage data storage.
 type EngineObject interface {
 	Engine
-	Exec(ctx context.Context, p *query.Pack) error
 	query.AssembleCreate
 	query.AssembleRetrieve
 	query.AssembleDelete
 	query.AssembleMigrate
+	Exec(ctx context.Context, p *query.Pack) error
 }
 
 // || CACHE ||
@@ -65,29 +65,6 @@ type EngineCache interface {
 
 type Query interface {
 	Exec(ctx context.Context) error
-}
-
-// || META DATA ||
-
-type QueryMDBase interface {
-	Query
-}
-
-// QueryMDMigrate applies migration changes to metadata storage.
-type QueryMDMigrate interface {
-	QueryMDBase
-	Verify(ctx context.Context) error
-}
-
-// || OBJECT ||
-
-type QueryObjectBase interface {
-	Query
-}
-
-type QueryObjectMigrate interface {
-	QueryObjectBase
-	Verify(ctx context.Context) error
 }
 
 // || TS CACHE ||
