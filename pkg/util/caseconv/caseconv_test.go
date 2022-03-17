@@ -12,4 +12,9 @@ var _ = Describe("Caseconv", func() {
 			Expect(caseconv.PascalToKebab("HelloStrange")).To(Equal("hello-strange"))
 		})
 	})
+	Context("PascalToSnake", func() {
+		It("Shouild correctly convert the string", func() {
+			Expect(caseconv.PascalToSnake("HelloStrange")).To(Equal("hello_strange"))
+		})
+	})
 })
