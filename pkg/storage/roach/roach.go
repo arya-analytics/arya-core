@@ -32,18 +32,22 @@ func New(driver Driver, pool *storage.Pool) *Engine {
 }
 
 func (e *Engine) Exec(ctx context.Context, p *query.Pack) error {
-	a := e.pool.Retrieve(e)
+	a, err := e.pool.Retrieve(e)
+	if err != nil {
+		return err
+	}
 	db := conn(a)
 	return query.Switch(ctx, p, query.Ops{
 		Create:   newCreate(db).exec,
 		Retrieve: newRetrieve(db).exec,
 		Delete:   newDelete(db).exec,
 		Update:   newUpdate(db).exec,
+		Migrate:  newMigrate(db).exec,
 	})
 }
 
 // NewAdapter opens a new connection with the data store and returns a storage.Adapter.
-func (e *Engine) NewAdapter() storage.Adapter {
+func (e *Engine) NewAdapter() (storage.Adapter, error) {
 	return newAdapter(e.driver)
 }
 
@@ -57,12 +61,7 @@ func (e *Engine) ShouldHandle(m interface{}, _ ...string) bool {
 	return catalog().Contains(m)
 }
 
-// NewMigrate opens a new migrateExec with the provided storage.Adapter.
-func (e *Engine) NewMigrate() storage.QueryMDMigrate {
-	a := e.pool.Retrieve(e)
-	return newMigrate(conn(a), e.driver)
-}
-
-func (e *Engine) NewTasks(opts ...tasks.ScheduleOpt) tasks.Schedule {
-	return newTaskScheduler(conn(e.pool.Retrieve(e)), opts...)
+func (e *Engine) NewTasks(opts ...tasks.ScheduleOpt) (tasks.Schedule, error) {
+	a, err := e.pool.Retrieve(e)
+	return newTaskScheduler(conn(a), opts...), err
 }

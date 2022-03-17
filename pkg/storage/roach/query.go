@@ -3,9 +3,11 @@ package roach
 import (
 	"context"
 	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/util/errutil"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/uptrace/bun"
+	bunMigrate "github.com/uptrace/bun/migrate"
 )
 
 type base struct {
@@ -51,6 +53,15 @@ func newDelete(db *bun.DB) *del {
 	return &del{bunQ: db.NewDelete(), base: base{db: db}}
 }
 
+type migrate struct {
+	base
+	bunQ *bunMigrate.Migrations
+}
+
+func newMigrate(db *bun.DB) *migrate {
+	return &migrate{bunQ: bunMigrate.NewMigrations(), base: base{db: db}}
+}
+
 // |||| EXEC ||||
 
 func (c *create) exec(ctx context.Context, p *query.Pack) error {
@@ -81,6 +92,22 @@ func (d *del) exec(ctx context.Context, p *query.Pack) error {
 	d.convertOpts(p)
 	_, err := d.bunQ.Exec(ctx)
 	return newErrorConvert().Exec(err)
+}
+
+func (m *migrate) exec(ctx context.Context, p *query.Pack) error {
+	c := errutil.NewCatchContext(ctx)
+	if m.verify(p) {
+		_, err := m.db.NewSelect().Model((*ChannelConfig)(nil)).Count(ctx)
+		return newErrorConvert().Exec(err)
+	}
+	bindMigrations(m.bunQ)
+	bunMig := bunMigrate.NewMigrator(m.db, m.bunQ)
+	c.Exec(bunMig.Init)
+	c.Exec(func(ctx context.Context) error {
+		_, err := bunMig.Migrate(ctx)
+		return err
+	})
+	return newErrorConvert().Exec(c.Error())
 }
 
 // |||| OPT CONVERTERS ||||
@@ -234,4 +261,10 @@ func (u *update) bulk(p *query.Pack) {
 	if blk := query.BulkUpdateOpt(p); blk {
 		u.bunQ = u.bunQ.Bulk()
 	}
+}
+
+// |||| CUSTOM MIGRATE OPTS ||||
+
+func (m *migrate) verify(p *query.Pack) bool {
+	return query.VerifyOpt(p)
 }

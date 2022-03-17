@@ -2,6 +2,7 @@ package roach_test
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/models"
+	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/storage/mock"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
@@ -10,7 +11,12 @@ import (
 )
 
 var _ = Describe("Roach", func() {
-	a := engine.NewAdapter()
+	var a storage.Adapter
+	BeforeEach(func() {
+		var err error
+		a, err = engine.NewAdapter()
+		Expect(err).To(BeNil())
+	})
 	Describe("Adapter", func() {
 		Describe("New adapter", func() {
 			It("Should create a new adapter without error", func() {

@@ -13,7 +13,9 @@ var _ = Describe("Minio Engine", func() {
 	Describe("adapter", func() {
 		var a storage.Adapter
 		BeforeEach(func() {
-			a = engine.NewAdapter()
+			var err error
+			a, err = engine.NewAdapter()
+			Expect(err).To(BeNil())
 		})
 		Describe("New adapter", func() {
 			It("Should create a new adapter without error", func() {

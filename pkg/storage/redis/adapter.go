@@ -4,7 +4,6 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/storage/redis/timeseries"
 	"github.com/google/uuid"
-	log "github.com/sirupsen/logrus"
 )
 
 type adapter struct {
@@ -13,13 +12,12 @@ type adapter struct {
 	driver Driver
 }
 
-func newAdapter(driver Driver) *adapter {
+func newAdapter(driver Driver) (*adapter, error) {
 	a := &adapter{
 		id:     uuid.New(),
 		driver: driver,
 	}
-	a.open()
-	return a
+	return a, a.open()
 }
 
 func bindAdapter(a storage.Adapter) (*adapter, bool) {
@@ -43,12 +41,10 @@ func (a *adapter) DemandCap() int {
 	return a.driver.DemandCap()
 }
 
-func (a *adapter) open() {
+func (a *adapter) open() error {
 	var err error
 	a.client, err = a.driver.Connect()
-	if err != nil {
-		log.Fatalln(err)
-	}
+	return err
 }
 
 func (a *adapter) conn() *timeseries.Client {

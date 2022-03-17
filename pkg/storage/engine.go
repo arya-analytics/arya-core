@@ -22,7 +22,7 @@ type Adapter interface {
 // These responsibilities are assigned in the model struct using the storage.re key.
 // If no responsibility is assigned, EngineMD is assumed responsible.
 type Engine interface {
-	NewAdapter() Adapter
+	NewAdapter() (Adapter, error)
 	IsAdapter(a Adapter) bool
 }
 
@@ -32,10 +32,9 @@ type Engine interface {
 // strongly consistent data across the cluster.
 type EngineMD interface {
 	Engine
-	Exec(ctx context.Context, p *query.Pack) error
 	query.Assemble
-	NewMigrate() QueryMDMigrate
-	NewTasks(opts ...tasks.ScheduleOpt) tasks.Schedule
+	Exec(ctx context.Context, p *query.Pack) error
+	NewTasks(opts ...tasks.ScheduleOpt) (tasks.Schedule, error)
 }
 
 // || OBJECT ||
@@ -47,7 +46,7 @@ type EngineObject interface {
 	query.AssembleCreate
 	query.AssembleRetrieve
 	query.AssembleDelete
-	NewMigrate() QueryObjectMigrate
+	query.AssembleMigrate
 }
 
 // || CACHE ||

@@ -6,7 +6,7 @@ import (
 	"github.com/minio/minio-go/v7"
 )
 
-func newErrorConvertChain() errutil.ConvertChain {
+func newErrorConvert() errutil.ConvertChain {
 	return query.NewErrorConvertChain(errorConvertDefault)
 }
 

@@ -24,11 +24,12 @@ var _ = Describe("NewTasks", func() {
 			Expect(err).To(BeNil())
 		})
 		It("Should create the missing nodes", func() {
-			tasks := engine.NewTasks(
+			tasks, tErr := engine.NewTasks(
 				tasks.ScheduleWithSilence(),
 				tasks.ScheduleWithAccel(taskAccel),
 				tasks.ScheduleWithName("roach tasks"),
 			)
+			Expect(tErr).To(BeNil())
 			go tasks.Start(ctx)
 			go func() {
 				err := <-tasks.Errors()
@@ -44,7 +45,9 @@ var _ = Describe("NewTasks", func() {
 			Expect(count).To(Equal(1))
 		})
 		Context("Extra nodes", func() {
-			bunDB := roach.UnsafeConn(pool.Retrieve(engine))
+			a, err := pool.Retrieve(engine)
+			Expect(err).To(BeNil())
+			bunDB := roach.UnsafeConn(a)
 			var extraNode *models.Node
 			BeforeEach(func() {
 				extraNode = &models.Node{ID: 2}
@@ -58,11 +61,12 @@ var _ = Describe("NewTasks", func() {
 				Expect(count).To(Equal(1))
 			})
 			It("Should remove the extra nodes", func() {
-				tasks := engine.NewTasks(
+				tasks, tErr := engine.NewTasks(
 					tasks.ScheduleWithSilence(),
 					tasks.ScheduleWithAccel(taskAccel),
 					tasks.ScheduleWithName("roach tasks"),
 				)
+				Expect(tErr).To(BeNil())
 				go tasks.Start(ctx)
 				go func() {
 					err := <-tasks.Errors()

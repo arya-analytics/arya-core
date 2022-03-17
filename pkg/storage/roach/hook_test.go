@@ -28,8 +28,7 @@ var _ = Describe("Hook", func() {
 			}
 		})
 		JustBeforeEach(func() {
-			err := engine.NewCreate().Model(channelConfig).Exec(ctx)
-			Expect(err).To(BeNil())
+			Expect(engine.NewCreate().Model(channelConfig).Exec(ctx)).To(BeNil())
 		})
 		It("Should be able to be re-queried after creation", func() {
 			var retrievedCC = &models.ChannelConfig{}

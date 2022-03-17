@@ -25,13 +25,13 @@ type Pool struct {
 	adapters map[Adapter]*AdapterState
 }
 
-func (p *Pool) Retrieve(e Engine) Adapter {
+func (p *Pool) Retrieve(e Engine) (a Adapter, err error) {
 	a, ok := p.findAdapter(e)
 	if !ok {
-		a = p.newAdapter(e)
+		a, err = e.NewAdapter()
 		p.addAdapter(a)
 	}
-	return a
+	return a, err
 }
 
 func (p *Pool) Release(a Adapter) {
@@ -48,10 +48,6 @@ func (p *Pool) findAdapter(e Engine) (Adapter, bool) {
 		}
 	}
 	return nil, false
-}
-
-func (p *Pool) newAdapter(e Engine) Adapter {
-	return e.NewAdapter()
 }
 
 func (p *Pool) addAdapter(a Adapter) {

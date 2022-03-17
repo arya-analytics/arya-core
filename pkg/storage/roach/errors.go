@@ -6,11 +6,17 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/lib/pq"
 	"github.com/uptrace/bun/driver/pgdriver"
+	"net"
 	"strings"
 )
 
 func newErrorConvert() errutil.ConvertChain {
-	return query.NewErrorConvertChain(errorConvertPQ, errorConvertPGDriver, errorConvertDefault)
+	return query.NewErrorConvertChain(
+		errorConvertPQ,
+		errorConvertPGDriver,
+		errorConvertConnection,
+		errorConvertDefault,
+	)
 }
 
 func errorConvertDefault(err error) (error, bool) {
@@ -30,6 +36,16 @@ func sqlErrors() map[string]query.ErrorType {
 		"bun: Update and Delete queries require at":   query.ErrorTypeInvalidArgs,
 		"does not have relation":                      query.ErrorTypeInvalidArgs,
 	}
+}
+
+func errorConvertConnection(err error) (error, bool) {
+	switch err.(type) {
+	case *net.OpError:
+		return query.NewSimpleError(query.ErrorTypeConnection, err), true
+	default:
+		return err, false
+	}
+
 }
 
 func pgErrors() map[pg.ErrorType]query.ErrorType {
