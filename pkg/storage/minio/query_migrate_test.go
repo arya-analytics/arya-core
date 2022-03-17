@@ -14,7 +14,7 @@ var _ = Describe("QueryMigrate", func() {
 		Expect(err).To(BeNil())
 	})
 	It("Should execute all migrations successfully", func() {
-		vErr := engine.NewMigrate().Verify(ctx)
+		vErr := engine.NewMigrate().Verify().Exec(ctx)
 		Expect(vErr).To(BeNil())
 	})
 })

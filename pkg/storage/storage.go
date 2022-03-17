@@ -27,6 +27,7 @@ package storage
 
 import (
 	"context"
+	"github.com/arya-analytics/aryacore/pkg/storage/internal"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/arya-analytics/aryacore/pkg/util/tasks"
 )
@@ -62,9 +63,8 @@ type Storage interface {
 	query.Assemble
 	NewTSRetrieve() *QueryTSRetrieve
 	NewTSCreate() *QueryTSCreate
-	NewMigrate() *QueryMigrate
 	AddQueryHook(hook QueryHook)
-	Start(ctx context.Context, opts ...tasks.ScheduleOpt)
+	Start(ctx context.Context, opts ...tasks.ScheduleOpt) error
 	Stop()
 	Errors() chan error
 }
@@ -99,12 +99,8 @@ func (s *storage) Exec(ctx context.Context, p *query.Pack) error {
 		Retrieve: newDef(s).exec,
 		Delete:   newDef(s).exec,
 		Update:   newUpdate(s).exec,
+		Migrate:  newDef(s).exec,
 	})
-}
-
-// NewMigrate opens a new QueryMigrate.
-func (s *storage) NewMigrate() *QueryMigrate {
-	return newMigrate(s)
 }
 
 // NewTSRetrieve opens a new QueryTSRetrieve.
@@ -118,9 +114,14 @@ func (s *storage) NewTSCreate() *QueryTSCreate {
 }
 
 // Start starts storage internal tasks.
-func (s *storage) Start(ctx context.Context, opts ...tasks.ScheduleOpt) {
-	s.tasks = tasks.NewScheduleBatch(s.cfg.EngineMD.NewTasks(opts...))
+func (s *storage) Start(ctx context.Context, opts ...tasks.ScheduleOpt) error {
+	mdT, err := s.cfg.EngineMD.NewTasks(opts...)
+	if err != nil {
+		return err
+	}
+	s.tasks = tasks.NewScheduleBatch(mdT)
 	go s.tasks.Start(ctx)
+	return err
 }
 
 // Stop stops storage internal tasks.
@@ -142,7 +143,7 @@ func (s *storage) AddQueryHook(hook QueryHook) {
 // Config holds the configuration information for Storage.
 // See New for information on creating Config.
 type Config struct {
-	EngineMD     EngineMD
-	EngineObject EngineObject
-	EngineCache  EngineCache
+	EngineMD     internal.EngineMD
+	EngineObject internal.EngineObject
+	EngineCache  internal.EngineCache
 }

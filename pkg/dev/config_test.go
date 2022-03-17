@@ -11,7 +11,6 @@ import (
 )
 
 var _ = Describe("Config", func() {
-	log.SetReportCaller(true)
 	var c *dev.AryaCluster
 	var cErr error
 	BeforeEach(func() {

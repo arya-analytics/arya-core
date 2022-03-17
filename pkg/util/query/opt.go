@@ -13,4 +13,5 @@ const (
 	bulkUpdateOptKey  optKey = "bulkU"
 	orderOptKey       optKey = "order"
 	limitOptKey       optKey = "limit"
+	verifyOptKey      optKey = "verify"
 )

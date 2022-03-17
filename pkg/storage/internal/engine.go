@@ -1,4 +1,4 @@
-package storage
+package internal
 
 import (
 	"context"
@@ -22,7 +22,7 @@ type Adapter interface {
 // These responsibilities are assigned in the model struct using the storage.re key.
 // If no responsibility is assigned, EngineMD is assumed responsible.
 type Engine interface {
-	NewAdapter() Adapter
+	NewAdapter() (Adapter, error)
 	IsAdapter(a Adapter) bool
 }
 
@@ -32,10 +32,9 @@ type Engine interface {
 // strongly consistent data across the cluster.
 type EngineMD interface {
 	Engine
-	Exec(ctx context.Context, p *query.Pack) error
 	query.Assemble
-	NewMigrate() QueryMDMigrate
-	NewTasks(opts ...tasks.ScheduleOpt) tasks.Schedule
+	Exec(ctx context.Context, p *query.Pack) error
+	NewTasks(opts ...tasks.ScheduleOpt) (tasks.Schedule, error)
 }
 
 // || OBJECT ||
@@ -43,11 +42,11 @@ type EngineMD interface {
 // EngineObject is responsible for storing bulktelem data to node localstorage data storage.
 type EngineObject interface {
 	Engine
-	Exec(ctx context.Context, p *query.Pack) error
 	query.AssembleCreate
 	query.AssembleRetrieve
 	query.AssembleDelete
-	NewMigrate() QueryObjectMigrate
+	query.AssembleMigrate
+	Exec(ctx context.Context, p *query.Pack) error
 }
 
 // || CACHE ||
@@ -66,29 +65,6 @@ type EngineCache interface {
 
 type Query interface {
 	Exec(ctx context.Context) error
-}
-
-// || META DATA ||
-
-type QueryMDBase interface {
-	Query
-}
-
-// QueryMDMigrate applies migration changes to metadata storage.
-type QueryMDMigrate interface {
-	QueryMDBase
-	Verify(ctx context.Context) error
-}
-
-// || OBJECT ||
-
-type QueryObjectBase interface {
-	Query
-}
-
-type QueryObjectMigrate interface {
-	QueryObjectBase
-	Verify(ctx context.Context) error
 }
 
 // || TS CACHE ||

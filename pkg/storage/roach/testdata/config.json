@@ -1,0 +1,13 @@
+{
+  "storage": {
+    "md": {
+      "username": "root",
+      "password": "",
+      "database": "defaultdb",
+      "useTLS": false,
+      "port": 26257,
+      "host": "badhost",
+      "demandCap": 500
+    }
+  }
+}

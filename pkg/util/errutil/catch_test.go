@@ -135,4 +135,19 @@ var _ = Describe("Catch", func() {
 			Expect(errs).To(HaveLen(1))
 		})
 	})
+	Describe("With Converter", func() {
+		It("Should convert the error", func() {
+			cc := errutil.ConvertChain{func(err error) (error, bool) {
+				if err.Error() == "not random error" {
+					return errors.New("random error"), true
+				}
+				return nil, false
+			}}
+			c := errutil.NewCatchSimple(errutil.WithConvert(cc))
+			c.Exec(func() error {
+				return errors.New("not random error")
+			})
+			Expect(c.Error()).To(Equal(errors.New("random error")))
+		})
+	})
 })

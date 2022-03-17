@@ -1,6 +1,7 @@
 package query_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
@@ -9,6 +10,20 @@ import (
 )
 
 var _ = Describe("errChan", func() {
+	Describe("New Errors", func() {
+		Describe("NewSimpleError", func() {
+			It("Should return an error with the correct type", func() {
+				err := query.NewSimpleError(query.ErrorTypeConnection, nil)
+				Expect(err.Type).To(Equal(query.ErrorTypeConnection))
+			})
+		})
+		Describe("NewUnknownError", func() {
+			It("Should return an error with unknown type", func() {
+				err := query.NewUnknownError(nil)
+				Expect(err.Type).To(Equal(query.ErrorTypeUnknown))
+			})
+		})
+	})
 	Context("Error string", func() {
 		It("Should return the correct string", func() {
 			err := query.Error{Type: query.ErrorTypeUnknown, Message: "Unknown Error", Base: errors.New("unknown error")}
@@ -53,6 +68,15 @@ var _ = Describe("errChan", func() {
 				Expect(sErr.Type).To(Equal(query.ErrorTypeUnknown))
 				Expect(sErr.Message).To(Equal("query -> unknown error"))
 			})
+		})
+	})
+	Describe("Catch", func() {
+		It("Should execute the catch correctly", func() {
+			c := query.NewCatch(ctx, query.NewMigrate().Pack())
+			c.Exec(func(ctx context.Context, p *query.Pack) error {
+				return errors.New("odd error")
+			})
+			Expect(c.Error()).ToNot(BeNil())
 		})
 	})
 })

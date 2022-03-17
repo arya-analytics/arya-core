@@ -1,13 +1,14 @@
 package minio
 
 import (
+	"github.com/arya-analytics/aryacore/pkg/storage/internal"
 	"github.com/arya-analytics/aryacore/pkg/util/errutil"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/minio/minio-go/v7"
 )
 
-func newErrorConvertChain() errutil.ConvertChain {
-	return query.NewErrorConvertChain(errorConvertDefault)
+func newErrorConvert() errutil.ConvertChain {
+	return query.NewErrorConvertChain(internal.ErrorConvertConnection, errorConvertDefault)
 }
 
 func errorConvertDefault(err error) (error, bool) {
@@ -18,6 +19,7 @@ func errorConvertDefault(err error) (error, bool) {
 
 func minioErrors() map[string]query.ErrorType {
 	return map[string]query.ErrorType{
-		"NoSuchKey": query.ErrorTypeItemNotFound,
+		"NoSuchKey":       query.ErrorTypeItemNotFound,
+		"InvalidArgument": query.ErrorTypeInvalidArgs,
 	}
 }

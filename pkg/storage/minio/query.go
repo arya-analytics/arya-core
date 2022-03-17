@@ -3,7 +3,8 @@ package minio
 import (
 	"context"
 	"fmt"
-	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/storage/internal"
+	"github.com/arya-analytics/aryacore/pkg/util/errutil"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
@@ -84,7 +85,7 @@ func (c *create) exec(ctx context.Context, p *query.Pack) error {
 		_, err := c.client.PutObject(ctx, c.bucket(), dv.PK.String(), dv.Data, dv.Data.Size(), minio.PutObjectOptions{})
 		dv.Data.Reset()
 		if err != nil {
-			return newErrorConvertChain().Exec(err)
+			return newErrorConvert().Exec(err)
 		}
 	}
 	c.exchangeToSource()
@@ -104,24 +105,13 @@ func (d *del) exec(ctx context.Context, p *query.Pack) error {
 func (r *retrieve) exec(ctx context.Context, p *query.Pack) error {
 	r.convertOpts(p)
 	if err := whereReqValidator().Exec(r.where).Error(); err != nil {
-		return err
+		return newErrorConvert().Exec(err)
 	}
 	var dvc dataValueChain
 	for _, pk := range r.pkc {
-		resObj, gErr := r.client.GetObject(ctx, r.bucket(), pk.String(), minio.GetObjectOptions{})
-		if gErr != nil {
-			return newErrorConvertChain().Exec(gErr)
-		}
-		stat, sErr := resObj.Stat()
-		if sErr != nil {
-			return newErrorConvertChain().Exec(sErr)
-		}
-		bulk := telem.NewChunkData(make([]byte, stat.Size))
-		if _, err := bulk.ReadFrom(resObj); err != nil {
-			return newErrorConvertChain().Exec(err)
-		}
-		if err := resObj.Close(); err != nil {
-			return newErrorConvertChain().Exec(err)
+		bulk, err := r.getObject(ctx, pk)
+		if err != nil {
+			return newErrorConvert().Exec(err)
 		}
 		dvc = append(dvc, &dataValue{PK: pk, Data: bulk})
 	}
@@ -130,19 +120,22 @@ func (r *retrieve) exec(ctx context.Context, p *query.Pack) error {
 	return nil
 }
 
-func (m *migrate) Exec(ctx context.Context) error {
+func (m *migrate) exec(ctx context.Context, p *query.Pack) error {
 	for _, mod := range catalog() {
-		me := newWrappedExchange(model.NewExchange(mod, mod))
-		bucketExists, err := m.client.BucketExists(ctx, me.bucket())
+		me := wrapExchange(model.NewExchange(mod, mod))
+		exists, err := m.client.BucketExists(ctx, me.bucket())
 		if err != nil {
-			return newErrorConvertChain().Exec(err)
+			return newErrorConvert().Exec(err)
 		}
-		if bucketExists {
-			break
+		if !exists {
+			if m.verify(p) {
+				return fmt.Errorf("bucket %s does not exist", err)
+			}
+			if mErr := m.client.MakeBucket(ctx, me.bucket(), minio.MakeBucketOptions{}); mErr != nil {
+				return newErrorConvert().Exec(mErr)
+			}
 		}
-		if mErr := m.client.MakeBucket(ctx, me.bucket(), minio.MakeBucketOptions{}); mErr != nil {
-			return newErrorConvertChain().Exec(mErr)
-		}
+
 	}
 	return nil
 }
@@ -150,22 +143,22 @@ func (m *migrate) Exec(ctx context.Context) error {
 // |||| OPT CONVERTERS ||||
 
 func (c *create) convertOpts(p *query.Pack) {
-	storage.OptConverters{c.model}.Exec(p)
+	internal.OptConverters{c.model}.Exec(p)
 }
 
 func (d *del) convertOpts(p *query.Pack) {
-	storage.OptConverters{d.model, d.pk}.Exec(p)
+	internal.OptConverters{d.model, d.pk}.Exec(p)
 }
 
 func (r *retrieve) convertOpts(p *query.Pack) {
-	storage.OptConverters{r.model, r.pk}.Exec(p)
+	internal.OptConverters{r.model, r.pk}.Exec(p)
 }
 
 // |||| MODEL ||||
 
 func (b *base) model(p *query.Pack) {
 	ptr := p.Model().Pointer()
-	b.exc = newWrappedExchange(model.NewExchange(ptr, catalog().New(ptr)))
+	b.exc = wrapExchange(model.NewExchange(ptr, catalog().New(ptr)))
 }
 
 // |||| PK ||||
@@ -182,20 +175,35 @@ func (w *where) pk(p *query.Pack) {
 	}
 }
 
+// |||| CUSTOM RETRIEVE ||||
+
+func (r *retrieve) getObject(ctx context.Context, pk model.PK) (*telem.ChunkData, error) {
+	var (
+		c      = errutil.NewCatchSimple()
+		resObj *minio.Object
+		stat   minio.ObjectInfo
+		bulk   *telem.ChunkData
+	)
+	c.Exec(func() (err error) {
+		resObj, err = r.client.GetObject(ctx, r.bucket(), pk.String(), minio.GetObjectOptions{})
+		return err
+	})
+	c.Exec(func() (err error) {
+		stat, err = resObj.Stat()
+		return err
+	})
+	c.Exec(func() error {
+		bulk = telem.NewChunkData(make([]byte, stat.Size))
+		_, err := bulk.ReadFrom(resObj)
+		return err
+	})
+	return bulk, c.Error()
+}
+
 // |||| CUSTOM MIGRATE ||||
 
-func (m *migrate) Verify(ctx context.Context) error {
-	for _, mod := range catalog() {
-		me := newWrappedExchange(model.NewExchange(mod, mod))
-		exists, err := m.client.BucketExists(ctx, me.bucket())
-		if err != nil {
-			return err
-		}
-		if !exists {
-			return fmt.Errorf("bucket %s does not exist", err)
-		}
-	}
-	return nil
+func (m *migrate) verify(p *query.Pack) bool {
+	return query.VerifyOpt(p)
 }
 
 // |||| VALIDATORS ||||

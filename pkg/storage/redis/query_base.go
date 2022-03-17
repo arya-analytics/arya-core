@@ -30,7 +30,7 @@ func (q *queryBase) baseExchangeToSource() {
 }
 
 func (q *queryBase) baseModel(m interface{}) {
-	q.modelExchange = newWrappedExchange(model.NewExchange(m,
+	q.modelExchange = wrapExchange(model.NewExchange(m,
 		catalog().New(m)))
 }
 

@@ -12,11 +12,10 @@ import (
 )
 
 var (
-	ctx     = context.Background()
-	driver  = mock.NewDriverRoach(false, false)
-	pool    = storage.NewPool()
-	engine  = roach.New(driver, pool)
-	adapter = engine.NewAdapter()
+	ctx    = context.Background()
+	driver = mock.NewDriverRoach(false, false)
+	pool   = storage.NewPool()
+	engine = roach.New(driver, pool)
 )
 
 var _ = BeforeSuite(func() {

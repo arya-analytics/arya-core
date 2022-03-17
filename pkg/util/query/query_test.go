@@ -2,6 +2,7 @@ package query_test
 
 import (
 	"context"
+	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	modelmock "github.com/arya-analytics/aryacore/pkg/util/model/mock"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
@@ -37,6 +38,10 @@ var _ = Describe("Query", func() {
 					actual = 4
 					return nil
 				},
+				Migrate: func(ctx context.Context, p *query.Pack) error {
+					actual = 5
+					return nil
+				},
 			})
 			Expect(actual).To(Equal(expected))
 		},
@@ -44,11 +49,21 @@ var _ = Describe("Query", func() {
 			Entry("Retrieve Query", query.NewRetrieve(), 2),
 			Entry("Update Query", query.NewUpdate(), 3),
 			Entry("Delete Query", query.NewDelete(), 4),
+			Entry("Migrate Query", query.NewMigrate(), 5),
 		)
 		It("Should panic when there is no viable query handler", func() {
 			Expect(func() {
 				query.Switch(ctx, query.NewRetrieve().Pack(), query.Ops{})
 			}).To(Panic())
+		})
+	})
+	Describe("Pack", func() {
+		Describe("String", func() {
+			It("Should return the query as a string", func() {
+				p := query.NewRetrieve().Model(&[]*models.ChannelConfig{}).Pack()
+				Expect(p.String()).
+					To(Equal("Variant: *query.Retrieve, Model: models.ChannelConfig, Count: 0, Opts: map[]"))
+			})
 		})
 	})
 

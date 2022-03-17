@@ -1,0 +1,12 @@
+{
+  "storage": {
+    "cache": {
+      "host": "redistsfake",
+      "port": 6379,
+      "database": 0,
+      "username": "",
+      "password": "",
+      "demandCap": 500
+    }
+  }
+}

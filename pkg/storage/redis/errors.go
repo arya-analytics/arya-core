@@ -1,12 +1,13 @@
 package redis
 
 import (
+	"github.com/arya-analytics/aryacore/pkg/storage/internal"
 	"github.com/arya-analytics/aryacore/pkg/util/errutil"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
 )
 
 func newErrorConvertChain() errutil.ConvertChain {
-	return query.NewErrorConvertChain(errorConvertDefault)
+	return query.NewErrorConvertChain(internal.ErrorConvertConnection, errorConvertDefault)
 }
 
 func errorConvertDefault(err error) (error, bool) {

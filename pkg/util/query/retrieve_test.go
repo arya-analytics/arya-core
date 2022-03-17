@@ -12,8 +12,6 @@ var _ = Describe("Retrieve", func() {
 		exec = &mock.Exec{}
 		asm  = query.NewAssemble(exec.Exec)
 	)
-	BeforeEach(func() {
-	})
 	Describe("Calc", func() {
 		var (
 			into  *int

@@ -2,7 +2,7 @@ package redis
 
 import (
 	"context"
-	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/storage/internal"
 	"github.com/arya-analytics/aryacore/pkg/storage/redis/timeseries"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
@@ -24,27 +24,27 @@ func newTSRetrieve(client *timeseries.Client) *tsRetrieveQuery {
 	return c
 }
 
-func (tsr *tsRetrieveQuery) Model(m interface{}) storage.QueryCacheTSRetrieve {
+func (tsr *tsRetrieveQuery) Model(m interface{}) internal.QueryCacheTSRetrieve {
 	tsr.baseModel(m)
 	return tsr
 }
 
-func (tsr *tsRetrieveQuery) WherePK(pk interface{}) storage.QueryCacheTSRetrieve {
+func (tsr *tsRetrieveQuery) WherePK(pk interface{}) internal.QueryCacheTSRetrieve {
 	tsr.PKChain = append(tsr.PKChain, model.NewPK(pk))
 	return tsr
 }
 
-func (tsr *tsRetrieveQuery) WherePKs(pks interface{}) storage.QueryCacheTSRetrieve {
+func (tsr *tsRetrieveQuery) WherePKs(pks interface{}) internal.QueryCacheTSRetrieve {
 	tsr.PKChain = model.NewPKChain(pks)
 	return tsr
 }
 
-func (tsr *tsRetrieveQuery) AllTimeRange() storage.QueryCacheTSRetrieve {
+func (tsr *tsRetrieveQuery) AllTimeRange() internal.QueryCacheTSRetrieve {
 	tsr.allRange = true
 	return tsr
 }
 
-func (tsr *tsRetrieveQuery) WhereTimeRange(fromTS int64, toTS int64) storage.QueryCacheTSRetrieve {
+func (tsr *tsRetrieveQuery) WhereTimeRange(fromTS int64, toTS int64) internal.QueryCacheTSRetrieve {
 	tsr.fromTS = fromTS
 	tsr.toTS = toTS
 	return tsr

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/arya-analytics/aryacore/pkg/util/errutil"
 	"github.com/uptrace/bun"
-	"github.com/uptrace/bun/migrate"
+	bunMigrate "github.com/uptrace/bun/migrate"
 )
 
 const (
@@ -61,7 +61,7 @@ func (m *migrateCatcher) Exec(execFunc migrationExecFunc) {
 
 // |||| MIGRATE UP ||||
 
-func migrateUpFunc(d Driver) migrate.MigrationFunc {
+func migrateUpFunc() bunMigrate.MigrationFunc {
 	return func(ctx context.Context, db *bun.DB) error {
 		c := &migrateCatcher{CatchContext: errutil.NewCatchContext(ctx)}
 
@@ -129,7 +129,7 @@ func migrateUpFunc(d Driver) migrate.MigrationFunc {
 
 // |||| MIGRATE DOWN ||||
 
-func migrateDownFunc(d Driver) migrate.MigrationFunc {
+func migrateDownFunc() bunMigrate.MigrationFunc {
 	return func(ctx context.Context, db *bun.DB) error {
 		return nil
 	}
@@ -137,6 +137,6 @@ func migrateDownFunc(d Driver) migrate.MigrationFunc {
 
 // |||| MIGRATION BINDING ||||
 
-func bindMigrations(m *migrate.Migrations, d Driver) {
-	m.MustRegister(migrateUpFunc(d), migrateDownFunc(d))
+func bindMigrations(m *bunMigrate.Migrations) {
+	m.MustRegister(migrateUpFunc(), migrateDownFunc())
 }

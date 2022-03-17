@@ -1,6 +1,7 @@
 package roach
 
 import (
+	"github.com/arya-analytics/aryacore/pkg/storage/internal"
 	"github.com/arya-analytics/aryacore/pkg/util/errutil"
 	"github.com/arya-analytics/aryacore/pkg/util/pg"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
@@ -10,7 +11,12 @@ import (
 )
 
 func newErrorConvert() errutil.ConvertChain {
-	return query.NewErrorConvertChain(errorConvertPQ, errorConvertPGDriver, errorConvertDefault)
+	return query.NewErrorConvertChain(
+		errorConvertPQ,
+		errorConvertPGDriver,
+		internal.ErrorConvertConnection,
+		errorConvertDefault,
+	)
 }
 
 func errorConvertDefault(err error) (error, bool) {

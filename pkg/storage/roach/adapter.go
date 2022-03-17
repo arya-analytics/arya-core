@@ -1,9 +1,8 @@
 package roach
 
 import (
-	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/storage/internal"
 	"github.com/google/uuid"
-	log "github.com/sirupsen/logrus"
 	"github.com/uptrace/bun"
 )
 
@@ -15,21 +14,20 @@ type adapter struct {
 	driver Driver
 }
 
-func newAdapter(driver Driver) *adapter {
+func newAdapter(driver Driver) (*adapter, error) {
 	a := &adapter{
 		id:     uuid.New(),
 		driver: driver,
 	}
-	a.open()
-	return a
+	return a, a.open()
 }
 
-func bindAdapter(a storage.Adapter) (*adapter, bool) {
+func bindAdapter(a internal.Adapter) (*adapter, bool) {
 	ra, ok := a.(*adapter)
 	return ra, ok
 }
 
-func conn(a storage.Adapter) *bun.DB {
+func conn(a internal.Adapter) *bun.DB {
 	ra, ok := bindAdapter(a)
 	if !ok {
 		panic("couldn't bind roach adapter.")
@@ -50,14 +48,12 @@ func (a *adapter) conn() *bun.DB {
 	return a.db
 }
 
-func (a *adapter) open() {
+func (a *adapter) open() error {
 	var err error
 	a.db, err = a.driver.Connect()
-	if err != nil {
-		log.Fatalln(err)
-	}
+	return newErrorConvert().Exec(err)
 }
 
-func UnsafeConn(a storage.Adapter) *bun.DB {
+func UnsafeConn(a internal.Adapter) *bun.DB {
 	return conn(a)
 }
