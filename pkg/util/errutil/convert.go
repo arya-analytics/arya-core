@@ -16,7 +16,7 @@ type Convert func(error) (error, bool)
 // 		cErr := cc.Exec()
 // 		fmt.Printf(cErr)
 // Output:
-// 		converted error
+// 		converted error.
 type ConvertChain []Convert
 
 // Exec executes ConvertChain on an error. If converted successfully, will return converted error. Otherwise,
