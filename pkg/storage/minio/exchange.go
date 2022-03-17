@@ -38,21 +38,18 @@ func (m *exchange) dataVals() dataValueChain {
 func (m *exchange) bindDataVals(dvc dataValueChain) {
 	for _, dv := range dvc {
 		rfl, ok := m.Dest().ValueByPK(dv.PK)
-		if !ok {
-			if m.Dest().IsChain() {
-				newRfl := m.Dest().NewStruct()
-				newRfl.StructFieldByRole("telemChunkData").Set(reflect.ValueOf(dv.Data))
-				newRfl.StructFieldByName("ID").Set(dv.PK.Value())
-				m.Dest().ChainAppend(newRfl)
-			} else {
-				if !m.Dest().PKField().IsZero() {
-					panic("object store meta data mismatch")
-				}
-				m.Dest().StructFieldByName("ID").Set(dv.PK.Value())
-				m.Dest().StructFieldByRole("telemChunkData").Set(reflect.ValueOf(dv.Data))
-			}
-		} else {
+		if ok {
 			rfl.StructFieldByRole("telemChunkData").Set(reflect.ValueOf(dv.Data))
+		} else {
+			nRfl := m.Dest()
+			if m.Dest().IsChain() {
+				nRfl = m.Dest().NewStruct()
+			}
+			nRfl.StructFieldByRole("telemChunkData").Set(reflect.ValueOf(dv.Data))
+			nRfl.StructFieldByName("ID").Set(dv.PK.Value())
+			if m.Dest().IsChain() {
+				m.Dest().ChainAppend(nRfl)
+			}
 		}
 	}
 }
