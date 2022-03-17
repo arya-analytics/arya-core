@@ -24,4 +24,10 @@ var _ = Describe("Base", func() {
 			Entry("Delete", asm.NewDelete().Model(&modelmock.ModelA{})),
 		)
 	})
+	Describe("Exec", func() {
+		It("Should execute the query", func() {
+			Expect(asm.Exec(ctx, query.NewMigrate().Pack())).To(BeNil())
+
+		})
+	})
 })
