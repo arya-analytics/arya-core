@@ -141,8 +141,7 @@ func startRngSvc(cmd *cobra.Command, clust cluster.Cluster) (*rng.Service, error
 }
 
 func startChanChunkSvc(cmd *cobra.Command, rngSvc *rng.Service, clust cluster.Cluster) *telemchanchunk.Service {
-	obs := telemchanchunk.NewObserveMem()
-	svc := telemchanchunk.NewService(clust.Exec, obs, rngSvc)
+	svc := telemchanchunk.NewService(clust.Exec, rngSvc)
 	return svc
 }
 

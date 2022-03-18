@@ -7,34 +7,34 @@ import (
 	"sync"
 )
 
-type ObservedChannelConfig struct {
+type observedChannelConfig struct {
 	PK     uuid.UUID
 	Status models.ChannelStatus
 }
 
-type Observe interface {
-	Add(oc ObservedChannelConfig)
-	Retrieve(pk uuid.UUID) (ObservedChannelConfig, bool)
+type observe interface {
+	Add(oc observedChannelConfig)
+	Retrieve(pk uuid.UUID) (observedChannelConfig, bool)
 }
 
-type ObserveMem struct {
+type observeMem struct {
 	sem     *semaphore.Weighted
 	mu      sync.Mutex
-	chanMap map[uuid.UUID]ObservedChannelConfig
+	chanMap map[uuid.UUID]observedChannelConfig
 }
 
-func NewObserveMem() *ObserveMem {
-	return &ObserveMem{chanMap: map[uuid.UUID]ObservedChannelConfig{}}
+func newObserveMem() *observeMem {
+	return &observeMem{chanMap: map[uuid.UUID]observedChannelConfig{}}
 }
 
-func (o *ObserveMem) Retrieve(cfgPk uuid.UUID) (ObservedChannelConfig, bool) {
+func (o *observeMem) Retrieve(cfgPk uuid.UUID) (observedChannelConfig, bool) {
 	o.mu.Lock()
 	defer o.mu.Unlock()
 	oc, ok := o.chanMap[cfgPk]
 	return oc, ok
 }
 
-func (o *ObserveMem) Add(oc ObservedChannelConfig) {
+func (o *observeMem) Add(oc observedChannelConfig) {
 	o.mu.Lock()
 	defer o.mu.Unlock()
 	o.chanMap[oc.PK] = oc

@@ -25,8 +25,7 @@ var _ = Describe("QueryStreamCreate", func() {
 	BeforeEach(func() {
 		rngObs := rng.NewObserveMem([]rng.ObservedRange{})
 		rngSvc := rng.NewService(rngObs, clust.Exec)
-		obs := chanchunk.NewObserveMem()
-		svc = chanchunk.NewService(clust.Exec, obs, rngSvc)
+		svc = chanchunk.NewService(clust.Exec, rngSvc)
 		node = &models.Node{ID: 1}
 		config = &models.ChannelConfig{
 			Name:           "Awesome Channel",
@@ -245,7 +244,7 @@ var _ = Describe("QueryStreamCreate", func() {
 					wg.Wait()
 
 					Expect(errors).To(HaveLen(1))
-					Expect(errors[0].(chanchunk.TimingError).Type).To(Equal(chanchunk.TimingErrorTypeNonContiguous))
+					Expect(errors[0].(chanchunk.Error).Type).To(Equal(chanchunk.ErrorTimingNonContiguous))
 
 					var resCC []*models.ChannelChunk
 					Expect(clust.NewRetrieve().
@@ -370,7 +369,7 @@ var _ = Describe("QueryStreamCreate", func() {
 					stream.Close()
 					wg.Wait()
 					Expect(errors).To(HaveLen(1))
-					Expect(errors[0].(chanchunk.TimingError).Type).To(Equal(chanchunk.TimingErrorTypeNonContiguous))
+					Expect(errors[0].(chanchunk.Error).Type).To(Equal(chanchunk.ErrorTimingNonContiguous))
 				})
 			})
 
