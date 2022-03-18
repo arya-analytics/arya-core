@@ -75,8 +75,12 @@ func (dr DataRate) Period() TimeSpan {
 }
 
 func (dr DataRate) String() string {
-	fStr := strconv.FormatFloat(float64(dr), 'E', -1, 32)
-	return fmt.Sprintf("%s Hz", fStr)
+	var precision int = 0
+	if dr < 1 {
+		precision = 3
+	}
+	fStr := strconv.FormatFloat(float64(dr), 'f', precision, 32)
+	return fmt.Sprintf("%sHz", fStr)
 }
 
 // |||| TIME RANGE ||||
