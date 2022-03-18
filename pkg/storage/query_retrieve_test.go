@@ -36,15 +36,15 @@ var _ = Describe("QueryRetrieve", func() {
 	Describe("Standard usage", func() {
 		Context("Meta Telem Only", func() {
 			Context("Single item", func() {
-				Describe("Retrieve a channel config", func() {
-					It("Should Retrieve the correct item", func() {
+				Describe("Acquire a channel config", func() {
+					It("Should Acquire the correct item", func() {
 						resChannelConfig := &models.ChannelConfig{}
 						err := store.NewRetrieve().Model(resChannelConfig).WherePK(channelConfig.ID).Exec(ctx)
 						Expect(err).To(BeNil())
 						Expect(resChannelConfig.ID).To(Equal(channelConfig.ID))
 						Expect(resChannelConfig.Name).To(Equal(channelConfig.Name))
 					})
-					It("Should Retrieve the channel config by a relation", func() {
+					It("Should Acquire the channel config by a relation", func() {
 						resChannelConfig := &models.ChannelConfig{}
 						err := store.NewRetrieve().Model(resChannelConfig).WhereFields(query.WhereFields{
 							"Node.ID": 1,
@@ -53,7 +53,7 @@ var _ = Describe("QueryRetrieve", func() {
 						Expect(resChannelConfig.ID).To(Equal(channelConfig.ID))
 						Expect(resChannelConfig.Name).To(Equal(channelConfig.Name))
 					})
-					It("Should Retrieve the correct relation", func() {
+					It("Should Acquire the correct relation", func() {
 						resChannelConfig := &models.ChannelConfig{}
 						err := store.NewRetrieve().Model(resChannelConfig).Relation("Node", "id").WhereFields(query.WhereFields{
 							"Node.ID": 1,
@@ -63,7 +63,7 @@ var _ = Describe("QueryRetrieve", func() {
 						Expect(resChannelConfig.Name).To(Equal(channelConfig.Name))
 						Expect(resChannelConfig.Node.ID).To(Equal(1))
 					})
-					It("Should Retrieve only the specified fields", func() {
+					It("Should Acquire only the specified fields", func() {
 						resChannelConfig := &models.ChannelConfig{}
 						err := store.NewRetrieve().Model(resChannelConfig).WherePK(channelConfig.ID).Fields("ID").Exec(ctx)
 						Expect(err).To(BeNil())
@@ -125,8 +125,8 @@ var _ = Describe("QueryRetrieve", func() {
 						Expect(err).To(BeNil())
 					}
 				})
-				Describe("Retrieve a channel chunk", func() {
-					It("Should Retrieve the correct item", func() {
+				Describe("Acquire a channel chunk", func() {
+					It("Should Acquire the correct item", func() {
 						resCCR := &models.ChannelChunkReplica{}
 						err := store.NewRetrieve().Model(resCCR).WherePK(
 							channelChunkReplica.ID).Exec(ctx)
@@ -137,7 +137,7 @@ var _ = Describe("QueryRetrieve", func() {
 					})
 				})
 				Describe("Retrieving the chunk by a non pk field", func() {
-					It("Should Retrieve the correct item", func() {
+					It("Should Acquire the correct item", func() {
 						resCCR := &models.ChannelChunkReplica{}
 						err := store.NewRetrieve().
 							Model(resCCR).

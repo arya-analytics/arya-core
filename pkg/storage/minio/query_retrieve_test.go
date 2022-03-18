@@ -30,7 +30,7 @@ var _ = Describe("QueryRetrieve", func() {
 		Expect(err).To(BeNil())
 	})
 	Describe("Standard Usage", func() {
-		Describe("Retrieve an item", func() {
+		Describe("Acquire an item", func() {
 			It("Should retrieve the correct item", func() {
 				resChannelChunk := &models.ChannelChunkReplica{}
 				err := engine.NewRetrieve().Model(resChannelChunk).WherePK(channelChunk.ID).Exec(ctx)
@@ -39,7 +39,7 @@ var _ = Describe("QueryRetrieve", func() {
 				Expect(resChannelChunk.Telem.Bytes()).To(Equal([]byte("randomstring")))
 			})
 		})
-		Describe("Retrieve multiple items", func() {
+		Describe("Acquire multiple items", func() {
 			var channelChunkTwo *models.ChannelChunkReplica
 			BeforeEach(func() {
 				channelChunkTwo = &models.ChannelChunkReplica{

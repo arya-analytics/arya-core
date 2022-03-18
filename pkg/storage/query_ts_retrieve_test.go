@@ -47,14 +47,14 @@ var _ = Describe("QueryTsRetrieve", func() {
 				err := store.NewTSCreate().Sample().Model(sample).Exec(ctx)
 				Expect(err).To(BeNil())
 			})
-			It("Should Retrieve the correct sample", func() {
+			It("Should Acquire the correct sample", func() {
 				resSample := &models.ChannelSample{}
 				err := store.NewTSRetrieve().Model(resSample).WherePK(channelConfig.
 					ID).Exec(ctx)
 				Expect(err).To(BeNil())
 				Expect(resSample.ChannelConfigID).To(Equal(channelConfig.ID))
 			})
-			It("Should Retrieve the correct sample", func() {
+			It("Should Acquire the correct sample", func() {
 			})
 		})
 		Describe("Retrieving a sample by time rng", func() {
@@ -81,7 +81,7 @@ var _ = Describe("QueryTsRetrieve", func() {
 				err := store.NewTSCreate().Sample().Model(&samples).Exec(ctx)
 				Expect(err).To(BeNil())
 			})
-			It("Should Retrieve the samples correctly", func() {
+			It("Should Acquire the samples correctly", func() {
 				var resSamples []*models.ChannelSample
 				sampleTime := samples[0].Timestamp.ToTime()
 				fromTs := sampleTime.Add(-800 * time.Millisecond)

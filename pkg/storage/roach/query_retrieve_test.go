@@ -30,7 +30,7 @@ var _ = Describe("QueryRetrieve", func() {
 		Expect(nErr).To(BeNil())
 	})
 	Describe("Standard Usage", func() {
-		Describe("Retrieve an item", func() {
+		Describe("Acquire an item", func() {
 			It("Should retrieve it without error", func() {
 				err := engine.NewRetrieve().Model(&models.ChannelConfig{}).
 					WherePK(channelConfig.ID).Exec(ctx)
@@ -43,7 +43,7 @@ var _ = Describe("QueryRetrieve", func() {
 				Expect(err).To(BeNil())
 				Expect(resChannelConfig).To(Equal(channelConfig))
 			})
-			It("Retrieve a single field", func() {
+			It("Acquire a single field", func() {
 				resChannelConfig := &models.ChannelConfig{}
 				err := engine.NewRetrieve().Model(resChannelConfig).Fields("name").WherePK(channelConfig.
 					ID).Exec(ctx)
@@ -52,7 +52,7 @@ var _ = Describe("QueryRetrieve", func() {
 				Expect(resChannelConfig.Name).To(Equal("B"))
 			})
 		})
-		Describe("Retrieve multiple items", func() {
+		Describe("Acquire multiple items", func() {
 			var channelConfigTwo *models.ChannelConfig
 			BeforeEach(func() {
 				channelConfigTwo = &models.ChannelConfig{
@@ -109,7 +109,7 @@ var _ = Describe("QueryRetrieve", func() {
 				})
 			})
 		})
-		Describe("Retrieve a related item", func() {
+		Describe("Acquire a related item", func() {
 			It("Should retrieve all of the correct items", func() {
 				resChannelConfig := &models.ChannelConfig{}
 				err := engine.NewRetrieve().Model(resChannelConfig).Relation("Node", "ID").
@@ -118,7 +118,7 @@ var _ = Describe("QueryRetrieve", func() {
 				Expect(resChannelConfig.Node.ID).To(Equal(1))
 			})
 		})
-		Describe("Retrieve through multiple levels of relations", func() {
+		Describe("Acquire through multiple levels of relations", func() {
 			var (
 				//rangeLease          *storage.RangeID
 				rangeX              *models.Range
