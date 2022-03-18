@@ -21,7 +21,9 @@ var _ = BeforeSuite(func() {
 })
 
 var _ = AfterSuite(func() {
-	clust.Stop()
+	if clust != nil {
+		clust.Stop()
+	}
 })
 
 func TestChanchunk(t *testing.T) {

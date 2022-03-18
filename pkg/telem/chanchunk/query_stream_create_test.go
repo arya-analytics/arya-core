@@ -1,6 +1,7 @@
 package chanchunk_test
 
 import (
+	"context"
 	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/telem/chanchunk"
 	"github.com/arya-analytics/aryacore/pkg/telem/rng"
@@ -58,7 +59,6 @@ var _ = Describe("QueryStreamCreate", func() {
 					Fail(err.Error())
 				}
 			}()
-
 		})
 		Describe("The  basics", func() {
 			It("Should create a single new telemetry chunk correctly", func() {
@@ -147,7 +147,7 @@ var _ = Describe("QueryStreamCreate", func() {
 					Expect(tc.Span()).To(Equal(telem.NewTimeSpan(59 * time.Second)))
 				}
 			})
-			It("Should update the channel config states", func() {
+			It("Should update the channel cfg states", func() {
 				data := telem.NewChunkData([]byte{})
 				Expect(data.WriteData([]float64{1, 2, 3, 4})).To(BeNil())
 
@@ -209,12 +209,12 @@ var _ = Describe("QueryStreamCreate", func() {
 		})
 	})
 	Describe("Edge cases + errors", func() {
-		var stream *chanchunk.QueryStreamCreate
-		JustBeforeEach(func() {
-			stream = svc.NewStreamCreate()
-			Expect(stream.Start(ctx, config.ID)).To(BeNil())
-		})
 		Describe("Non contiguous chunks", func() {
+			var stream *chanchunk.QueryStreamCreate
+			JustBeforeEach(func() {
+				stream = svc.NewStreamCreate()
+				Expect(stream.Start(ctx, config.ID)).To(BeNil())
+			})
 			Context("Chunks in reverse order", func() {
 				It("Should return a non-contiguous chunk error and not save the chunk", func() {
 					var errors []error
@@ -376,10 +376,66 @@ var _ = Describe("QueryStreamCreate", func() {
 
 		})
 		Describe("Duplicate streams", func() {
+			var stream *chanchunk.QueryStreamCreate
+			JustBeforeEach(func() {
+				stream = svc.NewStreamCreate()
+				Expect(stream.Start(ctx, config.ID)).To(BeNil())
+			})
 			It("Should prevent duplicate write streams to the same channel", func() {
 				streamTwo := svc.NewStreamCreate()
 				err := streamTwo.Start(ctx, config.ID)
 				Expect(err).ToNot(BeNil())
+			})
+		})
+		Describe("Context Cancellation", func() {
+			It("Should handle the context cancellation with grace", func() {
+				stream := svc.NewStreamCreate()
+				cancelCtx, cancel := context.WithCancel(ctx)
+
+				Expect(stream.Start(cancelCtx, config.ID)).To(BeNil())
+
+				var errors []error
+				wg := sync.WaitGroup{}
+				wg.Add(1)
+				go func() {
+					for err := range stream.Errors() {
+						errors = append(errors, err)
+					}
+					wg.Done()
+				}()
+
+				data := telem.NewChunkData([]byte{})
+				Expect(data.WriteData([]float64{1, 2, 3, 4, 5})).To(BeNil())
+
+				// Sending the first piece of data
+				start := telem.TimeStamp(0)
+				stream.Send(telem.TimeStamp(0), data)
+
+				// Cancelling the context
+				time.Sleep(50 * time.Millisecond)
+				cancel()
+
+				// Sending the second piece of data
+				stream.Send(start.Add(telem.NewTimeSpan(200*time.Millisecond)), data)
+
+				// Close the stream
+				stream.Close()
+				wg.Wait()
+
+				By("Resetting the channels state to inactive")
+				resCCInactive := &models.ChannelConfig{}
+				Expect(clust.NewRetrieve().Model(resCCInactive).WherePK(config.ID).Exec(ctx)).To(BeNil())
+				Expect(resCCInactive.ID).To(Equal(config.ID))
+				Expect(resCCInactive.Status).To(Equal(models.ChannelStatusInactive))
+
+				By("Not writing the second piece of data")
+				var resCC []*models.ChannelChunk
+				Expect(clust.NewRetrieve().
+					Model(&resCC).
+					WhereFields(query.WhereFields{"ChannelConfigID": config.ID}).
+					Order(query.OrderASC, "StartTS").
+					Exec(ctx)).To(BeNil())
+				Expect(len(resCC)).To(Equal(1))
 			})
 		})
 	})
