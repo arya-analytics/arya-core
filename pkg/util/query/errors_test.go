@@ -66,7 +66,7 @@ var _ = Describe("errChan", func() {
 				err := handler.Exec(fmt.Errorf("random error"))
 				sErr := err.(query.Error)
 				Expect(sErr.Type).To(Equal(query.ErrorTypeUnknown))
-				Expect(sErr.Message).To(Equal("query -> unknown error"))
+				Expect(sErr.Message).To(Equal("random error"))
 			})
 		})
 	})
