@@ -26,7 +26,7 @@ func (s *Server) BindTo(srv *grpc.Server) {
 }
 
 func (s *Server) RetrieveStream(req *bulktelemv1.RetrieveStreamRequest, server bulktelemv1.BulkTelemService_RetrieveStreamServer) error {
-	pk, err := model.NewPK(uuid.UUID{}).NewFromString(req.ChannelConfigId)
+	pk, err := parsePK(req.ChannelConfigId)
 	if err != nil {
 		return err
 	}
@@ -78,7 +78,7 @@ func (s *Server) CreateStream(server bulktelemv1.BulkTelemService_CreateStreamSe
 }
 
 func startStream(ctx context.Context, stream *chanchunk.StreamCreate, req *bulktelemv1.CreateStreamRequest) error {
-	pk, err := model.NewPK(uuid.UUID{}).NewFromString(req.ChannelConfigId)
+	pk, err := parsePK(req.ChannelConfigId)
 	if err != nil {
 		return err
 	}
@@ -101,4 +101,8 @@ func relayErrors(stream *chanchunk.StreamCreate, server bulktelemv1.BulkTelemSer
 		}
 	}
 	return nil
+}
+
+func parsePK(pkStr string) (model.PK, error) {
+	return model.NewPK(uuid.UUID{}).NewFromString(pkStr)
 }
