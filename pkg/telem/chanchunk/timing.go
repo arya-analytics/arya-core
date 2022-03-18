@@ -12,39 +12,39 @@ const (
 	errKey = "timing"
 )
 
-type TimingError struct {
-	Type    TimingErrorType
+type Error struct {
+	Type    ErrorType
 	Message string
 }
 
-func (e TimingError) Error() string {
+func (e Error) Error() string {
 	return fmt.Sprintf("%s - %s - %s", errKey, e.Type, e.Message)
 }
 
-type TimingErrorType int
+type ErrorType int
 
 //go:generate stringer -type=TimingErrorType
 const (
-	TimingErrorOverlap TimingErrorType = iota + 1
-	TimingErrorTypeIncompatibleChunks
-	TimingErrorTypeNonContiguous
+	ErrorTimingOverlap ErrorType = iota + 1
+	ErrorTimingIncompatibleChunks
+	ErrorTimingNonContiguous
 )
 
 // |||| VALIDATION |||||
 
-func validateTiming(vCtx NextChunkContext) error {
-	if vCtx.prevChunk == nil {
+func validateTiming(vCtx nextChunkContext) error {
+	if vCtx.prev == nil {
 		return nil
 	}
-	ov := vCtx.nextChunk.Overlap(vCtx.prevChunk)
+	ov := vCtx.next.Overlap(vCtx.prev)
 	if !ov.ChunksCompatible() {
-		return TimingError{Type: TimingErrorTypeIncompatibleChunks}
+		return Error{Type: ErrorTimingIncompatibleChunks}
 	}
 	if ov.IsValid() {
-		return TimingError{Type: TimingErrorOverlap}
+		return Error{Type: ErrorTimingOverlap}
 	}
-	if vCtx.nextChunk.Start() < vCtx.prevChunk.Start() {
-		return TimingError{Type: TimingErrorTypeNonContiguous}
+	if vCtx.next.Start() < vCtx.prev.Start() {
+		return Error{Type: ErrorTimingNonContiguous}
 	}
 
 	return nil
@@ -52,20 +52,20 @@ func validateTiming(vCtx NextChunkContext) error {
 
 // |||| RESOLUTION ||||
 
-func resolveTiming(sErr error, nCtx NextChunkContext) (bool, error) {
-	err, ok := sErr.(TimingError)
+func resolveTiming(sErr error, nCtx nextChunkContext) (bool, error) {
+	err, ok := sErr.(Error)
 	if !ok {
 		return false, sErr
 	}
 	// The only error type we're resolving rn are overlaps
-	if err.Type != TimingErrorOverlap {
+	if err.Type != ErrorTimingOverlap {
 		return true, err
 	}
 	return true, resolveChunkOverlap(err, nCtx)
 }
 
-func resolveChunkOverlap(err TimingError, nCtx NextChunkContext) error {
-	switch nCtx.config.ConflictPolicy {
+func resolveChunkOverlap(err Error, nCtx nextChunkContext) error {
+	switch nCtx.cfg.ConflictPolicy {
 	case models.ChannelConflictPolicyDiscard:
 		return discardOverlap(nCtx)
 	default:
@@ -73,8 +73,8 @@ func resolveChunkOverlap(err TimingError, nCtx NextChunkContext) error {
 	}
 }
 
-func discardOverlap(nCtx NextChunkContext) error {
-	ov := nCtx.nextChunk.Overlap(nCtx.prevChunk)
+func discardOverlap(nCtx nextChunkContext) error {
+	ov := nCtx.next.Overlap(nCtx.prev)
 	switch ov.Type() {
 	case telem.OverlapTypeNoneOrInvalid:
 		return nil
@@ -85,9 +85,9 @@ func discardOverlap(nCtx NextChunkContext) error {
 	case telem.OverlapTypeDestConsume:
 		return ov.RemoveFromConsumed()
 	default:
-		return TimingError{
-			Type:    TimingErrorTypeNonContiguous,
-			Message: fmt.Sprintf("received unresolveable conflict type %s for conflict policy %s", ov.Type(), nCtx.config.ConflictPolicy),
+		return Error{
+			Type:    ErrorTimingNonContiguous,
+			Message: fmt.Sprintf("received unresolveable conflict type %s for conflict policy %s", ov.Type(), nCtx.cfg.ConflictPolicy),
 		}
 	}
 }
