@@ -2,17 +2,18 @@ package minio
 
 import (
 	"context"
+	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/storage/internal"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
 )
 
 type Engine struct {
-	pool   *internal.Pool
+	pool   *storage.Pool
 	driver Driver
 }
 
-func New(driver Driver, pool *internal.Pool) *Engine {
+func New(driver Driver, pool *storage.Pool) *Engine {
 	return &Engine{driver: driver, pool: pool}
 }
 

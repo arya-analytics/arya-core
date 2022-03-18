@@ -2,6 +2,7 @@ package redis_test
 
 import (
 	"context"
+	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/storage/internal"
 	"github.com/arya-analytics/aryacore/pkg/storage/mock"
 	"github.com/arya-analytics/aryacore/pkg/storage/redis"
@@ -16,7 +17,7 @@ var (
 )
 
 var _ = BeforeSuite(func() {
-	pool := internal.NewPool()
+	pool := storage.NewPool()
 	engine = redis.New(mock.DriverRedis{}, pool)
 })
 

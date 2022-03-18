@@ -1,21 +1,22 @@
-package internal
+package storage
 
 import (
+	"github.com/arya-analytics/aryacore/pkg/storage/internal"
 	"sync"
 )
 
 func NewPool() *Pool {
 	return &Pool{
-		adapters: map[Adapter]bool{},
+		adapters: map[internal.Adapter]bool{},
 	}
 }
 
 type Pool struct {
 	mu       sync.RWMutex
-	adapters map[Adapter]bool
+	adapters map[internal.Adapter]bool
 }
 
-func (p *Pool) Acquire(e Engine) (a Adapter, err error) {
+func (p *Pool) Acquire(e internal.Engine) (a internal.Adapter, err error) {
 	a, ok := p.findAdapter(e)
 	if !ok {
 		a, err = e.NewAdapter()
@@ -25,11 +26,11 @@ func (p *Pool) Acquire(e Engine) (a Adapter, err error) {
 	return a, err
 }
 
-func (p *Pool) Release(a Adapter) {
+func (p *Pool) Release(a internal.Adapter) {
 	a.Release()
 }
 
-func (p *Pool) findAdapter(e Engine) (Adapter, bool) {
+func (p *Pool) findAdapter(e internal.Engine) (internal.Adapter, bool) {
 	p.mu.RLock()
 	defer p.mu.RUnlock()
 	for a := range p.adapters {
@@ -40,7 +41,7 @@ func (p *Pool) findAdapter(e Engine) (Adapter, bool) {
 	return nil, false
 }
 
-func (p *Pool) addAdapter(a Adapter) {
+func (p *Pool) addAdapter(a internal.Adapter) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	p.adapters[a] = true

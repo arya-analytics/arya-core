@@ -2,7 +2,7 @@ package minio_test
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/models"
-	"github.com/arya-analytics/aryacore/pkg/storage/internal"
+	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/storage/minio"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/google/uuid"
@@ -24,7 +24,7 @@ var _ = Describe("Driver", func() {
 	})
 	Describe("Connection Errors", func() {
 		It("Should return the correct query error", func() {
-			pool := internal.NewPool()
+			pool := storage.NewPool()
 			driver := &minio.DriverMinio{Config: minio.Config{}.Viper()}
 			engine := minio.New(driver, pool)
 			err := engine.NewRetrieve().Model(&models.ChannelChunkReplica{}).WherePK(uuid.New()).Exec(ctx)
@@ -32,7 +32,7 @@ var _ = Describe("Driver", func() {
 		})
 		Context("Config Formatting Error", func() {
 			It("Should return the correct query error", func() {
-				pool := internal.NewPool()
+				pool := storage.NewPool()
 				cfg := minio.Config{}.Viper()
 				cfg.Endpoint = "//awdawd"
 				driver := &minio.DriverMinio{Config: cfg}
