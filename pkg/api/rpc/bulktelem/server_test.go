@@ -38,7 +38,7 @@ var _ = Describe("Server", func() {
 		config = &models.ChannelConfig{
 			Name:           "Awesome Channel",
 			NodeID:         node.ID,
-			DataRate:       telem.DataRate(500),
+			DataRate:       telem.DataRate(25),
 			DataType:       telem.DataTypeFloat64,
 			ConflictPolicy: models.ChannelConflictPolicyDiscard,
 		}
@@ -112,6 +112,57 @@ var _ = Describe("Server", func() {
 			Expect(len(resCC)).To(Equal(5))
 			Expect(resCC[0].Size).To(Equal(cc[0].Size()))
 			Expect(resCC[4].StartTS).To(Equal(cc[4].Start()))
+		})
+	})
+	Describe("RetrieveStream", func() {
+		JustBeforeEach(func() {
+			cc := mock.ChunkSet(5, telem.TimeStamp(0), config.DataType, config.DataRate, telem.NewTimeSpan(1*time.Minute), telem.TimeSpan(0))
+			stream, err := cl.CreateStream(ctx)
+			Expect(err).To(BeNil())
+
+			wg := sync.WaitGroup{}
+			wg.Add(1)
+			var errors []*bulktelemv1.Error
+			go func() {
+				for {
+					res, err := stream.Recv()
+					if err == io.EOF {
+						wg.Done()
+						break
+					}
+					errors = append(errors, res.Error)
+				}
+			}()
+
+			for _, c := range cc {
+				Expect(stream.Send(&bulktelemv1.CreateStreamRequest{
+					ChannelConfigId: config.ID.String(),
+					StartTs:         int64(c.Start()),
+					Data:            c.Bytes(),
+				})).To(BeNil())
+			}
+			Expect(stream.CloseSend()).To(BeNil())
+
+			wg.Wait()
+		})
+		It("Should retrieve the chunks correctly", func() {
+			req := &bulktelemv1.RetrieveStreamRequest{
+				ChannelConfigId: model.NewPK(config.ID).String(),
+				StartTs:         int64(telem.TimeStamp(0)),
+				EndTs:           int64(telem.TimeStamp(0).Add(telem.NewTimeSpan(180 * time.Second))),
+			}
+			stream, err := cl.RetrieveStream(ctx, req)
+			Expect(err).To(BeNil())
+			var chunks []*bulktelemv1.RetrieveStreamResponse
+			for {
+				res, err := stream.Recv()
+				if err == io.EOF {
+					break
+				}
+				Expect(err).To(BeNil())
+				chunks = append(chunks, res)
+			}
+			Expect(chunks).To(HaveLen(4))
 		})
 	})
 })

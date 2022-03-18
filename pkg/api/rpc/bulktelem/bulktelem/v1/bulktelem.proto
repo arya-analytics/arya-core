@@ -2,9 +2,14 @@ syntax = "proto3";
 
 package bulktelem.v1;
 
+// |||| SERVICE ||||
+
 service BulkTelemService {
   rpc CreateStream(stream CreateStreamRequest) returns (stream CreateStreamResponse);
+  rpc RetrieveStream(RetrieveStreamRequest) returns (stream RetrieveStreamResponse);
 }
+
+// ||||| CREATE |||||
 
 message CreateStreamRequest {
   string channel_config_id = 1;
@@ -20,4 +25,19 @@ message error {
   int32 type = 1;
   string type_string = 2;
   string message = 3;
+}
+
+// |||| RETRIEVE ||||
+
+message RetrieveStreamRequest {
+  string channel_config_id = 1;
+  int64 start_ts = 2;
+  int64 end_ts= 3;
+}
+
+message RetrieveStreamResponse {
+  int64 start_ts = 2;
+  float data_rate = 3;
+  int64 data_type = 4;
+  bytes data = 5;
 }

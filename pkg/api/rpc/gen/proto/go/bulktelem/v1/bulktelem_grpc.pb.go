@@ -19,6 +19,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type BulkTelemServiceClient interface {
 	CreateStream(ctx context.Context, opts ...grpc.CallOption) (BulkTelemService_CreateStreamClient, error)
+	RetrieveStream(ctx context.Context, in *RetrieveStreamRequest, opts ...grpc.CallOption) (BulkTelemService_RetrieveStreamClient, error)
 }
 
 type bulkTelemServiceClient struct {
@@ -60,11 +61,44 @@ func (x *bulkTelemServiceCreateStreamClient) Recv() (*CreateStreamResponse, erro
 	return m, nil
 }
 
+func (c *bulkTelemServiceClient) RetrieveStream(ctx context.Context, in *RetrieveStreamRequest, opts ...grpc.CallOption) (BulkTelemService_RetrieveStreamClient, error) {
+	stream, err := c.cc.NewStream(ctx, &BulkTelemService_ServiceDesc.Streams[1], "/bulktelem.v1.BulkTelemService/RetrieveStream", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &bulkTelemServiceRetrieveStreamClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type BulkTelemService_RetrieveStreamClient interface {
+	Recv() (*RetrieveStreamResponse, error)
+	grpc.ClientStream
+}
+
+type bulkTelemServiceRetrieveStreamClient struct {
+	grpc.ClientStream
+}
+
+func (x *bulkTelemServiceRetrieveStreamClient) Recv() (*RetrieveStreamResponse, error) {
+	m := new(RetrieveStreamResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // BulkTelemServiceServer is the server API for BulkTelemService service.
 // All implementations should embed UnimplementedBulkTelemServiceServer
 // for forward compatibility
 type BulkTelemServiceServer interface {
 	CreateStream(BulkTelemService_CreateStreamServer) error
+	RetrieveStream(*RetrieveStreamRequest, BulkTelemService_RetrieveStreamServer) error
 }
 
 // UnimplementedBulkTelemServiceServer should be embedded to have forward compatible implementations.
@@ -73,6 +107,9 @@ type UnimplementedBulkTelemServiceServer struct {
 
 func (UnimplementedBulkTelemServiceServer) CreateStream(BulkTelemService_CreateStreamServer) error {
 	return status.Errorf(codes.Unimplemented, "method CreateStream not implemented")
+}
+func (UnimplementedBulkTelemServiceServer) RetrieveStream(*RetrieveStreamRequest, BulkTelemService_RetrieveStreamServer) error {
+	return status.Errorf(codes.Unimplemented, "method RetrieveStream not implemented")
 }
 
 // UnsafeBulkTelemServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -112,6 +149,27 @@ func (x *bulkTelemServiceCreateStreamServer) Recv() (*CreateStreamRequest, error
 	return m, nil
 }
 
+func _BulkTelemService_RetrieveStream_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(RetrieveStreamRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(BulkTelemServiceServer).RetrieveStream(m, &bulkTelemServiceRetrieveStreamServer{stream})
+}
+
+type BulkTelemService_RetrieveStreamServer interface {
+	Send(*RetrieveStreamResponse) error
+	grpc.ServerStream
+}
+
+type bulkTelemServiceRetrieveStreamServer struct {
+	grpc.ServerStream
+}
+
+func (x *bulkTelemServiceRetrieveStreamServer) Send(m *RetrieveStreamResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
 // BulkTelemService_ServiceDesc is the grpc.ServiceDesc for BulkTelemService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -125,6 +183,11 @@ var BulkTelemService_ServiceDesc = grpc.ServiceDesc{
 			Handler:       _BulkTelemService_CreateStream_Handler,
 			ServerStreams: true,
 			ClientStreams: true,
+		},
+		{
+			StreamName:    "RetrieveStream",
+			Handler:       _BulkTelemService_RetrieveStream_Handler,
+			ServerStreams: true,
 		},
 	},
 	Metadata: "bulktelem/v1/bulktelem.proto",

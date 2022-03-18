@@ -7,12 +7,11 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
-	"github.com/google/uuid"
 )
 
 type StreamRetrieve struct {
 	qa    query.Assemble
-	cfgPK uuid.UUID
+	cfgPK interface{}
 	_cfg  *models.ChannelConfig
 	tRng  telem.TimeRange
 	catch *errutil.CatchContext
@@ -22,7 +21,7 @@ func newStreamRetrieve(qa query.Assemble) *StreamRetrieve {
 	return &StreamRetrieve{qa: qa, _cfg: &models.ChannelConfig{}}
 }
 
-func (sr *StreamRetrieve) WhereConfigPK(cfgPK uuid.UUID) *StreamRetrieve {
+func (sr *StreamRetrieve) WhereConfigPK(cfgPK interface{}) *StreamRetrieve {
 	sr.cfgPK = cfgPK
 	return sr
 }
