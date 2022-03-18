@@ -128,12 +128,11 @@ func (qsc *QueryStreamCreate) updateConfigStatus(status models.ChannelStatus) {
 	qsc.obs.Add(ObservedChannelConfig{Status: status, PK: qsc.configPK})
 	qsc._config.Status = status
 	qsc.catch.CatchSimple.Exec(func() error {
-		err := query.NewUpdate().
+		return query.NewUpdate().
 			BindExec(qsc.exec).
 			Model(qsc._config).
 			WherePK(qsc.configPK).
 			Fields("Status").Exec(context.Background())
-		return err
 	})
 }
 
