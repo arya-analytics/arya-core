@@ -84,8 +84,6 @@ func (qsc *QueryStreamCreate) listen() {
 }
 
 func (qsc *QueryStreamCreate) processNextChunk(startTS telem.TimeStamp, data *telem.ChunkData) {
-	qsc.catch.Exec(qsc.obs.AcquireSem)
-	defer qsc.obs.ReleaseSem()
 	nc := telem.NewChunk(startTS, qsc.config().DataType, qsc.config().DataRate, data)
 	qsc.validateResolveNextChunk(nc)
 
