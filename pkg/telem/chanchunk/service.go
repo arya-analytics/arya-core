@@ -26,7 +26,7 @@ func NewService(exec query.Execute, rngSVC *rng.Service) *Service {
 	return &Service{exec: exec, obs: newObserveMem(), rngSVC: rngSVC}
 }
 
-// NewStreamCreate opens a QueryStreamCreate.
-func (s *Service) NewStreamCreate() *QueryStreamCreate {
+// NewStreamCreate opens a StreamCreate.
+func (s *Service) NewStreamCreate() *StreamCreate {
 	return newStreamCreate(s.exec, s.obs, s.rngSVC)
 }

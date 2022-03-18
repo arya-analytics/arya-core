@@ -54,7 +54,7 @@ func (s *Server) CreateStream(server bulktelemv1.BulkTelemService_CreateStreamSe
 	return wg.Wait()
 }
 
-func startStream(ctx context.Context, stream *chanchunk.QueryStreamCreate, req *bulktelemv1.CreateStreamRequest) error {
+func startStream(ctx context.Context, stream *chanchunk.StreamCreate, req *bulktelemv1.CreateStreamRequest) error {
 	pk, err := model.NewPK(uuid.UUID{}).NewFromString(req.ChannelConfigId)
 	if err != nil {
 		return err
@@ -62,7 +62,7 @@ func startStream(ctx context.Context, stream *chanchunk.QueryStreamCreate, req *
 	return stream.Start(ctx, pk.Raw().(uuid.UUID))
 }
 
-func sendData(stream *chanchunk.QueryStreamCreate, req *bulktelemv1.CreateStreamRequest) error {
+func sendData(stream *chanchunk.StreamCreate, req *bulktelemv1.CreateStreamRequest) error {
 	cd := telem.NewChunkData(make([]byte, len(req.Data)))
 	if _, err := cd.Write(req.Data); err != nil {
 		return err
@@ -71,7 +71,7 @@ func sendData(stream *chanchunk.QueryStreamCreate, req *bulktelemv1.CreateStream
 	return nil
 }
 
-func relayErrors(stream *chanchunk.QueryStreamCreate, server bulktelemv1.BulkTelemService_CreateStreamServer) error {
+func relayErrors(stream *chanchunk.StreamCreate, server bulktelemv1.BulkTelemService_CreateStreamServer) error {
 	for err := range stream.Errors() {
 		if sErr := server.Send(&bulktelemv1.CreateStreamResponse{Error: &bulktelemv1.Error{Message: err.Error()}}); sErr != nil {
 			return sErr

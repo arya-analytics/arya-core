@@ -15,7 +15,7 @@ import (
 	"time"
 )
 
-var _ = Describe("QueryStreamCreate", func() {
+var _ = Describe("StreamCreate", func() {
 	var (
 		node   *models.Node
 		config *models.ChannelConfig
@@ -47,7 +47,7 @@ var _ = Describe("QueryStreamCreate", func() {
 		}
 	})
 	Describe("Standard Usage", func() {
-		var stream *chanchunk.QueryStreamCreate
+		var stream *chanchunk.StreamCreate
 		JustBeforeEach(func() {
 			stream = svc.NewStreamCreate()
 			Expect(stream.Start(ctx, config.ID)).To(BeNil())
@@ -209,7 +209,7 @@ var _ = Describe("QueryStreamCreate", func() {
 	})
 	Describe("Edge cases + errors", func() {
 		Describe("Non contiguous chunks", func() {
-			var stream *chanchunk.QueryStreamCreate
+			var stream *chanchunk.StreamCreate
 			JustBeforeEach(func() {
 				stream = svc.NewStreamCreate()
 				Expect(stream.Start(ctx, config.ID)).To(BeNil())
@@ -375,7 +375,7 @@ var _ = Describe("QueryStreamCreate", func() {
 
 		})
 		Describe("Duplicate streams", func() {
-			var stream *chanchunk.QueryStreamCreate
+			var stream *chanchunk.StreamCreate
 			JustBeforeEach(func() {
 				stream = svc.NewStreamCreate()
 				Expect(stream.Start(ctx, config.ID)).To(BeNil())
