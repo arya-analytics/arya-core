@@ -4,18 +4,26 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/storage/internal"
 	"github.com/google/uuid"
 	"github.com/minio/minio-go/v7"
+	"time"
 )
 
 type adapter struct {
-	id     uuid.UUID
-	client *minio.Client
-	driver Driver
+	id         uuid.UUID
+	client     *minio.Client
+	driver     Driver
+	demand     internal.Demand
+	expiration internal.Expiration
 }
 
 func newAdapter(driver Driver) (*adapter, error) {
 	a := &adapter{
 		id:     uuid.New(),
 		driver: driver,
+		expiration: internal.Expiration{
+			Duration: driver.Expiration(),
+			Start:    time.Now(),
+		},
+		demand: internal.Demand{Max: driver.DemandCap()},
 	}
 
 	return a, a.open()
@@ -27,23 +35,23 @@ func bindAdapter(a internal.Adapter) (*adapter, bool) {
 }
 
 func conn(a internal.Adapter) *minio.Client {
-	me, ok := bindAdapter(a)
+	ma, ok := bindAdapter(a)
 	if !ok {
 		panic("couldn't bind minio adapter")
 	}
-	return me.conn()
+	return ma.client
 }
 
-func (a *adapter) ID() uuid.UUID {
-	return a.id
+func (a *adapter) Acquire() {
+	a.demand.Increment()
 }
 
-func (a *adapter) DemandCap() int {
-	return a.driver.DemandCap()
+func (a *adapter) Release() {
+	a.demand.Decrement()
 }
 
-func (a *adapter) conn() *minio.Client {
-	return a.client
+func (a *adapter) Healthy() bool {
+	return !a.expiration.Expired() && !a.demand.Exceeded()
 }
 
 func (a *adapter) open() error {

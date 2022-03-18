@@ -6,7 +6,6 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/storage/internal"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
-	"github.com/minio/minio-go/v7"
 )
 
 type Engine struct {
@@ -22,27 +21,19 @@ func (e *Engine) Exec(ctx context.Context, p *query.Pack) error {
 	if !e.shouldHandle(p) {
 		return nil
 	}
-
-	c, err := e.client()
+	a, err := e.pool.Acquire(e)
 	if err != nil {
 		return newErrorConvert().Exec(err)
 	}
-
-	return query.Switch(ctx, p, query.Ops{
+	c := conn(a)
+	err = query.Switch(ctx, p, query.Ops{
 		Create:   newCreate(c).exec,
 		Retrieve: newRetrieve(c).exec,
 		Delete:   newDelete(c).exec,
 		Migrate:  newMigrate(c).exec,
 	})
-}
-
-func (e *Engine) client() (*minio.Client, error) {
-	a, err := e.pool.Retrieve(e)
-	if err != nil {
-		return nil, err
-	}
-	return conn(a), nil
-
+	e.pool.Release(a)
+	return err
 }
 
 func (e *Engine) NewAdapter() (internal.Adapter, error) {

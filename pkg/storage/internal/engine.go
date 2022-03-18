@@ -4,13 +4,7 @@ import (
 	"context"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/arya-analytics/aryacore/pkg/util/tasks"
-	"github.com/google/uuid"
 )
-
-type Adapter interface {
-	ID() uuid.UUID
-	DemandCap() int
-}
 
 // |||| ENGINE ||||
 

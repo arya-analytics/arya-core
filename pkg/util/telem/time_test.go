@@ -4,6 +4,7 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"reflect"
 	"time"
 )
 
@@ -13,6 +14,16 @@ var _ = Describe("Time", func() {
 			t := time.Now()
 			ts := telem.NewTimeStamp(t)
 			Expect(int64(ts)).To(Equal(t.UnixMicro()))
+		})
+		It("Should correctly convert a timestamp to a time", func() {
+			t := time.UnixMilli(10)
+			ts := telem.NewTimeStamp(t)
+			Expect(ts.ToTime()).To(Equal(time.UnixMilli(10)))
+		})
+		It("Should stringify the timestamp", func() {
+			t := time.UnixMilli(10)
+			ts := telem.NewTimeStamp(t)
+			Expect(reflect.TypeOf(ts.String())).To(Equal(reflect.TypeOf("")))
 		})
 	})
 	Describe("TimeSpan", func() {
@@ -26,6 +37,10 @@ var _ = Describe("Time", func() {
 			ts := telem.NewTimeSpan(d)
 			Expect(ts.ToDataRate()).To(Equal(telem.DataRate(1)))
 		})
+		It("Should stringify the timespan", func() {
+			ts := telem.NewTimeSpan(10 * time.Second)
+			Expect(ts.String()).To(Equal("10s"))
+		})
 	})
 	Describe("TimeRange", func() {
 		It("Should create the correct time range", func() {
@@ -35,6 +50,12 @@ var _ = Describe("Time", func() {
 			Expect(int64(rng.Start())).To(Equal(t0.UnixMicro()))
 			Expect(int64(rng.End())).To(Equal(t1.UnixMicro()))
 			Expect(rng.Span()).To(BeNumerically(">", telem.NewTimeSpan(900*time.Millisecond)))
+		})
+		It("Should stringify the time range correctly", func() {
+			t0 := time.UnixMilli(10)
+			t1 := time.UnixMilli(20)
+			rng := telem.NewTimeRange(telem.NewTimeStamp(t0), telem.NewTimeStamp(t1))
+			Expect(len(rng.String())).To(Equal(len("from 1969-12-31 19:00:00.01 -0500 EST to 1969-12-31 19:00:00.02 -0500 EST")))
 		})
 		Describe("ChunkOverlap", func() {
 			Context("No overlap", func() {
@@ -124,8 +145,9 @@ var _ = Describe("Time", func() {
 		})
 	})
 	Describe("DataRate", func() {
-		It("Should create the correct data rate", func() {
-
+		It("Should stringify the data rate correctly", func() {
+			Expect(telem.DataRate(25).String()).To(Equal("25Hz"))
+			Expect(telem.DataRate(0.5).String()).To(Equal("0.500Hz"))
 		})
 	})
 })

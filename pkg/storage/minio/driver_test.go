@@ -17,7 +17,7 @@ var _ = Describe("Driver", func() {
 		Expect(viper.ReadInConfig()).To(BeNil())
 	})
 	Describe("Config", func() {
-		It("Shoild load the viper config correctly", func() {
+		It("Should load the viper config correctly", func() {
 			cfg := minio.Config{}.Viper()
 			Expect(cfg.Endpoint).To(Equal("badep:9000"))
 		})

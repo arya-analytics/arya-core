@@ -4,20 +4,28 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/storage/internal"
 	"github.com/google/uuid"
 	"github.com/uptrace/bun"
+	"time"
 )
 
 // || ADAPTER ||
 
 type adapter struct {
-	id     uuid.UUID
-	db     *bun.DB
-	driver Driver
+	id         uuid.UUID
+	db         *bun.DB
+	driver     Driver
+	demand     internal.Demand
+	expiration internal.Expiration
 }
 
 func newAdapter(driver Driver) (*adapter, error) {
 	a := &adapter{
 		id:     uuid.New(),
 		driver: driver,
+		expiration: internal.Expiration{
+			Start:    time.Now(),
+			Duration: driver.Expiration(),
+		},
+		demand: internal.Demand{Max: driver.DemandCap()},
 	}
 	return a, a.open()
 }
@@ -32,20 +40,19 @@ func conn(a internal.Adapter) *bun.DB {
 	if !ok {
 		panic("couldn't bind roach adapter.")
 	}
-	return ra.conn()
+	return ra.db
 }
 
-// ID implements the storage.Adapter interface.
-func (a *adapter) ID() uuid.UUID {
-	return a.id
+func (a *adapter) Acquire() {
+	a.demand.Increment()
 }
 
-func (a *adapter) DemandCap() int {
-	return a.driver.DemandCap()
+func (a *adapter) Release() {
+	a.demand.Decrement()
 }
 
-func (a *adapter) conn() *bun.DB {
-	return a.db
+func (a *adapter) Healthy() bool {
+	return !a.expiration.Expired() || !a.demand.Exceeded()
 }
 
 func (a *adapter) open() error {

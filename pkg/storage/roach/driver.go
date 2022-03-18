@@ -9,7 +9,14 @@ import (
 	"github.com/uptrace/bun/dialect/pgdialect"
 	"github.com/uptrace/bun/driver/pgdriver"
 	"github.com/uptrace/bun/extra/bundebug"
+	"time"
 )
+
+type Driver interface {
+	Connect() (*bun.DB, error)
+	DemandCap() int
+	Expiration() time.Duration
+}
 
 type Config struct {
 	// DSN is a connection string for the database. If specified,
@@ -29,6 +36,8 @@ type Config struct {
 	UseTLS bool
 	// Demand Cap
 	DemandCap int
+	// Expiration
+	Expiration time.Duration
 	// TransactionLogLevel
 	TransactionLogLevel TransactionLogLevel
 }
@@ -43,6 +52,7 @@ const (
 	driverRoachUseTLS              = "useTLS"
 	driverRoachTransactionLogLevel = "transactionLogLevel"
 	driverRoachDemandCap           = "demandCap"
+	driverRoachExpiration          = "expiration"
 )
 
 func configLeaf(name string) string {
@@ -60,6 +70,7 @@ func (c Config) Viper() Config {
 		UseTLS:              viper.GetBool(configLeaf(driverRoachUseTLS)),
 		DemandCap:           viper.GetInt(configLeaf(driverRoachDemandCap)),
 		TransactionLogLevel: TransactionLogLevel(viper.GetInt(configLeaf(driverRoachTransactionLogLevel))),
+		Expiration:          time.Duration(viper.GetInt(configLeaf(driverRoachExpiration))) * time.Second,
 	}
 }
 
@@ -77,6 +88,10 @@ func (d DriverRoach) Connect() (*bun.DB, error) {
 
 func (d DriverRoach) DemandCap() int {
 	return d.Config.DemandCap
+}
+
+func (d DriverRoach) Expiration() time.Duration {
+	return d.Config.Expiration
 }
 
 func (d DriverRoach) addr() string {

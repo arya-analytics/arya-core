@@ -3,10 +3,8 @@ package roach_test
 import (
 	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/storage/internal"
-	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"reflect"
 )
 
 var _ = Describe("Roach", func() {
@@ -19,7 +17,7 @@ var _ = Describe("Roach", func() {
 	Describe("Adapter", func() {
 		Describe("New adapter", func() {
 			It("Should create a new adapter without error", func() {
-				Expect(reflect.TypeOf(a.ID())).To(Equal(reflect.TypeOf(uuid.New())))
+				Expect(a.Healthy()).To(BeTrue())
 			})
 		})
 	})

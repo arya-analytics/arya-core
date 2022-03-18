@@ -13,9 +13,11 @@ import (
 	"github.com/uptrace/bun/extra/bundebug"
 	"io/ioutil"
 	baseLog "log"
+	"math"
 	"net"
 	"net/url"
 	"strconv"
+	"time"
 )
 
 // |||| ROACH ||||
@@ -81,7 +83,20 @@ func (d *DriverRoach) Connect() (*bun.DB, error) {
 }
 
 func (d *DriverRoach) DemandCap() int {
-	return 5000000
+	// Because Connect creates a new database, we never want to
+	// recycle the connection, so we need to return math.MaxInt.
+	return math.MaxInt
+}
+
+func (d *DriverRoach) Expiration() time.Duration {
+	// Because Connect creates a new database, we never want to
+	// recycle the connection, so we need to make it huuuge.
+	return 1000000 * time.Hour
+}
+
+func (d *DriverRoach) Healthy() bool {
+	// Connections never fail!
+	return true
 }
 
 func (d *DriverRoach) Stop() {
@@ -122,7 +137,15 @@ func (d DriverRedis) buildConfig() *redis.Options {
 }
 
 func (d DriverRedis) DemandCap() int {
-	return 50
+	// Because Connect creates a new database, we never want to
+	// recycle the connection, so we need to return math.MaxInt.
+	return math.MaxInt
+}
+
+func (d DriverRedis) Expiration() time.Duration {
+	// Because Connect creates a new database, we never want to
+	// recycle the connection, so we need to make it huuuge.
+	return 1000000 * time.Hour
 }
 
 // |||| MINIO ||||
@@ -141,5 +164,13 @@ func (d DriverMinio) buildConfig() *minio.Options {
 }
 
 func (d DriverMinio) DemandCap() int {
-	return 50
+	// Because Connect creates a new database, we never want to
+	// recycle the connection, so we need to return math.MaxInt.
+	return math.MaxInt
+}
+
+func (d DriverMinio) Expiration() time.Duration {
+	// Because Connect creates a new database, we never want to
+	// recycle the connection, so we need to make it huuuge.
+	return 1000000 * time.Hour
 }

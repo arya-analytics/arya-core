@@ -23,10 +23,12 @@ func (e *Engine) NewAdapter() (internal.Adapter, error) {
 }
 
 func (e *Engine) client() (*timeseries.Client, error) {
-	a, err := e.pool.Retrieve(e)
+	a, err := e.pool.Acquire(e)
 	if err != nil {
 		return nil, err
 	}
+	// TODO: remove this after NewTSRetrieve and NewTSCreate have been updated to match query api standard.
+	e.pool.Release(a)
 	return conn(a), nil
 }
 

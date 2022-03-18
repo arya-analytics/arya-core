@@ -6,17 +6,7 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/storage/internal"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/arya-analytics/aryacore/pkg/util/tasks"
-	"github.com/uptrace/bun"
 )
-
-// |||| CONFIG ||||
-
-type Driver interface {
-	Connect() (*bun.DB, error)
-	DemandCap() int
-}
-
-// |||| ENGINE ||||
 
 // Engine opens connections and execute queries with a roach database.
 // implements the storage.EngineMD interface.
@@ -33,18 +23,20 @@ func New(driver Driver, pool *storage.Pool) *Engine {
 }
 
 func (e *Engine) Exec(ctx context.Context, p *query.Pack) error {
-	a, err := e.pool.Retrieve(e)
+	a, err := e.pool.Acquire(e)
 	if err != nil {
-		return err
+		return newErrorConvert().Exec(err)
 	}
 	db := conn(a)
-	return query.Switch(ctx, p, query.Ops{
+	err = query.Switch(ctx, p, query.Ops{
 		Create:   newCreate(db).exec,
 		Retrieve: newRetrieve(db).exec,
 		Delete:   newDelete(db).exec,
 		Update:   newUpdate(db).exec,
 		Migrate:  newMigrate(db).exec,
 	})
+	e.pool.Release(a)
+	return newErrorConvert().Exec(err)
 }
 
 // NewAdapter opens a new connection with the data store and returns a storage.Adapter.
@@ -63,6 +55,6 @@ func (e *Engine) ShouldHandle(m interface{}, _ ...string) bool {
 }
 
 func (e *Engine) NewTasks(opts ...tasks.ScheduleOpt) (tasks.Schedule, error) {
-	a, err := e.pool.Retrieve(e)
+	a, err := e.pool.Acquire(e)
 	return newTaskScheduler(conn(a), opts...), err
 }

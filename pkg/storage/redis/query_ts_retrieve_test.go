@@ -110,7 +110,7 @@ var _ = Describe("QueryTsRetrieve", func() {
 					Expect(samples).To(HaveLen(2))
 				})
 			})
-			Describe("Retrieve samples across a time rng", func() {
+			Describe("Acquire samples across a time rng", func() {
 				var err error
 				BeforeEach(func() {
 					samples = []*models.ChannelSample{
