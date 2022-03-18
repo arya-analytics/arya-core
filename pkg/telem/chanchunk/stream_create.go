@@ -50,54 +50,54 @@ func newStreamCreate(qExec query.Execute, obs observe, rngSvc *rng.Service) *Str
 }
 
 // Start starts stream. Start must be called before Send. Returns any errors encountered during stream start.
-func (qsc *StreamCreate) Start(ctx context.Context, configPk uuid.UUID) error {
-	qsc.ctx = ctx
-	qsc.configPK = configPk
-	qsc.catch = errutil.NewCatchContext(ctx, errutil.WithHooks(errutil.NewPipeHook(qsc.errors)))
-	if err := qsc.validateStart(); err != nil {
+func (sc *StreamCreate) Start(ctx context.Context, configPk uuid.UUID) error {
+	sc.ctx = ctx
+	sc.configPK = configPk
+	sc.catch = errutil.NewCatchContext(ctx, errutil.WithHooks(errutil.NewPipeHook(sc.errors)))
+	if err := sc.validateStart(); err != nil {
 		return err
 	}
-	go qsc.listen()
+	go sc.listen()
 	return nil
 }
 
 // Send creates a new chunk of data starting at the specified timestamp.
-func (qsc *StreamCreate) Send(start telem.TimeStamp, data *telem.ChunkData) {
-	qsc.stream <- streamCreateArgs{start: start, data: data}
+func (sc *StreamCreate) Send(start telem.TimeStamp, data *telem.ChunkData) {
+	sc.stream <- streamCreateArgs{start: start, data: data}
 }
 
 // Close safely closes the stream.
-func (qsc *StreamCreate) Close() {
-	close(qsc.stream)
-	<-qsc.done
-	close(qsc.errors)
+func (sc *StreamCreate) Close() {
+	close(sc.stream)
+	<-sc.done
+	close(sc.errors)
 }
 
 // Errors returns errors encountered during stream operation.
-func (qsc *StreamCreate) Errors() chan error {
-	return qsc.errors
+func (sc *StreamCreate) Errors() chan error {
+	return sc.errors
 }
 
 // |||| PROCESS ||||
 
-func (qsc *StreamCreate) listen() {
-	qsc.updateConfigStatus(models.ChannelStatusActive)
+func (sc *StreamCreate) listen() {
+	sc.updateConfigStatus(models.ChannelStatusActive)
 	defer func() {
-		qsc.updateConfigStatus(models.ChannelStatusInactive)
-		qsc.done <- true
+		sc.updateConfigStatus(models.ChannelStatusInactive)
+		sc.done <- true
 	}()
-	for args := range qsc.stream {
-		qsc.processNextChunk(args.start, args.data)
+	for args := range sc.stream {
+		sc.processNextChunk(args.start, args.data)
 	}
 }
 
-func (qsc *StreamCreate) processNextChunk(startTS telem.TimeStamp, data *telem.ChunkData) {
-	nc := telem.NewChunk(startTS, qsc.config().DataType, qsc.config().DataRate, data)
-	qsc.validateResolveNextChunk(nc)
+func (sc *StreamCreate) processNextChunk(startTS telem.TimeStamp, data *telem.ChunkData) {
+	nc := telem.NewChunk(startTS, sc.config().DataType, sc.config().DataRate, data)
+	sc.validateResolveNextChunk(nc)
 
 	cc := &models.ChannelChunk{
 		ID:              uuid.New(),
-		ChannelConfigID: qsc.config().ID,
+		ChannelConfigID: sc.config().ID,
 		StartTS:         nc.Start(),
 		Size:            nc.Size(),
 	}
@@ -112,47 +112,47 @@ func (qsc *StreamCreate) processNextChunk(startTS telem.TimeStamp, data *telem.C
 		return
 	}
 
-	a := qsc.rngSvc.NewAllocate()
-	qsc.catch.Exec(a.Chunk(qsc.config().NodeID, cc).Exec)
-	qsc.catch.Exec(a.ChunkReplica(ccr).Exec)
+	a := sc.rngSvc.NewAllocate()
+	sc.catch.Exec(a.Chunk(sc.config().NodeID, cc).Exec)
+	sc.catch.Exec(a.ChunkReplica(ccr).Exec)
 
-	qsc.catch.Exec(query.NewCreate().BindExec(qsc.exec).Model(cc).Exec)
-	qsc.catch.Exec(query.NewCreate().BindExec(qsc.exec).Model(ccr).Exec)
+	sc.catch.Exec(query.NewCreate().BindExec(sc.exec).Model(cc).Exec)
+	sc.catch.Exec(query.NewCreate().BindExec(sc.exec).Model(ccr).Exec)
 
-	qsc.setPrevChunk(nc)
-	qsc.catch.Reset()
+	sc.setPrevChunk(nc)
+	sc.catch.Reset()
 }
 
 // ||| VALUE ACCESS |||
 
-func (qsc *StreamCreate) config() *models.ChannelConfig {
-	if model.NewPK(qsc._config.ID).IsZero() {
-		qsc.catch.Exec(query.NewRetrieve().BindExec(qsc.exec).Model(qsc._config).WherePK(qsc.configPK).Exec)
+func (sc *StreamCreate) config() *models.ChannelConfig {
+	if model.NewPK(sc._config.ID).IsZero() {
+		sc.catch.Exec(query.NewRetrieve().BindExec(sc.exec).Model(sc._config).WherePK(sc.configPK).Exec)
 	}
-	return qsc._config
+	return sc._config
 }
 
-func (qsc *StreamCreate) updateConfigStatus(status models.ChannelStatus) {
-	qsc.obs.Add(observedChannelConfig{Status: status, PK: qsc.configPK})
-	qsc._config.Status = status
-	qsc.catch.CatchSimple.Exec(func() error {
+func (sc *StreamCreate) updateConfigStatus(status models.ChannelStatus) {
+	sc.obs.Add(observedChannelConfig{Status: status, PK: sc.configPK})
+	sc._config.Status = status
+	sc.catch.CatchSimple.Exec(func() error {
 		return query.NewUpdate().
-			BindExec(qsc.exec).
-			Model(qsc._config).
-			WherePK(qsc.configPK).
+			BindExec(sc.exec).
+			Model(sc._config).
+			WherePK(sc.configPK).
 			Fields("Status").Exec(context.Background())
 	})
 }
 
-func (qsc *StreamCreate) prevChunk() *telem.Chunk {
-	if qsc._prevChunk == nil {
-		qsc.catch.Exec(func(ctx context.Context) error {
+func (sc *StreamCreate) prevChunk() *telem.Chunk {
+	if sc._prevChunk == nil {
+		sc.catch.Exec(func(ctx context.Context) error {
 			ccr := &models.ChannelChunkReplica{}
 			err := query.NewRetrieve().
-				BindExec(qsc.exec).
+				BindExec(sc.exec).
 				Model(ccr).
 				Relation("ChannelChunk", "ID", "StartTS", "Size").
-				WhereFields(query.WhereFields{"ChannelChunk.ChannelConfigID": qsc.config().ID}).Exec(qsc.ctx)
+				WhereFields(query.WhereFields{"ChannelChunk.ChannelConfigID": sc.config().ID}).Exec(sc.ctx)
 			sErr, ok := err.(query.Error)
 			if !ok || sErr.Type != query.ErrorTypeItemNotFound {
 				return err
@@ -162,28 +162,28 @@ func (qsc *StreamCreate) prevChunk() *telem.Chunk {
 			if sErr.Type == query.ErrorTypeItemNotFound {
 				return nil
 			}
-			qsc._prevChunk = telem.NewChunk(ccr.ChannelChunk.StartTS, qsc.config().DataType, qsc.config().DataRate, ccr.Telem)
+			sc._prevChunk = telem.NewChunk(ccr.ChannelChunk.StartTS, sc.config().DataType, sc.config().DataRate, ccr.Telem)
 			return nil
 		})
 	}
-	return qsc._prevChunk
+	return sc._prevChunk
 }
 
-func (qsc *StreamCreate) setPrevChunk(chunk *telem.Chunk) {
-	qsc._prevChunk = chunk
+func (sc *StreamCreate) setPrevChunk(chunk *telem.Chunk) {
+	sc._prevChunk = chunk
 }
 
 // |||| VALIDATE + RESOLVE ||||
 
-func (qsc *StreamCreate) validateStart() error {
-	return validateStart().Exec(validateStartContext{cfg: qsc.config(), obs: qsc.obs}).Error()
+func (sc *StreamCreate) validateStart() error {
+	return validateStart().Exec(validateStartContext{cfg: sc.config(), obs: sc.obs}).Error()
 }
 
-func (qsc *StreamCreate) validateResolveNextChunk(nextChunk *telem.Chunk) {
-	nc := nextChunkContext{cfg: qsc.config(), prev: qsc.prevChunk(), next: nextChunk}
-	qsc.catch.CatchSimple.Exec(func() error {
+func (sc *StreamCreate) validateResolveNextChunk(nextChunk *telem.Chunk) {
+	nc := nextChunkContext{cfg: sc.config(), prev: sc.prevChunk(), next: nextChunk}
+	sc.catch.CatchSimple.Exec(func() error {
 		for _, vErr := range validateNextChunk().Exec(nc).Errors() {
-			if rErr := qsc.resolveNextChunkError(vErr, nc); rErr != nil {
+			if rErr := sc.resolveNextChunkError(vErr, nc); rErr != nil {
 				return rErr
 			}
 		}
@@ -191,7 +191,7 @@ func (qsc *StreamCreate) validateResolveNextChunk(nextChunk *telem.Chunk) {
 	})
 }
 
-func (qsc *StreamCreate) resolveNextChunkError(err error, nCtx nextChunkContext) error {
+func (sc *StreamCreate) resolveNextChunkError(err error, nCtx nextChunkContext) error {
 	return resolveNextChunk().Exec(err, nCtx).Error()
 }
 

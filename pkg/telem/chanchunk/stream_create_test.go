@@ -25,7 +25,7 @@ var _ = Describe("StreamCreate", func() {
 	BeforeEach(func() {
 		rngObs := rng.NewObserveMem([]rng.ObservedRange{})
 		rngSvc := rng.NewService(rngObs, clust.Exec)
-		svc = chanchunk.NewService(clust.Exec, rngSvc)
+		svc = chanchunk.NewService(clust, rngSvc)
 		node = &models.Node{ID: 1}
 		config = &models.ChannelConfig{
 			Name:           "Awesome Channel",
@@ -54,9 +54,8 @@ var _ = Describe("StreamCreate", func() {
 
 			go func() {
 				defer GinkgoRecover()
-				for err := range stream.Errors() {
-					Fail(err.Error())
-				}
+				err := <-stream.Errors()
+				Expect(err).To(BeNil())
 			}()
 		})
 		Describe("The  basics", func() {
@@ -259,12 +258,12 @@ var _ = Describe("StreamCreate", func() {
 				It("Shouldn't discard the duplicate", func() {
 					var errors []error
 					wg := &sync.WaitGroup{}
+					wg.Add(1)
 					go func() {
-						wg.Add(1)
 						defer wg.Done()
-						for err := range stream.Errors() {
-							errors = append(errors, err)
-						}
+						defer GinkgoRecover()
+						err := <-stream.Errors()
+						Expect(err).To(BeNil())
 					}()
 
 					cc := mock.ChunkSet(
@@ -303,12 +302,12 @@ var _ = Describe("StreamCreate", func() {
 					It("Shouldn discard the consumed chunk", func() {
 						var errors []error
 						wg := &sync.WaitGroup{}
+						wg.Add(1)
 						go func() {
-							wg.Add(1)
 							defer wg.Done()
-							for err := range stream.Errors() {
-								errors = append(errors, err)
-							}
+							defer GinkgoRecover()
+							err := <-stream.Errors()
+							Expect(err).To(BeNil())
 						}()
 						cc := mock.ChunkSet(
 							2,
@@ -340,16 +339,15 @@ var _ = Describe("StreamCreate", func() {
 					})
 				})
 			})
-			Context("Next chunk consumes previous chunk", func() {
+			Context("Exec chunk consumes previous chunk", func() {
 				It("Should return a non-contiguous chunk error", func() {
-					var errors []error
 					wg := &sync.WaitGroup{}
+					wg.Add(1)
 					go func() {
-						wg.Add(1)
 						defer wg.Done()
-						for err := range stream.Errors() {
-							errors = append(errors, err)
-						}
+						defer GinkgoRecover()
+						err := <-stream.Errors()
+						Expect(err.(chanchunk.Error).Type).To(Equal(chanchunk.ErrorTimingNonContiguous))
 					}()
 					cc := mock.ChunkSet(
 						2,
@@ -368,8 +366,6 @@ var _ = Describe("StreamCreate", func() {
 					}
 					stream.Close()
 					wg.Wait()
-					Expect(errors).To(HaveLen(1))
-					Expect(errors[0].(chanchunk.Error).Type).To(Equal(chanchunk.ErrorTimingNonContiguous))
 				})
 			})
 
@@ -393,14 +389,13 @@ var _ = Describe("StreamCreate", func() {
 
 				Expect(stream.Start(cancelCtx, config.ID)).To(BeNil())
 
-				var errors []error
 				wg := sync.WaitGroup{}
 				wg.Add(1)
 				go func() {
-					for err := range stream.Errors() {
-						errors = append(errors, err)
-					}
-					wg.Done()
+					defer wg.Done()
+					defer GinkgoRecover()
+					err := <-stream.Errors()
+					Expect(err.(query.Error).Type).To(Equal(query.ErrorTypeInvalidArgs))
 				}()
 
 				data := telem.NewChunkData([]byte{})

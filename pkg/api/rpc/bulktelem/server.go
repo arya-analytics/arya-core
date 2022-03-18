@@ -25,6 +25,29 @@ func (s *Server) BindTo(srv *grpc.Server) {
 	bulktelemv1.RegisterBulkTelemServiceServer(srv, s)
 }
 
+func (s *Server) RetrieveStream(req *bulktelemv1.RetrieveStreamRequest, server bulktelemv1.BulkTelemService_RetrieveStreamServer) error {
+	pk, err := parsePK(req.ChannelConfigId)
+	if err != nil {
+		return err
+	}
+	tr := telem.NewTimeRange(telem.TimeStamp(req.StartTs), telem.TimeStamp(req.EndTs))
+	stream, err := s.svc.NewStreamRetrieve().WhereConfigPK(pk).WhereTimeRange(tr).Exec(server.Context())
+	if err != nil {
+		return err
+	}
+	for c := range stream {
+		if sErr := server.Send(&bulktelemv1.RetrieveStreamResponse{
+			StartTs:  int64(c.Start()),
+			DataType: int64(c.DataType),
+			DataRate: float32(c.DataRate),
+			Data:     c.Bytes(),
+		}); sErr != nil {
+			return sErr
+		}
+	}
+	return nil
+}
+
 func (s *Server) CreateStream(server bulktelemv1.BulkTelemService_CreateStreamServer) error {
 	stream := s.svc.NewStreamCreate()
 	wg := errgroup.Group{}
@@ -55,7 +78,7 @@ func (s *Server) CreateStream(server bulktelemv1.BulkTelemService_CreateStreamSe
 }
 
 func startStream(ctx context.Context, stream *chanchunk.StreamCreate, req *bulktelemv1.CreateStreamRequest) error {
-	pk, err := model.NewPK(uuid.UUID{}).NewFromString(req.ChannelConfigId)
+	pk, err := parsePK(req.ChannelConfigId)
 	if err != nil {
 		return err
 	}
@@ -78,4 +101,8 @@ func relayErrors(stream *chanchunk.StreamCreate, server bulktelemv1.BulkTelemSer
 		}
 	}
 	return nil
+}
+
+func parsePK(pkStr string) (model.PK, error) {
+	return model.NewPK(uuid.UUID{}).NewFromString(pkStr)
 }
