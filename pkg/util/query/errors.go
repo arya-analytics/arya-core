@@ -59,12 +59,14 @@ func injectErrKey(errStr string, args ...interface{}) string {
 //
 // 1. A pass through errutil.Convert that will propagate the error if it is already of type query.Error.
 //
-// 2. A default errutil.Convert that will return a query.Error with query.ErrorTypeUnknown.
+// 2. General errutil.Convert that handle common query errors
+//
+// 3. A default errutil.Convert that will return a query.Error with query.ErrorTypeUnknown.
 //
 func NewErrorConvertChain(converters ...errutil.Convert) errutil.ConvertChain {
 	cc := errutil.ConvertChain{errorPassConvert}
 	cc = append(cc, converters...)
-	cc = append(cc, errorDefaultConvert)
+	cc = append(cc, errorContextCanceled, errorDefaultConvert)
 	return cc
 }
 
@@ -73,13 +75,16 @@ func errorPassConvert(err error) (error, bool) {
 	return err, ok
 }
 
+func errorContextCanceled(err error) (error, bool) {
+	if err.Error() == "context canceled" {
+		return NewSimpleError(ErrorTypeInvalidArgs, err), true
+	}
+	return err, false
+}
+
 func errorDefaultConvert(err error) (error, bool) {
 	log.Errorf(injectErrKey("unknown error -> %s", err))
-	return Error{
-		Type:    ErrorTypeUnknown,
-		Base:    err,
-		Message: injectErrKey("unknown error"),
-	}, true
+	return NewUnknownError(err), true
 }
 
 // |||| CATCH ||||
