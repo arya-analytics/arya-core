@@ -24,9 +24,7 @@ type ObserveMem struct {
 }
 
 func NewObserveMem() *ObserveMem {
-	return &ObserveMem{
-		chanMap: map[uuid.UUID]ObservedChannelConfig{},
-	}
+	return &ObserveMem{chanMap: map[uuid.UUID]ObservedChannelConfig{}}
 }
 
 func (o *ObserveMem) Retrieve(cfgPk uuid.UUID) (ObservedChannelConfig, bool) {
