@@ -18,22 +18,25 @@ jobs:
           MINIO_ROOT_USER: minio
           MINIO_ROOT_PASSWORD: minio123
     steps:
+      - name: Cache bazelisk
+        uses: actions/cache@v2
+        env:
+          cache-name: bazel-cache
+        with:
+          path: |
+            ~/.cache/bazelisk
+            ~/.cache/bazel
+          key: ${{ runner.os }}-${{ env.cache-name }}-${{ github.ref }}
+          restore-keys: |
+            ${{ runner.os }}-${{ env.cache-name }}-development
+
       - uses: actions/checkout@v2
 
-      - name: Set Up Go
-        uses: actions/setup-go@v2
-        with:
-          go-version: 1.18.0
+      - name: Build
+        run: bazel build //...
 
-      - name: Set Up Tests
-        run: |
-          go get github.com/onsi/ginkgo/v2/ginkgo/generators@v2.0.0
-          go get github.com/onsi/ginkgo/v2/ginkgo/internal@v2.0.0
-          go get github.com/onsi/ginkgo/v2/ginkgo/labels@v2.0.0
-          go install github.com/onsi/ginkgo/v2/ginkgo
-
-      - name: Run Tests
-        run: ginkgo -r --covermode=atomic --coverprofile=coverage.txt -covermode=atomic --skip-package=dev
+      - name: Test
+        run: bazel coverage //... --test_output=errors
 
       - name: Upload Coverage
         uses: codecov/codecov-action@v2

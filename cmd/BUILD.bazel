@@ -1,0 +1,36 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "cmd",
+    srcs = [
+        "demo.go",
+        "root.go",
+        "start.go",
+    ],
+    importpath = "github.com/arya-analytics/aryacore/cmd",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/api/rpc/bulktelem",
+        "//pkg/api/rpc/chanconfig",
+        "//pkg/api/rpc/gen/proto/go/bulktelem/v1:bulktelem",
+        "//pkg/api/rpc/gen/proto/go/chanconfig/v1:chanconfig",
+        "//pkg/cluster",
+        "//pkg/cluster/chanchunk",
+        "//pkg/models",
+        "//pkg/rpc",
+        "//pkg/storage",
+        "//pkg/storage/minio",
+        "//pkg/storage/redis",
+        "//pkg/storage/roach",
+        "//pkg/telem/chanchunk",
+        "//pkg/telem/rng",
+        "//pkg/util/telem",
+        "//pkg/util/telem/mock",
+        "@com_github_google_uuid//:uuid",
+        "@com_github_sirupsen_logrus//:logrus",
+        "@com_github_spf13_cobra//:cobra",
+        "@com_github_spf13_viper//:viper",
+        "@org_golang_google_grpc//:grpc",
+        "@org_golang_google_grpc//credentials/insecure",
+    ],
+)

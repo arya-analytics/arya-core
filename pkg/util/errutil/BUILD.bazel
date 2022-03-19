@@ -1,0 +1,27 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "errutil",
+    srcs = [
+        "catch.go",
+        "convert.go",
+        "inspect.go",
+    ],
+    importpath = "github.com/arya-analytics/aryacore/pkg/util/errutil",
+    visibility = ["//visibility:public"],
+    deps = ["@com_github_sirupsen_logrus//:logrus"],
+)
+
+go_test(
+    name = "errutil_test",
+    srcs = [
+        "catch_test.go",
+        "convert_test.go",
+        "errutil_suite_test.go",
+    ],
+    deps = [
+        ":errutil",
+        "@com_github_onsi_ginkgo_v2//:ginkgo",
+        "@com_github_onsi_gomega//:gomega",
+    ],
+)

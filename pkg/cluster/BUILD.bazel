@@ -1,0 +1,21 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "cluster",
+    srcs = [
+        "cluster.go",
+        "pool.go",
+        "service_chain.go",
+        "storage.go",
+    ],
+    importpath = "github.com/arya-analytics/aryacore/pkg/cluster",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/models",
+        "//pkg/rpc",
+        "//pkg/storage",
+        "//pkg/util/model",
+        "//pkg/util/query",
+        "@org_golang_google_grpc//:grpc",
+    ],
+)

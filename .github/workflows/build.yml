@@ -5,13 +5,19 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: Cache bazelisk
+        uses: actions/cache@v2
+        env:
+          cache-name: bazel-cache
+        with:
+          path: |
+            ~/.cache/bazelisk
+            ~/.cache/bazel
+          key: ${{ runner.os }}-${{ env.cache-name }}-${{ github.ref }}
+          restore-keys: |
+            ${{ runner.os }}-${{ env.cache-name }}-development
+
       - uses: actions/checkout@v2
 
-      - name: Set Up Go
-        uses: actions/setup-go@v2
-        with:
-          go-version: 1.18.0
-          stable: false
-
       - name: Build
-        run: go build -v ./...
+        run: bazel build //...

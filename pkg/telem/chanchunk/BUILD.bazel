@@ -1,0 +1,47 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "chanchunk",
+    srcs = [
+        "observe.go",
+        "service.go",
+        "stream_create.go",
+        "stream_retrieve.go",
+        "timing.go",
+        "timingerrortype_string.go",
+    ],
+    importpath = "github.com/arya-analytics/aryacore/pkg/telem/chanchunk",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/models",
+        "//pkg/telem/rng",
+        "//pkg/util/errutil",
+        "//pkg/util/model",
+        "//pkg/util/query",
+        "//pkg/util/telem",
+        "//pkg/util/validate",
+        "@com_github_google_uuid//:uuid",
+        "@org_golang_x_sync//semaphore",
+    ],
+)
+
+go_test(
+    name = "chanchunk_test",
+    srcs = [
+        "chanchunk_suite_test.go",
+        "stream_create_test.go",
+        "stream_retrieve_test.go",
+    ],
+    deps = [
+        ":chanchunk",
+        "//pkg/cluster/mock",
+        "//pkg/models",
+        "//pkg/telem/rng",
+        "//pkg/util/model",
+        "//pkg/util/query",
+        "//pkg/util/telem",
+        "//pkg/util/telem/mock",
+        "@com_github_onsi_ginkgo_v2//:ginkgo",
+        "@com_github_onsi_gomega//:gomega",
+    ],
+)

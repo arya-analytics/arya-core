@@ -1,0 +1,38 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "chanconfig",
+    srcs = ["server.go"],
+    importpath = "github.com/arya-analytics/aryacore/pkg/api/rpc/chanconfig",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/api/rpc/gen/proto/go/chanconfig/v1:chanconfig",
+        "//pkg/cluster",
+        "//pkg/models",
+        "//pkg/rpc",
+        "//pkg/util/query",
+        "@org_golang_google_grpc//:grpc",
+    ],
+)
+
+go_test(
+    name = "chanconfig_test",
+    srcs = [
+        "chanconfig_suite_test.go",
+        "server_test.go",
+    ],
+    deps = [
+        ":chanconfig",
+        "//pkg/api/rpc/gen/proto/go/chanconfig/v1:chanconfig",
+        "//pkg/cluster/mock",
+        "//pkg/models",
+        "//pkg/util/model",
+        "//pkg/util/telem",
+        "@com_github_google_uuid//:uuid",
+        "@com_github_onsi_ginkgo_v2//:ginkgo",
+        "@com_github_onsi_gomega//:gomega",
+        "@com_github_sirupsen_logrus//:logrus",
+        "@org_golang_google_grpc//:grpc",
+        "@org_golang_google_grpc//credentials/insecure",
+    ],
+)

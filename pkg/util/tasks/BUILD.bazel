@@ -1,0 +1,25 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "tasks",
+    srcs = [
+        "schedule.go",
+        "tasks.go",
+    ],
+    importpath = "github.com/arya-analytics/aryacore/pkg/util/tasks",
+    visibility = ["//visibility:public"],
+    deps = ["@com_github_sirupsen_logrus//:logrus"],
+)
+
+go_test(
+    name = "tasks_test",
+    srcs = [
+        "schedule_test.go",
+        "tasks_suite_test.go",
+    ],
+    deps = [
+        ":tasks",
+        "@com_github_onsi_ginkgo_v2//:ginkgo",
+        "@com_github_onsi_gomega//:gomega",
+    ],
+)

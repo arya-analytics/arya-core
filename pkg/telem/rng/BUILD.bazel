@@ -1,0 +1,45 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "rng",
+    srcs = [
+        "allocate.go",
+        "observe.go",
+        "partition.go",
+        "query.go",
+        "service.go",
+    ],
+    importpath = "github.com/arya-analytics/aryacore/pkg/telem/rng",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/models",
+        "//pkg/util/errutil",
+        "//pkg/util/model",
+        "//pkg/util/query",
+        "//pkg/util/tasks",
+        "@com_github_google_uuid//:uuid",
+    ],
+)
+
+go_test(
+    name = "rng_test",
+    srcs = [
+        "allocate_test.go",
+        "observe_test.go",
+        "partition_test.go",
+        "rng_suite_test.go",
+    ],
+    deps = [
+        ":rng",
+        "//pkg/cluster/mock",
+        "//pkg/models",
+        "//pkg/telem/rng/mock",
+        "//pkg/util/model",
+        "//pkg/util/query",
+        "//pkg/util/query/mock",
+        "//pkg/util/tasks",
+        "@com_github_google_uuid//:uuid",
+        "@com_github_onsi_ginkgo_v2//:ginkgo",
+        "@com_github_onsi_gomega//:gomega",
+    ],
+)

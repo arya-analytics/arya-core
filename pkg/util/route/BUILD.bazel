@@ -1,0 +1,12 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "route",
+    srcs = [
+        "batch.go",
+        "switch.go",
+    ],
+    importpath = "github.com/arya-analytics/aryacore/pkg/util/route",
+    visibility = ["//visibility:public"],
+    deps = ["//pkg/util/model"],
+)

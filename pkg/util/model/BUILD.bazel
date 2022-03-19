@@ -1,0 +1,41 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "model",
+    srcs = [
+        "catalog.go",
+        "exchange.go",
+        "fields.go",
+        "pk.go",
+        "reflect.go",
+        "struct_tag.go",
+    ],
+    importpath = "github.com/arya-analytics/aryacore/pkg/util/model",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/util/validate",
+        "@com_github_google_uuid//:uuid",
+        "@com_github_sirupsen_logrus//:logrus",
+    ],
+)
+
+go_test(
+    name = "model_test",
+    srcs = [
+        "catalog_test.go",
+        "exchange_test.go",
+        "fields_test.go",
+        "model_suite_test.go",
+        "pk_test.go",
+        "reflect_test.go",
+        "struct_tag_test.go",
+    ],
+    deps = [
+        ":model",
+        "//pkg/models",
+        "//pkg/util/model/mock",
+        "@com_github_google_uuid//:uuid",
+        "@com_github_onsi_ginkgo_v2//:ginkgo",
+        "@com_github_onsi_gomega//:gomega",
+    ],
+)

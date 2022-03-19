@@ -1,0 +1,57 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "minio",
+    srcs = [
+        "adapter.go",
+        "driver.go",
+        "errors.go",
+        "exchange.go",
+        "minio.go",
+        "models.go",
+        "query.go",
+    ],
+    importpath = "github.com/arya-analytics/aryacore/pkg/storage/minio",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/storage",
+        "//pkg/storage/internal",
+        "//pkg/util/caseconv",
+        "//pkg/util/errutil",
+        "//pkg/util/model",
+        "//pkg/util/query",
+        "//pkg/util/telem",
+        "//pkg/util/validate",
+        "@com_github_google_uuid//:uuid",
+        "@com_github_minio_minio_go_v7//:minio-go",
+        "@com_github_minio_minio_go_v7//pkg/credentials",
+        "@com_github_spf13_viper//:viper",
+    ],
+)
+
+go_test(
+    name = "minio_test",
+    srcs = [
+        "driver_test.go",
+        "minio_suite_test.go",
+        "minio_test.go",
+        "query_create_test.go",
+        "query_delete_test.go",
+        "query_migrate_test.go",
+        "query_retrieve_test.go",
+    ],
+    data = glob(["testdata/**"]),
+    deps = [
+        ":minio",
+        "//pkg/models",
+        "//pkg/storage",
+        "//pkg/storage/internal",
+        "//pkg/storage/mock",
+        "//pkg/util/query",
+        "//pkg/util/telem",
+        "@com_github_google_uuid//:uuid",
+        "@com_github_onsi_ginkgo_v2//:ginkgo",
+        "@com_github_onsi_gomega//:gomega",
+        "@com_github_spf13_viper//:viper",
+    ],
+)

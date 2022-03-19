@@ -1,0 +1,51 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "storage",
+    srcs = [
+        "config.go",
+        "hook.go",
+        "pool.go",
+        "query.go",
+        "query_base.go",
+        "query_ts_base.go",
+        "query_ts_create.go",
+        "query_ts_retrieve.go",
+        "storage.go",
+    ],
+    importpath = "github.com/arya-analytics/aryacore/pkg/storage",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/storage/internal",
+        "//pkg/util/config",
+        "//pkg/util/errutil",
+        "//pkg/util/model",
+        "//pkg/util/query",
+        "//pkg/util/tasks",
+    ],
+)
+
+go_test(
+    name = "storage_test",
+    srcs = [
+        "query_create_test.go",
+        "query_delete_test.go",
+        "query_retrieve_test.go",
+        "query_ts_create_test.go",
+        "query_ts_retrieve_test.go",
+        "query_update_test.go",
+        "storage_suite_test.go",
+        "tasks_test.go",
+    ],
+    deps = [
+        "//pkg/models",
+        "//pkg/storage/mock",
+        "//pkg/util/model",
+        "//pkg/util/query",
+        "//pkg/util/tasks",
+        "//pkg/util/telem",
+        "@com_github_google_uuid//:uuid",
+        "@com_github_onsi_ginkgo_v2//:ginkgo",
+        "@com_github_onsi_gomega//:gomega",
+    ],
+)

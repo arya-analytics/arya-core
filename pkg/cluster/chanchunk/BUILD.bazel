@@ -1,0 +1,52 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "chanchunk",
+    srcs = [
+        "remote.go",
+        "server.go",
+        "service.go",
+    ],
+    importpath = "github.com/arya-analytics/aryacore/pkg/cluster/chanchunk",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/cluster",
+        "//pkg/cluster/gen/proto/go/chanchunk/v1:chanchunk",
+        "//pkg/models",
+        "//pkg/rpc",
+        "//pkg/util/errutil",
+        "//pkg/util/model",
+        "//pkg/util/query",
+        "//pkg/util/route",
+        "@com_github_google_uuid//:uuid",
+        "@com_github_sirupsen_logrus//:logrus",
+        "@org_golang_google_grpc//:grpc",
+    ],
+)
+
+go_test(
+    name = "chanchunk_test",
+    srcs = [
+        "chanchunk_suite_test.go",
+        "remote_test.go",
+        "server_test.go",
+        "service_test.go",
+    ],
+    deps = [
+        ":chanchunk",
+        "//pkg/cluster",
+        "//pkg/cluster/chanchunk/mock",
+        "//pkg/cluster/gen/proto/go/chanchunk/v1:chanchunk",
+        "//pkg/cluster/mock",
+        "//pkg/models",
+        "//pkg/storage/mock",
+        "//pkg/util/model",
+        "//pkg/util/query",
+        "//pkg/util/telem",
+        "//pkg/util/telem/mock",
+        "@com_github_google_uuid//:uuid",
+        "@com_github_onsi_ginkgo_v2//:ginkgo",
+        "@com_github_onsi_gomega//:gomega",
+        "@org_golang_google_grpc//:grpc",
+    ],
+)

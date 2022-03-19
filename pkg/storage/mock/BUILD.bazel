@@ -1,0 +1,27 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "mock",
+    srcs = [
+        "driver.go",
+        "storage.go",
+    ],
+    importpath = "github.com/arya-analytics/aryacore/pkg/storage/mock",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/models",
+        "//pkg/storage",
+        "//pkg/storage/minio",
+        "//pkg/storage/redis",
+        "//pkg/storage/redis/timeseries",
+        "//pkg/storage/roach",
+        "@com_github_cockroachdb_cockroach_go_v2//testserver",
+        "@com_github_go_redis_redis_v8//:redis",
+        "@com_github_minio_minio_go_v7//:minio-go",
+        "@com_github_minio_minio_go_v7//pkg/credentials",
+        "@com_github_sirupsen_logrus//:logrus",
+        "@com_github_uptrace_bun//:bun",
+        "@com_github_uptrace_bun_dialect_pgdialect//:pgdialect",
+        "@com_github_uptrace_bun_extra_bundebug//:bundebug",
+    ],
+)
