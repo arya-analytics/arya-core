@@ -1,0 +1,19 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
+load("@bazel_gazelle//:def.bzl", "gazelle")
+
+# gazelle:prefix github.com/arya-analytics/aryacore
+gazelle(name = "gazelle")
+
+go_library(
+    name = "aryacore_lib",
+    srcs = ["main.go"],
+    importpath = "github.com/arya-analytics/aryacore",
+    visibility = ["//visibility:private"],
+    deps = ["//cmd"],
+)
+
+go_binary(
+    name = "aryacore",
+    embed = [":aryacore_lib"],
+    visibility = ["//visibility:public"],
+)

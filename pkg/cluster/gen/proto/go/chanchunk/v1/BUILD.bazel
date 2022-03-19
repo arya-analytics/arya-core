@@ -1,0 +1,19 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "chanchunk",
+    srcs = [
+        "chanchunk.pb.go",
+        "chanchunk_grpc.pb.go",
+    ],
+    importpath = "github.com/arya-analytics/aryacore/pkg/cluster/gen/proto/go/chanchunk/v1",
+    visibility = ["//visibility:public"],
+    deps = [
+        "@com_github_srikrsna_protoc_gen_gotag//tagger:go_default_library",
+        "@org_golang_google_grpc//:go_default_library",
+        "@org_golang_google_grpc//codes:go_default_library",
+        "@org_golang_google_grpc//status:go_default_library",
+        "@org_golang_google_protobuf//reflect/protoreflect:go_default_library",
+        "@org_golang_google_protobuf//runtime/protoimpl:go_default_library",
+    ],
+)

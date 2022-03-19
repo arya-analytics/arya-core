@@ -1,0 +1,23 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "mock",
+    srcs = ["chunk.go"],
+    importpath = "github.com/arya-analytics/aryacore/pkg/util/telem/mock",
+    visibility = ["//visibility:public"],
+    deps = ["//pkg/util/telem"],
+)
+
+go_test(
+    name = "mock_test",
+    srcs = [
+        "chunk_test.go",
+        "mock_suite_test.go",
+    ],
+    deps = [
+        ":mock",
+        "//pkg/util/telem",
+        "@com_github_onsi_ginkgo_v2//:go_default_library",
+        "@com_github_onsi_gomega//:go_default_library",
+    ],
+)

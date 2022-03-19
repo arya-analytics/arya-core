@@ -1,0 +1,21 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "caseconv",
+    srcs = ["caseconv.go"],
+    importpath = "github.com/arya-analytics/aryacore/pkg/util/caseconv",
+    visibility = ["//visibility:public"],
+)
+
+go_test(
+    name = "caseconv_test",
+    srcs = [
+        "caseconv_suite_test.go",
+        "caseconv_test.go",
+    ],
+    deps = [
+        ":caseconv",
+        "@com_github_onsi_ginkgo_v2//:go_default_library",
+        "@com_github_onsi_gomega//:go_default_library",
+    ],
+)

@@ -1,0 +1,35 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "rpc",
+    srcs = [
+        "model_exchange.go",
+        "pool.go",
+    ],
+    importpath = "github.com/arya-analytics/aryacore/pkg/rpc",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/util/model",
+        "//pkg/util/telem",
+        "@org_golang_google_grpc//:go_default_library",
+    ],
+)
+
+go_test(
+    name = "rpc_test",
+    srcs = [
+        "model_exchange_test.go",
+        "pool_test.go",
+        "rpc_suite_test.go",
+    ],
+    deps = [
+        ":rpc",
+        "//pkg/util/telem",
+        "//pkg/util/telem/mock",
+        "@com_github_onsi_ginkgo_v2//:go_default_library",
+        "@com_github_onsi_gomega//:go_default_library",
+        "@org_golang_google_grpc//:go_default_library",
+        "@org_golang_google_grpc//connectivity:go_default_library",
+        "@org_golang_google_grpc//credentials/insecure:go_default_library",
+    ],
+)

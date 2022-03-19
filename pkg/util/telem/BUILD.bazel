@@ -1,0 +1,32 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "telem",
+    srcs = [
+        "chunk.go",
+        "convert.go",
+        "data.go",
+        "datatype_string.go",
+        "overlap.go",
+        "overlaptype_string.go",
+        "time.go",
+    ],
+    importpath = "github.com/arya-analytics/aryacore/pkg/util/telem",
+    visibility = ["//visibility:public"],
+)
+
+go_test(
+    name = "telem_test",
+    srcs = [
+        "chunk_test.go",
+        "data_test.go",
+        "overlap_test.go",
+        "telem_suite_test.go",
+        "time_test.go",
+    ],
+    deps = [
+        ":telem",
+        "@com_github_onsi_ginkgo_v2//:go_default_library",
+        "@com_github_onsi_gomega//:go_default_library",
+    ],
+)

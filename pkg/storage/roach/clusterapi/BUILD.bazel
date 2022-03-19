@@ -1,0 +1,22 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "clusterapi",
+    srcs = ["clusterapi.go"],
+    importpath = "github.com/arya-analytics/aryacore/pkg/storage/roach/clusterapi",
+    visibility = ["//visibility:public"],
+)
+
+go_test(
+    name = "clusterapi_test",
+    srcs = [
+        "clusterapi_suite_test.go",
+        "clusterapi_test.go",
+    ],
+    deps = [
+        ":clusterapi",
+        "//pkg/storage/mock",
+        "@com_github_onsi_ginkgo_v2//:go_default_library",
+        "@com_github_onsi_gomega//:go_default_library",
+    ],
+)

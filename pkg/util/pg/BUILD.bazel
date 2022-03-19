@@ -1,0 +1,11 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "pg",
+    srcs = [
+        "errortype_string.go",
+        "pg.go",
+    ],
+    importpath = "github.com/arya-analytics/aryacore/pkg/util/pg",
+    visibility = ["//visibility:public"],
+)
