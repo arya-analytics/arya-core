@@ -9,6 +9,6 @@ go_library(
         "//pkg/models",
         "//pkg/util/errutil",
         "//pkg/util/query",
-        "@com_github_google_uuid//:go_default_library",
+        "@com_github_google_uuid//:uuid",
     ],
 )

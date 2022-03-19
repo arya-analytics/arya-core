@@ -22,10 +22,10 @@ go_library(
         "//pkg/util/query",
         "//pkg/util/telem",
         "//pkg/util/validate",
-        "@com_github_google_uuid//:go_default_library",
-        "@com_github_minio_minio_go_v7//:go_default_library",
-        "@com_github_minio_minio_go_v7//pkg/credentials:go_default_library",
-        "@com_github_spf13_viper//:go_default_library",
+        "@com_github_google_uuid//:uuid",
+        "@com_github_minio_minio_go_v7//:minio-go",
+        "@com_github_minio_minio_go_v7//pkg/credentials",
+        "@com_github_spf13_viper//:viper",
     ],
 )
 
@@ -49,9 +49,9 @@ go_test(
         "//pkg/storage/mock",
         "//pkg/util/query",
         "//pkg/util/telem",
-        "@com_github_google_uuid//:go_default_library",
-        "@com_github_onsi_ginkgo_v2//:go_default_library",
-        "@com_github_onsi_gomega//:go_default_library",
-        "@com_github_spf13_viper//:go_default_library",
+        "@com_github_google_uuid//:uuid",
+        "@com_github_onsi_ginkgo_v2//:ginkgo",
+        "@com_github_onsi_gomega//:gomega",
+        "@com_github_spf13_viper//:viper",
     ],
 )
