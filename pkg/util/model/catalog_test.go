@@ -2,8 +2,10 @@ package model_test
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/models"
+	"github.com/arya-analytics/aryacore/pkg/util/model/mock"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"reflect"
 
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 )
@@ -64,6 +66,15 @@ var _ = Describe("Catalog", func() {
 			Expect(func() {
 				catalog.New(&models.Node{})
 			}).To(Panic())
+		})
+	})
+	Describe("Data Source", func() {
+		It("Should retrieve the data source item correctly", func() {
+			ds := model.DataSource{}
+			t := reflect.TypeOf(&mock.ModelA{})
+			ds[t] = model.NewReflect(&[]*mock.ModelA{})
+			m := ds.Retrieve(t)
+			Expect(m.Type()).To(Equal(reflect.TypeOf(mock.ModelA{})))
 		})
 	})
 })

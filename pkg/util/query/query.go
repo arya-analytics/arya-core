@@ -44,7 +44,7 @@ type Query interface {
 // |||| PACK ||||
 
 // Pack is a representation of a query as a struct. It stores the model, variant, and options for a query.
-// A Pack can be easily transported from where it's assembled to where it needs to be executed.
+// A Pack can be easily transported from Where it's assembled to Where it needs to be executed.
 //
 // Pack should generally not be instantiated directly, and should instead be created by using a Query such as
 // Create.
@@ -56,7 +56,16 @@ type Pack struct {
 }
 
 func NewPack(q Query) *Pack {
-	return &Pack{query: q, opts: map[optKey]interface{}{}}
+	return &Pack{query: q, opts: map[OptKey]interface{}{}}
+}
+
+func (p *Pack) SetOpt(key OptKey, val interface{}) {
+	p.opts[key] = val
+}
+
+func (p *Pack) RetrieveOpt(key OptKey) (interface{}, bool) {
+	o, ok := p.opts[key]
+	return o, ok
 }
 
 func (p *Pack) bindModel(m interface{}) {

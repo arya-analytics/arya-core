@@ -69,7 +69,7 @@ func (t *Chunk) End() TimeStamp {
 
 }
 
-// Range returns the TimeRange between the Start and End of the chunk.
+// TimeStampExp returns the TimeRange between the Start and End of the chunk.
 func (t *Chunk) Range() TimeRange {
 	return NewTimeRange(t.Start(), t.End())
 }
@@ -122,7 +122,7 @@ func (t *Chunk) AllValues() interface{} {
 // RemoveFromStart removes all values from the Start of the chunk to the specified timestamp. Modifies the Start
 // of the chunk to account for the removed values.
 //
-// Will panic if the provided TimeStamp exceeds the Range of the chunk.
+// Will panic if the provided TimeStamp exceeds the TimeStampExp of the chunk.
 func (t *Chunk) RemoveFromStart(ts TimeStamp) {
 	t.Splice(t.ByteIndexAt(t.Start()), t.ByteIndexAt(ts))
 	t.start = ts
@@ -131,7 +131,7 @@ func (t *Chunk) RemoveFromStart(ts TimeStamp) {
 // RemoveFromEnd removes all values from the End of the chunk to the specified timestamp. Modifies the End of the
 // chunk to account for the removed values.
 //
-// Will panic if the provided TimeStamp exceeds the Range of the chunk.
+// Will panic if the provided TimeStamp exceeds the TimeStampExp of the chunk.
 func (t *Chunk) RemoveFromEnd(ts TimeStamp) {
 	t.Splice(t.ByteIndexAt(ts), t.ByteIndexAt(t.End()))
 

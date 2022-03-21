@@ -2,14 +2,14 @@ package query
 
 // Retrieve retrieves a model or set of models depending on the parameters passed.
 type Retrieve struct {
-	where
+	Where
 }
 
 // || CONSTRUCTOR ||
 
 func NewRetrieve() *Retrieve {
 	r := &Retrieve{}
-	r.baseInit(r)
+	r.Base.Init(r)
 	return r
 }
 
@@ -21,7 +21,7 @@ func NewRetrieve() *Retrieve {
 // pass a struct. NOTE: If a struct is passed, and multiple values are returned,
 // the struct is assigned to the value of the first result.
 func (r *Retrieve) Model(m interface{}) *Retrieve {
-	r.baseModel(m)
+	r.Base.Model(m)
 	return r
 }
 
@@ -29,20 +29,20 @@ func (r *Retrieve) Model(m interface{}) *Retrieve {
 
 // WherePK queries by the primary of the model to be deleted.
 func (r *Retrieve) WherePK(pk interface{}) *Retrieve {
-	r.wherePK(pk)
+	r.Where.WherePK(pk)
 	return r
 }
 
 // WherePKs queries by a set of primary keys of models to be deleted.
 func (r *Retrieve) WherePKs(pks interface{}) *Retrieve {
-	r.wherePKs(pks)
+	r.Where.WherePKs(pks)
 	return r
 }
 
 // WhereFields queries by a set of key value pairs where the key represents a field name
 // and the value represent a value to match with.
 func (r *Retrieve) WhereFields(flds WhereFields) *Retrieve {
-	r.whereFields(flds)
+	r.Where.WhereFields(flds)
 	return r
 }
 
@@ -89,7 +89,7 @@ func (r *Retrieve) Relation(rel string, flds ...string) *Retrieve {
 // BindExec binds Execute that Retrieve will use to run the query.
 // This method MUST be called before calling Exec.
 func (r *Retrieve) BindExec(e Execute) *Retrieve {
-	r.baseBindExec(e)
+	r.Base.BindExec(e)
 	return r
 }
 

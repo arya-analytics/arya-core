@@ -65,7 +65,7 @@ var _ = Describe("ChunkData", func() {
 				Expect(chunk.Span()).To(Equal(telem.TimeSpan(400000000)))
 			})
 		})
-		Describe("Range", func() {
+		Describe("TimeStampExp", func() {
 			It("Should return the correct range", func() {
 				Expect(chunk.Range().Start()).To(Equal(chunk.Start()))
 				Expect(chunk.Range().End()).To(Equal(chunk.End()))
@@ -143,7 +143,7 @@ var _ = Describe("ChunkData", func() {
 					Expect(c.ValueAt(c.End().Add(telem.NewTimeSpan(-1 * time.Second)))).To(Equal(9.0))
 				})
 			})
-			Describe("Range of SourceValues", func() {
+			Describe("TimeStampExp of SourceValues", func() {
 				It("Should return the correct values", func() {
 					rng := c.RangeFromStart(c.Start().Add(telem.NewTimeSpan(3 * time.Second)))
 					Expect(rng.Start()).To(Equal(c.Start()))

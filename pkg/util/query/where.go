@@ -7,22 +7,22 @@ import (
 
 // |||| QUERY ||||
 
-type where struct {
-	base
+type Where struct {
+	Base
 }
 
-func (w *where) whereFields(flds WhereFields) {
+func (w *Where) WhereFields(flds WhereFields) {
 	newWhereFieldsOpt(w.Pack(), flds)
 }
 
-func (w *where) wherePK(pk interface{}) {
+func (w *Where) WherePK(pk interface{}) {
 	if reflect.TypeOf(pk).Kind() == reflect.Slice {
 		panic("wherepk can't be called with multiple primary keys!")
 	}
 	newPKOpt(w.Pack(), pk)
 }
 
-func (w *where) wherePKs(pks interface{}) {
+func (w *Where) WherePKs(pks interface{}) {
 	if reflect.TypeOf(pks).Kind() != reflect.Slice {
 		panic("wherepks can't be called with a single primary key!")
 	}

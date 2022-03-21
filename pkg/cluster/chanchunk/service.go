@@ -25,10 +25,10 @@ func (s *Service) CanHandle(p *query.Pack) bool {
 
 func (s *Service) Exec(ctx context.Context, p *query.Pack) error {
 	return query.Switch(ctx, p, query.Ops{
-		Create:   s.createReplica,
-		Retrieve: s.retrieveReplica,
-		Delete:   s.deleteReplica,
-		Update:   s.updateReplica,
+		Create:   s.create,
+		Retrieve: s.retrieve,
+		Delete:   s.delete,
+		Update:   s.update,
 	})
 }
 
@@ -60,7 +60,7 @@ func retrieveRRQuery(m *model.Reflect) query.Query {
 		WherePKs(m.FieldsByName(ccrFieldRRID).ToPKChain())
 }
 
-func (s *Service) createReplica(ctx context.Context, p *query.Pack) error {
+func (s *Service) create(ctx context.Context, p *query.Pack) error {
 	// CLARIFICATION: Retrieves information about the rng replicas and nodes model belongs to.
 	// It will bind the results to p.Model itself.
 	if err := s.localExec(ctx, retrieveRRQuery(p.Model()).Pack()); err != nil {
@@ -89,7 +89,7 @@ func augmentedRetrieveQuery(p *query.Pack) *query.Pack {
 	return p
 }
 
-func (s *Service) retrieveReplica(ctx context.Context, p *query.Pack) error {
+func (s *Service) retrieve(ctx context.Context, p *query.Pack) error {
 	fldsOpt, fldsOptOk := query.RetrieveFieldsOpt(p)
 	// CLARIFICATION: If we don't need to retrieve any telemetry, just
 	// run the original query and return the result.
@@ -131,7 +131,7 @@ func preDeleteRetrieveQuery(p *query.Pack) query.Query {
 	return q
 }
 
-func (s *Service) deleteReplica(ctx context.Context, p *query.Pack) error {
+func (s *Service) delete(ctx context.Context, p *query.Pack) error {
 	// CLARIFICATION: Retrieves information about the rng replicas and nodes model belongs to.
 	// It will bind the results to p .Model itself.
 	if err := s.localExec(ctx, preDeleteRetrieveQuery(p).Pack()); err != nil {
@@ -147,7 +147,7 @@ func (s *Service) deleteReplica(ctx context.Context, p *query.Pack) error {
 	)
 }
 
-func (s *Service) updateReplica(ctx context.Context, p *query.Pack) error {
+func (s *Service) update(ctx context.Context, p *query.Pack) error {
 	if !p.Model().FieldsByName("Telem").AllNonZero() {
 		log.
 			WithFields(log.Fields{"ID": p.Model().PKChain().Raw()}).

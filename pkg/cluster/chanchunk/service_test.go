@@ -83,7 +83,7 @@ var _ = Describe("Service", func() {
 			Expect(err).To(BeNil())
 		}
 	})
-	Describe("Node Is Remote", func() {
+	Context("Node Is Remote", func() {
 		It("Should create the chunk replica correctly", func() {
 			err := clust.NewCreate().Model(ccr).Exec(ctx)
 			Expect(err).To(BeNil())
@@ -112,7 +112,7 @@ var _ = Describe("Service", func() {
 			Expect(persist.ChunkReplicas).To(HaveLen(0))
 		})
 	})
-	Describe("Node Is Local", func() {
+	Context("Node Is Local", func() {
 		BeforeEach(func() {
 			store.AddQueryHook(mock.HostInterceptQueryHook(1))
 		})

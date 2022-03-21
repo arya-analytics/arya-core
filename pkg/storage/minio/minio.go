@@ -62,17 +62,17 @@ func (e *Engine) shouldHandle(p *query.Pack) bool {
 }
 
 func (e *Engine) NewCreate() *query.Create {
-	return query.NewCreate().BindExec(e.Exec)
+	return query.NewCreate().base.BindExec(e.Exec)
 }
 
 func (e *Engine) NewRetrieve() *query.Retrieve {
-	return query.NewRetrieve().BindExec(e.Exec)
+	return query.NewRetrieve().base.BindExec(e.Exec)
 }
 
 func (e *Engine) NewDelete() *query.Delete {
-	return query.NewDelete().BindExec(e.Exec)
+	return query.NewDelete().base.BindExec(e.Exec)
 }
 
 func (e *Engine) NewMigrate() *query.Migrate {
-	return query.NewMigrate().BindExec(e.Exec)
+	return query.NewMigrate().base.BindExec(e.Exec)
 }

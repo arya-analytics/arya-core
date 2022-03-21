@@ -87,7 +87,7 @@ func (sn *syncNodes) createNodeWithPK(pk model.PK) {
 	}
 	newNode := &models.Node{ID: pk.Raw().(int)}
 	sn.catcher.Exec(func() error {
-		if err := query.NewCreate().BindExec(newCreate(sn.db).exec).Model(newNode).Exec(sn.ctx); err != nil {
+		if err := query.NewCreate().base.BindExec(newCreate(sn.db).exec).Model(newNode).Exec(sn.ctx); err != nil {
 			if sErr, ok := err.(query.Error); !ok || sErr.Type != query.ErrorTypeUniqueViolation {
 				return err
 			}

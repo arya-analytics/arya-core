@@ -118,7 +118,7 @@ var _ = Describe("Time", func() {
 					Expect(oTwoOverlap.Start()).To(Equal(rngOne.Start()))
 				})
 			})
-			Context("One Range Inside Another", func() {
+			Context("One TimeStampExp Inside Another", func() {
 				It("Should return the correct overlap range", func() {
 					baseT := time.Now()
 					rngOne := telem.NewTimeRange(

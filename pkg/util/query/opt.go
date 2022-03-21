@@ -1,17 +1,17 @@
 package query
 
-type opts map[optKey]interface{}
+type opts map[OptKey]interface{}
 
-type optKey string
+type OptKey string
 
 const (
-	pkOptKey          optKey = "pk"
-	whereFieldsOptKey optKey = "wFld"
-	relationOptKey    optKey = "rel"
-	fieldsOptKey      optKey = "fld"
-	calculateOptKey   optKey = "calc"
-	bulkUpdateOptKey  optKey = "bulkU"
-	orderOptKey       optKey = "order"
-	limitOptKey       optKey = "limit"
-	verifyOptKey      optKey = "verify"
+	pkOptKey          OptKey = "pk"
+	whereFieldsOptKey OptKey = "wFld"
+	relationOptKey    OptKey = "rel"
+	fieldsOptKey      OptKey = "fld"
+	calculateOptKey   OptKey = "calc"
+	bulkUpdateOptKey  OptKey = "bulkU"
+	orderOptKey       OptKey = "order"
+	limitOptKey       OptKey = "limit"
+	verifyOptKey      OptKey = "verify"
 )

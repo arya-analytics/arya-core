@@ -4,36 +4,36 @@ import (
 	"context"
 )
 
-type base struct {
+type Base struct {
 	e  Execute
 	_q *Pack
 }
 
 // || CONSTRUCTOR ||
 
-func (b *base) baseInit(q Query) {
+func (b *Base) Init(q Query) {
 	b._q = NewPack(q)
 }
 
 // || PACK ||
 
-func (b *base) Pack() *Pack {
+func (b *Base) Pack() *Pack {
 	return b._q
 }
 
 // || MODEL ||
 
-func (b *base) baseModel(m interface{}) {
+func (b *Base) Model(m interface{}) {
 	b.Pack().bindModel(m)
 }
 
 // || EXECUTION ||
 
-func (b *base) baseBindExec(e Execute) {
+func (b *Base) BindExec(e Execute) {
 	b.e = e
 }
 
-func (b *base) Exec(ctx context.Context) error {
+func (b *Base) Exec(ctx context.Context) error {
 	p := b.Pack()
 	err := b.e(ctx, p)
 	return err

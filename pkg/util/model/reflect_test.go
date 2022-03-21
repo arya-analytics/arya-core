@@ -10,24 +10,35 @@ import (
 )
 
 var _ = Describe("Reflect", func() {
-	Describe("Pointer Checks", func() {
-		It("Should return true when the model is a pointer", func() {
-			Expect(model.NewReflect(&mock.ModelA{}).IsPointer()).To(BeTrue())
+
+	Describe("Construction", func() {
+		Describe("Pointer Checks", func() {
+			It("Should return true when the model is a pointer", func() {
+				Expect(model.NewReflect(&mock.ModelA{}).IsPointer()).To(BeTrue())
+			})
+			It("Should return false when the model is a pointer", func() {
+				Expect(model.UnsafeNewReflect(mock.ModelA{}).IsPointer()).To(BeFalse())
+			})
 		})
-		It("Should return false when the model is a pointer", func() {
-			Expect(model.UnsafeNewReflect(mock.ModelA{}).IsPointer()).To(BeFalse())
+		Describe("Pointer Creation", func() {
+			It("Should create a new pointer for a non-pointer model", func() {
+				Expect(model.UnsafeNewReflect(mock.ModelA{}).ToNewPointer().IsPointer()).To(BeTrue())
+			})
+			It("Should create the pointer to the correct underlying Val", func() {
+				var baseVal []*mock.ModelA
+				baseRfl := model.UnsafeNewReflect(baseVal)
+				Expect(baseRfl.ToNewPointer().RawValue().Interface()).To(Equal(baseVal))
+			})
+		})
+		Describe("Nesting", func() {
+			It("Should avoid wrapping a nested reflect", func() {
+				rfl := model.NewReflect(model.NewReflect(&mock.ModelA{}))
+				Expect(rfl.IsStruct()).To(BeTrue())
+				Expect(rfl.Type()).To(Equal(reflect.TypeOf(mock.ModelA{})))
+			})
 		})
 	})
-	Describe("Pointer Creation", func() {
-		It("Should create a new pointer for a non-pointer model", func() {
-			Expect(model.UnsafeNewReflect(mock.ModelA{}).ToNewPointer().IsPointer()).To(BeTrue())
-		})
-		It("Should create the pointer to the correct underlying Val", func() {
-			var baseVal []*mock.ModelA
-			baseRfl := model.UnsafeNewReflect(baseVal)
-			Expect(baseRfl.ToNewPointer().RawValue().Interface()).To(Equal(baseVal))
-		})
-	})
+
 	Context("Single Model", func() {
 		var m = &mock.ModelA{
 			ID: 22,

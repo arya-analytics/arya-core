@@ -13,6 +13,13 @@ import (
 // representing a UTC Unix timestamp in microseconds.
 type TimeStamp int64
 
+const (
+	// TimeRangeMin represents the minimum possible timestamp.
+	TimeRangeMin TimeStamp = math.MinInt64
+	// TimeRangeMax represents the maximum possible time stamp.
+	TimeRangeMax TimeStamp = math.MaxInt64
+)
+
 // NewTimeStamp creates a new TimeStamp from a time.Time.
 func NewTimeStamp(time time.Time) TimeStamp {
 	return TimeStamp(time.UnixMicro())
@@ -94,6 +101,11 @@ type TimeRange struct {
 // NewTimeRange constructs a TimeRange from a start and end TimeStamp.
 func NewTimeRange(start TimeStamp, end TimeStamp) TimeRange {
 	return TimeRange{start: start, end: end}
+}
+
+func AllTime() TimeRange {
+	return NewTimeRange(TimeRangeMin, TimeRangeMax)
+
 }
 
 // Start returns a TimeStamp representing the start of TimeRange.

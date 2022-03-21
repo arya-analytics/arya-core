@@ -26,8 +26,11 @@ type Reflect struct {
 // NewReflect initializes, validates and returns a new model Reflect.
 // Expects a pointer to a struct or a pointer to a slice of structs.
 // Will panic if it does not receive these.
-func NewReflect(modelPtr interface{}) *Reflect {
-	r := UnsafeNewReflect(modelPtr)
+func NewReflect(modelPtr interface{}) (r *Reflect) {
+	r, ok := modelPtr.(*Reflect)
+	if !ok {
+		r = UnsafeNewReflect(modelPtr)
+	}
 	r.Validate()
 	return r
 }

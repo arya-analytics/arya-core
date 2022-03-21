@@ -49,7 +49,7 @@ const (
 
 /// |||| GENERIC INFO ||||
 
-// Range returns a TimeRange representing the range of the ChunkOverlap. This might be an invalid or negative range
+// TimeStampExp returns a TimeRange representing the range of the ChunkOverlap. This might be an invalid or negative range
 // if the ChunkOverlap is invalid.
 func (o ChunkOverlap) Range() TimeRange {
 	r, _ := o.baseRange()
@@ -92,7 +92,7 @@ func (o ChunkOverlap) IsValid() bool {
 }
 
 // IsUniform checks if the ChunkOverlap is 'uniform' i.e. the telemetry residing in source is the same as the telemetry
-// residing in dest for the overlap Range.
+// residing in dest for the overlap TimeStampExp.
 //
 // This essentially checks if the data between two chunks is contiguous or not.
 //
@@ -116,12 +116,12 @@ func (o ChunkOverlap) ChunksCompatible() bool {
 
 // |||| VALUE ACCESS ||||
 
-// SourceValues returns the telemetry in the source Chunk within the ChunkOverlap Range.
+// SourceValues returns the telemetry in the source Chunk within the ChunkOverlap TimeStampExp.
 func (o ChunkOverlap) SourceValues() interface{} {
 	return o.source.ValuesInRange(o.Range())
 }
 
-// DestValues returns the telemetry in the dest Chunk within the ChunkOverlap Range.
+// DestValues returns the telemetry in the dest Chunk within the ChunkOverlap TimeStampExp.
 func (o ChunkOverlap) DestValues() interface{} {
 	return o.dest.ValuesInRange(o.Range())
 }

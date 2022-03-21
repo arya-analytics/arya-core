@@ -1,13 +1,13 @@
 package query
 
 type Migrate struct {
-	base
+	Base
 }
 
 func NewMigrate() *Migrate {
 	c := &Migrate{}
-	c.baseInit(c)
-	c.baseModel(&struct{}{})
+	c.Base.Init(c)
+	c.Model(&struct{}{})
 	return c
 }
 
@@ -17,7 +17,7 @@ func (m *Migrate) Verify() *Migrate {
 }
 
 func (m *Migrate) BindExec(e Execute) *Migrate {
-	m.baseBindExec(e)
+	m.Base.BindExec(e)
 	return m
 }
 

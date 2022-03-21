@@ -95,14 +95,14 @@ var _ = Describe("Where", func() {
 
 		})
 		Describe("Where Fields", func() {
-			It("Should create the correct where fields opt", func() {
+			It("Should create the correct Where fields opt", func() {
 				p := asm.NewRetrieve().WhereFields(query.WhereFields{"RandomField": "RandomValue"}).Pack()
 				wf, ok := query.WhereFieldsOpt(p)
 				Expect(ok).To(BeTrue())
 				Expect(wf["RandomField"]).To(Equal("RandomValue"))
 				Expect(len(wf)).To(Equal(1))
 			})
-			It("Should return false when a where fields opt wasn't specified", func() {
+			It("Should return false when a Where fields opt wasn't specified", func() {
 				p := asm.NewRetrieve().Pack()
 				wf, ok := query.WhereFieldsOpt(p)
 				Expect(ok).To(BeFalse())
