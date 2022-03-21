@@ -162,3 +162,24 @@ func (pkc PKChain) AllNonZero() bool {
 	}
 	return allNonZero
 }
+
+// Unique filters out duplicate PKs and returns the filtered chain.
+func (pkc PKChain) Unique() PKChain {
+	fPKC := PKChain{}
+	for _, pk := range pkc {
+		if !fPKC.Contains(pk) {
+			fPKC = append(fPKC, pk)
+		}
+	}
+	return fPKC
+}
+
+// Contains checks if the PKChain contains the PK.
+func (pkc PKChain) Contains(pk PK) bool {
+	for _, pko := range pkc {
+		if pko.Equals(pk) {
+			return true
+		}
+	}
+	return false
+}

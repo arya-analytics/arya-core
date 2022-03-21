@@ -280,6 +280,59 @@ var _ = Describe("Reflect", func() {
 			})
 		})
 	})
+	Context("Channel of Models", func() {
+		var (
+			m chan *mock.ModelA
+			//mBaseType       reflect.Type
+			mSingleBaseType reflect.Type
+			//mSingleType     reflect.Type
+			rfl *model.Reflect
+		)
+		BeforeEach(func() {
+			m = make(chan *mock.ModelA)
+			//mBaseType = reflect.TypeOf(m)
+			mSingleBaseType = reflect.TypeOf(mock.ModelA{})
+			//mSingleType = reflect.TypeOf(&mock.ModelA{})
+			rfl = model.NewReflect(&m)
+		})
+		It("Should pass validation without panicking", func() {
+			Expect(rfl.Validate).ToNot(Panic())
+		})
+		It("Should return the correct pointer interface", func() {
+			Expect(rfl.Pointer()).To(Equal(&m))
+		})
+		It("Should return the correct type", func() {
+			Expect(rfl.Type()).To(Equal(mSingleBaseType))
+		})
+		It("Should return true for IsChan", func() {
+			Expect(rfl.IsChan()).To(BeTrue())
+		})
+		It("Should return false for IsStruct", func() {
+			Expect(rfl.IsStruct()).To(BeFalse())
+		})
+		It("Should return false for IsChain", func() {
+			Expect(rfl.IsChain()).To(BeFalse())
+		})
+		Describe("Sending and receiving", func() {
+			It("Should send and receive the values correctly", func() {
+				rts := model.NewReflect(&mock.ModelA{ID: 2})
+				go rfl.ChanSend(rts)
+				r, ok := rfl.ChanRecv()
+				Expect(ok).To(BeTrue())
+				Expect(r.PK().Raw()).To(Equal(2))
+			})
+			It("Should send multiple values correctly", func() {
+				rts := model.NewReflect(&[]*mock.ModelA{{ID: 1}, {ID: 2}})
+				go rfl.ChanSendEach(rts)
+				r, ok := rfl.ChanRecv()
+				Expect(ok).To(BeTrue())
+				Expect(r.PK().Raw()).To(Equal(1))
+				r2, ok2 := rfl.ChanRecv()
+				Expect(ok2).To(BeTrue())
+				Expect(r2.PK().Raw()).To(Equal(2))
+			})
+		})
+	})
 	Describe("errors + edge cases", func() {
 		It("Should panic when a non pointer is provided", func() {
 			Expect(func() {

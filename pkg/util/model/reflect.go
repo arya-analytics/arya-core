@@ -76,7 +76,7 @@ func (r *Reflect) Pointer() interface{} {
 
 // Type returns the model object's type i.e. the actual type of the model struct.
 func (r *Reflect) Type() reflect.Type {
-	if r.IsChain() {
+	if r.IsChain() || r.IsChan() {
 		/* raw type is the slice
 		first elem is pointer to struct
 		second elem is struct */
@@ -87,14 +87,19 @@ func (r *Reflect) Type() reflect.Type {
 	return r.RawType()
 }
 
-// IsChain Returns true if the model object's type is chain.
+// IsChain returns true if the model object's type is chain.
 func (r *Reflect) IsChain() bool {
 	return r.RawType().Kind() == reflect.Slice
 }
 
-// IsStruct Returns true if the model object's type is a single struct.
+// IsStruct returns true if the model object's type is a single struct.
 func (r *Reflect) IsStruct() bool {
 	return r.RawType().Kind() == reflect.Struct
+}
+
+// IsChan returns true if the model object's type is a channel.
+func (r *Reflect) IsChan() bool {
+	return r.RawType().Kind() == reflect.Chan
 }
 
 // || STRUCT METHODS ||
@@ -106,7 +111,7 @@ func (r *Reflect) IsStruct() bool {
 // 		rChain := model.NewReflect(&[]*ExampleModel{})
 // 		rChain.StructValue()
 func (r *Reflect) StructValue() reflect.Value {
-	r.panicIfChain()
+	r.panicIfNotStruct()
 	return r.PointerValue().Elem()
 }
 
@@ -147,7 +152,7 @@ func (r *Reflect) StructFieldByName(name string) reflect.Value {
 // 		rStruct := model.UnsafeNewReflect(&ExampleStruct{})
 //		rStruct.ChainValue()
 func (r *Reflect) ChainValue() reflect.Value {
-	r.panicIfStruct()
+	r.panicIfNotChain()
 	return r.RawValue()
 }
 
@@ -161,8 +166,8 @@ func (r *Reflect) ChainValue() reflect.Value {
 //		rStructToAdd := model.UnsafeNewReflect(&ExampleStruct{})
 //		rStruct.ChainAppend(rStructToAdd)
 func (r *Reflect) ChainAppend(rta *Reflect) {
-	rta.panicIfChain()
-	r.panicIfStruct()
+	rta.panicIfNotStruct()
+	r.panicIfNotChain()
 	r.ChainValue().Set(reflect.Append(r.ChainValue(), rta.PointerValue()))
 }
 
@@ -193,6 +198,52 @@ func (r *Reflect) ChainValueByIndexOrNew(i int) *Reflect {
 		return rfl
 	}
 }
+
+// |||| CHANNEL METHODS ||||
+
+func (r *Reflect) ChanValue() reflect.Value {
+	r.panicIfNotChan()
+	return r.RawValue()
+}
+
+func (r *Reflect) ChanSend(rts *Reflect) {
+	rts.panicIfNotStruct()
+	r.ChanValue().Send(rts.PointerValue())
+}
+
+func (r *Reflect) ChanSendEach(rts *Reflect) {
+	rts.ForEach(func(rfl *Reflect, i int) {
+		r.ChanSend(rfl)
+	})
+}
+
+func (r *Reflect) ChanRecv() (*Reflect, bool) {
+	v, ok := r.ChanValue().Recv()
+	if ok {
+		return NewReflect(v.Interface()), true
+	}
+	return nil, false
+}
+
+//func (r *Reflect) ChanTryRecv() (*Reflect, bool) {
+//	v, ok := r.ChanValue().TryRecv()
+//	if ok {
+//		return NewReflect(v.Interface()), true
+//	}
+//	return nil, false
+//}
+//
+//func (r *Reflect) ChanRecvAll() *Reflect {
+//	nRfl := r.NewChain()
+//	for {
+//		rfl, ok := r.ChanTryRecv()
+//		if !ok {
+//			break
+//		}
+//		nRfl.ChainAppend(rfl)
+//	}
+//	return nRfl
+//}
 
 // |||| FIELD ACCESSORS ||||
 
@@ -305,6 +356,7 @@ func (r *Reflect) PK() PK {
 // If Reflect model object is a struct, returns a PKChain ith length 1 containing the
 // structs PK.
 func (r *Reflect) PKChain() PKChain {
+	r.panicIfChan()
 	var pks PKChain
 	r.ForEach(func(rfl *Reflect, i int) {
 		pks = append(pks, rfl.PK())
@@ -368,23 +420,35 @@ func (r *Reflect) StructTagChain() StructTagChain {
 
 // || TYPE ASSERTIONS ||
 
-func (r *Reflect) panicIfChain() {
-	if r.IsChain() {
-		panic("model is chain, cannot get struct Val")
+func (r *Reflect) panicIfNotStruct() {
+	if !r.IsStruct() {
+		panic("model is not a struct, cannot get struct Val")
 	}
 }
 
-func (r *Reflect) panicIfStruct() {
-	if r.IsStruct() {
-		panic("model is struct, cannot get chain Val")
+func (r *Reflect) panicIfNotChain() {
+	if !r.IsChain() {
+		panic("model is not a chain, cannot get chain Val")
+	}
+}
+
+func (r *Reflect) panicIfNotChan() {
+	if !r.IsChan() {
+		panic("model is not a chan, cannot get chan Val")
+	}
+}
+
+func (r *Reflect) panicIfChan() {
+	if r.IsChan() {
+		panic("model is a chan, cannot proceed")
 	}
 }
 
 // |||| VALIDATION ||||
 
-func validateSliceOrStruct(r *Reflect) error {
-	if !r.IsStruct() && !r.IsChain() {
-		return fmt.Errorf("model validation failed - is %s, must be struct or slice",
+func validateType(r *Reflect) error {
+	if !r.IsStruct() && !r.IsChain() && !r.IsChan() {
+		return fmt.Errorf("model validation failed - is %s, must be struct, slice, or chan",
 			r.Type().Kind())
 	}
 	return nil
@@ -406,6 +470,6 @@ func validateNonZero(r *Reflect) error {
 }
 
 func validateReflect() *validate.Validate[*Reflect] {
-	actions := []func(r *Reflect) error{validateIsPointer, validateSliceOrStruct, validateNonZero}
+	actions := []func(r *Reflect) error{validateIsPointer, validateType, validateNonZero}
 	return validate.New[*Reflect](actions)
 }

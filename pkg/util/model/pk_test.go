@@ -95,12 +95,12 @@ var _ = Describe("PKC", func() {
 					Expect(pks.AllZero()).To(BeFalse())
 				})
 				It("Should return true when all pks are zero", func() {
-					newPks := model.NewPKChain([]uuid.UUID{{}, {}})
-					Expect(newPks.AllZero()).To(BeTrue())
+					newPKC := model.NewPKChain([]uuid.UUID{{}, {}})
+					Expect(newPKC.AllZero()).To(BeTrue())
 				})
 				It("Should return true when the chain is empty", func() {
-					newPks := model.NewPKChain([]uuid.UUID{})
-					Expect(newPks.AllZero()).To(BeTrue())
+					newPKC := model.NewPKChain([]uuid.UUID{})
+					Expect(newPKC.AllZero()).To(BeTrue())
 				})
 			})
 			Context("AllNonZero", func() {
@@ -108,10 +108,34 @@ var _ = Describe("PKC", func() {
 					Expect(pks.AllNonZero()).To(BeTrue())
 				})
 				It("Should return false when one of the pks is non zero", func() {
-					newPks := model.NewPKChain([]uuid.UUID{uuid.New(), {}})
-					Expect(newPks.AllNonZero()).To(BeFalse())
+					newPKC := model.NewPKChain([]uuid.UUID{uuid.New(), {}})
+					Expect(newPKC.AllNonZero()).To(BeFalse())
 				})
 			})
+			Context("Contains", func() {
+				It("Should return true when the chain contains the PK", func() {
+					id1 := uuid.New()
+					id2 := uuid.New()
+					newPKC := model.NewPKChain([]uuid.UUID{id1, id2})
+					Expect(newPKC.Contains(model.NewPK(id1))).To(BeTrue())
+				})
+				It("Should return false when the chain doesn't contain the PK", func() {
+					id1 := uuid.New()
+					id2 := uuid.New()
+					newPKC := model.NewPKChain([]uuid.UUID{id1, id2})
+					Expect(newPKC.Contains(model.NewPK(uuid.New()))).To(BeFalse())
+				})
+			})
+			Context("Unique", func() {
+				It("Should filter out duplicates", func() {
+					id1 := uuid.New()
+					id2 := uuid.New()
+					newPKC := model.NewPKChain([]uuid.UUID{id1, id2, id2})
+					Expect(newPKC.Unique()).To(HaveLen(2))
+				})
+
+			})
+
 		})
 		Describe("Edge cases + errors", func() {
 			It("Should panic when a non-slice is provided", func() {
