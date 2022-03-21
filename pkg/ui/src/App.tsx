@@ -1,14 +1,17 @@
-import {Button} from "antd";
+import { useThemeContext } from "./Theme/Theme";
+import { Box, Grid } from "@mui/material";
+import { Nav } from "./Nav/Nav";
+import { Pages } from "./Page/Pages";
 
 function App() {
-    return (
-        <div className="App">
-            <header className="App-header">
-                <h1>Arya Core UI</h1>
-                <Button type="primary">Get Started</Button>
-            </header>
-        </div>
-    )
+  return (
+    <Box sx={{ flexGrow: 1, height: "100vh" }}>
+      <Grid container sx={{ height: "100%" }}>
+        <Nav />
+        <Pages />
+      </Grid>
+    </Box>
+  );
 }
 
-export default App
+export default App;
