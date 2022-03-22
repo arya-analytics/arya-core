@@ -20,7 +20,6 @@ func (ps *Persist) Exec(ctx context.Context, p *query.Pack) error {
 	default:
 		return ps.DataSourceMem.Exec(ctx, p)
 	}
-
 	return nil
 }
 

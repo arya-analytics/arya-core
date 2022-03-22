@@ -25,7 +25,7 @@ func (u *Update) Model(m interface{}) *Update {
 
 // WherePK queries the primary key of the model to be deleted.
 func (u *Update) WherePK(pk interface{}) *Update {
-	u.WherePK(pk)
+	u.Where.WherePK(pk)
 	return u
 }
 

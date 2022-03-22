@@ -32,9 +32,9 @@ var _ = Describe("Service", func() {
 		svc           *chanstream.Service
 		persist       *mock.Persist
 		lis           net.Listener
-		node          = &models.Node{IsHost: true}
-		channelConfig = &models.ChannelConfig{NodeID: node.ID, ID: uuid.New()}
-		items         = []interface{}{node, channelConfig}
+		nodeOne       = &models.Node{ID: 1, IsHost: true, Address: "localhost:26257"}
+		channelConfig = &models.ChannelConfig{NodeID: nodeOne.ID, ID: uuid.New()}
+		items         = []interface{}{nodeOne, channelConfig}
 	)
 	BeforeEach(func() {
 		clust = cluster.New()
@@ -43,7 +43,7 @@ var _ = Describe("Service", func() {
 		Expect(lisErr).To(BeNil())
 		port, pErr := strconv.Atoi(strings.Split(lis.Addr().String(), ":")[1])
 		Expect(pErr).To(BeNil())
-		node.RPCPort = port
+		nodeOne.RPCPort = port
 		pool = clustermock.NewNodeRPCPool()
 		ds := querymock.NewDataSourceMem()
 		persist = &mock.Persist{DataSourceMem: ds}
@@ -83,36 +83,59 @@ var _ = Describe("Service", func() {
 			Expect(svc.CanHandle(p)).To(BeTrue())
 		})
 	})
-	Describe("Node Is Local", func() {
-		It("Should create a stream of samples correctly", func() {
-			var samples = []*models.ChannelSample{
-				{
+	Describe("Create", func() {
+		var (
+			sampleCount = 1000
+			samples     []*models.ChannelSample
+		)
+		BeforeEach(func() {
+			samples = []*models.ChannelSample{}
+			for i := 0; i < sampleCount; i++ {
+				samples = append(samples, &models.ChannelSample{
 					ChannelConfigID: channelConfig.ID,
-					Timestamp:       telem.NewTimeStamp(time.Now()),
-					Value:           1.0,
-				},
-				{
-					ChannelConfigID: channelConfig.ID,
-					Timestamp:       telem.NewTimeStamp(time.Now().Add(1 * time.Second)),
-					Value:           2.0,
-				},
+					Timestamp:       telem.NewTimeStamp(time.Now().Add(time.Duration(i) * time.Second)),
+					Value:           float64(i),
+				})
 			}
-			c := make(chan *models.ChannelSample)
-			sRfl := model.NewReflect(&c)
-			errors := make(chan error)
-			go func() {
-				defer GinkgoRecover()
-				Expect(<-errors).To(BeNil())
-			}()
-			tsquery.NewCreate().Model(sRfl).BindExec(clust.Exec).GoExec(ctx, errors)
-			for _, s := range samples {
-				c <- s
-			}
-			time.Sleep(20 * time.Millisecond)
-			var resSamples []*models.ChannelSample
-			Expect(persist.NewRetrieve().Model(&resSamples).Exec(ctx)).To(BeNil())
-			Expect(samples).To(HaveLen(2))
-
+		})
+		Context("Node Is Local", func() {
+			It("Should create a stream of samples correctly", func() {
+				c := make(chan *models.ChannelSample)
+				sRfl := model.NewReflect(&c)
+				errors := make(chan error)
+				go func() {
+					panic(<-errors)
+				}()
+				tsquery.NewCreate().Model(sRfl).BindExec(clust.Exec).GoExec(ctx, errors)
+				for _, s := range samples {
+					c <- s
+				}
+				time.Sleep(20 * time.Millisecond)
+				var resSamples []*models.ChannelSample
+				Expect(persist.NewRetrieve().Model(&resSamples).Exec(ctx)).To(BeNil())
+				Expect(samples).To(HaveLen(sampleCount))
+			})
+		})
+		Context("Node Is Remote", func() {
+			BeforeEach(func() {
+				nodeOne.IsHost = false
+			})
+			It("Should create a stream of samples correctly", func() {
+				c := make(chan *models.ChannelSample)
+				sRfl := model.NewReflect(&c)
+				errors := make(chan error)
+				go func() {
+					panic(<-errors)
+				}()
+				tsquery.NewCreate().Model(sRfl).BindExec(clust.Exec).GoExec(ctx, errors)
+				for _, s := range samples {
+					c <- s
+				}
+				time.Sleep(20 * time.Millisecond)
+				var resSamples []*models.ChannelSample
+				Expect(persist.NewRetrieve().Model(&resSamples).Exec(ctx)).To(BeNil())
+				Expect(samples).To(HaveLen(sampleCount))
+			})
 		})
 	})
 })

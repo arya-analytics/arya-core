@@ -71,11 +71,12 @@ func (s *ServiceRemoteRPC) Create(ctx context.Context, p *query.Pack) error {
 		stream, err := s.retrieveCreateStream(ctx, rfl.StructFieldByName(csFieldNode).Interface().(*models.Node))
 		if err != nil {
 			errors <- err
+			break
 		}
 		exc := newExchange(rfl)
 		exc.ToDest()
-		if err := stream.Send(&api.CreateRequest{CCR: exc.Dest().Pointer().(*api.ChannelSample)}); err != nil {
-			errors <- err
+		if sErr := stream.Send(&api.CreateRequest{CCR: exc.Dest().Pointer().(*api.ChannelSample)}); sErr != nil {
+			errors <- sErr
 		}
 	}
 	return nil
