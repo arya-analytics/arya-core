@@ -35,6 +35,9 @@ func (b *Base) BindExec(e Execute) {
 
 func (b *Base) Exec(ctx context.Context) error {
 	p := b.Pack()
+	if b.e == nil {
+		panic("query execute not bound")
+	}
 	err := b.e(ctx, p)
 	return err
 

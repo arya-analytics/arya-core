@@ -25,10 +25,10 @@ func (s *Service) CanHandle(p *query.Pack) bool {
 
 func (s *Service) Exec(ctx context.Context, p *query.Pack) error {
 	return query.Switch(ctx, p, query.Ops{
-		Create:   s.create,
-		Retrieve: s.retrieve,
-		Delete:   s.delete,
-		Update:   s.update,
+		&query.Create{}:   s.create,
+		&query.Retrieve{}: s.retrieve,
+		&query.Delete{}:   s.delete,
+		&query.Update{}:   s.update,
 	})
 }
 

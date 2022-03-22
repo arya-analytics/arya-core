@@ -22,9 +22,9 @@ func NewDataSourceMem() *DataSourceMem {
 
 func (s *DataSourceMem) Exec(ctx context.Context, p *query.Pack) error {
 	return query.Switch(ctx, p, query.Ops{
-		Create:   s.create,
-		Retrieve: s.retrieve,
-		Update:   s.update,
+		&query.Create{}:   s.create,
+		&query.Retrieve{}: s.retrieve,
+		&query.Update{}:   s.update,
 	})
 }
 

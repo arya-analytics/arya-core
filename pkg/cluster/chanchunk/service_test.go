@@ -38,7 +38,6 @@ var _ = Describe("Service", func() {
 		items         = []interface{}{node, channelConfig, rng, rr, cc}
 	)
 	BeforeEach(func() {
-		store.AddQueryHook(mock.HostInterceptQueryHook(2))
 		clust = cluster.New()
 		var lisErr error
 		lis, lisErr = net.Listen("tcp", "localhost:0")
@@ -63,13 +62,10 @@ var _ = Describe("Service", func() {
 		mockTlm.PopulateRandFloat64(ccr.Telem, 500)
 	})
 	JustBeforeEach(func() {
-		var serverErr error
 		go func() {
-			if err := grpcServer.Serve(lis); err != nil {
-				serverErr = err
-			}
+			defer GinkgoRecover()
+			Expect(grpcServer.Serve(lis)).To(BeNil())
 		}()
-		Expect(serverErr).To(BeNil())
 	})
 	JustBeforeEach(func() {
 		for _, m := range items {
@@ -84,6 +80,9 @@ var _ = Describe("Service", func() {
 		}
 	})
 	Context("Node Is Remote", func() {
+		BeforeEach(func() {
+			store.AddQueryHook(clustermock.HostInterceptQueryHook(2))
+		})
 		It("Should create the chunk replica correctly", func() {
 			err := clust.NewCreate().Model(ccr).Exec(ctx)
 			Expect(err).To(BeNil())
@@ -114,7 +113,7 @@ var _ = Describe("Service", func() {
 	})
 	Context("Node Is Local", func() {
 		BeforeEach(func() {
-			store.AddQueryHook(mock.HostInterceptQueryHook(1))
+			store.AddQueryHook(clustermock.HostInterceptQueryHook(1))
 		})
 		It("Should create the chunk replica correctly", func() {
 			err := clust.NewCreate().Model(ccr).Exec(ctx)

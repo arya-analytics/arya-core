@@ -21,28 +21,28 @@ var _ = Describe("Query", func() {
 	Describe("Switch", func() {
 		DescribeTable("Executing the correct query", func(q query.Query, expected int) {
 			actual := 0
-			query.Switch(ctx, q.Pack(), query.Ops{
-				Create: func(ctx context.Context, p *query.Pack) error {
+			Expect(query.Switch(ctx, q.Pack(), query.Ops{
+				&query.Create{}: func(ctx context.Context, p *query.Pack) error {
 					actual = 1
 					return nil
 				},
-				Retrieve: func(ctx context.Context, p *query.Pack) error {
+				&query.Retrieve{}: func(ctx context.Context, p *query.Pack) error {
 					actual = 2
 					return nil
 				},
-				Update: func(ctx context.Context, p *query.Pack) error {
+				&query.Update{}: func(ctx context.Context, p *query.Pack) error {
 					actual = 3
 					return nil
 				},
-				Delete: func(ctx context.Context, p *query.Pack) error {
+				&query.Delete{}: func(ctx context.Context, p *query.Pack) error {
 					actual = 4
 					return nil
 				},
-				Migrate: func(ctx context.Context, p *query.Pack) error {
+				&query.Migrate{}: func(ctx context.Context, p *query.Pack) error {
 					actual = 5
 					return nil
 				},
-			})
+			})).To(BeNil())
 			Expect(actual).To(Equal(expected))
 		},
 			Entry("Create Query", query.NewCreate(), 1),

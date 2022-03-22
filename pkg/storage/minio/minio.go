@@ -27,10 +27,10 @@ func (e *Engine) Exec(ctx context.Context, p *query.Pack) error {
 	}
 	c := conn(a)
 	err = query.Switch(ctx, p, query.Ops{
-		Create:   newCreate(c).exec,
-		Retrieve: newRetrieve(c).exec,
-		Delete:   newDelete(c).exec,
-		Migrate:  newMigrate(c).exec,
+		&query.Create{}:   newCreate(c).exec,
+		&query.Retrieve{}: newRetrieve(c).exec,
+		&query.Delete{}:   newDelete(c).exec,
+		&query.Migrate{}:  newMigrate(c).exec,
 	})
 	e.pool.Release(a)
 	return err

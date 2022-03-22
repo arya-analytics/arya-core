@@ -29,7 +29,7 @@ type ServiceRemoteRPC struct {
 	createPool   map[int]api.ChannelStreamService_CreateClient
 }
 
-func NewServiceRemoteRPC(pool *cluster.NodeRPCPool) ServiceRemote {
+func NewServiceRemoteRPC(pool *cluster.NodeRPCPool) *ServiceRemoteRPC {
 	return &ServiceRemoteRPC{
 		pool:         pool,
 		retrievePool: map[int]api.ChannelStreamService_RetrieveClient{},
@@ -57,7 +57,7 @@ func (s *ServiceRemoteRPC) retrieveCreateStream(ctx context.Context, node *model
 	return c.Create(ctx)
 }
 
-func (s *ServiceRemoteRPC) Create(ctx context.Context, p *query.Pack) {
+func (s *ServiceRemoteRPC) Create(ctx context.Context, p *query.Pack) error {
 	goExecOpt, ok := tsquery.RetrieveGoExecOpt(p)
 	if !ok {
 		panic("go exec")
@@ -74,6 +74,9 @@ func (s *ServiceRemoteRPC) Create(ctx context.Context, p *query.Pack) {
 		}
 		exc := newExchange(rfl)
 		exc.ToDest()
-		stream.Send(&api.CreateRequest{CCR: exc.Dest().Pointer().(*api.ChannelSample)})
+		if err := stream.Send(&api.CreateRequest{CCR: exc.Dest().Pointer().(*api.ChannelSample)}); err != nil {
+			errors <- err
+		}
 	}
+	return nil
 }

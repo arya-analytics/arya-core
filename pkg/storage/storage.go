@@ -95,11 +95,11 @@ func New(cfg Config) Storage {
 // Exec implements query.Execute
 func (s *storage) Exec(ctx context.Context, p *query.Pack) error {
 	return query.Switch(ctx, p, query.Ops{
-		Create:   newDef(s).exec,
-		Retrieve: newDef(s).exec,
-		Delete:   newDef(s).exec,
-		Update:   newUpdate(s).exec,
-		Migrate:  newDef(s).exec,
+		&query.Create{}:   newDef(s).exec,
+		&query.Retrieve{}: newDef(s).exec,
+		&query.Delete{}:   newDef(s).exec,
+		&query.Update{}:   newUpdate(s).exec,
+		&query.Migrate{}:  newDef(s).exec,
 	})
 }
 

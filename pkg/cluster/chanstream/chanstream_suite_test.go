@@ -15,12 +15,12 @@ var (
 )
 
 var _ = BeforeSuite(func() {
-	store = mock.NewStorage()
-	Expect(store.NewMigrate().Exec(ctx)).To(BeNil())
+	//store = mock.NewStorage()
+	//Expect(store.NewMigrate().Exec(ctx)).To(BeNil())
 })
 
 var _ = AfterSuite(func() {
-	store.Stop()
+	//store.Stop()
 })
 
 func TestChanstream(t *testing.T) {

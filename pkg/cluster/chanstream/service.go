@@ -2,27 +2,29 @@ package chanstream
 
 import (
 	"context"
-	"errors"
 	"github.com/arya-analytics/aryacore/pkg/models"
-	"github.com/arya-analytics/aryacore/pkg/util/errutil"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/arya-analytics/aryacore/pkg/util/query/tsquery"
 	"github.com/arya-analytics/aryacore/pkg/util/route"
+	"github.com/google/uuid"
+	"reflect"
 )
 
 // |||| SERVICE |||
 
-type ServiceRemote interface {
-}
-
 type Service struct {
 	localExec query.Execute
-	remote    ServiceRemote
+	remote    *ServiceRemoteRPC
+	configs   map[uuid.UUID]*models.ChannelConfig
 }
 
-func NewService(local query.Execute, remote ServiceRemote) *Service {
-	return &Service{remote: remote, localExec: local}
+func NewService(local query.Execute, remote *ServiceRemoteRPC) *Service {
+	return &Service{
+		remote:    remote,
+		localExec: local,
+		configs:   map[uuid.UUID]*models.ChannelConfig{},
+	}
 }
 
 func (s *Service) CanHandle(p *query.Pack) bool {
@@ -33,7 +35,10 @@ func (s *Service) CanHandle(p *query.Pack) bool {
 }
 
 func (s *Service) Exec(ctx context.Context, p *query.Pack) error {
-	return query.Switch(ctx, p, query.Ops{})
+	return query.Switch(ctx, p, query.Ops{
+		&tsquery.Retrieve{}: s.retrieve,
+		&tsquery.Create{}:   s.create,
+	})
 }
 
 // Abbreviation reminder:
@@ -51,52 +56,61 @@ func nodeFields() []string {
 	return []string{"ID", "Address", "IsHost", "RPCPort"}
 }
 
-func retrieveChannelConfigsQuery(p *query.Pack, cfgs interface{}) *query.Retrieve {
-	q := query.NewRetrieve().Model(cfgs).Relation(cfgRelNode, nodeFields()...)
-	pkc, ok := query.PKOpt(p)
-	if !ok {
-		q.WherePKs(pkc)
-	}
-	return q
-}
-
-func (s *Service) create(ctx context.Context, p *query.Pack) {
+func (s *Service) create(ctx context.Context, p *query.Pack) error {
 	goExecOpt, ok := tsquery.RetrieveGoExecOpt(p)
 	if !ok {
 		panic("chanstream create queries must be run using goexec")
 	}
 	var (
-		rs       = make(chan *models.ChannelSample)
-		ls       = make(chan *models.ChannelSample)
-		rsRfl    = model.NewReflect(&rs)
-		lsRfl    = model.NewReflect(&ls)
-		cfgChain = model.NewReflect(&[]*models.ChannelConfig{})
-		c        = errutil.NewCatchContext(ctx, errutil.WithHooks(errutil.NewPipeHook(goExecOpt.Errors)))
+		rs    = make(chan *models.ChannelSample)
+		ls    = make(chan *models.ChannelSample)
+		rsRfl = model.NewReflect(&rs)
+		lsRfl = model.NewReflect(&ls)
 	)
-	// CLARIFICATION: Retrieves information about the  channel configs and nodes the model belongs to.
-	c.Exec(retrieveChannelConfigsQuery(p, cfgChain).BindExec(s.localExec).Exec)
+
+	tsquery.NewCreate().Model(rsRfl).BindExec(s.remote.Create).GoExec(ctx, goExecOpt.Errors)
+	tsquery.NewCreate().Model(lsRfl).BindExec(s.localExec).GoExec(ctx, goExecOpt.Errors)
+
 	for {
 		sample, sampleOk := p.Model().ChanRecv()
 		if !sampleOk {
 			break
 		}
-		cfgPK := model.NewPK(sample.StructFieldByName(csFieldCfgID))
-		cfg, cfgOk := cfgChain.ValueByPK(cfgPK)
-		if !cfgOk {
-			goExecOpt.Errors <- query.NewSimpleError(query.ErrorTypeInvalidArgs, errors.New("invalid config"))
+		cfgPK := sample.StructFieldByName(csFieldCfgID).Interface().(uuid.UUID)
+		cfg, err := s.retrieveConfig(ctx, cfgPK)
+		if err != nil {
+			goExecOpt.Errors <- err
 			continue
 		}
-		sample.StructFieldByName(csFieldCfg).Set(cfg.PointerValue())
+		sample.StructFieldByName(csFieldCfg).Set(reflect.ValueOf(cfg))
 		configNodeIsHostSwitch(
 			sample,
 			func(m *model.Reflect) { lsRfl.ChanSend(sample) },
 			func(m *model.Reflect) { rsRfl.ChanSend(sample) },
 		)
 	}
+	return nil
 }
 
-func (s *Service) retrieve() {
+func (s *Service) retrieveConfig(ctx context.Context, pk uuid.UUID) (*models.ChannelConfig, error) {
+	cfg, ok := s.configs[pk]
+	if !ok {
+		cfg = &models.ChannelConfig{}
+		if err := query.NewRetrieve().
+			Model(cfg).
+			WherePK(pk).
+			BindExec(s.localExec).
+			Relation(cfgRelNode, nodeFields()...).
+			Exec(ctx); err != nil {
+			return cfg, err
+		}
+		s.configs[pk] = cfg
+	}
+	return cfg, nil
+}
 
+func (s *Service) retrieve(ctx context.Context, p *query.Pack) error {
+	return nil
 }
 
 // |||| ROUTING ||||
