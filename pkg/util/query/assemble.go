@@ -22,13 +22,17 @@ type AssembleMigrate interface {
 	NewMigrate() *Migrate
 }
 
+type AssembleExec interface {
+	Exec(ctx context.Context, p *Pack) error
+}
+
 type Assemble interface {
 	AssembleCreate
 	AssembleRetrieve
 	AssembleDelete
 	AssembleUpdate
 	AssembleMigrate
-	Exec(ctx context.Context, p *Pack) error
+	AssembleExec
 }
 
 type AssembleBase struct {

@@ -1,18 +1,20 @@
-package query_test
+package tsquery_test
 
 import (
+	"context"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	modelmock "github.com/arya-analytics/aryacore/pkg/util/model/mock"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/arya-analytics/aryacore/pkg/util/query/mock"
+	"github.com/arya-analytics/aryacore/pkg/util/query/tsquery"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Base", func() {
+var _ = Describe("Assemble", func() {
 	var (
 		exec = &mock.Exec{}
-		asm  = query.NewAssemble(exec.Exec)
+		asm  = tsquery.NewAssemble(exec.Exec)
 	)
 	Describe("Common Query Functionality", func() {
 		DescribeTable("Model",
@@ -22,14 +24,11 @@ var _ = Describe("Base", func() {
 			},
 			Entry("Create", asm.NewCreate().Model(&modelmock.ModelA{})),
 			Entry("Retrieve", asm.NewRetrieve().Model(&modelmock.ModelA{})),
-			Entry("Update", asm.NewUpdate().Model(&modelmock.ModelA{})),
-			Entry("Delete", asm.NewDelete().Model(&modelmock.ModelA{})),
 		)
 	})
 	Describe("Exec", func() {
-		It("Should execute the query", func() {
-			Expect(asm.Exec(ctx, query.NewMigrate().Pack())).To(BeNil())
-
+		It("Should execute the query correctly", func() {
+			Expect(asm.Exec(context.Background(), tsquery.NewRetrieve().Pack()))
 		})
 	})
 })

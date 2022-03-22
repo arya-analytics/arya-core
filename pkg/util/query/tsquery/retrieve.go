@@ -20,24 +20,18 @@ func (r *Retrieve) Model(m interface{}) *Retrieve {
 	return r
 }
 
-func (r *Retrieve) WherePK(pk interface{}) *Retrieve {
-	r.Where.WherePK(pk)
-	return r
-}
-
-func (r *Retrieve) WherePKs(pks interface{}) *Retrieve {
-	r.Where.WherePKs(pks)
-	return r
-}
-
 func (r *Retrieve) AllTime() *Retrieve {
-	NewTimeRangeOpt(r.Pack(), telem.AllTime())
-	return r
-
+	return r.WhereTimeRange(telem.AllTime())
 }
 
-func (r *Retrieve) WhereTimeRange(tr telem.TimeRange) {
+func (r *Retrieve) WhereTimeRange(tr telem.TimeRange) *Retrieve {
 	NewTimeRangeOpt(r.Pack(), tr)
+	return r
+}
+
+func (r *Retrieve) BindExec(exec query.Execute) *Retrieve {
+	r.Base.BindExec(exec)
+	return r
 }
 
 const timeRangeOptKey query.OptKey = "tsRange"

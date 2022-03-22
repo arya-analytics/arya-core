@@ -1,4 +1,4 @@
-load("@io_bazel_rules_go//go:def.bzl", "go_library")
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
     name = "chanstream",
@@ -12,5 +12,22 @@ go_library(
         "//pkg/models",
         "//pkg/util/model",
         "//pkg/util/query",
+    ],
+)
+
+go_test(
+    name = "chanstream_test",
+    srcs = [
+        "chanstream_suite_test.go",
+        "service_test.go",
+    ],
+    deps = [
+        ":chanstream",
+        "//pkg/models",
+        "//pkg/storage/mock",
+        "//pkg/util/model/mock",
+        "//pkg/util/query",
+        "@com_github_onsi_ginkgo_v2//:ginkgo",
+        "@com_github_onsi_gomega//:gomega",
     ],
 )
