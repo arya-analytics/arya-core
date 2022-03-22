@@ -1,0 +1,13 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "mock",
+    srcs = ["persist.go"],
+    importpath = "github.com/arya-analytics/aryacore/pkg/cluster/chanstream/mock",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/util/query",
+        "//pkg/util/query/mock",
+        "//pkg/util/query/tsquery",
+    ],
+)

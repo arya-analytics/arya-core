@@ -116,8 +116,8 @@ func (sc *StreamCreate) processNextChunk(startTS telem.TimeStamp, data *telem.Ch
 	sc.catch.Exec(a.Chunk(sc.config().NodeID, cc).Exec)
 	sc.catch.Exec(a.ChunkReplica(ccr).Exec)
 
-	sc.catch.Exec(query.NewCreate().base.BindExec(sc.exec).Model(cc).Exec)
-	sc.catch.Exec(query.NewCreate().base.BindExec(sc.exec).Model(ccr).Exec)
+	sc.catch.Exec(query.NewCreate().BindExec(sc.exec).Model(cc).Exec)
+	sc.catch.Exec(query.NewCreate().BindExec(sc.exec).Model(ccr).Exec)
 
 	sc.setPrevChunk(nc)
 	sc.catch.Reset()
@@ -127,7 +127,7 @@ func (sc *StreamCreate) processNextChunk(startTS telem.TimeStamp, data *telem.Ch
 
 func (sc *StreamCreate) config() *models.ChannelConfig {
 	if model.NewPK(sc._config.ID).IsZero() {
-		sc.catch.Exec(query.NewRetrieve().base.BindExec(sc.exec).Model(sc._config).WherePK(sc.configPK).Exec)
+		sc.catch.Exec(query.NewRetrieve().BindExec(sc.exec).Model(sc._config).WherePK(sc.configPK).Exec)
 	}
 	return sc._config
 }

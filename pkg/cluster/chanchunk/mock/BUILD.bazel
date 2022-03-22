@@ -2,10 +2,7 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library")
 
 go_library(
     name = "mock",
-    srcs = [
-        "hook.go",
-        "persist.go",
-    ],
+    srcs = ["persist.go"],
     importpath = "github.com/arya-analytics/aryacore/pkg/cluster/chanchunk/mock",
     visibility = ["//visibility:public"],
     deps = [
