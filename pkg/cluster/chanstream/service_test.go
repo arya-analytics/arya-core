@@ -15,14 +15,16 @@ var _ = Describe("Service", func() {
 			svc *chanstream.Service
 		)
 		BeforeEach(func() {
-			svc = chanstream.NewService(store, struct{}{})
+			svc = chanstream.NewService(store.Exec, struct{}{})
 		})
 		It("Should return false for a query it can't handle", func() {
-			p := query.NewRetrieve().Model(&modelMock.ModelA{}).Pack()
+			c := make(chan *modelMock.ModelA)
+			p := query.NewRetrieve().Model(&c).Pack()
 			Expect(svc.CanHandle(p)).To(BeFalse())
 		})
 		It("Should return true for a query it can handle", func() {
-			p := query.NewRetrieve().Model(&models.ChannelSample{}).Pack()
+			c := make(chan *models.ChannelSample)
+			p := query.NewRetrieve().Model(&c).Pack()
 			Expect(svc.CanHandle(p)).To(BeTrue())
 		})
 	})

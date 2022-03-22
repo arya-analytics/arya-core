@@ -35,7 +35,7 @@ func (s *ServerRPC) BindTo(srv *grpc.Server) {
 func (s *ServerRPC) CreateReplicas(stream api.ChannelChunkService_CreateReplicasServer) error {
 	c := errutil.NewCatchSimple()
 	for {
-		var req *api.ChannelChunkServiceCreateReplicasRequest
+		var req *api.CreateReplicasRequest
 		c.Exec(func() (err error) {
 			req, err = stream.Recv()
 			return err
@@ -48,22 +48,22 @@ func (s *ServerRPC) CreateReplicas(stream api.ChannelChunkService_CreateReplicas
 			return c.Error()
 		}
 	}
-	return stream.SendAndClose(&api.ChannelChunkServiceCreateReplicasResponse{})
+	return stream.SendAndClose(&api.CreateReplicasResponse{})
 }
 
-func (s *ServerRPC) RetrieveReplicas(req *api.ChannelChunkServiceRetrieveReplicasRequest, stream api.ChannelChunkService_RetrieveReplicasServer) error {
+func (s *ServerRPC) RetrieveReplicas(req *api.RetrieveReplicasRequest, stream api.ChannelChunkService_RetrieveReplicasServer) error {
 	pkc := parsePKC(req.PKC)
 	c := errutil.NewCatchSimple()
 	for _, pk := range pkc {
-		res := &api.ChannelChunkServiceRetrieveReplicasResponse{CCR: &api.ChannelChunkReplica{}}
+		res := &api.RetrieveReplicasResponse{CCR: &api.ChannelChunkReplica{}}
 		c.Exec(func() error { return s.persist.RetrieveReplica(stream.Context(), res.CCR, pk) })
 		c.Exec(func() error { return stream.Send(res) })
 	}
 	return c.Error()
 }
 
-func (s *ServerRPC) DeleteReplicas(ctx context.Context, req *api.ChannelChunkServiceDeleteReplicasRequest) (*api.ChannelChunkServiceDeleteReplicasResponse, error) {
-	return &api.ChannelChunkServiceDeleteReplicasResponse{}, s.persist.DeleteReplica(ctx, parsePKC(req.PKC))
+func (s *ServerRPC) DeleteReplicas(ctx context.Context, req *api.DeleteReplicasRequest) (*api.DeleteReplicasResponse, error) {
+	return &api.DeleteReplicasResponse{}, s.persist.DeleteReplica(ctx, parsePKC(req.PKC))
 }
 
 func parsePKC(strPKC []string) model.PKChain {

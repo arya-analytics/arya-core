@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package chanstream.v1;
+
+service ChannelStreamService {
+  rpc Create(stream CreateRequest) returns (stream CreateResponse);
+  rpc Retrieve(stream RetrieveRequest) returns (stream RetrieveResponse);
+}
+
+// |||| MODEL ||||
+
+message ChannelSample {
+  string ChannelConfigID = 1;
+  float Value = 2;
+  int64 Timestamp = 3;
+}
+
+// |||| CREATE ||||
+
+message CreateRequest {
+  ChannelSample CCR = 1;
+}
+
+message CreateResponse {}
+
+// |||| RETRIEVE ||||
+
+message RetrieveRequest {
+  repeated string PKC = 1;
+}
+
+message RetrieveResponse {
+  ChannelSample CCR = 1;
+}
+

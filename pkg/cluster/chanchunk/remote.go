@@ -62,7 +62,7 @@ func (s *ServiceRemoteRPC) client(node *models.Node) (api.ChannelChunkServiceCli
 func (s *ServiceRemoteRPC) Retrieve(ctx context.Context, chunkReplica interface{}, qp []RemoteRetrieveOpts) error {
 	exc := newExchange(chunkReplica)
 	for _, params := range qp {
-		rq := &api.ChannelChunkServiceRetrieveReplicasRequest{PKC: params.PKC.Strings()}
+		rq := &api.RetrieveReplicasRequest{PKC: params.PKC.Strings()}
 		client, err := s.client(params.Node)
 		if err != nil {
 			return err
@@ -102,7 +102,7 @@ func (s *ServiceRemoteRPC) Create(ctx context.Context, qp []RemoteCreateOpts) er
 
 		var sErr error
 		exc.Dest().ForEach(func(rfl *model.Reflect, i int) {
-			req := &api.ChannelChunkServiceCreateReplicasRequest{CCR: rfl.Pointer().(*api.ChannelChunkReplica)}
+			req := &api.CreateReplicasRequest{CCR: rfl.Pointer().(*api.ChannelChunkReplica)}
 			if sErr == nil {
 				sErr = stream.Send(req)
 			}
@@ -121,7 +121,7 @@ func (s *ServiceRemoteRPC) Create(ctx context.Context, qp []RemoteCreateOpts) er
 
 func (s *ServiceRemoteRPC) Delete(ctx context.Context, qp []RemoteDeleteOpts) error {
 	for _, params := range qp {
-		req := &api.ChannelChunkServiceDeleteReplicasRequest{PKC: params.PKC.Strings()}
+		req := &api.DeleteReplicasRequest{PKC: params.PKC.Strings()}
 		client, err := s.client(params.Node)
 		if err != nil {
 			return err

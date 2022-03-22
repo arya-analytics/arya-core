@@ -1,6 +1,7 @@
 package tsquery
 
 import (
+	"context"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
 )
@@ -20,6 +21,16 @@ func (r *Retrieve) Model(m interface{}) *Retrieve {
 	return r
 }
 
+func (r *Retrieve) WherePKs(pks interface{}) *Retrieve {
+	r.Retrieve.WherePKs(pks)
+	return r
+}
+
+func (r *Retrieve) WherePK(pk interface{}) *Retrieve {
+	r.Retrieve.WherePK(pk)
+	return r
+}
+
 func (r *Retrieve) AllTime() *Retrieve {
 	return r.WhereTimeRange(telem.AllTime())
 }
@@ -32,6 +43,11 @@ func (r *Retrieve) WhereTimeRange(tr telem.TimeRange) *Retrieve {
 func (r *Retrieve) BindExec(exec query.Execute) *Retrieve {
 	r.Base.BindExec(exec)
 	return r
+}
+
+func (r *Retrieve) GoExec(ctx context.Context, e chan error) {
+	NewGoExecOpt(r.Pack(), e)
+	go r.Exec(ctx)
 }
 
 const timeRangeOptKey query.OptKey = "tsRange"

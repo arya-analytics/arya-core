@@ -6,6 +6,7 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/storage/redis/timeseries"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
+	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"github.com/arya-analytics/aryacore/pkg/util/validate"
 	"github.com/go-redis/redis/v8"
 )
@@ -69,7 +70,7 @@ func (tsr *tsRetrieveQuery) Exec(ctx context.Context) error {
 			if tsr.allRange {
 				cmd = tsr.baseClient().TSGetAll(ctx, pks)
 			} else if tsr.toTS != 0 {
-				cmd = tsr.baseClient().TSGetRange(ctx, pks, tsr.fromTS, tsr.toTS)
+				cmd = tsr.baseClient().TSGetRange(ctx, pks, telem.NewTimeRange(telem.TimeStamp(tsr.fromTS), telem.TimeStamp(tsr.toTS)))
 			} else {
 				cmd = tsr.baseClient().TSGet(ctx, pk.String())
 			}
