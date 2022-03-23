@@ -3,12 +3,10 @@ package redis
 import (
 	"github.com/arya-analytics/aryacore/pkg/storage/internal"
 	"github.com/arya-analytics/aryacore/pkg/storage/redis/timeseries"
-	"github.com/google/uuid"
 	"time"
 )
 
 type adapter struct {
-	id         uuid.UUID
 	client     *timeseries.Client
 	driver     Driver
 	demand     internal.Demand
@@ -17,28 +15,15 @@ type adapter struct {
 
 func newAdapter(driver Driver) (*adapter, error) {
 	a := &adapter{
-		id:     uuid.New(),
-		driver: driver,
-		expiration: internal.Expiration{
-			Duration: driver.Expiration(),
-			Start:    time.Now(),
-		},
-		demand: internal.Demand{Max: driver.DemandCap()},
+		driver:     driver,
+		expiration: internal.Expiration{Duration: driver.Expiration(), Start: time.Now()},
+		demand:     internal.Demand{Max: driver.DemandCap()},
 	}
 	return a, a.open()
 }
 
-func bindAdapter(a internal.Adapter) (*adapter, bool) {
-	ra, ok := a.(*adapter)
-	return ra, ok
-}
-
-func conn(a internal.Adapter) *timeseries.Client {
-	ra, ok := bindAdapter(a)
-	if !ok {
-		panic("couldn't bind redis adapter.")
-	}
-	return ra.client
+func client(a internal.Adapter) *timeseries.Client {
+	return a.(*adapter).client
 }
 
 func (a *adapter) Acquire() {

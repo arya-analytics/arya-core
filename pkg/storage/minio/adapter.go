@@ -2,13 +2,11 @@ package minio
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/storage/internal"
-	"github.com/google/uuid"
 	"github.com/minio/minio-go/v7"
 	"time"
 )
 
 type adapter struct {
-	id         uuid.UUID
 	client     *minio.Client
 	driver     Driver
 	demand     internal.Demand
@@ -17,29 +15,15 @@ type adapter struct {
 
 func newAdapter(driver Driver) (*adapter, error) {
 	a := &adapter{
-		id:     uuid.New(),
-		driver: driver,
-		expiration: internal.Expiration{
-			Duration: driver.Expiration(),
-			Start:    time.Now(),
-		},
-		demand: internal.Demand{Max: driver.DemandCap()},
+		driver:     driver,
+		expiration: internal.Expiration{Duration: driver.Expiration(), Start: time.Now()},
+		demand:     internal.Demand{Max: driver.DemandCap()},
 	}
-
 	return a, a.open()
 }
 
-func bindAdapter(a internal.Adapter) (*adapter, bool) {
-	me, ok := a.(*adapter)
-	return me, ok
-}
-
-func conn(a internal.Adapter) *minio.Client {
-	ma, ok := bindAdapter(a)
-	if !ok {
-		panic("couldn't bind minio adapter")
-	}
-	return ma.client
+func client(a internal.Adapter) *minio.Client {
+	return a.(*adapter).client
 }
 
 func (a *adapter) Acquire() {

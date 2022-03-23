@@ -2,7 +2,6 @@ package roach
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/storage/internal"
-	"github.com/google/uuid"
 	"github.com/uptrace/bun"
 	"time"
 )
@@ -10,7 +9,6 @@ import (
 // || ADAPTER ||
 
 type adapter struct {
-	id         uuid.UUID
 	db         *bun.DB
 	driver     Driver
 	demand     internal.Demand
@@ -19,7 +17,6 @@ type adapter struct {
 
 func newAdapter(driver Driver) (*adapter, error) {
 	a := &adapter{
-		id:     uuid.New(),
 		driver: driver,
 		expiration: internal.Expiration{
 			Start:    time.Now(),

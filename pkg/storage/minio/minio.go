@@ -25,7 +25,7 @@ func (e *Engine) Exec(ctx context.Context, p *query.Pack) error {
 	if err != nil {
 		return newErrorConvert().Exec(err)
 	}
-	c := conn(a)
+	c := client(a)
 	err = query.Switch(ctx, p, query.Ops{
 		&query.Create{}:   newCreate(c).exec,
 		&query.Retrieve{}: newRetrieve(c).exec,
@@ -41,7 +41,7 @@ func (e *Engine) NewAdapter() (internal.Adapter, error) {
 }
 
 func (e *Engine) IsAdapter(a internal.Adapter) bool {
-	_, ok := bindAdapter(a)
+	_, ok := a.(*adapter)
 	return ok
 }
 
