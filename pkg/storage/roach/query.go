@@ -138,16 +138,6 @@ func (d *del) convertOpts(p *query.Pack) {
 	internal.OptConverters{d.model, d.pk}.Exec(p)
 }
 
-// |||| BASE ||||
-
-func (b *base) exchangeToDest() {
-	b.exc.ToDest()
-}
-
-func (b *base) exchangeToSource() {
-	b.exc.ToSource()
-}
-
 // |||| MODEL ||||
 
 func (b *base) model(p *query.Pack) interface{} {
