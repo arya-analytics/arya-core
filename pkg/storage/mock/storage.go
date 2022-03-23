@@ -17,6 +17,7 @@ type Storage struct {
 
 func (s *Storage) Stop() {
 	s.DriverRoach.Stop()
+	s.Storage.Stop()
 }
 
 type storageOpts struct {

@@ -10,7 +10,7 @@ import (
 
 type HostInterceptQueryHook int
 
-func (h HostInterceptQueryHook) AfterQuery(ctx context.Context, p *query.Pack) error {
+func (h HostInterceptQueryHook) After(ctx context.Context, p *query.Pack) error {
 	switch p.Query().(type) {
 	case *query.Retrieve:
 		switch p.Model().Type() {
@@ -39,6 +39,6 @@ func (h HostInterceptQueryHook) setNodeIsHost(rfl *model.Reflect, nodePKFld, nod
 	})
 }
 
-func (h HostInterceptQueryHook) BeforeQuery(ctx context.Context, p *query.Pack) error {
+func (h HostInterceptQueryHook) Before(ctx context.Context, p *query.Pack) error {
 	return nil
 }

@@ -13,7 +13,7 @@
 // Engines (Engine) can fulfill one of three roles:
 //
 // EngineMD - Reads and writes lightweight, strongly consistent data to storage.
-// EngineObject - Saves bulktelem data to node localstorage data storage.
+// EngineObject - Saves bulk data to node local data storage.
 // EngineCache - High speed cache that can read and write time series data.
 //
 // Initialization
@@ -72,9 +72,9 @@ type Storage interface {
 type storage struct {
 	query.AssembleBase
 	tsquery.AssembleTSBase
-	cfg        Config
-	tasks      tasks.Schedule
-	queryHooks []QueryHook
+	cfg Config
+	ts  tasks.Schedule
+	qh  queryHookChain
 }
 
 // New creates a new Storage based on the provided Config.
@@ -96,40 +96,40 @@ func New(cfg Config) Storage {
 
 // Exec implements query.Execute
 func (s *storage) Exec(ctx context.Context, p *query.Pack) error {
-	return query.Switch(ctx, p, query.Ops{
-		&query.Create{}:     newRunQuery(s).exec,
-		&query.Retrieve{}:   newRunQuery(s).exec,
-		&query.Delete{}:     newRunQuery(s).exec,
-		&query.Update{}:     newRunQuery(s).exec,
-		&query.Migrate{}:    newRunQuery(s).exec,
-		&tsquery.Retrieve{}: newRunQuery(s).exec,
-		&tsquery.Create{}:   newRunQuery(s).exec,
-	})
+	qc := query.NewCatch(ctx, p)
+	qc.Exec(s.qh.before)
+	qc.Exec(s.cfg.EngineMD.Exec)
+	qc.Exec(s.cfg.EngineObject.Exec)
+	qc.Exec(s.cfg.EngineCache.Exec)
+	qc.Exec(s.qh.after)
+	return qc.Error()
 }
 
-// Start starts storage internal tasks.
+// Start starts storage internal ts.
 func (s *storage) Start(ctx context.Context, opts ...tasks.ScheduleOpt) error {
 	mdT, err := s.cfg.EngineMD.NewTasks(opts...)
 	if err != nil {
 		return err
 	}
-	s.tasks = tasks.NewScheduleBatch(mdT)
-	go s.tasks.Start(ctx)
+	s.ts = tasks.NewScheduleBatch(mdT)
+	go s.ts.Start(ctx)
 	return err
 }
 
-// Stop stops storage internal tasks.
+// Stop stops storage internal ts.
 func (s *storage) Stop() {
-	s.tasks.Stop()
-	s.tasks = nil
+	if s.ts != nil {
+		s.ts.Stop()
+		s.ts = nil
+	}
 }
 
 func (s *storage) Errors() chan error {
-	return s.tasks.Errors()
+	return s.ts.Errors()
 }
 
 func (s *storage) AddQueryHook(hook QueryHook) {
-	s.queryHooks = append(s.queryHooks, hook)
+	s.qh = append(s.qh, hook)
 }
 
 // |||| CONFIG ||||

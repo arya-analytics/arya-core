@@ -59,8 +59,7 @@ func (c *CatchSimple) Exec(ca CatchAction) {
 	if !c.opts.aggregate && len(c.errors) > 0 {
 		return
 	}
-	err := ca()
-	if err != nil {
+	if err := ca(); err != nil {
 		c.runHooks(err)
 		c.errors = append(c.errors, c.convert(err))
 	}

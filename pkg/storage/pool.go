@@ -6,9 +6,7 @@ import (
 )
 
 func NewPool() *Pool {
-	return &Pool{
-		adapters: map[internal.Adapter]bool{},
-	}
+	return &Pool{adapters: map[internal.Adapter]bool{}}
 }
 
 type Pool struct {
