@@ -25,12 +25,12 @@ var _ = Describe("Roach", func() {
 		Describe("Contains", func() {
 			Context("Model in catalog", func() {
 				It("Should return true", func() {
-					Expect(engine.ShouldHandle(&models.ChannelChunk{})).To(BeTrue())
+					Expect(engine.shouldHandle(&models.ChannelChunk{})).To(BeTrue())
 				})
 			})
 			Context("Model not in catalog", func() {
 				It("Should return false", func() {
-					Expect(engine.ShouldHandle(&models.ChannelSample{})).To(BeFalse())
+					Expect(engine.shouldHandle(&models.ChannelSample{})).To(BeFalse())
 				})
 			})
 		})

@@ -23,6 +23,9 @@ func New(driver Driver, pool *storage.Pool) *Engine {
 }
 
 func (e *Engine) Exec(ctx context.Context, p *query.Pack) error {
+	if !e.shouldHandle(p) {
+		return nil
+	}
 	a, err := e.pool.Acquire(e)
 	if err != nil {
 		return newErrorConvert().Exec(err)
@@ -50,8 +53,8 @@ func (e *Engine) IsAdapter(a internal.Adapter) bool {
 	return ok
 }
 
-func (e *Engine) ShouldHandle(m interface{}, _ ...string) bool {
-	return catalog().Contains(m)
+func (e *Engine) shouldHandle(p *query.Pack) bool {
+	return catalog().Contains(p.Model())
 }
 
 func (e *Engine) NewTasks(opts ...tasks.ScheduleOpt) (tasks.Schedule, error) {
