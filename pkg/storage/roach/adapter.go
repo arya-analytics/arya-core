@@ -17,12 +17,9 @@ type adapter struct {
 
 func newAdapter(driver Driver) (*adapter, error) {
 	a := &adapter{
-		driver: driver,
-		expiration: internal.Expiration{
-			Start:    time.Now(),
-			Duration: driver.Expiration(),
-		},
-		demand: internal.Demand{Max: driver.DemandCap()},
+		driver:     driver,
+		expiration: internal.Expiration{Start: time.Now(), Duration: driver.Expiration()},
+		demand:     internal.Demand{Max: driver.DemandCap()},
 	}
 	return a, a.open()
 }
