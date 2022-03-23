@@ -70,14 +70,14 @@ func (c *create) exec(ctx context.Context, p *query.Pack) error {
 	beforeInsertSetUUID(c.exc.Dest())
 	_, err := c.bunQ.Exec(ctx)
 	c.exc.ToSource()
-	return newErrorConvert().Exec(err)
+	return err
 }
 
 func (e *retrieve) exec(ctx context.Context, p *query.Pack) error {
 	e.convertOpts(p)
 	err := e.bunQ.Scan(ctx, e.scanArgs...)
 	e.exc.ToSource()
-	return newErrorConvert().Exec(err)
+	return err
 }
 
 func (u *update) exec(ctx context.Context, p *query.Pack) error {
@@ -85,20 +85,20 @@ func (u *update) exec(ctx context.Context, p *query.Pack) error {
 	u.exc.ToDest()
 	_, err := u.bunQ.Exec(ctx)
 	u.exc.ToSource()
-	return newErrorConvert().Exec(err)
+	return err
 }
 
 func (d *del) exec(ctx context.Context, p *query.Pack) error {
 	d.convertOpts(p)
 	_, err := d.bunQ.Exec(ctx)
-	return newErrorConvert().Exec(err)
+	return err
 }
 
 func (m *migrate) exec(ctx context.Context, p *query.Pack) error {
 	c := errutil.NewCatchContext(ctx)
 	if m.verify(p) {
 		_, err := m.db.NewSelect().Model((*ChannelConfig)(nil)).Count(ctx)
-		return newErrorConvert().Exec(err)
+		return err
 	}
 	bindMigrations(m.bunQ)
 	bunMig := bunMigrate.NewMigrator(m.db, m.bunQ)
@@ -107,7 +107,7 @@ func (m *migrate) exec(ctx context.Context, p *query.Pack) error {
 		_, err := bunMig.Migrate(ctx)
 		return err
 	})
-	return newErrorConvert().Exec(c.Error())
+	return c.Error()
 }
 
 // |||| OPT CONVERTERS ||||

@@ -47,10 +47,10 @@ func (tsc *tsCreate) exec(ctx context.Context, p *query.Pack) (err error) {
 		err = tsc.execSample(ctx, p)
 	}
 	tsc.exc.ToSource()
-	return newErrorConvert().Exec(err)
+	return err
 }
 
-func (tsr *tsRetrieve) exec(ctx context.Context, p *query.Pack) (err error) {
+func (tsr *tsRetrieve) exec(ctx context.Context, p *query.Pack) error {
 	tsr.convertOpts(p)
 	for _, pk := range tsr.pkc {
 		var cmd *redis.Cmd
@@ -63,8 +63,8 @@ func (tsr *tsRetrieve) exec(ctx context.Context, p *query.Pack) (err error) {
 		if err != nil {
 			return err
 		}
-		if err := tsr.exc.bindRes(pk.String(), res); err != nil {
-			return err
+		if bErr := tsr.exc.bindRes(pk.String(), res); bErr != nil {
+			return bErr
 		}
 	}
 	tsr.exc.ToSource()

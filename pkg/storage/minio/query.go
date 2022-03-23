@@ -71,7 +71,7 @@ func (c *create) exec(ctx context.Context, p *query.Pack) error {
 		_, err := c.client.PutObject(ctx, c.exc.bucket(), dv.PK.String(), dv.Data, dv.Data.Size(), minio.PutObjectOptions{})
 		dv.Data.Reset()
 		if err != nil {
-			return newErrorConvert().Exec(err)
+			return err
 		}
 	}
 	c.exc.ToSource()
@@ -91,13 +91,13 @@ func (d *del) exec(ctx context.Context, p *query.Pack) error {
 func (r *retrieve) exec(ctx context.Context, p *query.Pack) error {
 	r.convertOpts(p)
 	if err := whereReqValidator().Exec(r.where).Error(); err != nil {
-		return newErrorConvert().Exec(err)
+		return err
 	}
 	var d []data
 	for _, pk := range r.pkc {
 		bulk, err := r.getObject(ctx, pk)
 		if err != nil {
-			return newErrorConvert().Exec(err)
+			return err
 		}
 		d = append(d, data{PK: pk, Data: bulk})
 	}
@@ -111,14 +111,14 @@ func (m *migrate) exec(ctx context.Context, p *query.Pack) error {
 		me := wrapExchange(model.NewExchange(mod, mod))
 		exists, err := m.client.BucketExists(ctx, me.bucket())
 		if err != nil {
-			return newErrorConvert().Exec(err)
+			return err
 		}
 		if !exists {
 			if m.verify(p) {
 				return fmt.Errorf("bucket %s does not exist", err)
 			}
 			if mErr := m.client.MakeBucket(ctx, me.bucket(), minio.MakeBucketOptions{}); mErr != nil {
-				return newErrorConvert().Exec(mErr)
+				return mErr
 			}
 		}
 

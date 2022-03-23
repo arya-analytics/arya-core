@@ -33,7 +33,7 @@ func (e *Engine) Exec(ctx context.Context, p *query.Pack) error {
 		&query.Migrate{}:  newMigrate(c).exec,
 	}, query.SwitchWithoutPanic())
 	e.pool.Release(a)
-	return err
+	return newErrorConvert().Exec(err)
 }
 
 func (e *Engine) NewAdapter() (internal.Adapter, error) {
