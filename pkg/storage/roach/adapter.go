@@ -30,17 +30,8 @@ func newAdapter(driver Driver) (*adapter, error) {
 	return a, a.open()
 }
 
-func bindAdapter(a internal.Adapter) (*adapter, bool) {
-	ra, ok := a.(*adapter)
-	return ra, ok
-}
-
-func conn(a internal.Adapter) *bun.DB {
-	ra, ok := bindAdapter(a)
-	if !ok {
-		panic("couldn't bind roach adapter.")
-	}
-	return ra.db
+func UnsafeDB(a internal.Adapter) *bun.DB {
+	return a.(*adapter).db
 }
 
 func (a *adapter) Acquire() {
@@ -59,8 +50,4 @@ func (a *adapter) open() error {
 	var err error
 	a.db, err = a.driver.Connect()
 	return newErrorConvert().Exec(err)
-}
-
-func UnsafeConn(a internal.Adapter) *bun.DB {
-	return conn(a)
 }

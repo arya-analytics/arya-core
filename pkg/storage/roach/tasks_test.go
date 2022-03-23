@@ -47,7 +47,7 @@ var _ = Describe("NewTasks", func() {
 		Context("Extra nodes", func() {
 			a, err := pool.Acquire(engine)
 			Expect(err).To(BeNil())
-			bunDB := roach.UnsafeConn(a)
+			bunDB := roach.UnsafeDB(a)
 			var extraNode *models.Node
 			BeforeEach(func() {
 				extraNode = &models.Node{ID: 2}

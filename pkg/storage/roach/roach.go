@@ -27,7 +27,7 @@ func (e *Engine) Exec(ctx context.Context, p *query.Pack) error {
 	if err != nil {
 		return newErrorConvert().Exec(err)
 	}
-	db := conn(a)
+	db := UnsafeDB(a)
 	err = query.Switch(ctx, p, query.Ops{
 		&query.Create{}:   newCreate(db).exec,
 		&query.Retrieve{}: newRetrieve(db).exec,
@@ -46,7 +46,7 @@ func (e *Engine) NewAdapter() (internal.Adapter, error) {
 
 // IsAdapter checks if the provided adapter is a roach adapter.
 func (e *Engine) IsAdapter(a internal.Adapter) bool {
-	_, ok := bindAdapter(a)
+	_, ok := a.(*adapter)
 	return ok
 }
 
@@ -56,5 +56,5 @@ func (e *Engine) ShouldHandle(m interface{}, _ ...string) bool {
 
 func (e *Engine) NewTasks(opts ...tasks.ScheduleOpt) (tasks.Schedule, error) {
 	a, err := e.pool.Acquire(e)
-	return newTaskScheduler(conn(a), opts...), err
+	return newTaskScheduler(UnsafeDB(a), opts...), err
 }
