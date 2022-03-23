@@ -1,10 +1,11 @@
 package redis
 
 import (
+	"context"
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/storage/internal"
-	"github.com/arya-analytics/aryacore/pkg/storage/redis/timeseries"
-	log "github.com/sirupsen/logrus"
+	"github.com/arya-analytics/aryacore/pkg/util/query"
+	"github.com/arya-analytics/aryacore/pkg/util/query/tsquery"
 )
 
 // |||| ENGINE ||||
@@ -12,24 +13,34 @@ import (
 type Engine struct {
 	pool   *storage.Pool
 	driver Driver
+	tsquery.AssembleTS
 }
 
 func New(driver Driver, pool *storage.Pool) *Engine {
-	return &Engine{driver: driver, pool: pool}
+	e := &Engine{driver: driver, pool: pool}
+	e.AssembleTS = tsquery.NewAssemble(e.Exec)
+	return e
+}
+
+func (e *Engine) Exec(ctx context.Context, p *query.Pack) error {
+	if !e.shouldHandle(p) {
+		return nil
+	}
+	a, err := e.pool.Acquire(e)
+	if err != nil {
+		return newErrorConvert().Exec(err)
+	}
+	c := conn(a)
+	err = query.Switch(ctx, p, query.Ops{
+		&tsquery.Create{}:   newTSCreate(c).exec,
+		&tsquery.Retrieve{}: newTSRetrieve(c).exec,
+	})
+	e.pool.Release(a)
+	return newErrorConvert().Exec(err)
 }
 
 func (e *Engine) NewAdapter() (internal.Adapter, error) {
 	return newAdapter(e.driver)
-}
-
-func (e *Engine) client() (*timeseries.Client, error) {
-	a, err := e.pool.Acquire(e)
-	if err != nil {
-		return nil, err
-	}
-	// TODO: remove this after NewTSRetrieve and NewTSCreate have been updated to match query api standard.
-	e.pool.Release(a)
-	return conn(a), nil
 }
 
 func (e *Engine) IsAdapter(a internal.Adapter) bool {
@@ -37,18 +48,13 @@ func (e *Engine) IsAdapter(a internal.Adapter) bool {
 	return ok
 }
 
-func (e *Engine) NewTSRetrieve() internal.QueryCacheTSRetrieve {
-	c, err := e.client()
-	if err != nil {
-		log.Fatalln(err)
+func (e *Engine) shouldHandle(p *query.Pack) bool {
+	switch p.Query().(type) {
+	case *tsquery.Retrieve:
+		return true
+	case *tsquery.Create:
+		return true
+	default:
+		return false
 	}
-	return newTSRetrieve(c)
-}
-
-func (e *Engine) NewTSCreate() internal.QueryCacheTSCreate {
-	c, err := e.client()
-	if err != nil {
-		log.Fatalln(err)
-	}
-	return newTSCreate(c)
 }

@@ -63,11 +63,12 @@ func (r *Retrieve) Order(order Order, fld string) *Retrieve {
 	return r
 }
 
+// || LIMIT ||
+
 // Limit limits the number of results returned.
 func (r *Retrieve) Limit(limit int) *Retrieve {
 	NewLimitOpt(r.Pack(), limit)
 	return r
-
 }
 
 // || FIELDS ||

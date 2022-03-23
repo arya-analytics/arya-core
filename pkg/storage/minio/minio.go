@@ -31,7 +31,7 @@ func (e *Engine) Exec(ctx context.Context, p *query.Pack) error {
 		&query.Retrieve{}: newRetrieve(c).exec,
 		&query.Delete{}:   newDelete(c).exec,
 		&query.Migrate{}:  newMigrate(c).exec,
-	})
+	}, query.SwitchWithoutPanic())
 	e.pool.Release(a)
 	return err
 }

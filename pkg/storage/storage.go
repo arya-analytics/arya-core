@@ -29,6 +29,7 @@ import (
 	"context"
 	"github.com/arya-analytics/aryacore/pkg/storage/internal"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
+	"github.com/arya-analytics/aryacore/pkg/util/query/tsquery"
 	"github.com/arya-analytics/aryacore/pkg/util/tasks"
 )
 
@@ -61,8 +62,7 @@ import (
 // see Engine and its sub-interfaces.
 type Storage interface {
 	query.Assemble
-	NewTSRetrieve() *QueryTSRetrieve
-	NewTSCreate() *QueryTSCreate
+	tsquery.AssembleTS
 	AddQueryHook(hook QueryHook)
 	Start(ctx context.Context, opts ...tasks.ScheduleOpt) error
 	Stop()
@@ -71,6 +71,7 @@ type Storage interface {
 
 type storage struct {
 	query.AssembleBase
+	tsquery.AssembleTSBase
 	cfg        Config
 	tasks      tasks.Schedule
 	queryHooks []QueryHook
@@ -89,28 +90,21 @@ type storage struct {
 func New(cfg Config) Storage {
 	s := &storage{cfg: cfg}
 	s.AssembleBase = query.NewAssemble(s.Exec)
+	s.AssembleTSBase = tsquery.NewAssemble(s.Exec)
 	return s
 }
 
 // Exec implements query.Execute
 func (s *storage) Exec(ctx context.Context, p *query.Pack) error {
 	return query.Switch(ctx, p, query.Ops{
-		&query.Create{}:   newDef(s).exec,
-		&query.Retrieve{}: newDef(s).exec,
-		&query.Delete{}:   newDef(s).exec,
-		&query.Update{}:   newUpdate(s).exec,
-		&query.Migrate{}:  newDef(s).exec,
+		&query.Create{}:     newRunQuery(s).exec,
+		&query.Retrieve{}:   newRunQuery(s).exec,
+		&query.Delete{}:     newRunQuery(s).exec,
+		&query.Update{}:     newRunQuery(s).exec,
+		&query.Migrate{}:    newRunQuery(s).exec,
+		&tsquery.Retrieve{}: newRunQuery(s).exec,
+		&tsquery.Create{}:   newRunQuery(s).exec,
 	})
-}
-
-// NewTSRetrieve opens a new QueryTSRetrieve.
-func (s *storage) NewTSRetrieve() *QueryTSRetrieve {
-	return newTSRetrieve(s)
-}
-
-// NewTSCreate opens a new QueryTSCreate.
-func (s *storage) NewTSCreate() *QueryTSCreate {
-	return newTSCreate(s)
 }
 
 // Start starts storage internal tasks.

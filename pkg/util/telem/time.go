@@ -14,10 +14,10 @@ import (
 type TimeStamp int64
 
 const (
-	// TimeRangeMin represents the minimum possible timestamp.
-	TimeRangeMin TimeStamp = math.MinInt64
-	// TimeRangeMax represents the maximum possible time stamp.
-	TimeRangeMax TimeStamp = math.MaxInt64
+	// TimeStampMin represents the minimum possible timestamp.
+	TimeStampMin TimeStamp = math.MinInt64
+	// TimeStampMax represents the maximum possible time stamp.
+	TimeStampMax TimeStamp = math.MaxInt64
 )
 
 // NewTimeStamp creates a new TimeStamp from a time.Time.
@@ -103,9 +103,9 @@ func NewTimeRange(start TimeStamp, end TimeStamp) TimeRange {
 	return TimeRange{start: start, end: end}
 }
 
+// AllTime returns the widest possible time range. TimeStampMin to TimeStampMax.
 func AllTime() TimeRange {
-	return NewTimeRange(TimeRangeMin, TimeRangeMax)
-
+	return NewTimeRange(TimeStampMin, TimeStampMax)
 }
 
 // Start returns a TimeStamp representing the start of TimeRange.
@@ -121,6 +121,11 @@ func (tr TimeRange) End() TimeStamp {
 // Span returns a TimeSpan representing the amount of time within TimeRange.
 func (tr TimeRange) Span() TimeSpan {
 	return TimeSpan(tr.end - tr.start)
+}
+
+// IsZero returns true if the range has a span of zero.
+func (tr TimeRange) IsZero() bool {
+	return tr.Span() == 0
 }
 
 // Overlap calculates and returns an overlap TimeRange between two TimeRange. Returns a second argument that is true

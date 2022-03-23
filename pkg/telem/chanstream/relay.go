@@ -3,7 +3,6 @@ package chanstream
 import (
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
-	"github.com/google/uuid"
 	"time"
 )
 
@@ -70,13 +69,9 @@ func (r *relay) exec() {
 	//pkc := r.parseSendPKC()
 	//samples := make(chan *models.ChannelSample, len(pkc))
 	//errs := make(chan error)
-	//errs := tsquery.NewRetrieve().Model(samples).WherePKs(pkc).GoExec(ctx, errs)
+	//errs := tsquery.NewTSRetrieve().Model(samples).WherePKs(pkc).GoExec(ctx, errs)
 }
 
 func (r *relay) parseSendPKC() model.PKChain {
-	pkc := model.NewPKChain([]uuid.UUID{})
-	for k := range r.sends {
-		pkc = append(pkc, k.cfg().pks...)
-	}
-	return pkc.Unique()
+
 }

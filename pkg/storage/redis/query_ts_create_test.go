@@ -2,7 +2,6 @@ package redis_test
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/models"
-	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
@@ -19,21 +18,20 @@ var _ = Describe("QueryTsCreate", func() {
 		series = &models.ChannelConfig{ID: uuid.New()}
 	})
 	JustBeforeEach(func() {
-		err := engine.NewTSCreate().Series().Model(series).Exec(ctx)
+		err := engine.NewTSCreate().Model(series).Exec(ctx)
 		Expect(err).To(BeNil())
 	})
 	Describe("Standard Usage", func() {
 		Describe("Create a new series", func() {
 			It("Should exist after creation", func() {
-				exists, err := engine.NewTSRetrieve().SeriesExists(ctx, series.ID)
+				err := engine.NewTSRetrieve().Model(series).WherePK(series.ID).Exec(ctx)
 				Expect(err).To(BeNil())
-				Expect(exists).To(BeTrue())
 			})
 		})
 		Describe("Create a new sample", func() {
 			Context("Single sample", func() {
 				JustBeforeEach(func() {
-					err := engine.NewTSCreate().Sample().Model(sample).Exec(ctx)
+					err := engine.NewTSCreate().Model(sample).Exec(ctx)
 					Expect(err).To(BeNil())
 				})
 				BeforeEach(func() {
@@ -54,15 +52,6 @@ var _ = Describe("QueryTsCreate", func() {
 					Expect(resSamples[0].Value).To(Equal(sample.Value))
 					Expect(resSamples[0].Timestamp).To(Equal(sample.Timestamp))
 				})
-			})
-		})
-	})
-	Describe("Edge cases + errors", func() {
-		Describe("Not selecting a variant", func() {
-			It("Should return the correct storage error", func() {
-				err := engine.NewTSCreate().Model(series).Exec(ctx)
-				Expect(err).ToNot(BeNil())
-				Expect(err.(query.Error).Type).To(Equal(query.ErrorTypeInvalidArgs))
 			})
 		})
 	})

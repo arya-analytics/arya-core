@@ -35,11 +35,35 @@ type Ops map[Query]Execute
 
 // Switch switches a Pack to a configured set of Execute. Switch allows the caller to implement different query Execute
 // depending on the Query used.
-func Switch(ctx context.Context, p *Pack, ops Ops) error {
+func Switch(ctx context.Context, p *Pack, ops Ops, opts ...SwitchOpt) error {
+	so := parseOpts(opts...)
 	for qo, e := range ops {
 		if reflect.TypeOf(qo) == reflect.TypeOf(p.Query()) {
 			return e(ctx, p)
 		}
 	}
-	panic(fmt.Sprintf("%T not supported for model %s", p.Query(), p.Model().Type().Name()))
+	if so.panic {
+		panic(fmt.Sprintf("%T not supported for model %s", p.Query(), p.Model().Type().Name()))
+	}
+	return nil
+}
+
+func parseOpts(opts ...SwitchOpt) *switchOpts {
+	so := &switchOpts{panic: true}
+	for _, o := range opts {
+		o(so)
+	}
+	return so
+}
+
+type switchOpts struct {
+	panic bool
+}
+
+type SwitchOpt func(s *switchOpts)
+
+func SwitchWithoutPanic() SwitchOpt {
+	return func(so *switchOpts) {
+		so.panic = false
+	}
 }

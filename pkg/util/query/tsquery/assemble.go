@@ -5,36 +5,36 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/util/query"
 )
 
-type AssembleRetrieve interface {
-	NewRetrieve() *Retrieve
+type AssembleTSRetrieve interface {
+	NewTSRetrieve() *Retrieve
 }
 
-type AssembleCreate interface {
-	NewCreate() *Create
+type AssembleTSCreate interface {
+	NewTSCreate() *Create
 }
 
-type Assemble interface {
-	AssembleCreate
-	AssembleRetrieve
+type AssembleTS interface {
+	AssembleTSCreate
+	AssembleTSRetrieve
 	query.AssembleExec
 }
 
-type AssembleBase struct {
+type AssembleTSBase struct {
 	e query.Execute
 }
 
-func NewAssemble(e query.Execute) AssembleBase {
-	return AssembleBase{e: e}
+func NewAssemble(e query.Execute) AssembleTSBase {
+	return AssembleTSBase{e: e}
 }
 
-func (a AssembleBase) Exec(ctx context.Context, p *query.Pack) error {
+func (a AssembleTSBase) Exec(ctx context.Context, p *query.Pack) error {
 	return a.e(ctx, p)
 }
 
-func (a AssembleBase) NewRetrieve() *Retrieve {
+func (a AssembleTSBase) NewTSRetrieve() *Retrieve {
 	return NewRetrieve().BindExec(a.e)
 }
 
-func (a AssembleBase) NewCreate() *Create {
+func (a AssembleTSBase) NewTSCreate() *Create {
 	return NewCreate().BindExec(a.e)
 }

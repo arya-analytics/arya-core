@@ -14,4 +14,5 @@ const (
 	orderOptKey       OptKey = "order"
 	limitOptKey       OptKey = "limit"
 	verifyOptKey      OptKey = "verify"
+	existsOptKey      OptKey = "exists"
 )

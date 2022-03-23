@@ -16,21 +16,21 @@ var _ = Describe("Retrieve", func() {
 	)
 	Describe("TimeRangeOpt", func() {
 		It("Should set the time range all opt properly", func() {
-			p := asm.NewRetrieve().AllTime().Pack()
+			p := asm.NewTSRetrieve().AllTime().Pack()
 			tr, ok := tsquery.TimeRangeOpt(p)
 			Expect(ok).To(BeTrue())
-			Expect(tr.Start()).To(Equal(telem.TimeRangeMin))
-			Expect(tr.End()).To(Equal(telem.TimeRangeMax))
+			Expect(tr.Start()).To(Equal(telem.TimeStampMin))
+			Expect(tr.End()).To(Equal(telem.TimeStampMax))
 		})
 		It("Should set the where time range opt properly", func() {
 			tr := telem.NewTimeRange(telem.NewTimeStamp(time.Now()), telem.NewTimeStamp(time.Now()))
-			p := asm.NewRetrieve().WhereTimeRange(tr).Pack()
+			p := asm.NewTSRetrieve().WhereTimeRange(tr).Pack()
 			opt, ok := tsquery.TimeRangeOpt(p)
 			Expect(ok).To(BeTrue())
 			Expect(opt).To(Equal(tr))
 		})
 		It("Should return ok as false when the opt isn't specified", func() {
-			p := asm.NewRetrieve().Pack()
+			p := asm.NewTSRetrieve().Pack()
 			_, ok := tsquery.TimeRangeOpt(p)
 			Expect(ok).To(BeFalse())
 		})

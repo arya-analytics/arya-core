@@ -55,8 +55,8 @@ type ChannelChunkReplica struct {
 }
 
 type ChannelSample struct {
-	ChannelConfig   *ChannelConfig `model:"role:series"`
-	ChannelConfigID uuid.UUID
+	ChannelConfig   *ChannelConfig  `model:"role:series"`
+	ChannelConfigID uuid.UUID       `model:"role:pk,"`
 	Value           float64         `storage:"role:cache"`
 	Timestamp       telem.TimeStamp `storage:"role:cache"`
 }

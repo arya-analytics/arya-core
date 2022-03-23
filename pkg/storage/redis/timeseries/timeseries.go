@@ -111,14 +111,14 @@ const (
 )
 
 func parseStartTS(tr telem.TimeRange) string {
-	if tr.Start() != telem.TimeRangeMin {
+	if tr.Start() != telem.TimeStampMin {
 		return parseTS(tr.Start())
 	}
 	return timeRangeMin
 }
 
 func parseEndTS(tr telem.TimeRange) string {
-	if tr.End() != telem.TimeRangeMax {
+	if tr.End() != telem.TimeStampMax {
 		return parseTS(tr.End())
 	}
 	return timeRangeMax

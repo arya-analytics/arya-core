@@ -83,11 +83,7 @@ func (s *Service) create(ctx context.Context, p *query.Pack) error {
 			continue
 		}
 		sample.StructFieldByName(csFieldCfg).Set(reflect.ValueOf(cfg))
-		configNodeIsHostSwitch(
-			sample,
-			func(m *model.Reflect) { lsRfl.ChanSend(sample) },
-			func(m *model.Reflect) { rsRfl.ChanSend(sample) },
-		)
+		configNodeIsHostSwitch(sample, lsRfl.ChanSend, rsRfl.ChanSend)
 	}
 	return nil
 }

@@ -123,7 +123,7 @@ func (r *Reflect) StructValue() reflect.Value {
 func (r *Reflect) StructFieldByRole(role string) reflect.Value {
 	tag, ok := r.StructTagChain().Retrieve(TagCat, RoleKey, role)
 	if !ok {
-		panic(fmt.Sprintf("could not find field with role %s", role))
+		panic(fmt.Sprintf("couldn't find field w role %s on %s", role, r))
 	}
 	return r.StructValue().FieldByIndex(tag.Field.Index)
 }
@@ -228,25 +228,13 @@ func (r *Reflect) ChanRecv() (*Reflect, bool) {
 	return nil, false
 }
 
-//func (r *Reflect) ChanTryRecv() (*Reflect, bool) {
-//	v, ok := r.ChanValue().TryRecv()
-//	if ok {
-//		return NewReflect(v.Interface()), true
-//	}
-//	return nil, false
-//}
-//
-//func (r *Reflect) ChanRecvAll() *Reflect {
-//	nRfl := r.NewChain()
-//	for {
-//		rfl, ok := r.ChanTryRecv()
-//		if !ok {
-//			break
-//		}
-//		nRfl.ChainAppend(rfl)
-//	}
-//	return nRfl
-//}
+func (r *Reflect) ChanTryRecv() (*Reflect, bool) {
+	v, ok := r.ChanValue().TryRecv()
+	if ok {
+		return NewReflect(v.Interface()), true
+	}
+	return nil, false
+}
 
 // |||| FIELD ACCESSORS ||||
 
@@ -445,6 +433,12 @@ func (r *Reflect) panicIfChan() {
 	if r.IsChan() {
 		panic("model is a chan, cannot proceed")
 	}
+}
+
+// || STRINGER |||
+
+func (r *Reflect) String() string {
+	return r.Type().Name()
 }
 
 // |||| VALIDATION ||||

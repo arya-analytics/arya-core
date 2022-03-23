@@ -22,8 +22,8 @@ var _ = Describe("Assemble", func() {
 				p := q.Pack()
 				Expect(p.Model().Type()).To(Equal(model.NewReflect(&modelmock.ModelA{}).Type()))
 			},
-			Entry("Create", asm.NewCreate().Model(&modelmock.ModelA{})),
-			Entry("Retrieve", asm.NewRetrieve().Model(&modelmock.ModelA{})),
+			Entry("Create", asm.NewTSCreate().Model(&modelmock.ModelA{})),
+			Entry("Retrieve", asm.NewTSRetrieve().Model(&modelmock.ModelA{})),
 		)
 	})
 	Describe("Exec", func() {

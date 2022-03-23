@@ -1,6 +1,8 @@
 package mock
 
-import "github.com/google/uuid"
+import (
+	"github.com/google/uuid"
+)
 
 type ModelA struct {
 	ID                    int    `model:"role:pk"`

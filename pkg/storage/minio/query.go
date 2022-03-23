@@ -55,25 +55,11 @@ func newMigrate(client *minio.Client) *migrate {
 	return &migrate{base: base{client: client}}
 }
 
-// |||| BASE ||||
-
-func (b *base) bucket() string {
-	return b.exc.bucket()
-}
-
-func (b *base) exchangeToSource() {
-	b.exc.ToSource()
-}
-
-func (b *base) exchangeToDest() {
-	b.exc.ToDest()
-}
-
 // |||| EXEC |||||
 
 func (c *create) exec(ctx context.Context, p *query.Pack) error {
 	c.convertOpts(p)
-	c.exchangeToDest()
+	c.exc.ToDest()
 	for _, dv := range c.exc.dataVals() {
 		if dv.Data == nil {
 			return query.Error{
@@ -82,20 +68,20 @@ func (c *create) exec(ctx context.Context, p *query.Pack) error {
 			}
 		}
 		dv.Data.Reset()
-		_, err := c.client.PutObject(ctx, c.bucket(), dv.PK.String(), dv.Data, dv.Data.Size(), minio.PutObjectOptions{})
+		_, err := c.client.PutObject(ctx, c.exc.bucket(), dv.PK.String(), dv.Data, dv.Data.Size(), minio.PutObjectOptions{})
 		dv.Data.Reset()
 		if err != nil {
 			return newErrorConvert().Exec(err)
 		}
 	}
-	c.exchangeToSource()
+	c.exc.ToSource()
 	return nil
 }
 
 func (d *del) exec(ctx context.Context, p *query.Pack) error {
 	d.convertOpts(p)
 	for _, pk := range d.pkc {
-		if err := d.client.RemoveObject(ctx, d.bucket(), pk.String(), minio.RemoveObjectOptions{}); err != nil {
+		if err := d.client.RemoveObject(ctx, d.exc.bucket(), pk.String(), minio.RemoveObjectOptions{}); err != nil {
 			return err
 		}
 	}
@@ -116,7 +102,7 @@ func (r *retrieve) exec(ctx context.Context, p *query.Pack) error {
 		d = append(d, data{PK: pk, Data: bulk})
 	}
 	r.exc.bindDataVals(d)
-	r.exchangeToSource()
+	r.exc.ToSource()
 	return nil
 }
 
@@ -157,8 +143,7 @@ func (r *retrieve) convertOpts(p *query.Pack) {
 // |||| MODEL ||||
 
 func (b *base) model(p *query.Pack) {
-	ptr := p.Model().Pointer()
-	b.exc = wrapExchange(model.NewExchange(ptr, catalog().New(ptr)))
+	b.exc = wrapExchange(model.NewExchange(p.Model(), catalog().New(p.Model())))
 }
 
 // |||| PK ||||
@@ -185,7 +170,7 @@ func (r *retrieve) getObject(ctx context.Context, pk model.PK) (*telem.ChunkData
 		bulk   *telem.ChunkData
 	)
 	c.Exec(func() (err error) {
-		resObj, err = r.client.GetObject(ctx, r.bucket(), pk.String(), minio.GetObjectOptions{})
+		resObj, err = r.client.GetObject(ctx, r.exc.bucket(), pk.String(), minio.GetObjectOptions{})
 		return err
 	})
 	c.Exec(func() (err error) {
