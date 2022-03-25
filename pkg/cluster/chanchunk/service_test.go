@@ -3,11 +3,11 @@ package chanchunk_test
 import (
 	"github.com/arya-analytics/aryacore/pkg/cluster"
 	"github.com/arya-analytics/aryacore/pkg/cluster/chanchunk"
-	"github.com/arya-analytics/aryacore/pkg/cluster/chanchunk/mock"
 	clustermock "github.com/arya-analytics/aryacore/pkg/cluster/mock"
 	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
+	querymock "github.com/arya-analytics/aryacore/pkg/util/query/mock"
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	mockTlm "github.com/arya-analytics/aryacore/pkg/util/telem/mock"
 	"github.com/google/uuid"
@@ -22,10 +22,10 @@ import (
 var _ = Describe("Service", func() {
 	var (
 		clust         cluster.Cluster
-		remoteSvc     chanchunk.ServiceRemote
+		remoteSvc     chanchunk.Remote
 		svc           *chanchunk.Service
 		pool          *cluster.NodeRPCPool
-		persist       *mock.ServerRPCPersist
+		persist       query.Assemble
 		server        *chanchunk.ServerRPC
 		grpcServer    *grpc.Server
 		lis           net.Listener
@@ -46,8 +46,8 @@ var _ = Describe("Service", func() {
 		Expect(pErr).To(BeNil())
 		node.RPCPort = port
 		pool = clustermock.NewNodeRPCPool()
-		remoteSvc = chanchunk.NewServiceRemoteRPC(pool)
-		persist = &mock.ServerRPCPersist{}
+		remoteSvc = chanchunk.NewRemoteRPC(pool)
+		persist = querymock.NewDataSourceMem()
 		server = chanchunk.NewServerRPC(persist)
 		grpcServer = grpc.NewServer()
 		server.BindTo(grpcServer)
@@ -86,8 +86,11 @@ var _ = Describe("Service", func() {
 		It("Should create the chunk replica correctly", func() {
 			err := clust.NewCreate().Model(ccr).Exec(ctx)
 			Expect(err).To(BeNil())
-			Expect(persist.ChunkReplicas).To(HaveLen(1))
-			Expect(persist.ChunkReplicas[0].ID).To(Equal(ccr.ID))
+			var resCC []*models.ChannelChunkReplica
+			err = persist.NewRetrieve().Model(&resCC).Exec(ctx)
+			Expect(err).To(BeNil())
+			Expect(resCC).To(HaveLen(1))
+			Expect(resCC[0].ID).To(Equal(ccr.ID))
 		})
 		It("Should retrieve the chunk replica correctly", func() {
 			cErr := clust.NewCreate().Model(ccr).Exec(ctx)
@@ -98,7 +101,10 @@ var _ = Describe("Service", func() {
 			resCCR := &models.ChannelChunkReplica{}
 			rErr := clust.NewRetrieve().Model(resCCR).WherePK(ccr.ID).Exec(ctx)
 			Expect(rErr).To(BeNil())
-			Expect(resCCR.ID).To(Equal(ccr.ID))
+			var resCCRPst = &models.ChannelChunkReplica{}
+			rErr2 := persist.NewRetrieve().Model(resCCRPst).Exec(ctx)
+			Expect(rErr2).To(BeNil())
+			Expect(resCCRPst.ID).To(Equal(ccr.ID))
 		})
 		It("Should delete the chunk replica correctly", func() {
 			cErr := clust.NewCreate().Model(ccr).Exec(ctx)
@@ -108,7 +114,10 @@ var _ = Describe("Service", func() {
 			Expect(cErr).To(BeNil())
 			dErr := clust.NewDelete().Model(&models.ChannelChunkReplica{}).WherePK(ccr.ID).Exec(ctx)
 			Expect(dErr).To(BeNil())
-			Expect(persist.ChunkReplicas).To(HaveLen(0))
+			var resCCR []*models.ChannelChunkReplica
+			rErr := persist.NewRetrieve().Model(&resCCR).Exec(ctx)
+			Expect(rErr).ToNot(BeNil())
+			Expect(resCCR).To(HaveLen(0))
 		})
 	})
 	Context("Node Is Local", func() {
@@ -141,7 +150,10 @@ var _ = Describe("Service", func() {
 			Expect(cErr).To(BeNil())
 			dErr := clust.NewDelete().Model(&models.ChannelChunkReplica{}).WherePK(ccr.ID).Exec(ctx)
 			Expect(dErr).To(BeNil())
-			Expect(persist.ChunkReplicas).To(HaveLen(0))
+			var resCCR []*models.ChannelChunkReplica
+			rErr := persist.NewRetrieve().Model(&resCCR).Exec(ctx)
+			Expect(rErr).ToNot(BeNil())
+			Expect(resCCR).To(HaveLen(0))
 		})
 		It("Should update the replica correctly", func() {
 			cErr := clust.NewCreate().Model(ccr).Exec(ctx)
