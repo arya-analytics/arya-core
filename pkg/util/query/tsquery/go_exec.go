@@ -13,9 +13,11 @@ const (
 	errorBufferSize = 10
 )
 
-func NewGoExecOpt(p *query.Pack) {
+func NewGoExecOpt(p *query.Pack) GoExecOpt {
 	errors, done := make(chan error, errorBufferSize), make(chan bool)
-	p.SetOpt(goExecOptKey, GoExecOpt{Errors: errors, Done: done})
+	o := GoExecOpt{Errors: errors, Done: done}
+	p.SetOpt(goExecOptKey, o)
+	return o
 }
 
 func RetrieveGoExecOpt(p *query.Pack) (GoExecOpt, bool) {

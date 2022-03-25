@@ -25,7 +25,7 @@ import (
 var _ = Describe("Service", func() {
 	var (
 		clust         cluster.Cluster
-		remoteSvc     *chanstream.NewRemoteRPC
+		remoteSvc     *chanstream.RemoteRPC
 		server        *chanstream.ServerRPC
 		pool          *cluster.NodeRPCPool
 		grpcServer    *grpc.Server
@@ -67,9 +67,9 @@ var _ = Describe("Service", func() {
 		}
 	})
 	JustAfterEach(func() {
-		//for _, m := range items {
-		//	Expect(persist.NewDelete().Model(m).WherePK(model.NewReflect(m).PK()).Exec(ctx)).To(BeNil())
-		//}
+		for _, m := range items {
+			Expect(persist.NewDelete().Model(m).WherePK(model.NewReflect(m).PK()).Exec(ctx)).To(BeNil())
+		}
 	})
 	Describe("CanHandle", func() {
 		It("Should return false for a query it can't handle", func() {
@@ -83,30 +83,32 @@ var _ = Describe("Service", func() {
 			Expect(svc.CanHandle(p)).To(BeTrue())
 		})
 	})
+	var (
+		sampleCount = 1000
+		samples     []*models.ChannelSample
+	)
+	BeforeEach(func() {
+		samples = []*models.ChannelSample{}
+		for i := 0; i < sampleCount; i++ {
+			samples = append(samples, &models.ChannelSample{
+				ChannelConfigID: channelConfig.ID,
+				Timestamp:       telem.NewTimeStamp(time.Now().Add(time.Duration(i) * time.Second)),
+				Value:           float64(i),
+			})
+		}
+	})
 	Describe("Create", func() {
-		var (
-			sampleCount = 1000
-			samples     []*models.ChannelSample
-		)
-		BeforeEach(func() {
-			samples = []*models.ChannelSample{}
-			for i := 0; i < sampleCount; i++ {
-				samples = append(samples, &models.ChannelSample{
-					ChannelConfigID: channelConfig.ID,
-					Timestamp:       telem.NewTimeStamp(time.Now().Add(time.Duration(i) * time.Second)),
-					Value:           float64(i),
-				})
-			}
-		})
 		Context("Node Is Local", func() {
+			BeforeEach(func() {
+				nodeOne.IsHost = true
+			})
 			It("Should create a stream of samples correctly", func() {
 				c := make(chan *models.ChannelSample)
 				sRfl := model.NewReflect(&c)
-				errors := make(chan error)
+				ge := tsquery.NewCreate().Model(sRfl).BindExec(clust.Exec).GoExec(ctx)
 				go func() {
-					panic(<-errors)
+					panic(<-ge.Errors)
 				}()
-				tsquery.NewCreate().Model(sRfl).BindExec(clust.Exec).GoExec(ctx, errors)
 				for _, s := range samples {
 					c <- s
 				}
@@ -127,14 +129,47 @@ var _ = Describe("Service", func() {
 				go func() {
 					panic(<-errors)
 				}()
-				tsquery.NewCreate().Model(sRfl).BindExec(clust.Exec).GoExec(ctx, errors)
+				ge := tsquery.NewCreate().Model(sRfl).BindExec(clust.Exec).GoExec(ctx)
 				for _, s := range samples {
 					c <- s
 				}
+				go func() {
+					panic(<-ge.Errors)
+				}()
 				time.Sleep(20 * time.Millisecond)
 				var resSamples []*models.ChannelSample
 				Expect(persist.NewRetrieve().Model(&resSamples).Exec(ctx)).To(BeNil())
 				Expect(samples).To(HaveLen(sampleCount))
+			})
+		})
+	})
+	Describe("Retrieve", func() {
+		BeforeEach(func() {
+			Expect(persist.NewCreate().Model(&samples).Exec(ctx)).To(BeNil())
+		})
+		Context("Node Is Local", func() {
+			BeforeEach(func() {
+				nodeOne.IsHost = true
+			})
+			It("Should retrieve a stream of samples correctly", func() {
+				c := make(chan *models.ChannelSample)
+				sRfl := model.NewReflect(&c)
+				ge := tsquery.NewRetrieve().Model(sRfl).WherePK(channelConfig.ID).BindExec(clust.Exec).GoExec(ctx)
+				go func() {
+					panic(<-ge.Errors)
+				}()
+				var resSamples []*models.ChannelSample
+				t := time.NewTimer(100 * time.Millisecond)
+			o:
+				for {
+					select {
+					case s := <-c:
+						resSamples = append(resSamples, s)
+					case <-t.C:
+						break o
+					}
+				}
+				Expect(len(resSamples)).To(BeNumerically(">", 8))
 			})
 		})
 	})

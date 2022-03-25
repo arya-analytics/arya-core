@@ -45,9 +45,14 @@ func (r *Retrieve) BindExec(exec query.Execute) *Retrieve {
 	return r
 }
 
-func (r *Retrieve) GoExec(ctx context.Context, e chan error) {
-	NewGoExecOpt(r.Pack(), e)
-	go r.Exec(ctx)
+func (r *Retrieve) GoExec(ctx context.Context) GoExecOpt {
+	o := NewGoExecOpt(r.Pack())
+	go func() {
+		if err := r.Exec(ctx); err != nil {
+			o.Errors <- err
+		}
+	}()
+	return o
 }
 
 const timeRangeOptKey query.OptKey = "tsRange"

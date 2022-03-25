@@ -10,6 +10,7 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"github.com/google/uuid"
 	"math/rand"
+	"reflect"
 	"time"
 )
 
@@ -20,16 +21,28 @@ type Persist struct {
 func (ps *Persist) Exec(ctx context.Context, p *query.Pack) error {
 	switch p.Query().(type) {
 	case *tsquery.Create:
-		return ps.create(ctx, p)
+		if p.Model().IsChan() {
+			return ps.tsChanCreate(ctx, p)
+		} else {
+			return ps.tsCreate(ctx, p)
+		}
 	case *tsquery.Retrieve:
-		panic("operation not supported")
+		if p.Model().IsChan() {
+			return ps.tsChanRetrieve(ctx, p)
+		} else {
+			return ps.tsRetrieve(ctx, p)
+		}
 	default:
 		return ps.DataSourceMem.Exec(ctx, p)
 	}
 	return nil
 }
 
-func (ps *Persist) create(ctx context.Context, p *query.Pack) error {
+func (ps *Persist) tsCreate(ctx context.Context, p *query.Pack) error {
+	return ps.DataSourceMem.NewCreate().Model(p.Model()).Exec(ctx)
+}
+
+func (ps *Persist) tsChanCreate(ctx context.Context, p *query.Pack) error {
 	for {
 		rfl, ok := p.Model().ChanRecv()
 		if !ok {
@@ -44,7 +57,27 @@ func (ps *Persist) create(ctx context.Context, p *query.Pack) error {
 
 const clockSpeed = 10 * time.Millisecond
 
-func (ps *Persist) retrieve(ctx context.Context, p *query.Pack) error {
+func (ps *Persist) tsRetrieve(ctx context.Context, p *query.Pack) error {
+	pkc, ok := query.PKOpt(p)
+	if !ok {
+		panic("query must have a pk specified")
+	}
+	for _, pk := range pkc {
+		s := &models.ChannelSample{
+			ChannelConfigID: pk.Raw().(uuid.UUID),
+			Timestamp:       telem.NewTimeStamp(time.Now()),
+			Value:           rand.Float64(),
+		}
+		if p.Model().IsStruct() {
+			p.Model().StructValue().Set(reflect.ValueOf(s))
+		} else {
+			p.Model().ChainAppend(model.NewReflect(s))
+		}
+	}
+	return nil
+}
+
+func (ps *Persist) tsChanRetrieve(ctx context.Context, p *query.Pack) error {
 	t := time.NewTimer(clockSpeed)
 	pkOpt, ok := query.PKOpt(p)
 	if !ok {

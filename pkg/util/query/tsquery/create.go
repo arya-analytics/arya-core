@@ -25,12 +25,12 @@ func (c *Create) BindExec(exec query.Execute) *Create {
 	return c
 }
 
-func (c *Create) GoExec(ctx context.Context, e chan error) {
-	NewGoExecOpt(c.Pack(), e)
+func (c *Create) GoExec(ctx context.Context) GoExecOpt {
+	o := NewGoExecOpt(c.Pack())
 	go func() {
-		err := c.Exec(ctx)
-		if err != nil {
-			e <- err
+		if err := c.Exec(ctx); err != nil {
+			o.Errors <- err
 		}
 	}()
+	return o
 }

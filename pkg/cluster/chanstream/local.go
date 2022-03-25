@@ -3,7 +3,6 @@ package chanstream
 import (
 	"context"
 	"github.com/arya-analytics/aryacore/pkg/models"
-	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/arya-analytics/aryacore/pkg/util/query/tsquery"
@@ -12,11 +11,23 @@ import (
 )
 
 type LocalStorage struct {
-	store storage.Storage
+	relay *localRelay
+	qe    query.Execute
+}
+
+func (s *LocalStorage) exec(ctx context.Context, p *query.Pack) error {
+	return query.Switch(ctx, p, query.Ops{
+		&tsquery.Create{}:   s.create,
+		&tsquery.Retrieve{}: s.retrieve,
+		&query.Create{}:     s.qe,
+		&query.Delete{}:     s.qe,
+		&query.Retrieve{}:   s.qe,
+		&query.Delete{}:     s.qe,
+	})
 }
 
 func (s *LocalStorage) create(ctx context.Context, p *query.Pack) error {
-	goExecOpt, ok := tsquery.RetrieveGoExecOpt(p)
+	goe, ok := tsquery.RetrieveGoExecOpt(p)
 	if !ok {
 		panic("chanstream queries must be run using goexec")
 	}
@@ -25,16 +36,23 @@ func (s *LocalStorage) create(ctx context.Context, p *query.Pack) error {
 		if !sampleOK {
 			break
 		}
-		if err := tsquery.NewCreate().Model(sample).Exec(ctx); err != nil {
-			goExecOpt.Errors <- err
+		if err := tsquery.NewCreate().Model(sample).BindExec(s.qe).Exec(ctx); err != nil {
+			goe.Errors <- err
 		}
 	}
 	return nil
 }
 
 func (s *LocalStorage) retrieve(ctx context.Context, p *query.Pack) error {
-
+	_, ok := tsquery.RetrieveGoExecOpt(p)
+	if ok {
+		s.relay.add <- p
+		return nil
+	}
+	return s.qe(ctx, p)
 }
+
+// |||| RELAY ||||
 
 type localRelay struct {
 	ctx context.Context
@@ -60,6 +78,14 @@ func (lr *localRelay) processAdd(p *query.Pack) {
 	if !p.Model().IsChan() {
 		panic("local relay can't process non channel queries")
 	}
+	_, ok := query.PKOpt(p)
+	if !ok {
+		panic("queries to local relay must use a primary key")
+	}
+	_, ok = tsquery.RetrieveGoExecOpt(p)
+	if !ok {
+		panic("queries to local relay must use a GoExec opt")
+	}
 	lr.pc = append(lr.pc, p)
 }
 
@@ -72,12 +98,12 @@ func (lr *localRelay) pkc() (pkc model.PKChain) {
 }
 
 func (lr *localRelay) exec() {
-	samples, err := lr.retrieveSamples()
+	lr.filterDoneQueries()
+	s, err := lr.retrieveSamples()
 	if err != nil {
 		lr.relayError(err)
 	}
-	lr.relaySamples(samples)
-	lr.closeDoneQueries()
+	lr.relaySamples(s)
 }
 
 func (lr *localRelay) retrieveSamples() (*model.Reflect, error) {
@@ -86,7 +112,7 @@ func (lr *localRelay) retrieveSamples() (*model.Reflect, error) {
 }
 
 func (lr *localRelay) relaySamples(samples *model.Reflect) {
-	samples.ForEach(func(rfl *model.Reflect, i int) {
+	samples.ForEach(func(rfl *model.Reflect, _ int) {
 		for _, p := range lr.pc {
 			pkc, _ := query.PKOpt(p)
 			if pkc.Contains(rfl.PK()) {
@@ -98,10 +124,7 @@ func (lr *localRelay) relaySamples(samples *model.Reflect) {
 
 func (lr *localRelay) relayError(err error) {
 	for _, p := range lr.pc {
-		o, ok := tsquery.RetrieveGoExecOpt(p)
-		if !ok {
-			panic("queries must use GoExec")
-		}
+		o, _ := tsquery.RetrieveGoExecOpt(p)
 		select {
 		case o.Errors <- err:
 		default:
@@ -109,18 +132,14 @@ func (lr *localRelay) relayError(err error) {
 	}
 }
 
-func (lr *localRelay) closeDoneQueries() {
-	var newPS []*query.Pack
+func (lr *localRelay) filterDoneQueries() (newPS []*query.Pack) {
 	for _, p := range lr.pc {
-		o, ok := tsquery.RetrieveGoExecOpt(p)
-		if !ok {
-			panic("queries must use GoExec")
-		}
+		o, _ := tsquery.RetrieveGoExecOpt(p)
 		select {
 		case <-o.Done:
 		default:
 			newPS = append(newPS, p)
 		}
 	}
-	lr.pc = newPS
+	return newPS
 }

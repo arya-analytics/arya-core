@@ -28,10 +28,9 @@ func (s *ServerRPC) BindTo(srv *grpc.Server) {
 func (s *ServerRPC) Create(stream api.ChannelStreamService_CreateServer) error {
 	ch := make(chan *models.ChannelSample)
 	rfl := model.NewReflect(&ch)
-	errors := make(chan error)
-	tsquery.NewCreate().Model(rfl).BindExec(s.qe).GoExec(stream.Context(), errors)
+	goe := tsquery.NewCreate().Model(rfl).BindExec(s.qe).GoExec(stream.Context())
 	wg := errgroup.Group{}
-	wg.Go(func() error { return <-errors })
+	wg.Go(func() error { return <-goe.Errors })
 	wg.Go(func() error {
 		for {
 			req, err := stream.Recv()
