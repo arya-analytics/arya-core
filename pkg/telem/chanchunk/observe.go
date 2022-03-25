@@ -3,7 +3,6 @@ package chanchunk
 import (
 	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/google/uuid"
-	"golang.org/x/sync/semaphore"
 	"sync"
 )
 
@@ -18,7 +17,6 @@ type observe interface {
 }
 
 type observeMem struct {
-	sem     *semaphore.Weighted
 	mu      sync.Mutex
 	chanMap map[uuid.UUID]observedChannelConfig
 }

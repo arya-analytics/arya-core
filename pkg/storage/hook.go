@@ -16,7 +16,7 @@ type queryHookChain []QueryHook
 func (qhc queryHookChain) before(ctx context.Context, p *query.Pack) error {
 	c := query.NewCatch(ctx, p, errutil.WithAggregation())
 	for _, h := range qhc {
-		c.Exec(h.After)
+		c.Exec(h.Before)
 	}
 	return c.Error()
 }
@@ -24,7 +24,7 @@ func (qhc queryHookChain) before(ctx context.Context, p *query.Pack) error {
 func (qhc queryHookChain) after(ctx context.Context, p *query.Pack) error {
 	c := query.NewCatch(ctx, p, errutil.WithAggregation())
 	for _, h := range qhc {
-		c.Exec(h.Before)
+		c.Exec(h.After)
 	}
 	return c.Error()
 }

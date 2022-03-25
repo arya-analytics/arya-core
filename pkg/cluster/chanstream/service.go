@@ -15,11 +15,11 @@ import (
 
 type Service struct {
 	localExec query.Execute
-	remote    *ServiceRemoteRPC
+	remote    *NewRemoteRPC
 	configs   map[uuid.UUID]*models.ChannelConfig
 }
 
-func NewService(local query.Execute, remote *ServiceRemoteRPC) *Service {
+func NewService(local query.Execute, remote *NewRemoteRPC) *Service {
 	return &Service{
 		remote:    remote,
 		localExec: local,

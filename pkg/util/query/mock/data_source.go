@@ -25,6 +25,7 @@ func (s *DataSourceMem) Exec(ctx context.Context, p *query.Pack) error {
 		&query.Create{}:   s.create,
 		&query.Retrieve{}: s.retrieve,
 		&query.Update{}:   s.update,
+		&query.Delete{}:   s.delete,
 	})
 }
 
@@ -40,6 +41,24 @@ func (s *DataSourceMem) retrieve(ctx context.Context, p *query.Pack) error {
 		exc = model.NewExchange(p.Model().Pointer(), f.Pointer())
 	}
 	exc.ToSource()
+	return nil
+}
+
+func (s *DataSourceMem) delete(ctx context.Context, p *query.Pack) error {
+	f := s.filter(p)
+	newData := f.NewChain()
+	s.Data.Retrieve(f.Type()).ForEach(func(rfl *model.Reflect, i int) {
+		match := false
+		f.ForEach(func(nFRfl *model.Reflect, i int) {
+			if rfl.PK().Equals(nFRfl.PK()) {
+				match = true
+			}
+		})
+		if !match {
+			newData.ChainAppend(rfl)
+		}
+	})
+	s.Data[f.Type()] = newData
 	return nil
 }
 

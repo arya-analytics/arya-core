@@ -50,12 +50,12 @@ func (e *Engine) shouldHandle(p *query.Pack) bool {
 	if ok {
 		return true
 	}
-	if !catalog().Contains(p.Model().Pointer()) {
+	if !catalog().Contains(p.Model()) {
 		return false
 	}
 	fldsOpt, ok := query.RetrieveFieldsOpt(p)
 	if ok {
-		rfl := model.NewReflect(catalog().New(p.Model().Pointer()))
+		rfl := model.NewReflect(catalog().New(p.Model()))
 		return rfl.StructTagChain().HasAnyFields(fldsOpt.AllExcept("ID")...)
 	}
 	return true

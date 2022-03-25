@@ -236,6 +236,10 @@ func (r *Reflect) ChanTryRecv() (*Reflect, bool) {
 	return nil, false
 }
 
+func (r *Reflect) ChanTrySend(rts *Reflect) bool {
+	return r.ChanValue().TrySend(rts.PointerValue())
+}
+
 // |||| FIELD ACCESSORS ||||
 
 // Fields returns all fields in the reflect object at the struct index i.

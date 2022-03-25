@@ -145,4 +145,14 @@ var _ = Describe("DataSourceMem", func() {
 			Expect(err.(query.Error).Type).To(Equal(query.ErrorTypeItemNotFound))
 		})
 	})
+	Describe("Update", func() {
+		It("Should delete an item correctly", func() {
+			n := &models.Node{ID: 1}
+			Expect(asm.NewCreate().Model(n).Exec(ctx)).To(BeNil())
+			Expect(asm.NewDelete().Model(n).WherePK(n.ID).Exec(ctx)).To(BeNil())
+			err := asm.NewRetrieve().Model(n).WherePK(n.ID).Exec(ctx)
+			Expect(err).ToNot(BeNil())
+			Expect(err.(query.Error).Type).To(Equal(query.ErrorTypeItemNotFound))
+		})
+	})
 })

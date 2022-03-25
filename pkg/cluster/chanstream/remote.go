@@ -23,21 +23,21 @@ func newExchange(m interface{}) *model.Exchange {
 	return rpc.NewModelExchange(m, catalogRemoteRPC().New(m))
 }
 
-type ServiceRemoteRPC struct {
+type RemoteRPC struct {
 	pool         *cluster.NodeRPCPool
 	retrievePool map[int]api.ChannelStreamService_RetrieveClient
 	createPool   map[int]api.ChannelStreamService_CreateClient
 }
 
-func NewServiceRemoteRPC(pool *cluster.NodeRPCPool) *ServiceRemoteRPC {
-	return &ServiceRemoteRPC{
+func NewRemoteRPC(pool *cluster.NodeRPCPool) *RemoteRPC {
+	return &RemoteRPC{
 		pool:         pool,
 		retrievePool: map[int]api.ChannelStreamService_RetrieveClient{},
 		createPool:   map[int]api.ChannelStreamService_CreateClient{},
 	}
 }
 
-func (s *ServiceRemoteRPC) client(node *models.Node) (api.ChannelStreamServiceClient, error) {
+func (s *RemoteRPC) client(node *models.Node) (api.ChannelStreamServiceClient, error) {
 	conn, err := s.pool.Retrieve(node)
 	if err != nil {
 		return nil, err
@@ -45,7 +45,7 @@ func (s *ServiceRemoteRPC) client(node *models.Node) (api.ChannelStreamServiceCl
 	return api.NewChannelStreamServiceClient(conn), nil
 }
 
-func (s *ServiceRemoteRPC) retrieveCreateStream(ctx context.Context, node *models.Node) (api.ChannelStreamService_CreateClient, error) {
+func (s *RemoteRPC) retrieveCreateStream(ctx context.Context, node *models.Node) (api.ChannelStreamService_CreateClient, error) {
 	stream, ok := s.createPool[node.ID]
 	if ok {
 		return stream, nil
@@ -57,7 +57,7 @@ func (s *ServiceRemoteRPC) retrieveCreateStream(ctx context.Context, node *model
 	return c.Create(ctx)
 }
 
-func (s *ServiceRemoteRPC) Create(ctx context.Context, p *query.Pack) error {
+func (s *RemoteRPC) Create(ctx context.Context, p *query.Pack) error {
 	goExecOpt, ok := tsquery.RetrieveGoExecOpt(p)
 	if !ok {
 		panic("go exec")

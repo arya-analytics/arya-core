@@ -4,12 +4,18 @@ import "github.com/arya-analytics/aryacore/pkg/util/query"
 
 type GoExecOpt struct {
 	Errors chan error
+	Done   chan bool
 }
 
 const goExecOptKey query.OptKey = "goExec"
 
-func NewGoExecOpt(p *query.Pack, e chan error) {
-	p.SetOpt(goExecOptKey, GoExecOpt{Errors: e})
+const (
+	errorBufferSize = 10
+)
+
+func NewGoExecOpt(p *query.Pack) {
+	errors, done := make(chan error, errorBufferSize), make(chan bool)
+	p.SetOpt(goExecOptKey, GoExecOpt{Errors: errors, Done: done})
 }
 
 func RetrieveGoExecOpt(p *query.Pack) (GoExecOpt, bool) {

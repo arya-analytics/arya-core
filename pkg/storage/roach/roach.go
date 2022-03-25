@@ -16,12 +16,14 @@ type Engine struct {
 	pool   *storage.Pool
 }
 
+// New creates a new roach.Engine with the provided Driver and storage.Pool.
 func New(driver Driver, pool *storage.Pool) *Engine {
 	e := &Engine{driver: driver, pool: pool}
 	e.AssembleBase = query.NewAssemble(e.Exec)
 	return e
 }
 
+// Exec implements query.Execute.
 func (e *Engine) Exec(ctx context.Context, p *query.Pack) error {
 	if !e.shouldHandle(p) {
 		return nil
@@ -53,11 +55,16 @@ func (e *Engine) IsAdapter(a internal.Adapter) bool {
 	return ok
 }
 
-func (e *Engine) shouldHandle(p *query.Pack) bool {
-	return catalog().Contains(p.Model())
-}
-
 func (e *Engine) NewTasks(opts ...tasks.ScheduleOpt) (tasks.Schedule, error) {
 	a, err := e.pool.Acquire(e)
 	return newTaskScheduler(UnsafeDB(a), opts...), err
+}
+
+func (e *Engine) shouldHandle(p *query.Pack) bool {
+	switch p.Query().(type) {
+	case *query.Migrate:
+		return true
+	default:
+		return catalog().Contains(p.Model())
+	}
 }
