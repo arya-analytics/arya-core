@@ -19,7 +19,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ChannelStreamServiceClient interface {
 	Create(ctx context.Context, opts ...grpc.CallOption) (ChannelStreamService_CreateClient, error)
-	Retrieve(ctx context.Context, in *RetrieveRequest, opts ...grpc.CallOption) (ChannelStreamService_RetrieveClient, error)
+	Retrieve(ctx context.Context, opts ...grpc.CallOption) (ChannelStreamService_RetrieveClient, error)
 }
 
 type channelStreamServiceClient struct {
@@ -61,28 +61,27 @@ func (x *channelStreamServiceCreateClient) Recv() (*CreateResponse, error) {
 	return m, nil
 }
 
-func (c *channelStreamServiceClient) Retrieve(ctx context.Context, in *RetrieveRequest, opts ...grpc.CallOption) (ChannelStreamService_RetrieveClient, error) {
+func (c *channelStreamServiceClient) Retrieve(ctx context.Context, opts ...grpc.CallOption) (ChannelStreamService_RetrieveClient, error) {
 	stream, err := c.cc.NewStream(ctx, &ChannelStreamService_ServiceDesc.Streams[1], "/chanstream.v1.ChannelStreamService/Retrieve", opts...)
 	if err != nil {
 		return nil, err
 	}
 	x := &channelStreamServiceRetrieveClient{stream}
-	if err := x.ClientStream.SendMsg(in); err != nil {
-		return nil, err
-	}
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
 	return x, nil
 }
 
 type ChannelStreamService_RetrieveClient interface {
+	Send(*RetrieveRequest) error
 	Recv() (*RetrieveResponse, error)
 	grpc.ClientStream
 }
 
 type channelStreamServiceRetrieveClient struct {
 	grpc.ClientStream
+}
+
+func (x *channelStreamServiceRetrieveClient) Send(m *RetrieveRequest) error {
+	return x.ClientStream.SendMsg(m)
 }
 
 func (x *channelStreamServiceRetrieveClient) Recv() (*RetrieveResponse, error) {
@@ -98,7 +97,7 @@ func (x *channelStreamServiceRetrieveClient) Recv() (*RetrieveResponse, error) {
 // for forward compatibility
 type ChannelStreamServiceServer interface {
 	Create(ChannelStreamService_CreateServer) error
-	Retrieve(*RetrieveRequest, ChannelStreamService_RetrieveServer) error
+	Retrieve(ChannelStreamService_RetrieveServer) error
 }
 
 // UnimplementedChannelStreamServiceServer should be embedded to have forward compatible implementations.
@@ -108,7 +107,7 @@ type UnimplementedChannelStreamServiceServer struct {
 func (UnimplementedChannelStreamServiceServer) Create(ChannelStreamService_CreateServer) error {
 	return status.Errorf(codes.Unimplemented, "method Create not implemented")
 }
-func (UnimplementedChannelStreamServiceServer) Retrieve(*RetrieveRequest, ChannelStreamService_RetrieveServer) error {
+func (UnimplementedChannelStreamServiceServer) Retrieve(ChannelStreamService_RetrieveServer) error {
 	return status.Errorf(codes.Unimplemented, "method Retrieve not implemented")
 }
 
@@ -150,15 +149,12 @@ func (x *channelStreamServiceCreateServer) Recv() (*CreateRequest, error) {
 }
 
 func _ChannelStreamService_Retrieve_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(RetrieveRequest)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
-	}
-	return srv.(ChannelStreamServiceServer).Retrieve(m, &channelStreamServiceRetrieveServer{stream})
+	return srv.(ChannelStreamServiceServer).Retrieve(&channelStreamServiceRetrieveServer{stream})
 }
 
 type ChannelStreamService_RetrieveServer interface {
 	Send(*RetrieveResponse) error
+	Recv() (*RetrieveRequest, error)
 	grpc.ServerStream
 }
 
@@ -168,6 +164,14 @@ type channelStreamServiceRetrieveServer struct {
 
 func (x *channelStreamServiceRetrieveServer) Send(m *RetrieveResponse) error {
 	return x.ServerStream.SendMsg(m)
+}
+
+func (x *channelStreamServiceRetrieveServer) Recv() (*RetrieveRequest, error) {
+	m := new(RetrieveRequest)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 // ChannelStreamService_ServiceDesc is the grpc.ServiceDesc for ChannelStreamService service.
@@ -188,6 +192,7 @@ var ChannelStreamService_ServiceDesc = grpc.ServiceDesc{
 			StreamName:    "Retrieve",
 			Handler:       _ChannelStreamService_Retrieve_Handler,
 			ServerStreams: true,
+			ClientStreams: true,
 		},
 	},
 	Metadata: "chanstream/v1/chanstream.proto",

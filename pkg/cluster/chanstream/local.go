@@ -4,9 +4,11 @@ import (
 	"context"
 	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
+	"github.com/arya-analytics/aryacore/pkg/util/model/filter"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/arya-analytics/aryacore/pkg/util/query/tsquery"
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
+	log "github.com/sirupsen/logrus"
 	"time"
 )
 
@@ -94,7 +96,7 @@ func (lr *localRelay) pkc() (pkc model.PKChain) {
 		nPKC, _ := query.PKOpt(p)
 		pkc = append(pkc, nPKC...)
 	}
-	return pkc
+	return pkc.Unique()
 }
 
 func (lr *localRelay) exec() {
@@ -106,20 +108,21 @@ func (lr *localRelay) exec() {
 	lr.relaySamples(s)
 }
 
-func (lr *localRelay) retrieveSamples() (*model.Reflect, error) {
-	samples := model.NewReflect(&[]*models.ChannelSample{})
-	return samples, tsquery.NewRetrieve().Model(samples).BindExec(lr.qe).WherePKs(lr.pkc()).Exec(lr.ctx)
+func (lr *localRelay) retrieveSamples() (samples []*models.ChannelSample, err error) {
+	return samples, tsquery.NewRetrieve().Model(&samples).BindExec(lr.qe).WherePKs(lr.pkc()).Exec(lr.ctx)
 }
 
-func (lr *localRelay) relaySamples(samples *model.Reflect) {
-	samples.ForEach(func(rfl *model.Reflect, _ int) {
-		for _, p := range lr.pc {
-			pkc, _ := query.PKOpt(p)
-			if pkc.Contains(rfl.PK()) {
-				p.Model().ChanTrySend(rfl)
-			}
-		}
-	})
+func (lr *localRelay) relaySamples(samples []*models.ChannelSample) {
+	for _, p := range lr.pc {
+		relay(p, samples)
+	}
+}
+
+func relay(p *query.Pack, samples []*models.ChannelSample) {
+	pkc, _ := query.PKOpt(p)
+	os := model.NewReflect(&[]*models.ChannelSample{})
+	filter.Exec(query.NewRetrieve().Model(&samples).WherePKs(pkc).Pack(), os)
+	os.ForEach(func(rfl *model.Reflect, i int) { p.Model().ChanTrySend(rfl) })
 }
 
 func (lr *localRelay) relayError(err error) {
@@ -137,6 +140,7 @@ func (lr *localRelay) filterDoneQueries() (newPS []*query.Pack) {
 		o, _ := tsquery.RetrieveGoExecOpt(p)
 		select {
 		case <-o.Done:
+			log.Infof("relay: query %s done", p.String())
 		default:
 			newPS = append(newPS, p)
 		}

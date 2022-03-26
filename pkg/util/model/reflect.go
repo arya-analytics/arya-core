@@ -359,6 +359,12 @@ func (r *Reflect) PKChain() PKChain {
 	return pks
 }
 
+// || SET ||
+
+func (r *Reflect) Set(rts *Reflect) {
+	r.RawValue().Set(rts.RawValue())
+}
+
 // || TYPE + VALUE ACCESSORS ||
 
 // PointerType returns the type of the pointer to the model object.

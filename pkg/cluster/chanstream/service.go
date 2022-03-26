@@ -109,13 +109,11 @@ func (s *Service) tsRetrieve(ctx context.Context, p *query.Pack) error {
 	route.ModelSwitchBoolean(
 		model.NewReflect(&cc),
 		CfgFieldNodeIsHost,
-		func(m *model.Reflect) {
-			le = retrieveSamplesQuery(p, m).BindExec(s.local.exec).GoExec(ctx)
-		},
+		func(m *model.Reflect) { le = retrieveSamplesQuery(p, m).BindExec(s.local.exec).GoExec(ctx) },
 		func(m *model.Reflect) { re = retrieveSamplesQuery(p, m).BindExec(s.remote.exec).GoExec(ctx) },
 	)
 
-	go errutil.NewDelta(goe.Errors, le.Errors, re.Errors).Exec()
+	errutil.NewDelta(goe.Errors, le.Errors, re.Errors).Exec()
 
 	return nil
 }

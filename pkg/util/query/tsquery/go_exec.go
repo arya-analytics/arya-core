@@ -7,6 +7,10 @@ type GoExecOpt struct {
 	Done   chan bool
 }
 
+func (g GoExecOpt) Release() {
+	g.Done <- true
+}
+
 const goExecOptKey query.OptKey = "goExec"
 
 const (

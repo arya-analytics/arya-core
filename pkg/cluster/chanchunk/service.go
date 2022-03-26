@@ -162,8 +162,8 @@ func replicaNodeIsHostSwitch(mRfl *model.Reflect, localF, remoteF func(m *model.
 	c := errutil.NewCatchSimple()
 	route.ModelSwitchBoolean(mRfl,
 		ccrFieldNodeIsHost,
-		func(_ bool, m *model.Reflect) { c.Exec(func() error { return localF(m) }) },
-		func(_ bool, m *model.Reflect) { c.Exec(func() error { return remoteF(m) }) },
+		func(m *model.Reflect) { c.Exec(func() error { return localF(m) }) },
+		func(m *model.Reflect) { c.Exec(func() error { return remoteF(m) }) },
 	)
 	return c.Error()
 }

@@ -11,12 +11,12 @@ func ModelSwitchIter[T comparable](rfl *model.Reflect, fld string, action func(f
 	}
 }
 
-func ModelSwitchBoolean(rfl *model.Reflect, boolFld string, trueAction, falseAction func(fld bool, rfl *model.Reflect)) {
+func ModelSwitchBoolean(rfl *model.Reflect, boolFld string, trueAction, falseAction func(rfl *model.Reflect)) {
 	switchMap := BatchModel[bool](rfl, boolFld)
 	if trueRfl, ok := switchMap[true]; ok {
-		trueAction(true, trueRfl)
+		trueAction(trueRfl)
 	}
 	if falseRfl, ok := switchMap[false]; ok {
-		falseAction(false, falseRfl)
+		falseAction(falseRfl)
 	}
 }
