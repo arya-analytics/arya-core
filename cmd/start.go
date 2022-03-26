@@ -120,7 +120,7 @@ func startStorage(cmd *cobra.Command) (storage.Storage, error) {
 func startCluster(cmd *cobra.Command, store storage.Storage) cluster.Cluster {
 	pool := startNodeRPCPool()
 	clust := cluster.New()
-	clust.BindService(chanchunk.NewService(store.Exec, chanchunk.NewServiceRemoteRPC(pool)))
+	clust.BindService(chanchunk.NewService(store.Exec, chanchunk.NewRemoteRPC(pool)))
 	clust.BindService(cluster.NewStorageService(store))
 	return clust
 }
@@ -158,8 +158,7 @@ func startGRPCServer(clust cluster.Cluster, chanChunkSvc *telemchanchunk.Service
 
 	// || CLUSTER CHANCHUNK ||
 
-	persist := &chanchunk.ServerRPCPersistCluster{Cluster: clust}
-	ccServer := chanchunk.NewServerRPC(persist)
+	ccServer := chanchunk.NewServerRPC(clust)
 	ccServer.BindTo(grpcServer)
 
 	// || TELEM CHANCHUNK ||

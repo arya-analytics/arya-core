@@ -11,6 +11,7 @@ go_library(
     deps = [
         "//pkg/util/model",
         "//pkg/util/query",
+        "//pkg/util/query/tsquery",
     ],
 )
 
