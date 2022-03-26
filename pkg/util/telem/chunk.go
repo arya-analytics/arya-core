@@ -69,7 +69,7 @@ func (t *Chunk) End() TimeStamp {
 
 }
 
-// TimeStampExp returns the TimeRange between the Start and End of the chunk.
+// Range returns the TimeRange between the Start and End of the chunk.
 func (t *Chunk) Range() TimeRange {
 	return NewTimeRange(t.Start(), t.End())
 }
