@@ -120,7 +120,7 @@ var _ = Describe("Service", func() {
 			BeforeEach(func() {
 				nodeOne.IsHost = false
 			})
-			It("Should tsCreate a stream of samples correctly", func() {
+			It("Should create a stream of samples correctly", func() {
 				c := make(chan *models.ChannelSample)
 				sRfl := model.NewReflect(&c)
 				errors := make(chan error)
