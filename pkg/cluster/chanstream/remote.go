@@ -9,6 +9,7 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/arya-analytics/aryacore/pkg/util/query/tsquery"
+	"io"
 )
 
 // |||| RPC IMPLEMENTATION ||||
@@ -42,7 +43,6 @@ func (r *RemoteRPC) exec(ctx context.Context, p *query.Pack) error {
 		&tsquery.Create{}:   r.create,
 		&tsquery.Retrieve{}: r.retrieve,
 	})
-
 }
 
 func (r *RemoteRPC) client(node *models.Node) (api.ChannelStreamServiceClient, error) {
@@ -65,12 +65,20 @@ func (r *RemoteRPC) retrieveCreateStream(ctx context.Context, node *models.Node)
 	return c.Create(ctx)
 }
 
-func (r *RemoteRPC) create(ctx context.Context, p *query.Pack) error {
-	goExecOpt, ok := tsquery.RetrieveGoExecOpt(p)
-	if !ok {
-		panic("go exec")
+func (r *RemoteRPC) retrieveRetrieveStream(ctx context.Context, node *models.Node) (api.ChannelStreamService_RetrieveClient, error) {
+	stream, ok := r.retrievePool[node.ID]
+	if ok {
+		return stream, nil
 	}
-	errors := goExecOpt.Errors
+	c, err := r.client(node)
+	if err != nil {
+		return nil, err
+	}
+	return c.Retrieve(ctx)
+}
+
+func (r *RemoteRPC) create(ctx context.Context, p *query.Pack) error {
+	goe := goExecOpt(p)
 	for {
 		rfl, cOk := p.Model().ChanRecv()
 		if !cOk {
@@ -78,18 +86,40 @@ func (r *RemoteRPC) create(ctx context.Context, p *query.Pack) error {
 		}
 		stream, err := r.retrieveCreateStream(ctx, rfl.StructFieldByName(csFieldNode).Interface().(*models.Node))
 		if err != nil {
-			errors <- err
+			goe.Errors <- err
 			break
 		}
 		exc := newExchange(rfl)
 		exc.ToDest()
 		if sErr := stream.Send(&api.CreateRequest{CCR: exc.Dest().Pointer().(*api.ChannelSample)}); sErr != nil {
-			errors <- sErr
+			goe.Errors <- sErr
 		}
 	}
 	return nil
 }
 
 func (r *RemoteRPC) retrieve(ctx context.Context, p *query.Pack) error {
+	goe, nodes := goExecOpt(p), nodeOpt(p)
+	for _, n := range nodes {
+		stream, err := r.retrieveRetrieveStream(ctx, n)
+		if err != nil {
+			return err
+		}
+		go func() {
+			for {
+				res, sErr := stream.Recv()
+				if sErr == io.EOF {
+					break
+				}
+				if sErr != nil {
+					goe.Errors <- sErr
+					break
+				}
+				exc := rpc.NewModelExchange(res.CCR, &models.ChannelSample{})
+				exc.ToDest()
+				p.Model().ChanSend(exc.Dest())
+			}
+		}()
+	}
 	return nil
 }

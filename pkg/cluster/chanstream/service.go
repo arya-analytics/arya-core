@@ -109,7 +109,9 @@ func (s *Service) tsRetrieve(ctx context.Context, p *query.Pack) error {
 	route.ModelSwitchBoolean(
 		model.NewReflect(&cc),
 		CfgFieldNodeIsHost,
-		func(m *model.Reflect) { le = retrieveSamplesQuery(p, m).BindExec(s.local.exec).GoExec(ctx) },
+		func(m *model.Reflect) {
+			le = retrieveSamplesQuery(p, m).BindExec(s.local.exec).GoExec(ctx)
+		},
 		func(m *model.Reflect) { re = retrieveSamplesQuery(p, m).BindExec(s.remote.exec).GoExec(ctx) },
 	)
 
@@ -152,7 +154,12 @@ func pkOpt(p *query.Pack) model.PKChain {
 // || SAMPLES ||
 
 func retrieveSamplesQuery(p *query.Pack, m *model.Reflect) *tsquery.Retrieve {
-	return tsquery.NewRetrieve().Model(p.Model()).WherePKs(m.PKChain())
+	q := tsquery.NewRetrieve().Model(p.Model()).WherePKs(m.PKChain())
+	newNodeOpt(
+		q.Pack(),
+		m.FieldsByName(cfgRelNode).ToReflect().RawValue().Interface().([]*models.Node),
+	)
+	return q
 }
 
 // |||| ROUTING ||||
@@ -169,4 +176,18 @@ func sampleNodeIsHostSwitchEach(mRfl *model.Reflect, localF, remoteF func(m *mod
 
 func catalog() model.Catalog {
 	return model.Catalog{&models.ChannelSample{}}
+}
+
+const nodeOptKey query.OptKey = "chanStreamNode"
+
+func newNodeOpt(p *query.Pack, nodes []*models.Node) {
+	p.SetOpt(nodeOptKey, nodes)
+}
+
+func nodeOpt(p *query.Pack) []*models.Node {
+	n, ok := p.RetrieveOpt(nodeOptKey)
+	if !ok {
+		panic("node opt not specified. this is a bug")
+	}
+	return n.([]*models.Node)
 }
