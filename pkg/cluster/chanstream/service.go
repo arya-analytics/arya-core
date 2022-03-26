@@ -88,7 +88,7 @@ func (s *Service) tsCreate(ctx context.Context, p *query.Pack) error {
 			continue
 		}
 		sample.StructFieldByName(csFieldCfg).Set(reflect.ValueOf(cc[0]))
-		nodeIsHostForEachSwitch(sample, csFieldNodeIsHost, lsRfl.ChanSend, rsRfl.ChanSend)
+		sampleNodeIsHostSwitchEach(sample, lsRfl.ChanSend, rsRfl.ChanSend)
 	}
 	return nil
 }
@@ -106,7 +106,7 @@ func (s *Service) tsRetrieve(ctx context.Context, p *query.Pack) error {
 		return err
 	}
 
-	nodeIsHostSwitch(
+	route.ModelSwitchBoolean(
 		model.NewReflect(&cc),
 		CfgFieldNodeIsHost,
 		func(m *model.Reflect) { le = retrieveSamplesQuery(p, m).BindExec(s.local.exec).GoExec(ctx) },
@@ -157,21 +157,11 @@ func retrieveSamplesQuery(p *query.Pack, m *model.Reflect) *tsquery.Retrieve {
 
 // |||| ROUTING ||||
 
-func nodeIsHostForEachSwitch(mRfl *model.Reflect, fld string, localF, remoteF func(m *model.Reflect)) {
-	nodeIsHostSwitch(
-		mRfl,
-		fld,
+func sampleNodeIsHostSwitchEach(mRfl *model.Reflect, localF, remoteF func(m *model.Reflect)) {
+	route.ModelSwitchBoolean(mRfl,
+		csFieldNodeIsHost,
 		func(m *model.Reflect) { m.ForEach(func(rfl *model.Reflect, i int) { localF(rfl) }) },
 		func(m *model.Reflect) { m.ForEach(func(rfl *model.Reflect, i int) { remoteF(rfl) }) },
-	)
-}
-
-func nodeIsHostSwitch(mRfl *model.Reflect, fld string, localF, remoteF func(m *model.Reflect)) {
-	route.ModelSwitchBoolean(
-		mRfl,
-		fld,
-		func(_ bool, m *model.Reflect) { localF(m) },
-		func(_ bool, m *model.Reflect) { remoteF(m) },
 	)
 }
 
