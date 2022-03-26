@@ -7,7 +7,7 @@ import (
 
 type Service interface {
 	CanHandle(q *query.Pack) bool
-	Exec(ctx context.Context, p *query.Pack) error
+	query.AssembleExec
 }
 
 type Cluster interface {

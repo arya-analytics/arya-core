@@ -102,7 +102,7 @@ var _ = Describe("Service", func() {
 			BeforeEach(func() {
 				nodeOne.IsHost = true
 			})
-			It("Should create a stream of samples correctly", func() {
+			It("Should tsCreate a stream of samples correctly", func() {
 				c := make(chan *models.ChannelSample)
 				sRfl := model.NewReflect(&c)
 				ge := tsquery.NewCreate().Model(sRfl).BindExec(clust.Exec).GoExec(ctx)
@@ -122,7 +122,7 @@ var _ = Describe("Service", func() {
 			BeforeEach(func() {
 				nodeOne.IsHost = false
 			})
-			It("Should create a stream of samples correctly", func() {
+			It("Should tsCreate a stream of samples correctly", func() {
 				c := make(chan *models.ChannelSample)
 				sRfl := model.NewReflect(&c)
 				errors := make(chan error)
@@ -151,7 +151,7 @@ var _ = Describe("Service", func() {
 			BeforeEach(func() {
 				nodeOne.IsHost = true
 			})
-			It("Should retrieve a stream of samples correctly", func() {
+			It("Should tsRetrieve a stream of samples correctly", func() {
 				c := make(chan *models.ChannelSample)
 				sRfl := model.NewReflect(&c)
 				ge := tsquery.NewRetrieve().Model(sRfl).WherePK(channelConfig.ID).BindExec(clust.Exec).GoExec(ctx)
@@ -171,7 +171,7 @@ var _ = Describe("Service", func() {
 				}
 				Expect(len(resSamples)).To(BeNumerically(">", 8))
 			})
-			It("Should retrieve a stream of samples form multi channels correctly", func() {
+			It("Should tsRetrieve a stream of samples form multi channels correctly", func() {
 				ccTwo := &models.ChannelConfig{ID: uuid.New(), NodeID: 1}
 				Expect(persist.NewCreate().Model(ccTwo).Exec(ctx))
 				c := make(chan *models.ChannelSample, 2)

@@ -9,37 +9,32 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/util/query/tsquery"
 	"github.com/arya-analytics/aryacore/pkg/util/route"
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
-	"github.com/google/uuid"
 	"reflect"
 )
 
 // |||| SERVICE |||
 
 type Service struct {
-	localStorage *LocalStorage
-	remote       *RemoteRPC
-	ccMemo       *query.Memo
+	local  *LocalStorage
+	remote *RemoteRPC
+	ccMemo *query.Memo
 }
 
 func NewService(local query.Execute, remote *RemoteRPC) *Service {
-	relay := &localRelay{
+	r := &localRelay{
 		ctx: context.Background(),
 		qe:  local,
 		dr:  telem.DataRate(100),
 		add: make(chan *query.Pack),
 	}
+	go r.start()
 
-	go relay.start()
-
-	l := &LocalStorage{relay: relay, qe: local}
-
-	return &Service{
-		remote:       remote,
-		localStorage: l,
-		ccMemo:       query.NewMemo(model.NewReflect(&[]*models.ChannelConfig{})),
-	}
+	l := &LocalStorage{relay: r, qe: local}
+	memo := query.NewMemo(model.NewReflect(&[]*models.ChannelConfig{}))
+	return &Service{remote: remote, local: l, ccMemo: memo}
 }
 
+// CanHandle implements cluster.Service.
 func (s *Service) CanHandle(p *query.Pack) bool {
 	if !p.Model().IsChan() {
 		panic("chanstream service can't handle non-channel models yet!")
@@ -47,52 +42,47 @@ func (s *Service) CanHandle(p *query.Pack) bool {
 	return catalog().Contains(p.Model())
 }
 
+// Exec implements cluster.Service.
 func (s *Service) Exec(ctx context.Context, p *query.Pack) error {
 	return query.Switch(ctx, p, query.Ops{
-		&tsquery.Create{}:   s.create,
-		&tsquery.Retrieve{}: s.retrieve,
+		&tsquery.Create{}:   s.tsCreate,
+		&tsquery.Retrieve{}: s.tsRetrieve,
 	})
 }
 
-// Abbreviation reminder:
-// cfg - Channel Config
-// cs - channel Sample
 const (
-	cfgRelNode        = "Node"
-	cfgNodeIsHost     = "Node.IsHost"
-	csFieldCfgID      = "ChannelConfigID"
-	csFieldCfg        = "ChannelConfig"
-	csFieldNodeIsHost = "ChannelConfig.Node.IsHost"
-	csFieldNode       = "ChannelConfig.Node"
+	cfgRelNode         = "Node"
+	CfgFieldNodeIsHost = "Node.IsHost"
+	csFieldCfgID       = "ChannelConfigID"
+	csFieldCfg         = "ChannelConfig"
+	csFieldNodeIsHost  = "ChannelConfig.Node.IsHost"
+	csFieldNode        = "ChannelConfig.Node"
 )
 
 func nodeFields() []string {
 	return []string{"ID", "Address", "IsHost", "RPCPort"}
 }
 
-func (s *Service) create(ctx context.Context, p *query.Pack) error {
-	goe, ok := tsquery.RetrieveGoExecOpt(p)
-	if !ok {
-		panic("chanstream create queries must be run using goexec")
-	}
+func (s *Service) tsCreate(ctx context.Context, p *query.Pack) error {
 	var (
+		goe   = goExecOpt(p)
 		rs    = make(chan *models.ChannelSample)
 		ls    = make(chan *models.ChannelSample)
 		rsRfl = model.NewReflect(&rs)
 		lsRfl = model.NewReflect(&ls)
 	)
 
-	goeOne := tsquery.NewCreate().Model(rsRfl).BindExec(s.remote.exec).GoExec(ctx)
-	goeTwo := tsquery.NewCreate().Model(lsRfl).BindExec(s.localStorage.exec).GoExec(ctx)
-	go errutil.NewDelta(goe.Errors, goeTwo.Errors, goeOne.Errors).Exec()
+	le := tsquery.NewCreate().Model(lsRfl).BindExec(s.local.exec).GoExec(ctx)
+	re := tsquery.NewCreate().Model(rsRfl).BindExec(s.remote.exec).GoExec(ctx)
+	go errutil.NewDelta(goe.Errors, le.Errors, re.Errors).Exec()
 
 	for {
 		sample, sampleOk := p.Model().ChanRecv()
 		if !sampleOk {
 			break
 		}
-		cfgPK := sample.StructFieldByName(csFieldCfgID).Interface().(uuid.UUID)
-		cc, err := s.retrieveConfig(ctx, model.NewPKChain([]uuid.UUID{cfgPK}))
+		pkc := sample.FieldsByName(csFieldCfgID).ToPKChain()
+		cc, err := s.retrieveConfigs(ctx, pkc)
 		if err != nil {
 			goe.Errors <- err
 			continue
@@ -103,31 +93,23 @@ func (s *Service) create(ctx context.Context, p *query.Pack) error {
 	return nil
 }
 
-func (s *Service) retrieve(ctx context.Context, p *query.Pack) error {
-	goe, ok := tsquery.RetrieveGoExecOpt(p)
-	if !ok {
-		panic("chanstream queries must be run using goexec")
-	}
+func (s *Service) tsRetrieve(ctx context.Context, p *query.Pack) error {
+	var (
+		goe = goExecOpt(p)
+		pkc = pkOpt(p)
+		le  = tsquery.GoExecOpt{Errors: make(chan error)}
+		re  = tsquery.GoExecOpt{Errors: make(chan error)}
+	)
 
-	pkc, ok := query.PKOpt(p)
-	if !ok {
-		panic("chanstream queries require a pk")
-	}
-
-	cc, err := s.retrieveConfig(ctx, pkc)
+	cc, err := s.retrieveConfigs(ctx, pkc)
 	if err != nil {
 		return err
 	}
 
-	var (
-		le = tsquery.GoExecOpt{Errors: make(chan error)}
-		re = tsquery.GoExecOpt{Errors: make(chan error)}
-	)
-
 	nodeIsHostSwitch(
 		model.NewReflect(&cc),
-		cfgNodeIsHost,
-		func(m *model.Reflect) { le = retrieveSamplesQuery(p, m).BindExec(s.localStorage.exec).GoExec(ctx) },
+		CfgFieldNodeIsHost,
+		func(m *model.Reflect) { le = retrieveSamplesQuery(p, m).BindExec(s.local.exec).GoExec(ctx) },
 		func(m *model.Reflect) { re = retrieveSamplesQuery(p, m).BindExec(s.remote.exec).GoExec(ctx) },
 	)
 
@@ -136,21 +118,42 @@ func (s *Service) retrieve(ctx context.Context, p *query.Pack) error {
 	return nil
 }
 
-func retrieveSamplesQuery(p *query.Pack, m *model.Reflect) *tsquery.Retrieve {
-	return tsquery.NewRetrieve().Model(p.Model()).WherePKs(m.PKChain())
-}
-
-func (s *Service) retrieveConfig(ctx context.Context, pkc model.PKChain) (cc []*models.ChannelConfig, err error) {
+func (s *Service) retrieveConfigs(ctx context.Context, pkc model.PKChain) (cc []*models.ChannelConfig, err error) {
 	return cc, query.NewRetrieve().
 		Model(&cc).
 		WherePKs(pkc).
 		WithMemo(s.ccMemo).
 		Relation(cfgRelNode, nodeFields()...).
-		BindExec(s.localStorage.exec).
+		BindExec(s.local.exec).
 		Exec(ctx)
 }
 
 // |||| QUERY |||
+
+// || OPT ||
+
+func goExecOpt(p *query.Pack) tsquery.GoExecOpt {
+	goe, ok := tsquery.RetrieveGoExecOpt(p)
+	if !ok {
+		panic("chanstream queries must be run using goexec")
+	}
+	return goe
+}
+
+func pkOpt(p *query.Pack) model.PKChain {
+	pkc, ok := query.PKOpt(p)
+	if !ok {
+		panic("chanstream queries require a pk")
+	}
+	return pkc
+
+}
+
+// || SAMPLES ||
+
+func retrieveSamplesQuery(p *query.Pack, m *model.Reflect) *tsquery.Retrieve {
+	return tsquery.NewRetrieve().Model(p.Model()).WherePKs(m.PKChain())
+}
 
 // |||| ROUTING ||||
 
