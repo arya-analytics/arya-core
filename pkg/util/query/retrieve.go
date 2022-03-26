@@ -85,6 +85,13 @@ func (r *Retrieve) Relation(rel string, flds ...string) *Retrieve {
 	return r
 }
 
+// || MEMO |||
+
+func (r *Retrieve) WithMemo(memo *Memo) *Retrieve {
+	NewMemoOpt(r.Pack(), memo)
+	return r
+}
+
 // || EXEC ||
 
 // BindExec binds Execute that Retrieve will use to run the query.
@@ -159,4 +166,18 @@ func LimitOpt(p *Pack) (int, bool) {
 		return 0, false
 	}
 	return qo.(int), true
+}
+
+// || MEMO ||
+
+func NewMemoOpt(p *Pack, memo *Memo) {
+	p.opts[memoOptKey] = memo
+}
+
+func MemoOpt(p *Pack) (*Memo, bool) {
+	qo, ok := p.opts[memoOptKey]
+	if !ok {
+		return nil, false
+	}
+	return qo.(*Memo), true
 }

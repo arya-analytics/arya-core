@@ -171,6 +171,28 @@ var _ = Describe("Service", func() {
 				}
 				Expect(len(resSamples)).To(BeNumerically(">", 8))
 			})
+			It("Should retrieve a stream of samples form multi channels correctly", func() {
+				ccTwo := &models.ChannelConfig{ID: uuid.New(), NodeID: 1}
+				Expect(persist.NewCreate().Model(ccTwo).Exec(ctx))
+				c := make(chan *models.ChannelSample, 2)
+				sRfl := model.NewReflect(&c)
+				ge := tsquery.NewRetrieve().Model(sRfl).WherePKs([]uuid.UUID{channelConfig.ID, ccTwo.ID}).BindExec(clust.Exec).GoExec(ctx)
+				go func() {
+					panic(<-ge.Errors)
+				}()
+				var resSamples []*models.ChannelSample
+				t := time.NewTimer(100 * time.Millisecond)
+			o:
+				for {
+					select {
+					case s := <-c:
+						resSamples = append(resSamples, s)
+					case <-t.C:
+						break o
+					}
+				}
+				Expect(len(resSamples)).To(BeNumerically(">", 16))
+			})
 		})
 	})
 })

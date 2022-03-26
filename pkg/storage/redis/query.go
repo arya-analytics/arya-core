@@ -3,7 +3,6 @@ package redis
 import (
 	"context"
 	"fmt"
-	"github.com/arya-analytics/aryacore/pkg/storage/internal"
 	"github.com/arya-analytics/aryacore/pkg/storage/redis/timeseries"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
@@ -74,11 +73,11 @@ func (tsr *tsRetrieve) exec(ctx context.Context, p *query.Pack) error {
 // |||| OPT CONVERTERS ||||
 
 func (tsc *tsCreate) convertOpts(p *query.Pack) {
-	internal.OptConverters{tsc.model, tsc.variant}.Exec(p)
+	query.OptConverters{tsc.model, tsc.variant}.Exec(p)
 }
 
 func (tsr *tsRetrieve) convertOpts(p *query.Pack) {
-	internal.OptConverters{tsr.model, tsr.pk, tsr.timeRange}.Exec(p)
+	query.OptConverters{tsr.model, tsr.pk, tsr.timeRange}.Exec(p)
 }
 
 // |||| MODEL ||||

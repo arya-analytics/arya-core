@@ -3,6 +3,7 @@ package chanstream
 import (
 	"context"
 	"github.com/arya-analytics/aryacore/pkg/models"
+	"github.com/arya-analytics/aryacore/pkg/util/errutil"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/arya-analytics/aryacore/pkg/util/query/tsquery"
@@ -17,7 +18,7 @@ import (
 type Service struct {
 	localStorage *LocalStorage
 	remote       *RemoteRPC
-	configs      map[model.PK]*models.ChannelConfig
+	ccMemo       *query.Memo
 }
 
 func NewService(local query.Execute, remote *RemoteRPC) *Service {
@@ -35,7 +36,7 @@ func NewService(local query.Execute, remote *RemoteRPC) *Service {
 	return &Service{
 		remote:       remote,
 		localStorage: l,
-		configs:      map[model.PK]*models.ChannelConfig{},
+		ccMemo:       query.NewMemo(model.NewReflect(&[]*models.ChannelConfig{})),
 	}
 }
 
@@ -81,31 +82,23 @@ func (s *Service) create(ctx context.Context, p *query.Pack) error {
 		lsRfl = model.NewReflect(&ls)
 	)
 
-	goeOne := tsquery.NewCreate().Model(rsRfl).BindExec(s.remote.Create).GoExec(ctx)
+	goeOne := tsquery.NewCreate().Model(rsRfl).BindExec(s.remote.exec).GoExec(ctx)
 	goeTwo := tsquery.NewCreate().Model(lsRfl).BindExec(s.localStorage.exec).GoExec(ctx)
-	go func() {
-		for {
-			select {
-			case err := <-goeOne.Errors:
-				goe.Errors <- err
-			case err := <-goeTwo.Errors:
-				goe.Errors <- err
-			}
-		}
-	}()
+	go errutil.NewDelta(goe.Errors, goeTwo.Errors, goeOne.Errors).Exec()
+
 	for {
 		sample, sampleOk := p.Model().ChanRecv()
 		if !sampleOk {
 			break
 		}
-		cfgPK := model.NewPK(sample.StructFieldByName(csFieldCfgID).Interface().(uuid.UUID))
-		cfg, err := s.retrieveConfig(ctx, cfgPK)
+		cfgPK := sample.StructFieldByName(csFieldCfgID).Interface().(uuid.UUID)
+		cc, err := s.retrieveConfig(ctx, model.NewPKChain([]uuid.UUID{cfgPK}))
 		if err != nil {
 			goe.Errors <- err
 			continue
 		}
-		sample.StructFieldByName(csFieldCfg).Set(reflect.ValueOf(cfg))
-		configNodeIsHostForEachSwitch(sample, lsRfl.ChanSend, rsRfl.ChanSend)
+		sample.StructFieldByName(csFieldCfg).Set(reflect.ValueOf(cc[0]))
+		nodeIsHostForEachSwitch(sample, csFieldNodeIsHost, lsRfl.ChanSend, rsRfl.ChanSend)
 	}
 	return nil
 }
@@ -121,60 +114,61 @@ func (s *Service) retrieve(ctx context.Context, p *query.Pack) error {
 		panic("chanstream queries require a pk")
 	}
 
-	cfg, err := s.retrieveConfig(ctx, pkc[0])
+	cc, err := s.retrieveConfig(ctx, pkc)
 	if err != nil {
-		goe.Errors <- err
+		return err
 	}
 
-	q := tsquery.NewRetrieve().Model(p.Model()).WherePK(cfg.ID)
-	if cfg.Node.IsHost {
-		q = q.BindExec(s.localStorage.exec)
-	} else {
-		panic("Hello")
-		//q = q.BindExec(s.remote)
-	}
+	var (
+		le = tsquery.GoExecOpt{Errors: make(chan error)}
+		re = tsquery.GoExecOpt{Errors: make(chan error)}
+	)
 
-	qGoe := q.GoExec(ctx)
+	nodeIsHostSwitch(
+		model.NewReflect(&cc),
+		cfgNodeIsHost,
+		func(m *model.Reflect) { le = retrieveSamplesQuery(p, m).BindExec(s.localStorage.exec).GoExec(ctx) },
+		func(m *model.Reflect) { re = retrieveSamplesQuery(p, m).BindExec(s.remote.exec).GoExec(ctx) },
+	)
 
-	go func() {
-		for {
-			select {
-			case err := <-qGoe.Errors:
-				goe.Errors <- err
-				//	goe.Errors <- err
-				//case err := <-goeTwo.Errors:
-				//	goe.Errors <- err
-			}
-		}
-	}()
+	go errutil.NewDelta(goe.Errors, le.Errors, re.Errors).Exec()
+
 	return nil
 }
 
-func (s *Service) retrieveConfig(ctx context.Context, pk model.PK) (*models.ChannelConfig, error) {
-	cfg, ok := s.configs[pk]
-	if !ok {
-		cfg = &models.ChannelConfig{}
-		if err := query.NewRetrieve().
-			Model(cfg).
-			WherePK(pk).
-			BindExec(s.localStorage.exec).
-			Relation(cfgRelNode, nodeFields()...).
-			Exec(ctx); err != nil {
-			return cfg, err
-		}
-		s.configs[pk] = cfg
-	}
-	return cfg, nil
+func retrieveSamplesQuery(p *query.Pack, m *model.Reflect) *tsquery.Retrieve {
+	return tsquery.NewRetrieve().Model(p.Model()).WherePKs(m.PKChain())
 }
+
+func (s *Service) retrieveConfig(ctx context.Context, pkc model.PKChain) (cc []*models.ChannelConfig, err error) {
+	return cc, query.NewRetrieve().
+		Model(&cc).
+		WherePKs(pkc).
+		WithMemo(s.ccMemo).
+		Relation(cfgRelNode, nodeFields()...).
+		BindExec(s.localStorage.exec).
+		Exec(ctx)
+}
+
+// |||| QUERY |||
 
 // |||| ROUTING ||||
 
-func configNodeIsHostForEachSwitch(mRfl *model.Reflect, localF, remoteF func(m *model.Reflect)) {
+func nodeIsHostForEachSwitch(mRfl *model.Reflect, fld string, localF, remoteF func(m *model.Reflect)) {
+	nodeIsHostSwitch(
+		mRfl,
+		fld,
+		func(m *model.Reflect) { m.ForEach(func(rfl *model.Reflect, i int) { localF(rfl) }) },
+		func(m *model.Reflect) { m.ForEach(func(rfl *model.Reflect, i int) { remoteF(rfl) }) },
+	)
+}
+
+func nodeIsHostSwitch(mRfl *model.Reflect, fld string, localF, remoteF func(m *model.Reflect)) {
 	route.ModelSwitchBoolean(
 		mRfl,
-		csFieldNodeIsHost,
-		func(_ bool, m *model.Reflect) { m.ForEach(func(rfl *model.Reflect, i int) { localF(rfl) }) },
-		func(_ bool, m *model.Reflect) { m.ForEach(func(rfl *model.Reflect, i int) { remoteF(rfl) }) },
+		fld,
+		func(_ bool, m *model.Reflect) { localF(m) },
+		func(_ bool, m *model.Reflect) { remoteF(m) },
 	)
 }
 

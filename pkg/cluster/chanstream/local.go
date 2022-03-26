@@ -84,7 +84,7 @@ func (lr *localRelay) processAdd(p *query.Pack) {
 	}
 	_, ok = tsquery.RetrieveGoExecOpt(p)
 	if !ok {
-		panic("queries to local relay must use a GoExec opt")
+		panic("queries to local relay must use a Exec opt")
 	}
 	lr.pc = append(lr.pc, p)
 }

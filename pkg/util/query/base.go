@@ -35,10 +35,19 @@ func (b *Base) BindExec(e Execute) {
 
 func (b *Base) Exec(ctx context.Context) error {
 	p := b.Pack()
+	memo, ok := MemoOpt(p)
+	if ok {
+		if err := memo.Exec(ctx, p); err == nil {
+			return nil
+		}
+	}
 	if b.e == nil {
 		panic("query execute not bound")
 	}
 	err := b.e(ctx, p)
+	if ok {
+		memo.Add(p.Model())
+	}
 	return err
 
 }

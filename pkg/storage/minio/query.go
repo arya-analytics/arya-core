@@ -3,7 +3,6 @@ package minio
 import (
 	"context"
 	"fmt"
-	"github.com/arya-analytics/aryacore/pkg/storage/internal"
 	"github.com/arya-analytics/aryacore/pkg/util/errutil"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
@@ -129,15 +128,15 @@ func (m *migrate) exec(ctx context.Context, p *query.Pack) error {
 // |||| OPT CONVERTERS ||||
 
 func (c *create) convertOpts(p *query.Pack) {
-	internal.OptConverters{c.model}.Exec(p)
+	query.OptConverters{c.model}.Exec(p)
 }
 
 func (d *del) convertOpts(p *query.Pack) {
-	internal.OptConverters{d.model, d.pk}.Exec(p)
+	query.OptConverters{d.model, d.pk}.Exec(p)
 }
 
 func (r *retrieve) convertOpts(p *query.Pack) {
-	internal.OptConverters{r.model, r.pk}.Exec(p)
+	query.OptConverters{r.model, r.pk}.Exec(p)
 }
 
 // |||| MODEL ||||

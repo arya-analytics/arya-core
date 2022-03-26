@@ -37,27 +37,35 @@ func NewRemoteRPC(pool *cluster.NodeRPCPool) *RemoteRPC {
 	}
 }
 
-func (s *RemoteRPC) client(node *models.Node) (api.ChannelStreamServiceClient, error) {
-	conn, err := s.pool.Retrieve(node)
+func (r *RemoteRPC) exec(ctx context.Context, p *query.Pack) error {
+	return query.Switch(ctx, p, query.Ops{
+		&tsquery.Create{}:   r.create,
+		&tsquery.Retrieve{}: r.retrieve,
+	})
+
+}
+
+func (r *RemoteRPC) client(node *models.Node) (api.ChannelStreamServiceClient, error) {
+	conn, err := r.pool.Retrieve(node)
 	if err != nil {
 		return nil, err
 	}
 	return api.NewChannelStreamServiceClient(conn), nil
 }
 
-func (s *RemoteRPC) retrieveCreateStream(ctx context.Context, node *models.Node) (api.ChannelStreamService_CreateClient, error) {
-	stream, ok := s.createPool[node.ID]
+func (r *RemoteRPC) retrieveCreateStream(ctx context.Context, node *models.Node) (api.ChannelStreamService_CreateClient, error) {
+	stream, ok := r.createPool[node.ID]
 	if ok {
 		return stream, nil
 	}
-	c, err := s.client(node)
+	c, err := r.client(node)
 	if err != nil {
 		return nil, err
 	}
 	return c.Create(ctx)
 }
 
-func (s *RemoteRPC) Create(ctx context.Context, p *query.Pack) error {
+func (r *RemoteRPC) create(ctx context.Context, p *query.Pack) error {
 	goExecOpt, ok := tsquery.RetrieveGoExecOpt(p)
 	if !ok {
 		panic("go exec")
@@ -68,7 +76,7 @@ func (s *RemoteRPC) Create(ctx context.Context, p *query.Pack) error {
 		if !cOk {
 			break
 		}
-		stream, err := s.retrieveCreateStream(ctx, rfl.StructFieldByName(csFieldNode).Interface().(*models.Node))
+		stream, err := r.retrieveCreateStream(ctx, rfl.StructFieldByName(csFieldNode).Interface().(*models.Node))
 		if err != nil {
 			errors <- err
 			break
@@ -79,5 +87,9 @@ func (s *RemoteRPC) Create(ctx context.Context, p *query.Pack) error {
 			errors <- sErr
 		}
 	}
+	return nil
+}
+
+func (r *RemoteRPC) retrieve(ctx context.Context, p *query.Pack) error {
 	return nil
 }

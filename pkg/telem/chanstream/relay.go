@@ -69,7 +69,7 @@ func (r *relay) exec() {
 	//pkc := r.parseSendPKC()
 	//samples := make(chan *models.ChannelSample, len(pkc))
 	//errs := make(chan error)
-	//errs := tsquery.NewTSRetrieve().Model(samples).WherePKs(pkc).GoExec(ctx, errs)
+	//errs := tsquery.NewTSRetrieve().Model(samples).WherePKs(pkc).Exec(ctx, errs)
 }
 
 func (r *relay) parseSendPKC() model.PKChain {

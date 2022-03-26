@@ -14,5 +14,15 @@ const (
 	orderOptKey       OptKey = "order"
 	limitOptKey       OptKey = "limit"
 	verifyOptKey      OptKey = "verify"
-	existsOptKey      OptKey = "exists"
+	memoOptKey        OptKey = "memo"
 )
+
+type OptConverters []OptConverter
+
+type OptConverter func(p *Pack)
+
+func (ocs OptConverters) Exec(p *Pack) {
+	for _, oc := range ocs {
+		oc(p)
+	}
+}
