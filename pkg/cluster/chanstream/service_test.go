@@ -25,7 +25,6 @@ import (
 var _ = Describe("Service", func() {
 	var (
 		clust         cluster.Cluster
-		remoteSvc     *chanstream.RemoteRPC
 		server        *chanstream.ServerRPC
 		pool          *cluster.NodeRPCPool
 		grpcServer    *grpc.Server
@@ -50,8 +49,7 @@ var _ = Describe("Service", func() {
 		server = chanstream.NewServerRPC(persist.Exec)
 		grpcServer = grpc.NewServer()
 		server.BindTo(grpcServer)
-		remoteSvc = chanstream.NewRemoteRPC(pool)
-		svc = chanstream.NewService(persist.Exec, remoteSvc)
+		svc = chanstream.NewService(persist.Exec, chanstream.NewRemoteRPC(pool))
 		clust.BindService(svc)
 		clust.BindService(&clustermock.Persist{DataSourceMem: ds})
 	})
