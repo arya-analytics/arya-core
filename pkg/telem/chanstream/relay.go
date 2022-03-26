@@ -1,10 +1,12 @@
 package chanstream
 
 import (
+	"context"
 	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/model/filter"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
+	"github.com/arya-analytics/aryacore/pkg/util/query/tsquery"
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"time"
 )
@@ -23,13 +25,25 @@ type send interface {
 }
 
 type relay struct {
+	qExec          query.Execute
 	dr             telem.DataRate
 	_addSend       chan send
 	sends          map[send]bool
-	_addReceive    chan receive
-	receives       map[receive]bool
 	_removeSend    chan send
 	_removeReceive chan receive
+	clusterQ       *query.Pack
+}
+
+func newRelay(dr telem.DataRate, qExec query.Execute) *relay {
+	return &relay{
+		qExec:          qExec,
+		dr:             dr,
+		_addSend:       make(chan send),
+		sends:          make(map[send]bool),
+		_removeSend:    make(chan send),
+		_removeReceive: make(chan receive),
+	}
+
 }
 
 func (r *relay) start() {
@@ -39,10 +53,6 @@ func (r *relay) start() {
 		select {
 		case snd := <-r._addSend:
 			r.processAddSend(snd)
-		case rcv := <-r._addReceive:
-			r.processAddReceive(rcv)
-		case rc := <-r._removeReceive:
-			r.processRemoveReceive(rc)
 		case s := <-r._removeSend:
 			r.processRemoveSend(s)
 		case <-t.C:
@@ -54,6 +64,11 @@ func (r *relay) start() {
 // |||| SEND MANAGEMENT ||||
 
 func (r *relay) addSend(snd send) {
+	c := make(chan *models.ChannelSample, len(snd.cfg().pks))
+	rfl := model.NewReflect(&c)
+	q := tsquery.NewRetrieve().Model(rfl).WherePKs(snd.cfg().pks).BindExec(r.qExec)
+	q.GoExec(context.Background())
+	r.clusterQ = q.Pack()
 	r._addSend <- snd
 }
 
@@ -71,22 +86,6 @@ func (r *relay) processRemoveSend(snd send) {
 
 // |||| RECEIVE MANAGEMENT ||||
 
-func (r *relay) addReceive(rcv receive) {
-	r._addReceive <- rcv
-}
-
-func (r *relay) removeReceive(rcv receive) {
-	r._removeReceive <- rcv
-}
-
-func (r *relay) processAddReceive(rcv receive) {
-	r.receives[rcv] = true
-}
-
-func (r *relay) processRemoveReceive(rcv receive) {
-	delete(r.receives, rcv)
-}
-
 // |||| EXECUTION ||||
 
 func (r *relay) exec() {
@@ -98,12 +97,15 @@ func (r *relay) exec() {
 }
 
 func (r *relay) retrieve() (samples []*models.ChannelSample, err error) {
-	for rcv := range r.receives {
-		s, err := rcv.retrieve()
-		if err != nil {
-			return nil, err
+	if r.clusterQ == nil {
+		return samples, err
+	}
+	for {
+		s, ok := r.clusterQ.Model().ChanTryRecv()
+		if !ok {
+			break
 		}
-		samples = append(samples, s...)
+		samples = append(samples, s.Pointer().(*models.ChannelSample))
 	}
 	return samples, nil
 }
@@ -116,7 +118,7 @@ func (r *relay) relay(samples []*models.ChannelSample) {
 
 func relayToSend(s send, samples []*models.ChannelSample) {
 	var os []*models.ChannelSample
-	filter.Exec(query.NewRetrieve().Model(samples).WherePKs(s.cfg().pks).Pack(), &os)
+	filter.Exec(query.NewRetrieve().Model(&samples).WherePKs(s.cfg().pks).Pack(), &os)
 	for _, o := range os {
 		s.send() <- o
 	}
