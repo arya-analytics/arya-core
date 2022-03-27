@@ -1,6 +1,5 @@
-import { Grid } from "@mui/material";
-import { Page } from "./Page";
+import { Cluster } from "../Cluster/Cluster";
 
 export const Pages = () => {
-  return <Page />;
+  return <Cluster />;
 };

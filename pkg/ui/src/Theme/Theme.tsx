@@ -13,9 +13,15 @@ import merge from "lodash.merge";
 const defaultTheme = "dark";
 const persistedThemeKey = "aryaTheme";
 
-const PaletteContext = createContext<[PaletteMode, (val: PaletteMode) => void]>(
-  [defaultTheme, () => {}]
-);
+const PaletteContext = createContext<{
+  palette: PaletteMode;
+  theme: ThemeOptions;
+  setPalette: (palette: PaletteMode) => void;
+}>({
+  palette: "light",
+  theme: {},
+  setPalette: () => {},
+});
 
 export const useThemeContext = () => useContext(PaletteContext);
 
@@ -32,7 +38,7 @@ export const ThemeProvider = ({ children }: React.PropsWithChildren<any>) => {
   }, [palette]);
   return (
     <MaterialThemeProvider theme={theme}>
-      <PaletteContext.Provider value={[palette, setPalette]}>
+      <PaletteContext.Provider value={{ palette, theme, setPalette }}>
         {children}
       </PaletteContext.Provider>
     </MaterialThemeProvider>
@@ -64,6 +70,31 @@ const baseTheme: ThemeOptions = {
       main: "#3774D0",
     },
   },
+  components: {
+    MuiTabs: {
+      defaultProps: {
+        sx: {
+          borderBottom: 1,
+          borderColor: "divider",
+          minHeight: 0,
+          "& .MuiTabs-indicator": {
+            backgroundColor: "",
+          },
+          "& .MuiButtonBase-root": {
+            height: 36,
+            minHeight: 0,
+            textTransform: "none",
+            color: "text.primary",
+          },
+        },
+      },
+    },
+    MuiTypography: {
+      defaultProps: {
+        color: "text.primary",
+      },
+    },
+  },
 };
 
 const lightTheme = {
@@ -72,8 +103,10 @@ const lightTheme = {
     secondary: {
       main: "#212121",
     },
+    text: {
+      primary: "#212121",
+    },
   },
-
 };
 
 const darkTheme: ThemeOptions = {
@@ -83,14 +116,10 @@ const darkTheme: ThemeOptions = {
       default: "#1F1F1F",
     },
     secondary: {
-      main: "#e0e0e0"
-    }
-  },
-  components: {
-    MuiTypography: {
-      defaultProps: {
-        color: "text.primary",
-      },
+      main: "#e0e0e0",
+    },
+    text: {
+      primary: "#e0e0e0",
     },
   },
 };
@@ -105,11 +134,11 @@ const themes = {
 };
 
 export const ToggleThemeSwitch = (props: SwitchProps) => {
-  const [theme, setTheme] = useThemeContext();
+  const { palette, setPalette } = useThemeContext();
   return (
     <Switch
-      onChange={() => setTheme(theme == "light" ? "dark" : "light")}
-      checked={theme == "light"}
+      onChange={() => setPalette(palette == "light" ? "dark" : "light")}
+      checked={palette == "light"}
       {...props}
     />
   );
