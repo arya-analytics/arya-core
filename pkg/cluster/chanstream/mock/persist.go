@@ -78,7 +78,7 @@ func (ps *Persist) tsRetrieve(ctx context.Context, p *query.Pack) error {
 }
 
 func (ps *Persist) tsChanRetrieve(ctx context.Context, p *query.Pack) error {
-	t := time.NewTimer(clockSpeed)
+	t := time.NewTicker(clockSpeed)
 	pkOpt, ok := query.PKOpt(p)
 	if !ok {
 		panic("query must have a pk specified")

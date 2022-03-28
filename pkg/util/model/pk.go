@@ -36,6 +36,10 @@ type PK struct {
 
 // NewPK constructs and returns a new PK.
 func NewPK(pk interface{}) PK {
+	_, ok := pk.(PK)
+	if ok {
+		return pk.(PK)
+	}
 	return PK{raw: pk}
 }
 
@@ -81,6 +85,18 @@ func (pk PK) NewFromString(pkStr string) (PK, error) {
 		panic(fmt.Sprintf("pk could not be converted from string to %t. pkStr is %s", t, pkStr))
 	}
 	return NewPK(newRawPk), err
+}
+
+func (pk PK) NewChainFromStrings(pkStrings ...string) (PKChain, error) {
+	var pkc PKChain
+	for _, pkStr := range pkStrings {
+		pk, err := pk.NewFromString(pkStr)
+		if err != nil {
+			return nil, err
+		}
+		pkc = append(pkc, pk)
+	}
+	return pkc, nil
 }
 
 // Raw returns raw Val of the pk i.e. the pk provided when calling model.NewPK.
@@ -175,9 +191,9 @@ func (pkc PKChain) Unique() PKChain {
 }
 
 // Contains checks if the PKChain contains the PK.
-func (pkc PKChain) Contains(pk PK) bool {
+func (pkc PKChain) Contains(pk interface{}) bool {
 	for _, pko := range pkc {
-		if pko.Equals(pk) {
+		if pko.Equals(NewPK(pk)) {
 			return true
 		}
 	}

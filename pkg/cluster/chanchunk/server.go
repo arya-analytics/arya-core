@@ -46,7 +46,7 @@ func (s *ServerRPC) CreateReplicas(stream api.ChannelChunkService_CreateReplicas
 }
 
 func (s *ServerRPC) RetrieveReplicas(req *api.RetrieveReplicasRequest, stream api.ChannelChunkService_RetrieveReplicasServer) error {
-	pkc := parsePKC(req.PKC)
+	pkc := ParsePKC(req.PKC)
 	c := errutil.NewCatchSimple()
 	for _, pk := range pkc {
 		res := &api.RetrieveReplicasResponse{CCR: &api.ChannelChunkReplica{}}
@@ -57,7 +57,7 @@ func (s *ServerRPC) RetrieveReplicas(req *api.RetrieveReplicasRequest, stream ap
 }
 
 func (s *ServerRPC) DeleteReplicas(ctx context.Context, req *api.DeleteReplicasRequest) (*api.DeleteReplicasResponse, error) {
-	return &api.DeleteReplicasResponse{}, s.DeleteReplica(ctx, parsePKC(req.PKC))
+	return &api.DeleteReplicasResponse{}, s.DeleteReplica(ctx, ParsePKC(req.PKC))
 }
 
 func (s *ServerRPC) RetrieveReplica(ctx context.Context, ccr *api.ChannelChunkReplica, pk model.PK) error {
@@ -76,7 +76,7 @@ func (s *ServerRPC) DeleteReplica(ctx context.Context, pkc model.PKChain) error 
 	return s.qa.NewDelete().Model(&models.ChannelChunkReplica{}).WherePKs(pkc.Raw()).Exec(ctx)
 }
 
-func parsePKC(strPKC []string) model.PKChain {
+func ParsePKC(strPKC []string) model.PKChain {
 	PKC := model.NewPKChain([]uuid.UUID{})
 	for _, strPK := range strPKC {
 		pk, err := model.NewPK(uuid.New()).NewFromString(strPK)

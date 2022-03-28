@@ -1,19 +1,22 @@
 package chanstream
 
 import (
+	"context"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
-	"github.com/arya-analytics/aryacore/pkg/util/telem"
 )
 
 type Service struct {
 	qExec query.Execute
-	rel   *relay
+	delta *delta
 }
 
 func NewService(qExec query.Execute) *Service {
-	rel := newRelay(telem.DataRate(100), qExec)
-	go rel.start()
-	return &Service{qExec: qExec, rel: rel}
+	d := &delta{
+		inlet:     &deltaInlet{ctx: context.Background(), qExec: qExec},
+		addOutlet: make(chan deltaOutlet, 1),
+	}
+	go d.start()
+	return &Service{qExec: qExec, delta: d}
 }
 
 func (s *Service) NewStreamCreate() *StreamCreate {
@@ -21,5 +24,5 @@ func (s *Service) NewStreamCreate() *StreamCreate {
 }
 
 func (s *Service) NewStreamRetrieve() *StreamRetrieve {
-	return newStreamRetrieve(s.rel)
+	return newStreamRetrieve(s.delta)
 }

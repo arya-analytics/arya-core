@@ -99,12 +99,13 @@ func (r *RemoteRPC) create(ctx context.Context, p *query.Pack) error {
 }
 
 func (r *RemoteRPC) retrieve(ctx context.Context, p *query.Pack) error {
-	goe, nodes := goExecOpt(p), nodeOpt(p)
+	goe, nodes, pkc := goExecOpt(p), nodeOpt(p), pkOpt(p)
 	for _, n := range nodes {
 		stream, err := r.retrieveRetrieveStream(ctx, n)
 		if err != nil {
 			return err
 		}
+		stream.Send(&api.RetrieveRequest{PKC: pkc.Strings()})
 		go func() {
 			for {
 				res, sErr := stream.Recv()
