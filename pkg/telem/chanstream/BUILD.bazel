@@ -1,19 +1,45 @@
-load("@io_bazel_rules_go//go:def.bzl", "go_library")
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
     name = "chanstream",
     srcs = [
+        "delta.go",
         "observe.go",
-        "relay.go",
         "service.go",
+        "stream_create.go",
+        "stream_retrieve.go",
     ],
     importpath = "github.com/arya-analytics/aryacore/pkg/telem/chanstream",
     visibility = ["//visibility:public"],
     deps = [
         "//pkg/models",
         "//pkg/util/model",
-        "//pkg/util/model/filter",
         "//pkg/util/query",
+        "//pkg/util/query/tsquery",
+    ],
+)
+
+go_test(
+    name = "chanstream_test",
+    srcs = [
+        "chanstream_suite_test.go",
+        "stream_create_test.go",
+        "stream_retrieve_test.go",
+    ],
+    deps = [
+        ":chanstream",
+        "//pkg/cluster",
+        "//pkg/cluster/chanstream",
+        "//pkg/cluster/chanstream/mock",
+        "//pkg/cluster/mock",
+        "//pkg/models",
+        "//pkg/util/model",
+        "//pkg/util/query/mock",
         "//pkg/util/telem",
+        "@com_github_google_uuid//:uuid",
+        "@com_github_onsi_ginkgo_v2//:ginkgo",
+        "@com_github_onsi_gomega//:gomega",
+        "@com_github_sirupsen_logrus//:logrus",
+        "@org_golang_google_grpc//:grpc",
     ],
 )

@@ -19,7 +19,6 @@ go_library(
         "@com_github_go_redis_redis_v8//:redis",
         "@com_github_minio_minio_go_v7//:minio-go",
         "@com_github_minio_minio_go_v7//pkg/credentials",
-        "@com_github_sirupsen_logrus//:logrus",
         "@com_github_uptrace_bun//:bun",
         "@com_github_uptrace_bun_dialect_pgdialect//:pgdialect",
         "@com_github_uptrace_bun_extra_bundebug//:bundebug",

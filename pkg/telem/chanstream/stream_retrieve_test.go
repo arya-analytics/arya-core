@@ -106,7 +106,7 @@ var _ = Describe("StreamRetrieve", func() {
 		}
 		Expect(len(resSamples)).To(BeNumerically(">", 7))
 	})
-	FIt("Should serve multiple concurrent streams correctly", func() {
+	It("Should serve multiple concurrent streams correctly", func() {
 		pkc := model.NewPKChain([]uuid.UUID{ccOne.ID})
 		pkc2 := model.NewPKChain([]uuid.UUID{ccTwo.ID})
 		stream := svc.NewStreamRetrieve().WherePKC(pkc)
