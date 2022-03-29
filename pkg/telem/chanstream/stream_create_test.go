@@ -55,7 +55,7 @@ var _ = Describe("StreamCreate", func() {
 			Expect(persist.NewDelete().Model(m).WherePK(model.NewReflect(m).PK()).Exec(ctx)).To(BeNil())
 		}
 	})
-	It("Should create a Stream of samples correctly", func() {
+	It("Should create a stream of samples correctly", func() {
 		stream := svc.NewStreamCreate()
 		stream.Start(ctx)
 		go func() {

@@ -74,7 +74,7 @@ var _ = Describe("Delta", func() {
 			Expect(oTwo.data).To(HaveLen(20))
 		})
 	})
-	Describe("Streaming Errors", func() {
+	Describe("Streaming errors", func() {
 		It("Should stream errors correctly", func() {
 			inlet := &DeltaInletTest{
 				data: make(chan int),

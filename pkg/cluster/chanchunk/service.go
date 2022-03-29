@@ -158,9 +158,9 @@ func (s *Service) update(ctx context.Context, p *query.Pack) error {
 
 // |||| ROUTING ||||
 
-func replicaNodeIsHostSwitch(mRfl *model.Reflect, localF, remoteF func(m *model.Reflect) error) error {
+func replicaNodeIsHostSwitch(m *model.Reflect, localF, remoteF func(m *model.Reflect) error) error {
 	c := errutil.NewCatchSimple()
-	route.ModelSwitchBoolean(mRfl,
+	route.ModelSwitchBoolean(m,
 		ccrFieldNodeIsHost,
 		func(m *model.Reflect) { c.Exec(func() error { return localF(m) }) },
 		func(m *model.Reflect) { c.Exec(func() error { return remoteF(m) }) },
