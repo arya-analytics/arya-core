@@ -12,7 +12,6 @@ import (
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"net"
 	"strconv"
@@ -48,17 +47,17 @@ var _ = Describe("StreamRetrieve", func() {
 		port, pErr := strconv.Atoi(strings.Split(lis.Addr().String(), ":")[1])
 		Expect(pErr).To(BeNil())
 		nodeTwo.RPCPort = port
-
 		pool := clustermock.NewNodeRPCPool()
 		ds := querymock.NewDataSourceMem()
 		persist = &chanstreammock.Persist{DataSourceMem: ds}
+		svc = chanstream.NewService(clust.Exec)
 		server := clusterchanstream.NewServerRPC(persist.Exec)
-		grpcServer = grpc.NewServer()
-		server.BindTo(grpcServer)
+
 		cSvc := clusterchanstream.NewService(persist.Exec, clusterchanstream.NewRemoteRPC(pool))
 		clust.BindService(cSvc)
 		clust.BindService(&clustermock.Persist{DataSourceMem: ds})
-		svc = chanstream.NewService(clust.Exec)
+		grpcServer = grpc.NewServer()
+		server.BindTo(grpcServer)
 		samples = []*models.ChannelSample{}
 		for i := 0; i < sampleCount; i++ {
 			samples = append(samples, &models.ChannelSample{
@@ -95,6 +94,10 @@ var _ = Describe("StreamRetrieve", func() {
 		c := stream.Start(ctx)
 		var resSamples []*models.ChannelSample
 		t := time.NewTimer(100 * time.Millisecond)
+		go func() {
+			defer GinkgoRecover()
+			Expect(<-stream.Errors()).To(BeNil())
+		}()
 	o:
 		for {
 			select {
@@ -130,7 +133,6 @@ var _ = Describe("StreamRetrieve", func() {
 				break o
 			}
 		}
-		log.Info(len(resSamples), len(resSamples2))
 		Expect(len(resSamples)).To(BeNumerically(">", 8))
 		Expect(len(resSamples2)).To(BeNumerically(">", 8))
 	})

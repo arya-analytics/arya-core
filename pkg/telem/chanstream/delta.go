@@ -18,6 +18,7 @@ func (o deltaOutlet) Send(sample *models.ChannelSample) {
 	if o.pkc.Contains(sample.ChannelConfigID) {
 		select {
 		case o.s <- sample:
+		default:
 		}
 	}
 }
@@ -25,6 +26,7 @@ func (o deltaOutlet) Send(sample *models.ChannelSample) {
 func (o deltaOutlet) SendError(err error) {
 	select {
 	case o.errors <- err:
+	default:
 	}
 }
 
