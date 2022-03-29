@@ -100,7 +100,7 @@ var _ = Describe("Service", func() {
 			BeforeEach(func() {
 				nodeOne.IsHost = true
 			})
-			It("Should tsCreate a stream of samples correctly", func() {
+			It("Should create a stream of samples correctly", func() {
 				c := make(chan *models.ChannelSample)
 				sRfl := model.NewReflect(&c)
 				ge := tsquery.NewCreate().Model(sRfl).BindExec(clust.Exec).GoExec(ctx)
@@ -149,7 +149,7 @@ var _ = Describe("Service", func() {
 			BeforeEach(func() {
 				nodeOne.IsHost = true
 			})
-			It("Should tsRetrieve a stream of samples correctly", func() {
+			It("Should retrieve a stream of samples correctly", func() {
 				c := make(chan *models.ChannelSample)
 				sRfl := model.NewReflect(&c)
 				ge := tsquery.NewRetrieve().Model(sRfl).WherePK(channelConfig.ID).BindExec(clust.Exec).GoExec(ctx)
@@ -169,7 +169,7 @@ var _ = Describe("Service", func() {
 				}
 				Expect(len(resSamples)).To(BeNumerically(">", 8))
 			})
-			It("Should tsRetrieve a stream of samples form multi channels correctly", func() {
+			It("Should retrieve a stream of samples form multi channels correctly", func() {
 				ccTwo := &models.ChannelConfig{ID: uuid.New(), NodeID: 1}
 				Expect(persist.NewCreate().Model(ccTwo).Exec(ctx))
 				c := make(chan *models.ChannelSample, 2)
@@ -190,6 +190,31 @@ var _ = Describe("Service", func() {
 					}
 				}
 				Expect(len(resSamples)).To(BeNumerically(">", 16))
+			})
+		})
+		Context("Node Is Remote", func() {
+			BeforeEach(func() {
+				nodeOne.IsHost = false
+			})
+			It("Should retrieve a stream of samples correctly", func() {
+				c := make(chan *models.ChannelSample)
+				sRfl := model.NewReflect(&c)
+				ge := tsquery.NewRetrieve().Model(sRfl).WherePK(channelConfig.ID).BindExec(clust.Exec).GoExec(ctx)
+				go func() {
+					panic(<-ge.Errors)
+				}()
+				var resSamples []*models.ChannelSample
+				t := time.NewTimer(100 * time.Millisecond)
+			o:
+				for {
+					select {
+					case s := <-c:
+						resSamples = append(resSamples, s)
+					case <-t.C:
+						break o
+					}
+				}
+				Expect(len(resSamples)).To(BeNumerically(">", 8))
 			})
 		})
 	})
