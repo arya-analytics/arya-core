@@ -15,11 +15,14 @@ go_library(
 go_test(
     name = "route_test",
     srcs = [
+        "batch_test.go",
         "delta_test.go",
         "route_suite_test.go",
     ],
     deps = [
         ":route",
+        "//pkg/util/model",
+        "//pkg/util/model/mock",
         "@com_github_onsi_ginkgo_v2//:ginkgo",
         "@com_github_onsi_gomega//:gomega",
     ],
