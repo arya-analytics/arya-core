@@ -1,6 +1,6 @@
 import { motion, SVGMotionProps } from "framer-motion";
 import React from "react";
-import { useThemeContext } from "../Theme/Theme";
+import { useThemeContext } from "../../Theme/Theme";
 
 // |||| BASE ||||
 

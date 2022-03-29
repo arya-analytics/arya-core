@@ -70,6 +70,9 @@ const baseTheme: ThemeOptions = {
       main: "#3774D0",
     },
   },
+  shape: {
+    borderRadius: 2,
+  },
   components: {
     MuiTabs: {
       defaultProps: {

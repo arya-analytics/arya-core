@@ -1,8 +1,8 @@
 import React from "react";
 import { Node, NodePin } from "./Node";
 import { NoiseAwareOutlined } from "@mui/icons-material";
-import { Page, PageHeading } from "../Page/Page";
-import { Canvas } from "../Canvas/Canvas";
+import { Page, PageHeading } from "../../Pages/Page";
+import { Canvas, polygonItemAligner } from "../../Canvas/Canvas";
 
 interface NodeMapProps {
   onSelect?: (node: Node) => void;
@@ -16,7 +16,7 @@ export const NodeMap = ({ nodes, onSelect }: NodeMapProps) => {
         Node Map
       </PageHeading>
       <Page direction="row">
-        <Canvas>
+        <Canvas itemAligner={polygonItemAligner}>
           {nodes.map((node) => {
             return <NodePin node={node} onClick={onSelect} />;
           })}

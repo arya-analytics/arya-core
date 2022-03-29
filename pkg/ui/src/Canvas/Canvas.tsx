@@ -1,5 +1,11 @@
 import { motion, PanInfo } from "framer-motion";
-import React, { cloneElement, useEffect, useMemo, useState } from "react";
+import React, {
+  cloneElement,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Box, Button, ButtonGroup } from "@mui/material";
 import {
   AddOutlined,
@@ -18,7 +24,20 @@ type ItemState = {
   y: number;
 };
 
-export const Canvas = ({ children }: React.PropsWithChildren<any>) => {
+type ItemAlignerProps = {
+  length: number;
+  i: number;
+};
+
+export interface CanvasProps extends React.PropsWithChildren<any> {
+  itemAligner: (props: ItemAlignerProps) => ItemState;
+}
+
+export const Canvas = ({
+  itemAligner,
+  children,
+}: React.PropsWithChildren<any>) => {
+  const svgRef = useRef<SVGSVGElement>(null);
   let arrayChildren = useMemo(
     () => React.Children.toArray(children),
     [children]
@@ -50,16 +69,23 @@ export const Canvas = ({ children }: React.PropsWithChildren<any>) => {
   };
 
   useEffect(() => {
-    console.log("useEffect");
-    if (arrayChildren.length < itemState.length) {
-      setItemState(itemState.slice(arrayChildren.length));
-    } else {
-      const newItems = arrayChildren
-        .slice(itemState.length)
-        .map((_, i) => ({ x: i * 400, y: i * 400 }));
-      setItemState((prevState) => [...prevState, ...newItems]);
+    svgRef.current?.getBoundingClientRect();
+    const { width, height } = svgRef.current?.getBoundingClientRect() || {
+      width: 0,
+      height: 0,
+    };
+    const dep = width > height ? height : width;
+    let newItems = arrayChildren.map((_, i) => ({ x: 0, y: 0 }));
+    if (itemAligner) {
+      newItems = newItems
+        .map((_, i) => itemAligner({ i: i, length: newItems.length }))
+        .map(({ x, y }) => ({
+          x: x * 0.25 * dep + 0.4 * width,
+          y: y * 0.25 * dep + 0.4 * height,
+        }));
     }
-  }, [arrayChildren]);
+    setItemState(newItems);
+  }, [arrayChildren, svgRef, itemAligner]);
 
   return (
     <Box
@@ -87,6 +113,7 @@ export const Canvas = ({ children }: React.PropsWithChildren<any>) => {
         </Button>
       </ButtonGroup>
       <motion.svg
+        ref={svgRef}
         height="100%"
         width="100%"
         onWheel={(e) => {
@@ -106,4 +133,15 @@ export const Canvas = ({ children }: React.PropsWithChildren<any>) => {
       </motion.svg>
     </Box>
   );
+};
+
+export const polygonItemAligner = ({
+  length,
+  i,
+}: ItemAlignerProps): ItemState => {
+  console.log(length, i);
+  return {
+    x: Math.cos((2 * Math.PI * i) / length),
+    y: Math.sin((2 * Math.PI * i) / length),
+  };
 };

@@ -1,15 +1,16 @@
-import { useThemeContext } from "./Theme/Theme";
 import { Box, Grid } from "@mui/material";
+import { Login } from "./Pages/Login/Login";
 import { Nav } from "./Nav/Nav";
-import { Pages } from "./Page/Pages";
+import { Pages } from "./Pages/Pages";
 
 function App() {
   return (
     <Box sx={{ flexGrow: 1, height: "100vh" }}>
-      <Grid container sx={{ height: "100%" }}>
-        <Nav />
-        <Pages />
-      </Grid>
+      <Login />
+      {/*<Grid container sx={{ height: "100%" }}>*/}
+      {/*  <Nav />*/}
+      {/*  <Pages />*/}
+      {/*</Grid>*/}
     </Box>
   );
 }

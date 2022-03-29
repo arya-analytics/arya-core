@@ -1,4 +1,4 @@
-import { Box, Divider, Typography } from "@mui/material";
+import { Box, Divider, Stack, Typography } from "@mui/material";
 
 import { motion } from "framer-motion";
 import { Node, NODE_METRIC_COLORS } from "../NodeMap/Node";
@@ -8,6 +8,7 @@ interface BarProgressProps {
   name: string;
   progress: number;
   fill: string;
+  width?: number | string;
 }
 
 const drawProgress = (progress: number) => {
@@ -21,13 +22,22 @@ const drawProgress = (progress: number) => {
   };
 };
 
-const BarProgress = ({ progress, fill, name }: BarProgressProps) => {
+export const BarProgress = ({
+  progress,
+  fill,
+  name,
+  width,
+}: BarProgressProps) => {
   return (
-    <>
+    <Stack
+      direction="row"
+      spacing={2}
+      sx={{ display: "flex", alignItems: "center" }}
+    >
       <Typography variant="subtitle2">{name}</Typography>
       <Box
         sx={{
-          width: "100%",
+          width,
           height: "10px",
           backgroundColor: "action.disabledBackground",
           margin: "5px 0",
@@ -44,7 +54,7 @@ const BarProgress = ({ progress, fill, name }: BarProgressProps) => {
           }}
         />
       </Box>
-    </>
+    </Stack>
   );
 };
 

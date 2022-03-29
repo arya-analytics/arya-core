@@ -44,7 +44,7 @@ export const PageHeading = ({ icon, variant, children }: PageHeadingProps) => {
 export interface PageProps extends PropsWithChildren<any> {
   xs?: number | "auto" | boolean;
   direction?: "row" | "column";
-  sx: SxProps;
+  sx?: SxProps;
 }
 
 export const Page = ({

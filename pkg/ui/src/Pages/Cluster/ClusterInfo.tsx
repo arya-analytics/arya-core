@@ -1,11 +1,11 @@
 import { Box, Tab, Tabs, Typography } from "@mui/material";
-import { NodeDetail } from "../NodeDetail/NodeDetail";
-import { Page, PageHeading } from "../Page/Page";
-import { Node } from "../NodeMap/Node";
-import { useState } from "react";
+import { NodeDetail } from "../../Node/NodeDetail/NodeDetail";
+import { Page, PageHeading } from "../Page";
+import { Node } from "../../Node/NodeMap/Node";
+import { PropsWithChildren, useState } from "react";
 import { Info, InfoOutlined, InfoSharp } from "@mui/icons-material";
 
-function TabPanel(props) {
+function TabPanel(props: PropsWithChildren<any>) {
   const { children, value, index, ...other } = props;
 
   return (

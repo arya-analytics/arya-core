@@ -6,8 +6,8 @@ import {
   MultiHexagonProgress,
 } from "./Hexagon";
 import React from "react";
-import { useThemeContext } from "../Theme/Theme";
-import { CanvasItemProps } from "../Canvas/Canvas";
+import { useThemeContext } from "../../Theme/Theme";
+import { CanvasItemProps } from "../../Canvas/Canvas";
 
 export interface NodeMetric {
   key: string;
