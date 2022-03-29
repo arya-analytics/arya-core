@@ -350,12 +350,9 @@ func (r *Reflect) PK() PK {
 // If the Reflect model object is a chain, returns all PK of the models in the chain.
 // If Reflect model object is a struct, returns a PKChain ith length 1 containing the
 // structs PK.
-func (r *Reflect) PKChain() PKChain {
+func (r *Reflect) PKChain() (pks PKChain) {
 	r.panicIfChan()
-	var pks PKChain
-	r.ForEach(func(rfl *Reflect, i int) {
-		pks = append(pks, rfl.PK())
-	})
+	r.ForEach(func(rfl *Reflect, i int) { pks = append(pks, rfl.PK()) })
 	return pks
 }
 
