@@ -186,7 +186,7 @@ var _ = Describe("ChunkData", func() {
 					cc := telem.NewChunk(telem.TimeStamp(0), telem.DataTypeFloat64, telem.DataRate(25000), cd)
 					ts := time.Now()
 					cc.AllValues()
-					Expect(time.Since(ts)).To(BeNumerically("<", 5*time.Millisecond))
+					Expect(time.Since(ts)).To(BeNumerically("<", 10*time.Millisecond))
 				})
 			})
 		})
