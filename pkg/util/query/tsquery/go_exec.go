@@ -7,7 +7,7 @@ type GoExecOpt struct {
 	Done   chan bool
 }
 
-func (g GoExecOpt) Release() {
+func (g GoExecOpt) Close() {
 	g.Done <- true
 }
 

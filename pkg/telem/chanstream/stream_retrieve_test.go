@@ -88,7 +88,7 @@ var _ = Describe("StreamRetrieve", func() {
 			Expect(persist.NewDelete().Model(m).WherePK(model.NewReflect(m).PK()).Exec(ctx)).To(BeNil())
 		}
 	})
-	It("Should retrieve a stream of samples correctly", func() {
+	It("Should retrieve a Stream of samples correctly", func() {
 		pkc := model.NewPKChain([]uuid.UUID{ccOne.ID})
 		stream := svc.NewStreamRetrieve().WherePKC(pkc)
 		c := stream.Start(ctx)
@@ -104,6 +104,7 @@ var _ = Describe("StreamRetrieve", func() {
 			case s := <-c:
 				resSamples = append(resSamples, s)
 			case <-t.C:
+				stream.Close()
 				break o
 			}
 		}
@@ -130,6 +131,8 @@ var _ = Describe("StreamRetrieve", func() {
 			case s := <-c2:
 				resSamples2 = append(resSamples2, s)
 			case <-t.C:
+				stream.Close()
+				stream2.Close()
 				break o
 			}
 		}

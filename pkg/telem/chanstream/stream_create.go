@@ -40,7 +40,7 @@ func (sc *StreamCreate) Send(sample *models.ChannelSample) {
 }
 
 func (sc *StreamCreate) Stop() {
-	sc.ge.Release()
+	sc.ge.Close()
 }
 
 func (sc *StreamCreate) Errors() chan error {

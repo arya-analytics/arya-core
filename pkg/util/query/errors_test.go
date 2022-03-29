@@ -10,7 +10,7 @@ import (
 )
 
 var _ = Describe("errChan", func() {
-	Describe("New Errors", func() {
+	Describe("New errors", func() {
 		Describe("NewSimpleError", func() {
 			It("Should return an error with the correct type", func() {
 				err := query.NewSimpleError(query.ErrorTypeConnection, nil)

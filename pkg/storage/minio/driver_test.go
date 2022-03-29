@@ -22,7 +22,7 @@ var _ = Describe("Driver", func() {
 			Expect(cfg.Endpoint).To(Equal("badep:9000"))
 		})
 	})
-	Describe("Connection Errors", func() {
+	Describe("Connection errors", func() {
 		It("Should return the correct query error", func() {
 			pool := storage.NewPool()
 			driver := &minio.DriverMinio{Config: minio.Config{}.Viper()}

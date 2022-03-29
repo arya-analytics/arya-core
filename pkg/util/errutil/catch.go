@@ -140,7 +140,7 @@ type CatchOpt func(o *catchOpts)
 // 		c := errutil.NewCatchSimple(errutil.WithAggregation())
 // 		c.Exec(myFunc1)  // Returns an error
 // 		c.Exec(myFunc2)
-// 		fmt.Println(c.Errors())
+// 		fmt.Println(c.errors())
 //
 // 	Output:
 // 		errors returned by myFunc1 and myFunc2
