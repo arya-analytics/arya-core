@@ -19,8 +19,8 @@ type StreamRetrieve struct {
 func newStreamRetrieve(delta *route.Delta[*models.ChannelSample, outletContext]) *StreamRetrieve {
 	return &StreamRetrieve{
 		delta:  delta,
-		stream: make(chan *models.ChannelSample, 1),
-		errors: make(chan error, 1),
+		stream: make(chan *models.ChannelSample),
+		errors: make(chan error, errorPipeCapacity),
 	}
 }
 
