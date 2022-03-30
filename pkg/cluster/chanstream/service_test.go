@@ -15,7 +15,6 @@ import (
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"net"
 	"strconv"
@@ -116,7 +115,6 @@ var _ = Describe("Service", func() {
 				var resSamples []*models.ChannelSample
 				Expect(persist.NewRetrieve().Model(&resSamples).Exec(ctx)).To(BeNil())
 				Expect(samples).To(HaveLen(sampleCount))
-				log.Info(stream.SegCount)
 			})
 		})
 		Context("Node Is Remote", func() {

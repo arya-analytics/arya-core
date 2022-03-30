@@ -85,20 +85,12 @@ func (d *Delta[V, C]) updateInlet() {
 
 func (d *Delta[V, C]) relay(v V) {
 	for outlet := range d.outlets {
-		select {
-		case outlet.Send() <- v:
-		default:
-		}
+		outlet.Send() <- v
 	}
 }
 
 func (d *Delta[V, C]) relayError(e error) {
 	for outlet := range d.outlets {
-		for {
-			select {
-			case outlet.SendError() <- e:
-			default:
-			}
-		}
+		outlet.SendError() <- e
 	}
 }

@@ -13,31 +13,46 @@ type DeltaInletTest struct {
 	err  chan error
 }
 
-func (d *DeltaInletTest) Stream() chan int {
+func (d *DeltaInletTest) Next() <-chan int {
 	return d.data
 }
 
-func (d *DeltaInletTest) Errors() chan error {
+func (d *DeltaInletTest) Errors() <-chan error {
 	return d.err
 }
 
 func (d *DeltaInletTest) Update(ctx route.DeltaContext[int, int]) {}
 
 type DeltaOutletTest struct {
+	errC chan error
+	valC chan int
 	data []int
 	err  []error
+}
+
+func (d *DeltaOutletTest) Start() {
+	go func() {
+		for err := range d.errC {
+			d.err = append(d.err, err)
+		}
+	}()
+	go func() {
+		for v := range d.valC {
+			d.data = append(d.data, v)
+		}
+	}()
 }
 
 func (d *DeltaOutletTest) Context() int {
 	return 0
 }
 
-func (d *DeltaOutletTest) Send(v int) {
-	d.data = append(d.data, v)
+func (d *DeltaOutletTest) Send() chan<- int {
+	return d.valC
 }
 
-func (d *DeltaOutletTest) SendError(err error) {
-	d.err = append(d.err, err)
+func (d *DeltaOutletTest) SendError() chan<- error {
+	return d.errC
 }
 
 var _ = Describe("Delta", func() {
@@ -62,12 +77,14 @@ var _ = Describe("Delta", func() {
 			}
 			delta := route.NewDelta[int, int](inlet)
 			go delta.Start()
-			oOne := &DeltaOutletTest{}
-			oTwo := &DeltaOutletTest{}
+			oOne := &DeltaOutletTest{errC: make(chan error), valC: make(chan int)}
+			oOne.Start()
+			oTwo := &DeltaOutletTest{errC: make(chan error), valC: make(chan int)}
+			oTwo.Start()
 			delta.AddOutlet(oOne)
 			delta.AddOutlet(oTwo)
 			for i := 0; i < 20; i++ {
-				inlet.Stream() <- i
+				inlet.data <- i
 			}
 			time.Sleep(1 * time.Millisecond)
 			Expect(oOne.data).To(HaveLen(20))
@@ -82,11 +99,14 @@ var _ = Describe("Delta", func() {
 			}
 			delta := route.NewDelta[int, int](inlet)
 			go delta.Start()
-			oOne := &DeltaOutletTest{}
-			oTwo := &DeltaOutletTest{}
+			oOne := &DeltaOutletTest{errC: make(chan error), valC: make(chan int)}
+			oOne.Start()
+			oTwo := &DeltaOutletTest{errC: make(chan error), valC: make(chan int)}
+			oTwo.Start()
 			delta.AddOutlet(oOne)
 			delta.AddOutlet(oTwo)
-			inlet.Errors() <- errors.New("Hello")
+			inlet.err <- errors.New("Hello")
+			time.Sleep(1 * time.Millisecond)
 			Expect(oOne.err).To(HaveLen(1))
 			Expect(oTwo.err).To(HaveLen(1))
 		})
@@ -99,13 +119,15 @@ var _ = Describe("Delta", func() {
 			}
 			delta := route.NewDelta[int, int](inlet)
 			go delta.Start()
-			oOne := &DeltaOutletTest{}
-			oTwo := &DeltaOutletTest{}
+			oOne := &DeltaOutletTest{errC: make(chan error), valC: make(chan int)}
+			oOne.Start()
+			oTwo := &DeltaOutletTest{errC: make(chan error), valC: make(chan int)}
+			oTwo.Start()
 			delta.AddOutlet(oOne)
 			delta.AddOutlet(oTwo)
 			delta.RemoveOutlet(oOne)
 			for i := 0; i < 20; i++ {
-				inlet.Stream() <- i
+				inlet.data <- i
 			}
 			time.Sleep(1 * time.Millisecond)
 			Expect(oOne.data).To(HaveLen(0))

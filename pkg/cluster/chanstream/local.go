@@ -138,7 +138,6 @@ func (lr *localRelay) filterDoneQueries() (newPS []*query.Pack) {
 		o, _ := streamq.StreamOpt(p)
 		select {
 		case <-o.Ctx.Done():
-			//log.Infof("relay: query %s done", p.String())
 		default:
 			newPS = append(newPS, p)
 		}
