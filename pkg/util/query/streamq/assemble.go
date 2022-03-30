@@ -1,4 +1,4 @@
-package tsquery
+package streamq
 
 import (
 	"context"
@@ -6,11 +6,11 @@ import (
 )
 
 type AssembleTSRetrieve interface {
-	NewTSRetrieve() *Retrieve
+	NewTSRetrieve() *TSRetrieve
 }
 
 type AssembleTSCreate interface {
-	NewTSCreate() *Create
+	NewTSCreate() *TSCreate
 }
 
 type AssembleTS interface {
@@ -31,10 +31,10 @@ func (a AssembleTSBase) Exec(ctx context.Context, p *query.Pack) error {
 	return a.e(ctx, p)
 }
 
-func (a AssembleTSBase) NewTSRetrieve() *Retrieve {
-	return NewRetrieve().BindExec(a.e)
+func (a AssembleTSBase) NewTSRetrieve() *TSRetrieve {
+	return NewTSRetrieve().BindExec(a.e)
 }
 
-func (a AssembleTSBase) NewTSCreate() *Create {
-	return NewCreate().BindExec(a.e)
+func (a AssembleTSBase) NewTSCreate() *TSCreate {
+	return NewTSCreate().BindExec(a.e)
 }

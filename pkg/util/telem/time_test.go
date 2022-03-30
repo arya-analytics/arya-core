@@ -76,7 +76,7 @@ var _ = Describe("Time", func() {
 						Expect(oTwoOverlap).To(BeFalse())
 					})
 				})
-				Describe("Start and end times are the same", func() {
+				Describe("Send and end times are the same", func() {
 					It("Should return no overlap", func() {
 						baseT := time.Now()
 						rngOne := telem.NewTimeRange(

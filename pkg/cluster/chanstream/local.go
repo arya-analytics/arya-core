@@ -6,9 +6,8 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/model/filter"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
-	"github.com/arya-analytics/aryacore/pkg/util/query/tsquery"
+	"github.com/arya-analytics/aryacore/pkg/util/query/streamq"
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
-	log "github.com/sirupsen/logrus"
 	"time"
 )
 
@@ -17,41 +16,40 @@ type LocalStorage struct {
 	qe    query.Execute
 }
 
-func (s *LocalStorage) exec(ctx context.Context, p *query.Pack) error {
+func (ls *LocalStorage) exec(ctx context.Context, p *query.Pack) error {
 	return query.Switch(ctx, p, query.Ops{
-		&tsquery.Create{}:   s.create,
-		&tsquery.Retrieve{}: s.retrieve,
-		&query.Create{}:     s.qe,
-		&query.Delete{}:     s.qe,
-		&query.Retrieve{}:   s.qe,
-		&query.Delete{}:     s.qe,
+		&streamq.TSCreate{}:   ls.create,
+		&streamq.TSRetrieve{}: ls.retrieve,
+		&query.Create{}:       ls.qe,
+		&query.Delete{}:       ls.qe,
+		&query.Retrieve{}:     ls.qe,
+		&query.Delete{}:       ls.qe,
 	})
 }
 
-func (s *LocalStorage) create(ctx context.Context, p *query.Pack) error {
-	goe, ok := tsquery.RetrieveGoExecOpt(p)
-	if !ok {
-		panic("chanstream queries must be run using goexec")
-	}
-	for {
-		sample, sampleOK := p.Model().ChanRecv()
-		if !sampleOK {
-			break
+func (ls *LocalStorage) create(ctx context.Context, p *query.Pack) error {
+	stream := stream(p)
+	stream.Segment(func() {
+		for {
+			sample, sampleOK := p.Model().ChanRecv()
+			if !sampleOK {
+				break
+			}
+			if err := streamq.NewTSCreate().Model(sample).BindExec(ls.qe).Exec(ctx); err != nil {
+				stream.Errors <- err
+			}
 		}
-		if err := tsquery.NewCreate().Model(sample).BindExec(s.qe).Exec(ctx); err != nil {
-			goe.Errors <- err
-		}
-	}
+	})
 	return nil
 }
 
-func (s *LocalStorage) retrieve(ctx context.Context, p *query.Pack) error {
-	_, ok := tsquery.RetrieveGoExecOpt(p)
+func (ls *LocalStorage) retrieve(ctx context.Context, p *query.Pack) error {
+	_, ok := streamq.StreamOpt(p)
 	if ok {
-		s.relay.add <- p
+		ls.relay.add <- p
 		return nil
 	}
-	return s.qe(ctx, p)
+	return ls.qe(ctx, p)
 }
 
 // |||| RELAY ||||
@@ -84,7 +82,7 @@ func (lr *localRelay) processAdd(p *query.Pack) {
 	if !ok {
 		panic("queries to local relay must use a primary key")
 	}
-	_, ok = tsquery.RetrieveGoExecOpt(p)
+	_, ok = streamq.StreamOpt(p)
 	if !ok {
 		panic("queries to local relay must use a Exec opt")
 	}
@@ -109,7 +107,7 @@ func (lr *localRelay) exec() {
 }
 
 func (lr *localRelay) retrieveSamples() (samples []*models.ChannelSample, err error) {
-	return samples, tsquery.NewRetrieve().Model(&samples).BindExec(lr.qe).WherePKs(lr.pkc()).Exec(lr.ctx)
+	return samples, streamq.NewTSRetrieve().Model(&samples).BindExec(lr.qe).WherePKs(lr.pkc()).Exec(lr.ctx)
 }
 
 func (lr *localRelay) relaySamples(samples []*models.ChannelSample) {
@@ -127,7 +125,7 @@ func relay(p *query.Pack, samples []*models.ChannelSample) {
 
 func (lr *localRelay) relayError(err error) {
 	for _, p := range lr.pc {
-		o, _ := tsquery.RetrieveGoExecOpt(p)
+		o, _ := streamq.StreamOpt(p)
 		select {
 		case o.Errors <- err:
 		default:
@@ -137,10 +135,10 @@ func (lr *localRelay) relayError(err error) {
 
 func (lr *localRelay) filterDoneQueries() (newPS []*query.Pack) {
 	for _, p := range lr.pc {
-		o, _ := tsquery.RetrieveGoExecOpt(p)
+		o, _ := streamq.StreamOpt(p)
 		select {
-		case <-o.Done:
-			log.Infof("relay: query %s done", p.String())
+		case <-o.Ctx.Done():
+			//log.Infof("relay: query %s done", p.String())
 		default:
 			newPS = append(newPS, p)
 		}

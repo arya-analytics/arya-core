@@ -5,7 +5,7 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/storage/internal"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
-	"github.com/arya-analytics/aryacore/pkg/util/query/tsquery"
+	"github.com/arya-analytics/aryacore/pkg/util/query/streamq"
 )
 
 // |||| ENGINE ||||
@@ -13,12 +13,12 @@ import (
 type Engine struct {
 	pool   *storage.Pool
 	driver Driver
-	tsquery.AssembleTS
+	streamq.AssembleTS
 }
 
 func New(driver Driver, pool *storage.Pool) *Engine {
 	e := &Engine{driver: driver, pool: pool}
-	e.AssembleTS = tsquery.NewAssemble(e.Exec)
+	e.AssembleTS = streamq.NewAssemble(e.Exec)
 	return e
 }
 
@@ -32,8 +32,8 @@ func (e *Engine) Exec(ctx context.Context, p *query.Pack) error {
 	}
 	c := client(a)
 	err = query.Switch(ctx, p, query.Ops{
-		&tsquery.Create{}:   newTSCreate(c).exec,
-		&tsquery.Retrieve{}: newTSRetrieve(c).exec,
+		&streamq.TSCreate{}:   newTSCreate(c).exec,
+		&streamq.TSRetrieve{}: newTSRetrieve(c).exec,
 	})
 	e.pool.Release(a)
 	return newErrorConvert().Exec(err)
@@ -50,9 +50,9 @@ func (e *Engine) IsAdapter(a internal.Adapter) bool {
 
 func (e *Engine) shouldHandle(p *query.Pack) bool {
 	switch p.Query().(type) {
-	case *tsquery.Retrieve:
+	case *streamq.TSRetrieve:
 		return true
-	case *tsquery.Create:
+	case *streamq.TSCreate:
 		return true
 	default:
 		return false

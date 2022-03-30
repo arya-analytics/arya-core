@@ -79,7 +79,7 @@ var _ = Describe("StreamRetrieve", func() {
 				stream.Send(c.Start(), c.ChunkData)
 			}
 		})
-		It("Should retrieve a stream of chunks within the correct time range", func() {
+		It("Should retrieve a streamq of chunks within the correct time range", func() {
 			tr := telem.NewTimeRange(telem.TimeStamp(0), telem.TimeStamp(0).Add(telem.NewTimeSpan(170*time.Second)))
 			stream, err := svc.NewStreamRetrieve().WhereConfigPK(config.ID).WhereTimeRange(tr).Exec(ctx)
 			Expect(err).To(BeNil())

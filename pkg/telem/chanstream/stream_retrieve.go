@@ -5,60 +5,66 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
-	"github.com/arya-analytics/aryacore/pkg/util/query/tsquery"
+	"github.com/arya-analytics/aryacore/pkg/util/query/streamq"
 	"github.com/arya-analytics/aryacore/pkg/util/route"
 )
 
-type StreamRetrieve struct {
-	delta  *route.Delta[*models.ChannelSample, outletContext]
-	stream chan *models.ChannelSample
-	errors chan error
-	pkc    model.PKChain
+type streamRetrieve struct {
+	delta *route.Delta[*models.ChannelSample, outletContext]
 }
 
-func newStreamRetrieve(delta *route.Delta[*models.ChannelSample, outletContext]) *StreamRetrieve {
-	return &StreamRetrieve{
-		delta:  delta,
-		stream: make(chan *models.ChannelSample),
-		errors: make(chan error, errorPipeCapacity),
+func newStreamRetrieve(delta *route.Delta[*models.ChannelSample, outletContext]) *streamRetrieve {
+	return &streamRetrieve{delta: delta}
+}
+
+func (sr *streamRetrieve) exec(ctx context.Context, p *query.Pack) error {
+	s := stream(p)
+	pkc, ok := query.PKOpt(p)
+	if !ok {
+		panic("no pk")
 	}
-}
-
-// || QUERY ||
-
-func (s *StreamRetrieve) Start(ctx context.Context) chan *models.ChannelSample {
-	s.delta.AddOutlet(s)
-	return s.stream
-}
-
-func (s *StreamRetrieve) WherePKC(pkc model.PKChain) *StreamRetrieve {
-	s.pkc = pkc
-	s.stream = make(chan *models.ChannelSample, len(s.pkc))
-	return s
-}
-
-func (s *StreamRetrieve) Close() {
-	s.delta.RemoveOutlet(s)
-	close(s.stream)
-	close(s.errors)
+	d := &deltaOutlet{qStream: s, pkc: pkc, valStream: make(chan *models.ChannelSample), model: p.Model()}
+	d.Start(ctx)
+	sr.delta.AddOutlet(d)
+	return nil
 }
 
 // || DELTA OUTLET IMPL ||
 
-func (s *StreamRetrieve) Errors() chan error {
-	return s.errors
+type deltaOutlet struct {
+	pkc       model.PKChain
+	model     *model.Reflect
+	qStream   *streamq.Stream
+	valStream chan *models.ChannelSample
 }
 
-func (s *StreamRetrieve) SendError(e error) {
-	s.errors <- e
+func (o *deltaOutlet) SendError() chan<- error {
+	return o.qStream.Errors
 }
 
-func (s *StreamRetrieve) Send(v *models.ChannelSample) {
-	s.stream <- v
+func (o *deltaOutlet) Send() chan<- *models.ChannelSample {
+	return o.valStream
 }
 
-func (s *StreamRetrieve) Context() outletContext {
-	return outletContext{pkc: s.pkc}
+func (o *deltaOutlet) Context() outletContext {
+	return outletContext{pkc: o.pkc}
+}
+
+func (o *deltaOutlet) Start(ctx context.Context) {
+	o.qStream.Segment(func() {
+		for v := range o.valStream {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				r := model.NewReflect(v)
+				if o.pkc.Contains(r.PK()) {
+					o.model.ChanSend(r)
+				}
+			}
+
+		}
+	})
 }
 
 type outletContext struct {
@@ -68,26 +74,48 @@ type outletContext struct {
 // |||| INLET ||||
 
 type deltaInlet struct {
-	ctx   context.Context
-	qExec query.Execute
-	s     chan *models.ChannelSample
-	goe   tsquery.GoExecOpt
+	cancel    context.CancelFunc
+	qExec     query.Execute
+	qStream   *streamq.Stream
+	valStream chan *models.ChannelSample
 }
 
-func (i *deltaInlet) Stream() chan *models.ChannelSample {
-	return i.s
+func (i *deltaInlet) Next() <-chan *models.ChannelSample {
+	return i.valStream
 }
 
-func (i *deltaInlet) Errors() chan error {
-	return i.goe.Errors
+func (i *deltaInlet) Errors() <-chan error {
+	return i.qStream.Errors
 }
 
 func (i *deltaInlet) Update(dCtx route.DeltaContext[*models.ChannelSample, outletContext]) {
-	var allPKC model.PKChain
-	for o := range dCtx.Outlets {
-		allPKC = append(allPKC, o.Context().pkc...)
+	pkc := parsePKC(dCtx)
+	i.valStream = make(chan *models.ChannelSample, len(pkc))
+	ctx, cancel := context.WithCancel(context.Background())
+	pQStream, err := streamq.NewTSRetrieve().Model(&i.valStream).BindExec(i.qExec).WherePKs(pkc).Stream(ctx)
+	if err != nil {
+		i.qStream.Errors <- err
+		cancel()
+		return
 	}
-	allPKC = allPKC.Unique()
-	i.s = make(chan *models.ChannelSample, len(allPKC))
-	i.goe = tsquery.NewRetrieve().Model(&i.s).BindExec(i.qExec).WherePKs(allPKC).GoExec(i.ctx)
+	if i.cancel != nil {
+		i.cancel()
+	}
+	i.cancel = cancel
+	i.qStream = pQStream
+}
+
+func parsePKC(dCtx route.DeltaContext[*models.ChannelSample, outletContext]) (pkc model.PKChain) {
+	for o := range dCtx.Outlets {
+		pkc = append(pkc, o.Context().pkc...)
+	}
+	return pkc.Unique()
+}
+
+func stream(p *query.Pack) *streamq.Stream {
+	s, ok := streamq.StreamOpt(p)
+	if !ok {
+		panic("qStream not found on query")
+	}
+	return s
 }

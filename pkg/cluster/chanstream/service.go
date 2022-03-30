@@ -1,12 +1,13 @@
 package chanstream
 
+import "C"
 import (
 	"context"
 	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/util/errutil"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
-	"github.com/arya-analytics/aryacore/pkg/util/query/tsquery"
+	"github.com/arya-analytics/aryacore/pkg/util/query/streamq"
 	"github.com/arya-analytics/aryacore/pkg/util/route"
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"reflect"
@@ -45,8 +46,8 @@ func (s *Service) CanHandle(p *query.Pack) bool {
 // Exec implements cluster.Service.
 func (s *Service) Exec(ctx context.Context, p *query.Pack) error {
 	return query.Switch(ctx, p, query.Ops{
-		&tsquery.Create{}:   s.tsCreate,
-		&tsquery.Retrieve{}: s.tsRetrieve,
+		&streamq.TSCreate{}:   s.tsCreate,
+		&streamq.TSRetrieve{}: s.tsRetrieve,
 	})
 }
 
@@ -65,40 +66,48 @@ func nodeFields() []string {
 
 func (s *Service) tsCreate(ctx context.Context, p *query.Pack) error {
 	var (
-		goe   = goExecOpt(p)
+		st    = stream(p)
 		rs    = make(chan *models.ChannelSample)
 		ls    = make(chan *models.ChannelSample)
 		rsRfl = model.NewReflect(&rs)
 		lsRfl = model.NewReflect(&ls)
 	)
 
-	le := tsquery.NewCreate().Model(lsRfl).BindExec(s.local.exec).GoExec(ctx)
-	re := tsquery.NewCreate().Model(rsRfl).BindExec(s.remote.exec).GoExec(ctx)
-	go errutil.NewDelta(goe.Errors, le.Errors, re.Errors).Exec()
-
-	for {
-		sample, sampleOk := p.Model().ChanRecv()
-		if !sampleOk {
-			break
-		}
-		pkc := sample.FieldsByName(csFieldCfgID).ToPKChain()
-		cc, err := s.retrieveConfigs(ctx, pkc)
-		if err != nil {
-			goe.Errors <- err
-			continue
-		}
-		sample.StructFieldByName(csFieldCfg).Set(reflect.ValueOf(cc[0]))
-		sampleNodeIsHostSwitchEach(sample, lsRfl.ChanSend, rsRfl.ChanSend)
+	_, err := streamq.NewTSCreate().Model(lsRfl).BindStream(st).BindExec(s.local.exec).Stream(ctx)
+	if err != nil {
+		return err
 	}
+	_, err = streamq.NewTSCreate().Model(rsRfl).BindStream(st).BindExec(s.remote.exec).Stream(ctx)
+	if err != nil {
+		return err
+	}
+
+	st.Segment(func() {
+		for {
+			sample, sampleOk := p.Model().ChanRecv()
+			if !sampleOk {
+				break
+			}
+			pkc := sample.FieldsByName(csFieldCfgID).ToPKChain()
+			cc, err := s.retrieveConfigs(ctx, pkc)
+			if err != nil {
+				st.Errors <- err
+				continue
+			}
+			sample.StructFieldByName(csFieldCfg).Set(reflect.ValueOf(cc[0]))
+			sampleNodeIsHostSwitchEach(sample, lsRfl.ChanSend, rsRfl.ChanSend)
+		}
+	})
+
 	return nil
 }
 
 func (s *Service) tsRetrieve(ctx context.Context, p *query.Pack) error {
 	var (
-		goe = goExecOpt(p)
+		goe = stream(p)
 		pkc = pkOpt(p)
-		le  = tsquery.GoExecOpt{Errors: make(chan error)}
-		re  = tsquery.GoExecOpt{Errors: make(chan error)}
+		le  = &streamq.Stream{Errors: make(chan error)}
+		re  = &streamq.Stream{Errors: make(chan error)}
 	)
 
 	cc, err := s.retrieveConfigs(ctx, pkc)
@@ -106,16 +115,27 @@ func (s *Service) tsRetrieve(ctx context.Context, p *query.Pack) error {
 		return err
 	}
 
+	c := errutil.NewCatchContext(ctx)
 	route.ModelSwitchBoolean(
 		model.NewReflect(&cc),
 		CfgFieldNodeIsHost,
-		func(m *model.Reflect) { le = retrieveSamplesQuery(p, m).BindExec(s.local.exec).GoExec(ctx) },
-		func(m *model.Reflect) { re = retrieveSamplesQuery(p, m).BindExec(s.remote.exec).GoExec(ctx) },
+		func(m *model.Reflect) {
+			c.Exec(func(ctx context.Context) (err error) {
+				le, err = retrieveSamplesQuery(p, m).BindExec(s.local.exec).Stream(ctx)
+				return err
+			})
+		},
+		func(m *model.Reflect) {
+			c.Exec(func(ctx context.Context) (err error) {
+				re, err = retrieveSamplesQuery(p, m).BindExec(s.remote.exec).Stream(ctx)
+				return err
+			})
+		},
 	)
 
 	errutil.NewDelta(goe.Errors, le.Errors, re.Errors).Exec()
 
-	return nil
+	return c.Error()
 }
 
 func (s *Service) retrieveConfigs(ctx context.Context, pkc model.PKChain) (cc []*models.ChannelConfig, err error) {
@@ -132,12 +152,12 @@ func (s *Service) retrieveConfigs(ctx context.Context, pkc model.PKChain) (cc []
 
 // || OPT ||
 
-func goExecOpt(p *query.Pack) tsquery.GoExecOpt {
-	goe, ok := tsquery.RetrieveGoExecOpt(p)
+func stream(p *query.Pack) *streamq.Stream {
+	stream, ok := streamq.StreamOpt(p)
 	if !ok {
 		panic("chanstream queries must be run using goexec")
 	}
-	return goe
+	return stream
 }
 
 func pkOpt(p *query.Pack) model.PKChain {
@@ -151,8 +171,8 @@ func pkOpt(p *query.Pack) model.PKChain {
 
 // || SAMPLES ||
 
-func retrieveSamplesQuery(p *query.Pack, m *model.Reflect) *tsquery.Retrieve {
-	q := tsquery.NewRetrieve().Model(p.Model()).WherePKs(m.PKChain())
+func retrieveSamplesQuery(p *query.Pack, m *model.Reflect) *streamq.TSRetrieve {
+	q := streamq.NewTSRetrieve().Model(p.Model()).WherePKs(m.PKChain())
 	newNodeOpt(
 		q.Pack(),
 		m.FieldsByName(cfgRelNode).ToReflect().RawValue().Interface().([]*models.Node),

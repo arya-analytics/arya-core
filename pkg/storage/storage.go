@@ -29,7 +29,7 @@ import (
 	"context"
 	"github.com/arya-analytics/aryacore/pkg/storage/internal"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
-	"github.com/arya-analytics/aryacore/pkg/util/query/tsquery"
+	"github.com/arya-analytics/aryacore/pkg/util/query/streamq"
 	"github.com/arya-analytics/aryacore/pkg/util/tasks"
 )
 
@@ -62,7 +62,7 @@ import (
 // see Engine and its sub-interfaces.
 type Storage interface {
 	query.Assemble
-	tsquery.AssembleTS
+	streamq.AssembleTS
 	AddQueryHook(hook QueryHook)
 	Start(ctx context.Context, opts ...tasks.ScheduleOpt) error
 	Stop()
@@ -71,7 +71,7 @@ type Storage interface {
 
 type storage struct {
 	query.AssembleBase
-	tsquery.AssembleTSBase
+	streamq.AssembleTSBase
 	cfg Config
 	ts  tasks.Schedule
 	qh  queryHookChain
@@ -90,7 +90,7 @@ type storage struct {
 func New(cfg Config) Storage {
 	s := &storage{cfg: cfg}
 	s.AssembleBase = query.NewAssemble(s.Exec)
-	s.AssembleTSBase = tsquery.NewAssemble(s.Exec)
+	s.AssembleTSBase = streamq.NewAssemble(s.Exec)
 	return s
 }
 

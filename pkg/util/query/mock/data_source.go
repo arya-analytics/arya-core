@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
-	"github.com/arya-analytics/aryacore/pkg/util/query/tsquery"
+	"github.com/arya-analytics/aryacore/pkg/util/query/streamq"
 	"reflect"
 	"strings"
 )
@@ -23,12 +23,12 @@ func NewDataSourceMem() *DataSourceMem {
 
 func (s *DataSourceMem) Exec(ctx context.Context, p *query.Pack) error {
 	return query.Switch(ctx, p, query.Ops{
-		&query.Create{}:     s.create,
-		&tsquery.Create{}:   s.create,
-		&query.Retrieve{}:   s.retrieve,
-		&tsquery.Retrieve{}: s.retrieve,
-		&query.Update{}:     s.update,
-		&query.Delete{}:     s.delete,
+		&query.Create{}:       s.create,
+		&streamq.TSCreate{}:   s.create,
+		&query.Retrieve{}:     s.retrieve,
+		&streamq.TSRetrieve{}: s.retrieve,
+		&query.Update{}:       s.update,
+		&query.Delete{}:       s.delete,
 	})
 }
 

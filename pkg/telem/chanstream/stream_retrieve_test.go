@@ -1,6 +1,7 @@
 package chanstream_test
 
 import (
+	"context"
 	"github.com/arya-analytics/aryacore/pkg/cluster"
 	clusterchanstream "github.com/arya-analytics/aryacore/pkg/cluster/chanstream"
 	chanstreammock "github.com/arya-analytics/aryacore/pkg/cluster/chanstream/mock"
@@ -21,7 +22,7 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/telem/chanstream"
 )
 
-var _ = Describe("StreamRetrieve", func() {
+var _ = Describe("streamRetrieve", func() {
 	var (
 		clust   cluster.Cluster
 		persist *chanstreammock.Persist
@@ -88,15 +89,21 @@ var _ = Describe("StreamRetrieve", func() {
 			Expect(persist.NewDelete().Model(m).WherePK(model.NewReflect(m).PK()).Exec(ctx)).To(BeNil())
 		}
 	})
-	It("Should retrieve a stream of samples correctly", func() {
+	It("Should retrieve a qStream of samples correctly", func() {
 		pkc := model.NewPKChain([]uuid.UUID{ccOne.ID})
-		stream := svc.NewStreamRetrieve().WherePKC(pkc)
-		c := stream.Start(ctx)
+		c := make(chan *models.ChannelSample)
+		aCtx, cancel := context.WithCancel(ctx)
+		stream, err := svc.
+			NewTSRetrieve().
+			Model(&c).
+			WherePKs(pkc).
+			Stream(aCtx)
+		Expect(err).To(BeNil())
 		var resSamples []*models.ChannelSample
 		t := time.NewTimer(100 * time.Millisecond)
 		go func() {
 			defer GinkgoRecover()
-			Expect(<-stream.Errors()).To(BeNil())
+			Expect(<-stream.Errors).To(BeNil())
 		}()
 	o:
 		for {
@@ -104,7 +111,7 @@ var _ = Describe("StreamRetrieve", func() {
 			case s := <-c:
 				resSamples = append(resSamples, s)
 			case <-t.C:
-				stream.Close()
+				cancel()
 				break o
 			}
 		}
@@ -113,10 +120,23 @@ var _ = Describe("StreamRetrieve", func() {
 	It("Should serve multiple concurrent streams correctly", func() {
 		pkc := model.NewPKChain([]uuid.UUID{ccOne.ID})
 		pkc2 := model.NewPKChain([]uuid.UUID{ccTwo.ID})
-		stream := svc.NewStreamRetrieve().WherePKC(pkc)
-		stream2 := svc.NewStreamRetrieve().WherePKC(pkc2)
-		c2 := stream2.Start(ctx)
-		c1 := stream.Start(ctx)
+		c1 := make(chan *models.ChannelSample)
+		c2 := make(chan *models.ChannelSample)
+		aCtx, cancel := context.WithCancel(ctx)
+		stream, err := svc.NewTSRetrieve().Model(&c1).WherePKs(pkc).Stream(aCtx)
+		Expect(err).To(BeNil())
+		stream2, err := svc.NewTSRetrieve().Model(&c2).WherePKs(pkc2).Stream(aCtx)
+		Expect(err).To(BeNil())
+
+		go func() {
+			defer GinkgoRecover()
+			var err error
+			select {
+			case err = <-stream.Errors:
+			case err = <-stream2.Errors:
+			}
+			Expect(err).To(BeNil())
+		}()
 
 		var (
 			resSamples  []*models.ChannelSample
@@ -131,12 +151,13 @@ var _ = Describe("StreamRetrieve", func() {
 			case s := <-c2:
 				resSamples2 = append(resSamples2, s)
 			case <-t.C:
-				stream.Close()
-				stream2.Close()
+				cancel()
 				break o
 			}
 		}
 		Expect(len(resSamples)).To(BeNumerically(">", 8))
+		Expect(len(resSamples)).To(BeNumerically("<", 12))
 		Expect(len(resSamples2)).To(BeNumerically(">", 8))
+		Expect(len(resSamples2)).To(BeNumerically("<", 12))
 	})
 })

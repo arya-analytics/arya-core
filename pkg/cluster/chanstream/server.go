@@ -6,7 +6,7 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/rpc"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
-	"github.com/arya-analytics/aryacore/pkg/util/query/tsquery"
+	"github.com/arya-analytics/aryacore/pkg/util/query/streamq"
 	"github.com/google/uuid"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
@@ -29,7 +29,10 @@ func (s *ServerRPC) BindTo(srv *grpc.Server) {
 func (s *ServerRPC) Create(stream api.ChannelStreamService_CreateServer) error {
 	ch := make(chan *models.ChannelSample)
 	rfl := model.NewReflect(&ch)
-	goe := tsquery.NewCreate().Model(rfl).BindExec(s.qe).GoExec(stream.Context())
+	goe, err := streamq.NewTSCreate().Model(rfl).BindExec(s.qe).Stream(stream.Context())
+	if err != nil {
+		return err
+	}
 	wg := errgroup.Group{}
 	wg.Go(func() error { return <-goe.Errors })
 	wg.Go(func() error {
@@ -49,39 +52,45 @@ func (s *ServerRPC) Create(stream api.ChannelStreamService_CreateServer) error {
 	return wg.Wait()
 }
 
-func (s *ServerRPC) Retrieve(stream api.ChannelStreamService_RetrieveServer) error {
+func (s *ServerRPC) Retrieve(rpcStream api.ChannelStreamService_RetrieveServer) error {
 	ch := make(chan *models.ChannelSample)
 	var (
-		wg  errgroup.Group
-		goe = tsquery.GoExecOpt{Errors: make(chan error, 1)}
+		wg      errgroup.Group
+		qStream = &streamq.Stream{Errors: make(chan error, 1)}
 	)
-	wg.Go(func() error { return <-goe.Errors })
+	wg.Go(func() error { return <-qStream.Errors })
 	wg.Go(func() error {
 		for {
-			req, err := stream.Recv()
+			req, err := rpcStream.Recv()
 			if err == io.EOF {
 				return nil
 			}
+			select {
+			case <-rpcStream.Context().Done():
+				return nil
+			default:
+			}
+
 			pkc, err := model.NewPK(uuid.UUID{}).NewChainFromStrings(req.PKC...)
 			if err != nil {
 				return err
 			}
 			ch = make(chan *models.ChannelSample, len(pkc))
-			goe = tsquery.
-				NewRetrieve().
+			if qStream, err = streamq.
+				NewTSRetrieve().
 				Model(&ch).
-				WherePKs(pkc).BindExec(s.qe).
-				GoExec(stream.Context())
+				WherePKs(pkc).BindExec(s.qe).Stream(rpcStream.Context()); err != nil {
+				return err
+			}
 			for s := range ch {
 				res := &api.RetrieveResponse{CCR: &api.ChannelSample{}}
 				exc := rpc.NewModelExchange(res.CCR, s)
 				exc.ToSource()
-				if err := stream.Send(res); err != nil {
+				if err := rpcStream.Send(res); err != nil {
 					return err
 				}
 			}
 		}
 	})
-	panic(wg.Wait())
 	return wg.Wait()
 }

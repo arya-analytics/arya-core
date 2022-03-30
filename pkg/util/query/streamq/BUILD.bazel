@@ -35,3 +35,39 @@ go_test(
         "@com_github_onsi_gomega//:gomega",
     ],
 )
+
+go_library(
+    name = "streamq",
+    srcs = [
+        "assemble.go",
+        "create.go",
+        "retrieve.go",
+        "stream.go",
+    ],
+    importpath = "github.com/arya-analytics/aryacore/pkg/util/query/streamq",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/util/query",
+        "//pkg/util/telem",
+    ],
+)
+
+go_test(
+    name = "streamq_test",
+    srcs = [
+        "assemble_test.go",
+        "create_test.go",
+        "retrieve_test.go",
+        "tsquery_suite_test.go",
+    ],
+    deps = [
+        ":streamq",
+        "//pkg/util/model",
+        "//pkg/util/model/mock",
+        "//pkg/util/query",
+        "//pkg/util/query/mock",
+        "//pkg/util/telem",
+        "@com_github_onsi_ginkgo_v2//:ginkgo",
+        "@com_github_onsi_gomega//:gomega",
+    ],
+)

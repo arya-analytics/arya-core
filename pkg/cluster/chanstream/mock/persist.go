@@ -6,7 +6,7 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/arya-analytics/aryacore/pkg/util/query/mock"
-	"github.com/arya-analytics/aryacore/pkg/util/query/tsquery"
+	"github.com/arya-analytics/aryacore/pkg/util/query/streamq"
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"github.com/google/uuid"
 	"math/rand"
@@ -20,13 +20,13 @@ type Persist struct {
 
 func (ps *Persist) Exec(ctx context.Context, p *query.Pack) error {
 	switch p.Query().(type) {
-	case *tsquery.Create:
+	case *streamq.TSCreate:
 		if p.Model().IsChan() {
 			return ps.tsChanCreate(ctx, p)
 		} else {
 			return ps.tsCreate(ctx, p)
 		}
-	case *tsquery.Retrieve:
+	case *streamq.TSRetrieve:
 		if p.Model().IsChan() {
 			return ps.tsChanRetrieve(ctx, p)
 		} else {
@@ -43,15 +43,18 @@ func (ps *Persist) tsCreate(ctx context.Context, p *query.Pack) error {
 }
 
 func (ps *Persist) tsChanCreate(ctx context.Context, p *query.Pack) error {
-	for {
-		rfl, ok := p.Model().ChanRecv()
-		if !ok {
-			break
+	goe, _ := streamq.StreamOpt(p)
+	go func() {
+		for {
+			rfl, ok := p.Model().ChanRecv()
+			if !ok {
+				break
+			}
+			if err := ps.NewCreate().Model(rfl).Exec(ctx); err != nil {
+				goe.Errors <- err
+			}
 		}
-		if err := ps.NewCreate().Model(rfl).Exec(ctx); err != nil {
-			return err
-		}
-	}
+	}()
 	return nil
 }
 
@@ -83,14 +86,16 @@ func (ps *Persist) tsChanRetrieve(ctx context.Context, p *query.Pack) error {
 	if !ok {
 		panic("query must have a pk specified")
 	}
-	for range t.C {
-		for _, pk := range pkOpt {
-			p.Model().ChanSend(model.NewReflect(&models.ChannelSample{
-				ChannelConfigID: pk.Raw().(uuid.UUID),
-				Timestamp:       telem.NewTimeStamp(time.Now()),
-				Value:           rand.Float64(),
-			}))
+	go func() {
+		for range t.C {
+			for _, pk := range pkOpt {
+				p.Model().ChanSend(model.NewReflect(&models.ChannelSample{
+					ChannelConfigID: pk.Raw().(uuid.UUID),
+					Timestamp:       telem.NewTimeStamp(time.Now()),
+					Value:           rand.Float64(),
+				}))
+			}
 		}
-	}
+	}()
 	return nil
 }

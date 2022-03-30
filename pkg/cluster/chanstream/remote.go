@@ -8,7 +8,7 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/rpc"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
-	"github.com/arya-analytics/aryacore/pkg/util/query/tsquery"
+	"github.com/arya-analytics/aryacore/pkg/util/query/streamq"
 	"io"
 )
 
@@ -40,8 +40,8 @@ func NewRemoteRPC(pool *cluster.NodeRPCPool) *RemoteRPC {
 
 func (r *RemoteRPC) exec(ctx context.Context, p *query.Pack) error {
 	return query.Switch(ctx, p, query.Ops{
-		&tsquery.Create{}:   r.create,
-		&tsquery.Retrieve{}: r.retrieve,
+		&streamq.TSCreate{}:   r.create,
+		&streamq.TSRetrieve{}: r.retrieve,
 	})
 }
 
@@ -78,28 +78,30 @@ func (r *RemoteRPC) retrieveRetrieveStream(ctx context.Context, node *models.Nod
 }
 
 func (r *RemoteRPC) create(ctx context.Context, p *query.Pack) error {
-	goe := goExecOpt(p)
-	for {
-		rfl, cOk := p.Model().ChanRecv()
-		if !cOk {
-			break
+	s := stream(p)
+	s.Segment(func() {
+		for {
+			rfl, cOk := p.Model().ChanRecv()
+			if !cOk {
+				break
+			}
+			stream, err := r.retrieveCreateStream(ctx, rfl.StructFieldByName(csFieldNode).Interface().(*models.Node))
+			if err != nil {
+				s.Errors <- err
+				break
+			}
+			exc := newExchange(rfl)
+			exc.ToDest()
+			if sErr := stream.Send(&api.CreateRequest{CCR: exc.Dest().Pointer().(*api.ChannelSample)}); sErr != nil {
+				s.Errors <- sErr
+			}
 		}
-		stream, err := r.retrieveCreateStream(ctx, rfl.StructFieldByName(csFieldNode).Interface().(*models.Node))
-		if err != nil {
-			goe.Errors <- err
-			break
-		}
-		exc := newExchange(rfl)
-		exc.ToDest()
-		if sErr := stream.Send(&api.CreateRequest{CCR: exc.Dest().Pointer().(*api.ChannelSample)}); sErr != nil {
-			goe.Errors <- sErr
-		}
-	}
+	})
 	return nil
 }
 
 func (r *RemoteRPC) retrieve(ctx context.Context, p *query.Pack) error {
-	goe, nodes, pkc := goExecOpt(p), nodeOpt(p), pkOpt(p)
+	goe, nodes, pkc := stream(p), nodeOpt(p), pkOpt(p)
 	for _, n := range nodes {
 		stream, err := r.retrieveRetrieveStream(ctx, n)
 		if err != nil {

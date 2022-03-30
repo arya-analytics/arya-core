@@ -6,7 +6,7 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/storage/redis/timeseries"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
-	"github.com/arya-analytics/aryacore/pkg/util/query/tsquery"
+	"github.com/arya-analytics/aryacore/pkg/util/query/streamq"
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"github.com/go-redis/redis/v8"
 )
@@ -99,7 +99,7 @@ func (tsr *tsRetrieve) pk(p *query.Pack) {
 // |||| TIME RANGE ||||
 
 func (tsr *tsRetrieve) timeRange(p *query.Pack) {
-	tr, _ := tsquery.TimeRangeOpt(p)
+	tr, _ := streamq.TimeRangeOpt(p)
 	tsr.tr = tr
 }
 

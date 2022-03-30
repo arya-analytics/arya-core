@@ -10,7 +10,7 @@ go_library(
         "//pkg/util/model",
         "//pkg/util/query",
         "//pkg/util/query/mock",
-        "//pkg/util/query/tsquery",
+        "//pkg/util/query/streamq",
         "//pkg/util/telem",
         "@com_github_google_uuid//:uuid",
     ],

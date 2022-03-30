@@ -2,7 +2,7 @@ package internal
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/util/query"
-	"github.com/arya-analytics/aryacore/pkg/util/query/tsquery"
+	"github.com/arya-analytics/aryacore/pkg/util/query/streamq"
 	"github.com/arya-analytics/aryacore/pkg/util/tasks"
 )
 
@@ -48,7 +48,7 @@ type EngineObject interface {
 // ephemeral data at high speeds.
 type EngineCache interface {
 	Engine
-	tsquery.AssembleTSCreate
-	tsquery.AssembleTSRetrieve
+	streamq.AssembleTSCreate
+	streamq.AssembleTSRetrieve
 	query.AssembleExec
 }

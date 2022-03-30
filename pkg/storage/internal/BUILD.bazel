@@ -11,7 +11,7 @@ go_library(
     visibility = ["//pkg/storage:__subpackages__"],
     deps = [
         "//pkg/util/query",
-        "//pkg/util/query/tsquery",
+        "//pkg/util/query/streamq",
         "//pkg/util/tasks",
     ],
 )

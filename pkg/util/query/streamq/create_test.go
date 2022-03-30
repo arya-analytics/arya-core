@@ -1,13 +1,13 @@
-package tsquery_test
+package streamq_test
 
 import (
 	. "github.com/onsi/ginkgo/v2"
 )
 
-var _ = Describe("Create", func() {
+var _ = Describe("TSCreate", func() {
 	var (
 	//exec = &mock.Exec{}
-	//asm  = tsquery.NewAssemble(exec.Exec)
+	//asm  = streamq.NewAssemble(exec.Exec)
 	)
 	Describe("Base", func() {})
 

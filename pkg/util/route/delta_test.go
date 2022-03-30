@@ -55,7 +55,7 @@ var _ = Describe("Delta", func() {
 		})
 	})
 	Describe("Streaming Data", func() {
-		It("Should stream data correctly", func() {
+		It("Should streamq data correctly", func() {
 			inlet := &DeltaInletTest{
 				data: make(chan int),
 				err:  make(chan error),
@@ -75,7 +75,7 @@ var _ = Describe("Delta", func() {
 		})
 	})
 	Describe("Streaming errors", func() {
-		It("Should stream errors correctly", func() {
+		It("Should streamq errors correctly", func() {
 			inlet := &DeltaInletTest{
 				data: make(chan int),
 				err:  make(chan error),

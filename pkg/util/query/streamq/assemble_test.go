@@ -1,4 +1,4 @@
-package tsquery_test
+package streamq_test
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	modelmock "github.com/arya-analytics/aryacore/pkg/util/model/mock"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/arya-analytics/aryacore/pkg/util/query/mock"
-	"github.com/arya-analytics/aryacore/pkg/util/query/tsquery"
+	"github.com/arya-analytics/aryacore/pkg/util/query/streamq"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -14,7 +14,7 @@ import (
 var _ = Describe("Assemble", func() {
 	var (
 		exec = &mock.Exec{}
-		asm  = tsquery.NewAssemble(exec.Exec)
+		asm  = streamq.NewAssemble(exec.Exec)
 	)
 	Describe("Common Query Functionality", func() {
 		DescribeTable("Model",
@@ -22,13 +22,13 @@ var _ = Describe("Assemble", func() {
 				p := q.Pack()
 				Expect(p.Model().Type()).To(Equal(model.NewReflect(&modelmock.ModelA{}).Type()))
 			},
-			Entry("Create", asm.NewTSCreate().Model(&modelmock.ModelA{})),
-			Entry("Retrieve", asm.NewTSRetrieve().Model(&modelmock.ModelA{})),
+			Entry("TSCreate", asm.NewTSCreate().Model(&modelmock.ModelA{})),
+			Entry("TSRetrieve", asm.NewTSRetrieve().Model(&modelmock.ModelA{})),
 		)
 	})
 	Describe("Exec", func() {
 		It("Should execute the query correctly", func() {
-			Expect(asm.Exec(context.Background(), tsquery.NewRetrieve().Pack()))
+			Expect(asm.Exec(context.Background(), streamq.NewTSRetrieve().Pack()))
 		})
 	})
 })

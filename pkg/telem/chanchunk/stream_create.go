@@ -49,7 +49,7 @@ func newStreamCreate(qExec query.Execute, obs observe, rngSvc *rng.Service) *Str
 	}
 }
 
-// Start starts stream. Start must be called before Send. Returns any errors encountered during stream start.
+// Start starts streamq. Start must be called before Send. Returns any errors encountered during streamq start.
 func (sc *StreamCreate) Start(ctx context.Context, configPk uuid.UUID) error {
 	sc.ctx = ctx
 	sc.configPK = configPk
@@ -66,14 +66,14 @@ func (sc *StreamCreate) Send(start telem.TimeStamp, data *telem.ChunkData) {
 	sc.stream <- streamCreateArgs{start: start, data: data}
 }
 
-// Close safely closes the stream.
+// Close safely closes the streamq.
 func (sc *StreamCreate) Close() {
 	close(sc.stream)
 	<-sc.done
 	close(sc.errors)
 }
 
-// Errors returns errors encountered during stream operation.
+// Errors returns errors encountered during streamq operation.
 func (sc *StreamCreate) Errors() chan error {
 	return sc.errors
 }
@@ -210,7 +210,7 @@ func validateStart() *validate.Validate[validateStartContext] {
 func validateConfigState(sCtx validateStartContext) error {
 	oc, _ := sCtx.obs.Retrieve(sCtx.cfg.ID)
 	if sCtx.cfg.Status == models.ChannelStatusActive || oc.Status == models.ChannelStatusActive {
-		return errors.New("open a second stream to an active channel")
+		return errors.New("open a second streamq to an active channel")
 	}
 	return nil
 }

@@ -1,4 +1,4 @@
-package tsquery
+package streamq
 
 import (
 	"context"
@@ -6,53 +6,56 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
 )
 
-type Retrieve struct {
+type TSRetrieve struct {
 	query.Retrieve
 }
 
-func NewRetrieve() *Retrieve {
-	r := &Retrieve{}
+func NewTSRetrieve() *TSRetrieve {
+	r := &TSRetrieve{}
 	r.Base.Init(r)
 	return r
 }
 
-func (r *Retrieve) Model(m interface{}) *Retrieve {
+func (r *TSRetrieve) Model(m interface{}) *TSRetrieve {
 	r.Base.Model(m)
 	return r
 }
 
-func (r *Retrieve) WherePKs(pks interface{}) *Retrieve {
+func (r *TSRetrieve) WherePKs(pks interface{}) *TSRetrieve {
 	r.Retrieve.WherePKs(pks)
 	return r
 }
 
-func (r *Retrieve) WherePK(pk interface{}) *Retrieve {
+func (r *TSRetrieve) WherePK(pk interface{}) *TSRetrieve {
 	r.Retrieve.WherePK(pk)
 	return r
 }
 
-func (r *Retrieve) AllTime() *Retrieve {
+func (r *TSRetrieve) AllTime() *TSRetrieve {
 	return r.WhereTimeRange(telem.AllTime())
 }
 
-func (r *Retrieve) WhereTimeRange(tr telem.TimeRange) *Retrieve {
+func (r *TSRetrieve) WhereTimeRange(tr telem.TimeRange) *TSRetrieve {
 	NewTimeRangeOpt(r.Pack(), tr)
 	return r
 }
 
-func (r *Retrieve) BindExec(exec query.Execute) *Retrieve {
+func (r *TSRetrieve) BindExec(exec query.Execute) *TSRetrieve {
 	r.Base.BindExec(exec)
 	return r
 }
 
-func (r *Retrieve) GoExec(ctx context.Context) GoExecOpt {
-	o := NewGoExecOpt(r.Pack())
-	go func() {
-		if err := r.Exec(ctx); err != nil {
-			o.Errors <- err
-		}
-	}()
-	return o
+func (r *TSRetrieve) BindStream(stream *Stream) *TSRetrieve {
+	BindStreamOpt(r.Pack(), stream)
+	return r
+}
+
+func (r *TSRetrieve) Stream(ctx context.Context) (*Stream, error) {
+	o, ok := StreamOpt(r.Pack())
+	if !ok {
+		o = NewStreamOpt(ctx, r.Pack())
+	}
+	return o, r.Exec(ctx)
 }
 
 const timeRangeOptKey query.OptKey = "tsRange"

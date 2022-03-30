@@ -10,11 +10,12 @@ import (
 	modelMock "github.com/arya-analytics/aryacore/pkg/util/model/mock"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
 	querymock "github.com/arya-analytics/aryacore/pkg/util/query/mock"
-	"github.com/arya-analytics/aryacore/pkg/util/query/tsquery"
+	"github.com/arya-analytics/aryacore/pkg/util/query/streamq"
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"net"
 	"strconv"
@@ -95,17 +96,18 @@ var _ = Describe("Service", func() {
 			})
 		}
 	})
-	Describe("Create", func() {
+	Describe("TSCreate", func() {
 		Context("Node Is Local", func() {
 			BeforeEach(func() {
 				nodeOne.IsHost = true
 			})
-			It("Should create a stream of samples correctly", func() {
+			It("Should create a streamq of samples correctly", func() {
 				c := make(chan *models.ChannelSample)
 				sRfl := model.NewReflect(&c)
-				ge := tsquery.NewCreate().Model(sRfl).BindExec(clust.Exec).GoExec(ctx)
+				stream, err := streamq.NewTSCreate().Model(sRfl).BindExec(clust.Exec).Stream(ctx)
+				Expect(err).To(BeNil())
 				go func() {
-					panic(<-ge.Errors)
+					panic(<-stream.Errors)
 				}()
 				for _, s := range samples {
 					c <- s
@@ -114,25 +116,27 @@ var _ = Describe("Service", func() {
 				var resSamples []*models.ChannelSample
 				Expect(persist.NewRetrieve().Model(&resSamples).Exec(ctx)).To(BeNil())
 				Expect(samples).To(HaveLen(sampleCount))
+				log.Info(stream.SegCount)
 			})
 		})
 		Context("Node Is Remote", func() {
 			BeforeEach(func() {
 				nodeOne.IsHost = false
 			})
-			It("Should create a stream of samples correctly", func() {
+			It("Should create a streamq of samples correctly", func() {
 				c := make(chan *models.ChannelSample)
 				sRfl := model.NewReflect(&c)
 				errors := make(chan error)
 				go func() {
 					panic(<-errors)
 				}()
-				ge := tsquery.NewCreate().Model(sRfl).BindExec(clust.Exec).GoExec(ctx)
+				stream, err := streamq.NewTSCreate().Model(sRfl).BindExec(clust.Exec).Stream(ctx)
+				Expect(err).To(BeNil())
 				for _, s := range samples {
 					c <- s
 				}
 				go func() {
-					panic(<-ge.Errors)
+					panic(<-stream.Errors)
 				}()
 				time.Sleep(20 * time.Millisecond)
 				var resSamples []*models.ChannelSample
@@ -141,7 +145,7 @@ var _ = Describe("Service", func() {
 			})
 		})
 	})
-	Describe("Retrieve", func() {
+	Describe("TSRetrieve", func() {
 		BeforeEach(func() {
 			Expect(persist.NewCreate().Model(&samples).Exec(ctx)).To(BeNil())
 		})
@@ -149,12 +153,13 @@ var _ = Describe("Service", func() {
 			BeforeEach(func() {
 				nodeOne.IsHost = true
 			})
-			It("Should retrieve a stream of samples correctly", func() {
+			It("Should retrieve a streamq of samples correctly", func() {
 				c := make(chan *models.ChannelSample)
 				sRfl := model.NewReflect(&c)
-				ge := tsquery.NewRetrieve().Model(sRfl).WherePK(channelConfig.ID).BindExec(clust.Exec).GoExec(ctx)
+				stream, err := streamq.NewTSRetrieve().Model(sRfl).WherePK(channelConfig.ID).BindExec(clust.Exec).Stream(ctx)
+				Expect(err).To(BeNil())
 				go func() {
-					panic(<-ge.Errors)
+					panic(<-stream.Errors)
 				}()
 				var resSamples []*models.ChannelSample
 				t := time.NewTimer(100 * time.Millisecond)
@@ -169,14 +174,20 @@ var _ = Describe("Service", func() {
 				}
 				Expect(len(resSamples)).To(BeNumerically(">", 8))
 			})
-			It("Should retrieve a stream of samples form multi channels correctly", func() {
+			It("Should retrieve a streamq of samples form multi channels correctly", func() {
 				ccTwo := &models.ChannelConfig{ID: uuid.New(), NodeID: 1}
 				Expect(persist.NewCreate().Model(ccTwo).Exec(ctx))
 				c := make(chan *models.ChannelSample, 2)
 				sRfl := model.NewReflect(&c)
-				ge := tsquery.NewRetrieve().Model(sRfl).WherePKs([]uuid.UUID{channelConfig.ID, ccTwo.ID}).BindExec(clust.Exec).GoExec(ctx)
+				stream, err := streamq.
+					NewTSRetrieve().
+					Model(sRfl).
+					WherePKs([]uuid.UUID{channelConfig.ID, ccTwo.ID}).
+					BindExec(clust.Exec).
+					Stream(ctx)
+				Expect(err).To(BeNil())
 				go func() {
-					panic(<-ge.Errors)
+					panic(<-stream.Errors)
 				}()
 				var resSamples []*models.ChannelSample
 				t := time.NewTimer(100 * time.Millisecond)
@@ -196,10 +207,11 @@ var _ = Describe("Service", func() {
 			BeforeEach(func() {
 				nodeOne.IsHost = false
 			})
-			It("Should retrieve a stream of samples correctly", func() {
+			It("Should retrieve a streamq of samples correctly", func() {
 				c := make(chan *models.ChannelSample)
 				sRfl := model.NewReflect(&c)
-				ge := tsquery.NewRetrieve().Model(sRfl).WherePK(channelConfig.ID).BindExec(clust.Exec).GoExec(ctx)
+				ge, err := streamq.NewTSRetrieve().Model(sRfl).WherePK(channelConfig.ID).BindExec(clust.Exec).Stream(ctx)
+				Expect(err).To(BeNil())
 				go func() {
 					panic(<-ge.Errors)
 				}()

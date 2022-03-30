@@ -13,7 +13,7 @@ go_library(
         "//pkg/models",
         "//pkg/util/model",
         "//pkg/util/query",
-        "//pkg/util/query/tsquery",
+        "//pkg/util/query/streamq",
         "//pkg/util/route",
     ],
 )

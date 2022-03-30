@@ -16,7 +16,7 @@ import (
 	"time"
 )
 
-var _ = Describe("StreamCreate", func() {
+var _ = Describe("streamCreate", func() {
 	var (
 		clust         cluster.Cluster
 		persist       *chanstreammock.Persist
@@ -55,14 +55,16 @@ var _ = Describe("StreamCreate", func() {
 			Expect(persist.NewDelete().Model(m).WherePK(model.NewReflect(m).PK()).Exec(ctx)).To(BeNil())
 		}
 	})
-	It("Should create a stream of samples correctly", func() {
-		stream := svc.NewStreamCreate()
-		stream.Start(ctx)
+	It("Should create a qStream of samples correctly", func() {
+		c := make(chan *models.ChannelSample)
+		stream, err := svc.NewTSCreate().Model(&c).Stream(ctx)
+		Expect(err).To(BeNil())
 		go func() {
-			panic(<-stream.Errors())
+			defer GinkgoRecover()
+			Expect(<-stream.Errors).To(BeNil())
 		}()
 		for _, s := range samples {
-			stream.Send(s)
+			c <- s
 		}
 		var resCC []*models.ChannelSample
 		Expect(persist.NewRetrieve().Model(&resCC).Exec(ctx)).To(BeNil())

@@ -1,4 +1,4 @@
-package tsquery_test
+package streamq_test
 
 import (
 	"testing"

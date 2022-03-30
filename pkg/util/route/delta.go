@@ -9,8 +9,8 @@ type DeltaContext[V, C any] struct {
 // |||| INLET ||||
 
 type DeltaInlet[V, C any] interface {
-	Stream() chan V
-	Errors() chan error
+	Next() <-chan V
+	Errors() <-chan error
 	Update(DeltaContext[V, C])
 }
 
@@ -18,8 +18,8 @@ type DeltaInlet[V, C any] interface {
 
 type DeltaOutlet[V, C any] interface {
 	Context() C
-	Send(v V)
-	SendError(err error)
+	Send() chan<- V
+	SendError() chan<- error
 }
 
 // |||| DELTA ||||
@@ -49,7 +49,7 @@ func (d *Delta[V, C]) Start() {
 			d.processRemoveOutlet(o)
 		case e := <-d.inlet.Errors():
 			d.relayError(e)
-		case v := <-d.inlet.Stream():
+		case v := <-d.inlet.Next():
 			d.relay(v)
 		}
 	}
@@ -85,12 +85,20 @@ func (d *Delta[V, C]) updateInlet() {
 
 func (d *Delta[V, C]) relay(v V) {
 	for outlet := range d.outlets {
-		outlet.Send(v)
+		select {
+		case outlet.Send() <- v:
+		default:
+		}
 	}
 }
 
 func (d *Delta[V, C]) relayError(e error) {
 	for outlet := range d.outlets {
-		outlet.SendError(e)
+		for {
+			select {
+			case outlet.SendError() <- e:
+			default:
+			}
+		}
 	}
 }
