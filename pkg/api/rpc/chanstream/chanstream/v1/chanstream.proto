@@ -2,9 +2,9 @@ syntax = "proto3";
 
 package chanstream.v1;
 
-service ChannelStreamService {
-  rpc Create(stream CreateRequest) returns (stream CreateResponse);
-  rpc Retrieve(stream RetrieveRequest) returns (stream RetrieveResponse);
+service ChanStreamService {
+  rpc Create(stream CreateRequest) returns (stream CreateResponse) {}
+  rpc Retrieve(stream RetrieveRequest) returns (stream RetrieveResponse) {}
 }
 
 // |||| MODEL ||||

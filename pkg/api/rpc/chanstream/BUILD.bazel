@@ -1,0 +1,32 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "chanstream",
+    srcs = ["server.go"],
+    importpath = "github.com/arya-analytics/aryacore/pkg/api/rpc/chanstream",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/cluster/gen/proto/go/chanstream/v1:chanstream",
+        "//pkg/models",
+        "//pkg/rpc",
+        "//pkg/telem/chanstream",
+        "//pkg/util/model",
+        "//pkg/util/query/streamq",
+        "@com_github_google_uuid//:uuid",
+        "@org_golang_google_grpc//:grpc",
+        "@org_golang_x_sync//errgroup",
+    ],
+)
+
+go_test(
+    name = "chanstream_test",
+    srcs = [
+        "chanstream_suite_test.go",
+        "server_test.go",
+    ],
+    deps = [
+        ":chanstream",
+        "@com_github_onsi_ginkgo_v2//:ginkgo",
+        "@com_github_onsi_gomega//:gomega",
+    ],
+)

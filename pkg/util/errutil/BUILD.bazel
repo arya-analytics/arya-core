@@ -5,7 +5,6 @@ go_library(
     srcs = [
         "catch.go",
         "convert.go",
-        "delta.go",
         "inspect.go",
     ],
     importpath = "github.com/arya-analytics/aryacore/pkg/util/errutil",
