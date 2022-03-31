@@ -98,9 +98,9 @@ var _ = Describe("Service", func() {
 	Describe("TSCreate", func() {
 		Context("Node Is Local", func() {
 			BeforeEach(func() {
-				nodeOne.IsHost = true
+				persist.AddQueryHook(clustermock.HostInterceptQueryHook(1))
 			})
-			It("Should create a streamq of samples correctly", func() {
+			It("Should create a stream of samples correctly", func() {
 				c := make(chan *models.ChannelSample)
 				sRfl := model.NewReflect(&c)
 				stream, err := streamq.NewTSCreate().Model(sRfl).BindExec(clust.Exec).Stream(ctx)
@@ -117,11 +117,12 @@ var _ = Describe("Service", func() {
 				Expect(samples).To(HaveLen(sampleCount))
 			})
 		})
+
 		Context("Node Is Remote", func() {
 			BeforeEach(func() {
-				nodeOne.IsHost = false
+				persist.AddQueryHook(clustermock.HostInterceptQueryHook(2))
 			})
-			It("Should create a streamq of samples correctly", func() {
+			It("Should create a stream of samples correctly", func() {
 				c := make(chan *models.ChannelSample)
 				sRfl := model.NewReflect(&c)
 				errors := make(chan error)
@@ -139,19 +140,20 @@ var _ = Describe("Service", func() {
 				time.Sleep(20 * time.Millisecond)
 				var resSamples []*models.ChannelSample
 				Expect(persist.NewRetrieve().Model(&resSamples).Exec(ctx)).To(BeNil())
-				Expect(samples).To(HaveLen(sampleCount))
+				Expect(resSamples).To(HaveLen(sampleCount))
 			})
 		})
 	})
+
 	Describe("TSRetrieve", func() {
 		BeforeEach(func() {
 			Expect(persist.NewCreate().Model(&samples).Exec(ctx)).To(BeNil())
 		})
 		Context("Node Is Local", func() {
 			BeforeEach(func() {
-				nodeOne.IsHost = true
+				persist.AddQueryHook(clustermock.HostInterceptQueryHook(1))
 			})
-			It("Should retrieve a streamq of samples correctly", func() {
+			It("Should retrieve a stream of samples correctly", func() {
 				c := make(chan *models.ChannelSample)
 				sRfl := model.NewReflect(&c)
 				stream, err := streamq.NewTSRetrieve().Model(sRfl).WherePK(channelConfig.ID).BindExec(clust.Exec).Stream(ctx)
@@ -203,9 +205,9 @@ var _ = Describe("Service", func() {
 		})
 		Context("Node Is Remote", func() {
 			BeforeEach(func() {
-				nodeOne.IsHost = false
+				persist.AddQueryHook(clustermock.HostInterceptQueryHook(2))
 			})
-			It("Should retrieve a streamq of samples correctly", func() {
+			It("Should retrieve a stream of samples correctly", func() {
 				c := make(chan *models.ChannelSample)
 				sRfl := model.NewReflect(&c)
 				ge, err := streamq.NewTSRetrieve().Model(sRfl).WherePK(channelConfig.ID).BindExec(clust.Exec).Stream(ctx)

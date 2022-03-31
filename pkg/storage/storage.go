@@ -63,7 +63,7 @@ import (
 type Storage interface {
 	query.Assemble
 	streamq.AssembleTS
-	AddQueryHook(hook QueryHook)
+	AddQueryHook(hook query.Hook)
 	Start(ctx context.Context, opts ...tasks.ScheduleOpt) error
 	Stop()
 	Errors() chan error
@@ -74,7 +74,7 @@ type storage struct {
 	streamq.AssembleTSBase
 	cfg Config
 	ts  tasks.Schedule
-	qh  queryHookChain
+	*query.HookRunner
 }
 
 // New creates a new Storage based on the provided Config.
@@ -88,7 +88,7 @@ type storage struct {
 // Storage cannot operate without Config.EngineMD,
 // as it relies on this engine to maintain consistency with other engines.
 func New(cfg Config) Storage {
-	s := &storage{cfg: cfg}
+	s := &storage{cfg: cfg, HookRunner: query.NewHookRunner()}
 	s.AssembleBase = query.NewAssemble(s.Exec)
 	s.AssembleTSBase = streamq.NewAssemble(s.Exec)
 	return s
@@ -97,11 +97,11 @@ func New(cfg Config) Storage {
 // Exec implements query.Execute
 func (s *storage) Exec(ctx context.Context, p *query.Pack) error {
 	qc := query.NewCatch(ctx, p)
-	qc.Exec(s.qh.before)
+	qc.Exec(s.Before)
 	qc.Exec(s.cfg.EngineMD.Exec)
 	qc.Exec(s.cfg.EngineObject.Exec)
 	qc.Exec(s.cfg.EngineCache.Exec)
-	qc.Exec(s.qh.after)
+	qc.Exec(s.After)
 	return qc.Error()
 }
 
@@ -126,10 +126,6 @@ func (s *storage) Stop() {
 
 func (s *storage) Errors() chan error {
 	return s.ts.Errors()
-}
-
-func (s *storage) AddQueryHook(hook QueryHook) {
-	s.qh = append(s.qh, hook)
 }
 
 // |||| CONFIG ||||

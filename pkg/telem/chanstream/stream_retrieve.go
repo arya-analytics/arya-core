@@ -89,6 +89,9 @@ func (i *deltaInlet) Errors() <-chan error {
 }
 
 func (i *deltaInlet) Update(dCtx route.DeltaContext[*models.ChannelSample, outletContext]) {
+	if i.cancel != nil {
+		i.cancel()
+	}
 	pkc := parsePKC(dCtx)
 	i.valStream = make(chan *models.ChannelSample, len(pkc))
 	ctx, cancel := context.WithCancel(context.Background())
@@ -97,9 +100,6 @@ func (i *deltaInlet) Update(dCtx route.DeltaContext[*models.ChannelSample, outle
 		i.qStream.Errors <- err
 		cancel()
 		return
-	}
-	if i.cancel != nil {
-		i.cancel()
 	}
 	i.cancel = cancel
 	i.qStream = pQStream

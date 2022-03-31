@@ -13,6 +13,7 @@ import (
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"net"
 	"strconv"
@@ -41,7 +42,6 @@ var _ = Describe("streamRetrieve", func() {
 	)
 	BeforeEach(func() {
 		clust = cluster.New()
-
 		var lisErr error
 		lis, lisErr = net.Listen("tcp", "localhost:0")
 		Expect(lisErr).To(BeNil())
@@ -155,6 +155,7 @@ var _ = Describe("streamRetrieve", func() {
 				break o
 			}
 		}
+		log.Info(model.NewReflect(&resSamples).PKChain().Unique())
 		Expect(len(resSamples)).To(BeNumerically(">", 8))
 		Expect(len(resSamples)).To(BeNumerically("<", 12))
 		Expect(len(resSamples2)).To(BeNumerically(">", 8))

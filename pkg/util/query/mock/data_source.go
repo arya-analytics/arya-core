@@ -13,23 +13,30 @@ import (
 type DataSourceMem struct {
 	query.AssembleBase
 	Data model.DataSource
+	*query.HookRunner
 }
 
 func NewDataSourceMem() *DataSourceMem {
-	ds := &DataSourceMem{Data: map[reflect.Type]*model.Reflect{}}
+	ds := &DataSourceMem{Data: map[reflect.Type]*model.Reflect{}, HookRunner: query.NewHookRunner()}
 	ds.AssembleBase = query.NewAssemble(ds.Exec)
 	return ds
 }
 
 func (s *DataSourceMem) Exec(ctx context.Context, p *query.Pack) error {
-	return query.Switch(ctx, p, query.Ops{
-		&query.Create{}:       s.create,
-		&streamq.TSCreate{}:   s.create,
-		&query.Retrieve{}:     s.retrieve,
-		&streamq.TSRetrieve{}: s.retrieve,
-		&query.Update{}:       s.update,
-		&query.Delete{}:       s.delete,
+	c := query.NewCatch(ctx, p)
+	c.Exec(s.Before)
+	c.Exec(func(ctx context.Context, p *query.Pack) error {
+		return query.Switch(ctx, p, query.Ops{
+			&query.Create{}:       s.create,
+			&streamq.TSCreate{}:   s.create,
+			&query.Retrieve{}:     s.retrieve,
+			&streamq.TSRetrieve{}: s.retrieve,
+			&query.Update{}:       s.update,
+			&query.Delete{}:       s.delete,
+		})
 	})
+	c.Exec(s.After)
+	return c.Error()
 }
 
 func (s *DataSourceMem) retrieve(ctx context.Context, p *query.Pack) error {

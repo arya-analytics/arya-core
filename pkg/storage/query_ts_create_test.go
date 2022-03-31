@@ -99,7 +99,7 @@ var _ = Describe("QueryTSCreate", func() {
 					seriesErr := store.NewTSCreate().Model(channelConfigTwo).Exec(ctx)
 					Expect(seriesErr).To(BeNil())
 				})
-				It("The samples should be able to be retrieved after creation", func() {
+				It("The samples should be able to be retrieved After creation", func() {
 					var resSamples []*models.ChannelSample
 					cErr := store.NewTSCreate().Model(&samples).Exec(ctx)
 					Expect(cErr).To(BeNil())

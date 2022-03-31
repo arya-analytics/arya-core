@@ -104,10 +104,8 @@ func (s *Service) tsCreate(ctx context.Context, p *query.Pack) error {
 
 func (s *Service) tsRetrieve(ctx context.Context, p *query.Pack) error {
 	var (
-		goe = stream(p)
+		st  = stream(p)
 		pkc = pkOpt(p)
-		le  = &streamq.Stream{Errors: make(chan error)}
-		re  = &streamq.Stream{Errors: make(chan error)}
 	)
 
 	cc, err := s.retrieveConfigs(ctx, pkc)
@@ -121,19 +119,17 @@ func (s *Service) tsRetrieve(ctx context.Context, p *query.Pack) error {
 		CfgFieldNodeIsHost,
 		func(m *model.Reflect) {
 			c.Exec(func(ctx context.Context) (err error) {
-				le, err = retrieveSamplesQuery(p, m).BindExec(s.local.exec).Stream(ctx)
+				_, err = retrieveSamplesQuery(p, m).BindStream(st).BindExec(s.local.exec).Stream(ctx)
 				return err
 			})
 		},
 		func(m *model.Reflect) {
 			c.Exec(func(ctx context.Context) (err error) {
-				re, err = retrieveSamplesQuery(p, m).BindExec(s.remote.exec).Stream(ctx)
+				_, err = retrieveSamplesQuery(p, m).BindStream(st).BindExec(s.remote.exec).Stream(ctx)
 				return err
 			})
 		},
 	)
-
-	errutil.NewDelta(goe.Errors, le.Errors, re.Errors).Exec()
 
 	return c.Error()
 }
@@ -153,11 +149,11 @@ func (s *Service) retrieveConfigs(ctx context.Context, pkc model.PKChain) (cc []
 // || OPT ||
 
 func stream(p *query.Pack) *streamq.Stream {
-	stream, ok := streamq.StreamOpt(p)
+	s, ok := streamq.StreamOpt(p)
 	if !ok {
 		panic("chanstream queries must be run using goexec")
 	}
-	return stream
+	return s
 }
 
 func pkOpt(p *query.Pack) model.PKChain {
