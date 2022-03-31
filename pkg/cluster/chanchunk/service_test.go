@@ -25,7 +25,7 @@ var _ = Describe("Service", func() {
 		remoteSvc     chanchunk.Remote
 		svc           *chanchunk.Service
 		pool          *cluster.NodeRPCPool
-		persist       query.Assemble
+		persist       *querymock.DataSourceMem
 		server        *chanchunk.ServerRPC
 		grpcServer    *grpc.Server
 		lis           net.Listener
@@ -79,9 +79,15 @@ var _ = Describe("Service", func() {
 			Expect(err).To(BeNil())
 		}
 	})
+	AfterEach(func() {
+		store.ClearQueryHooks()
+		persist.ClearQueryHooks()
+	})
 	Context("Node Is Remote", func() {
 		BeforeEach(func() {
-			store.AddQueryHook(clustermock.HostInterceptQueryHook(2))
+			qh := clustermock.HostInterceptQueryHook(2)
+			store.AddQueryHook(qh)
+			persist.AddQueryHook(qh)
 		})
 		It("Should create the chunk replica correctly", func() {
 			err := clust.NewCreate().Model(ccr).Exec(ctx)
@@ -122,8 +128,11 @@ var _ = Describe("Service", func() {
 	})
 	Context("Node Is Local", func() {
 		BeforeEach(func() {
-			store.AddQueryHook(clustermock.HostInterceptQueryHook(1))
+			qh := clustermock.HostInterceptQueryHook(1)
+			store.AddQueryHook(qh)
+			persist.AddQueryHook(qh)
 		})
+
 		It("Should create the chunk replica correctly", func() {
 			err := clust.NewCreate().Model(ccr).Exec(ctx)
 			Expect(err).To(BeNil())

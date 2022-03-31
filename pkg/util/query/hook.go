@@ -41,3 +41,7 @@ func (hr *HookRunner) After(ctx context.Context, p *Pack) error {
 	}
 	return c.Error()
 }
+
+func (hr *HookRunner) ClearQueryHooks() {
+	hr.hooks = make(map[Hook]bool)
+}

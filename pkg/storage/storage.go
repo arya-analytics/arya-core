@@ -64,6 +64,7 @@ type Storage interface {
 	query.Assemble
 	streamq.AssembleTS
 	AddQueryHook(hook query.Hook)
+	ClearQueryHooks()
 	Start(ctx context.Context, opts ...tasks.ScheduleOpt) error
 	Stop()
 	Errors() chan error

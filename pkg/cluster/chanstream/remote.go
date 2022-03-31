@@ -54,27 +54,37 @@ func (r *RemoteRPC) client(node *models.Node) (api.ChannelStreamServiceClient, e
 }
 
 func (r *RemoteRPC) retrieveCreateStream(ctx context.Context, node *models.Node) (api.ChannelStreamService_CreateClient, error) {
-	stream, ok := r.createPool[node.ID]
+	s, ok := r.createPool[node.ID]
 	if ok {
-		return stream, nil
+		return s, nil
 	}
 	c, err := r.client(node)
 	if err != nil {
 		return nil, err
 	}
-	return c.Create(ctx)
+	s, err = c.Create(ctx)
+	if err != nil {
+		return nil, err
+	}
+	r.createPool[node.ID] = s
+	return s, nil
 }
 
 func (r *RemoteRPC) retrieveRetrieveStream(ctx context.Context, node *models.Node) (api.ChannelStreamService_RetrieveClient, error) {
-	stream, ok := r.retrievePool[node.ID]
+	s, ok := r.retrievePool[node.ID]
 	if ok {
-		return stream, nil
+		return s, nil
 	}
 	c, err := r.client(node)
 	if err != nil {
 		return nil, err
 	}
-	return c.Retrieve(ctx)
+	s, err = c.Retrieve(ctx)
+	if err != nil {
+		return nil, err
+	}
+	r.retrievePool[node.ID] = s
+	return s, nil
 }
 
 func (r *RemoteRPC) create(ctx context.Context, p *query.Pack) error {
@@ -103,16 +113,24 @@ func (r *RemoteRPC) create(ctx context.Context, p *query.Pack) error {
 func (r *RemoteRPC) retrieve(ctx context.Context, p *query.Pack) error {
 	goe, nodes, pkc := stream(p), nodeOpt(p), pkOpt(p)
 	for _, n := range nodes {
-		stream, err := r.retrieveRetrieveStream(ctx, n)
+		s, err := r.retrieveRetrieveStream(ctx, n)
 		if err != nil {
 			return err
 		}
-		stream.Send(&api.RetrieveRequest{PKC: pkc.Strings()})
+		err = s.Send(&api.RetrieveRequest{PKC: pkc.Strings()})
+		if err != nil {
+			return err
+		}
 		go func() {
 			for {
-				res, sErr := stream.Recv()
+				res, sErr := s.Recv()
 				if sErr == io.EOF {
 					break
+				}
+				select {
+				case <-ctx.Done():
+					return
+				default:
 				}
 				if sErr != nil {
 					goe.Errors <- sErr

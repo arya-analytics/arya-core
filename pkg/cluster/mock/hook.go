@@ -18,6 +18,8 @@ func (h HostInterceptQueryHook) After(ctx context.Context, p *query.Pack) error 
 			h.setNodeIsHost(p.Model(), "RangeReplica.Node.ID", "RangeReplica.Node.IsHost")
 		case reflect.TypeOf(models.RangeReplica{}):
 			h.setNodeIsHost(p.Model(), "Node.ID", "Node.IsHost")
+		case reflect.TypeOf(models.ChannelConfig{}):
+			h.setNodeIsHost(p.Model(), "Node.ID", "Node.IsHost")
 		}
 	}
 	return nil
@@ -25,16 +27,16 @@ func (h HostInterceptQueryHook) After(ctx context.Context, p *query.Pack) error 
 
 func (h HostInterceptQueryHook) setNodeIsHost(rfl *model.Reflect, nodePKFld, nodeIsHostFld string) {
 	rfl.ForEach(func(nRfl *model.Reflect, i int) {
-		nodePKFld := nRfl.StructFieldByName(nodePKFld)
-		if !nodePKFld.IsValid() {
+		pk := nRfl.StructFieldByName(nodePKFld)
+		if !pk.IsValid() {
 			return
 		}
-		nodePK := nodePKFld.Interface()
-		nodeIsHost := nRfl.StructFieldByName(nodeIsHostFld)
-		if nodePK == int(h) {
-			nodeIsHost.Set(reflect.ValueOf(true))
+		pko := pk.Interface()
+		nih := nRfl.StructFieldByName(nodeIsHostFld)
+		if pko == int(h) {
+			nih.Set(reflect.ValueOf(true))
 		} else {
-			nodeIsHost.Set(reflect.ValueOf(false))
+			nih.Set(reflect.ValueOf(false))
 		}
 	})
 }

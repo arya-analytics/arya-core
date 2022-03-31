@@ -1,6 +1,7 @@
 package chanstream_test
 
 import (
+	"context"
 	"github.com/arya-analytics/aryacore/pkg/cluster"
 	"github.com/arya-analytics/aryacore/pkg/cluster/chanstream"
 	"github.com/arya-analytics/aryacore/pkg/cluster/chanstream/mock"
@@ -31,7 +32,7 @@ var _ = Describe("Service", func() {
 		svc           *chanstream.Service
 		persist       *mock.Persist
 		lis           net.Listener
-		nodeOne       = &models.Node{ID: 1, IsHost: true, Address: "localhost:26257"}
+		nodeOne       = &models.Node{ID: 1, Address: "localhost:26257"}
 		channelConfig = &models.ChannelConfig{NodeID: nodeOne.ID, ID: uuid.New()}
 		items         = []interface{}{nodeOne, channelConfig}
 	)
@@ -68,6 +69,9 @@ var _ = Describe("Service", func() {
 		for _, m := range items {
 			Expect(persist.NewDelete().Model(m).WherePK(model.NewReflect(m).PK()).Exec(ctx)).To(BeNil())
 		}
+	})
+	AfterEach(func() {
+		persist.ClearQueryHooks()
 	})
 	Describe("CanHandle", func() {
 		It("Should return false for a query it can't handle", func() {
@@ -116,6 +120,7 @@ var _ = Describe("Service", func() {
 				Expect(persist.NewRetrieve().Model(&resSamples).Exec(ctx)).To(BeNil())
 				Expect(samples).To(HaveLen(sampleCount))
 			})
+
 		})
 
 		Context("Node Is Remote", func() {
@@ -125,10 +130,6 @@ var _ = Describe("Service", func() {
 			It("Should create a stream of samples correctly", func() {
 				c := make(chan *models.ChannelSample)
 				sRfl := model.NewReflect(&c)
-				errors := make(chan error)
-				go func() {
-					panic(<-errors)
-				}()
 				stream, err := streamq.NewTSCreate().Model(sRfl).BindExec(clust.Exec).Stream(ctx)
 				Expect(err).To(BeNil())
 				for _, s := range samples {
@@ -202,6 +203,25 @@ var _ = Describe("Service", func() {
 				}
 				Expect(len(resSamples)).To(BeNumerically(">", 16))
 			})
+			It("Should stop retrieving samples after a context is canceled", func() {
+				c := make(chan *models.ChannelSample)
+				sRfl := model.NewReflect(&c)
+				ctx, cancel := context.WithCancel(ctx)
+				stream, err := streamq.NewTSRetrieve().Model(sRfl).WherePK(channelConfig.ID).BindExec(clust.Exec).Stream(ctx)
+				Expect(err).To(BeNil())
+				go func() {
+					panic(<-stream.Errors)
+				}()
+				var resSamples []*models.ChannelSample
+				go func() {
+					for s := range c {
+						resSamples = append(resSamples, s)
+					}
+				}()
+				time.Sleep(20 * time.Millisecond)
+				cancel()
+				Expect(len(resSamples)).To(BeNumerically("<", 4))
+			})
 		})
 		Context("Node Is Remote", func() {
 			BeforeEach(func() {
@@ -210,10 +230,10 @@ var _ = Describe("Service", func() {
 			It("Should retrieve a stream of samples correctly", func() {
 				c := make(chan *models.ChannelSample)
 				sRfl := model.NewReflect(&c)
-				ge, err := streamq.NewTSRetrieve().Model(sRfl).WherePK(channelConfig.ID).BindExec(clust.Exec).Stream(ctx)
+				stream, err := streamq.NewTSRetrieve().Model(sRfl).WherePK(channelConfig.ID).BindExec(clust.Exec).Stream(ctx)
 				Expect(err).To(BeNil())
 				go func() {
-					panic(<-ge.Errors)
+					panic(<-stream.Errors)
 				}()
 				var resSamples []*models.ChannelSample
 				t := time.NewTimer(100 * time.Millisecond)

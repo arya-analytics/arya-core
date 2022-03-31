@@ -11,7 +11,7 @@ service ChannelStreamService {
 
 message ChannelSample {
   string ChannelConfigID = 1;
-  float Value = 2;
+  double Value = 2;
   int64 Timestamp = 3;
 }
 
