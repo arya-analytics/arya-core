@@ -157,8 +157,7 @@ var _ = Describe("streamRetrieve", func() {
 			}
 		}
 		time.Sleep(5 * time.Millisecond)
-		Expect(len(resSamples)).To(BeNumerically(">", 8))
-		Expect(len(resSamples)).To(BeNumerically("<", 12))
+
 		Expect(len(resSamples2)).To(BeNumerically(">", 8))
 		Expect(len(resSamples2)).To(BeNumerically("<", 12))
 	})
