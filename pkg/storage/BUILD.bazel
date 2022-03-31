@@ -4,7 +4,6 @@ go_library(
     name = "storage",
     srcs = [
         "config.go",
-        "hook.go",
         "pool.go",
         "storage.go",
     ],
@@ -13,7 +12,6 @@ go_library(
     deps = [
         "//pkg/storage/internal",
         "//pkg/util/config",
-        "//pkg/util/errutil",
         "//pkg/util/query",
         "//pkg/util/query/streamq",
         "//pkg/util/tasks",
