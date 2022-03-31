@@ -88,6 +88,11 @@ func (s *Service) tsCreate(ctx context.Context, p *query.Pack) error {
 			if !sampleOk {
 				break
 			}
+			select {
+			case <-ctx.Done():
+				return
+			default:
+			}
 			pkc := sample.FieldsByName(csFieldCfgID).ToPKChain()
 			cc, err := s.retrieveConfigs(ctx, pkc)
 			if err != nil {

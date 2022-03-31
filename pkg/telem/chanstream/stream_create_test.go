@@ -68,6 +68,6 @@ var _ = Describe("streamCreate", func() {
 		}
 		var resCC []*models.ChannelSample
 		Expect(persist.NewRetrieve().Model(&resCC).Exec(ctx)).To(BeNil())
-		Expect(len(resCC)).To(BeNumerically(">", sampleCount*-5))
+		Expect(len(resCC)).To(Equal(sampleCount))
 	})
 })

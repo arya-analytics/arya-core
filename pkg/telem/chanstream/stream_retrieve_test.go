@@ -27,8 +27,8 @@ var _ = Describe("streamRetrieve", func() {
 		clust   cluster.Cluster
 		persist *chanstreammock.Persist
 		svc     *chanstream.Service
-		nodeOne = &models.Node{ID: 1, IsHost: true, Address: "localhost:26257"}
-		nodeTwo = &models.Node{ID: 2, IsHost: false, Address: "localhost:26257"}
+		nodeOne = &models.Node{ID: 1, Address: "localhost:26257"}
+		nodeTwo = &models.Node{ID: 2, Address: "localhost:26257"}
 
 		lis        net.Listener
 		grpcServer *grpc.Server
@@ -88,6 +88,8 @@ var _ = Describe("streamRetrieve", func() {
 			Expect(persist.NewDelete().Model(m).WherePK(model.NewReflect(m).PK()).Exec(ctx)).To(BeNil())
 		}
 	})
+	BeforeEach(func() { persist.AddQueryHook(clustermock.HostInterceptQueryHook(1)) })
+	AfterEach(func() { persist.ClearQueryHooks() })
 	It("Should retrieve a qStream of samples correctly", func() {
 		pkc := model.NewPKChain([]uuid.UUID{ccOne.ID})
 		c := make(chan *models.ChannelSample)
@@ -154,6 +156,7 @@ var _ = Describe("streamRetrieve", func() {
 				break o
 			}
 		}
+		time.Sleep(5 * time.Millisecond)
 		Expect(len(resSamples)).To(BeNumerically(">", 8))
 		Expect(len(resSamples)).To(BeNumerically("<", 12))
 		Expect(len(resSamples2)).To(BeNumerically(">", 8))

@@ -206,8 +206,8 @@ var _ = Describe("Service", func() {
 			It("Should stop retrieving samples after a context is canceled", func() {
 				c := make(chan *models.ChannelSample)
 				sRfl := model.NewReflect(&c)
-				ctx, cancel := context.WithCancel(ctx)
-				stream, err := streamq.NewTSRetrieve().Model(sRfl).WherePK(channelConfig.ID).BindExec(clust.Exec).Stream(ctx)
+				aCtx, cancel := context.WithCancel(ctx)
+				stream, err := streamq.NewTSRetrieve().Model(sRfl).WherePK(channelConfig.ID).BindExec(clust.Exec).Stream(aCtx)
 				Expect(err).To(BeNil())
 				go func() {
 					panic(<-stream.Errors)
@@ -220,6 +220,7 @@ var _ = Describe("Service", func() {
 				}()
 				time.Sleep(20 * time.Millisecond)
 				cancel()
+				time.Sleep(50 * time.Millisecond)
 				Expect(len(resSamples)).To(BeNumerically("<", 4))
 			})
 		})

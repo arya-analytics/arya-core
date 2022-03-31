@@ -98,7 +98,7 @@ func (lr *localRelay) pkc() (pkc model.PKChain) {
 }
 
 func (lr *localRelay) exec() {
-	lr.filterDoneQueries()
+	lr.pc = lr.filterDoneQueries()
 	s, err := lr.retrieveSamples()
 	if err != nil {
 		lr.relayError(err)
