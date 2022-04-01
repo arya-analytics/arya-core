@@ -10,6 +10,7 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/util/pool"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/arya-analytics/aryacore/pkg/util/query/streamq"
+	"github.com/arya-analytics/aryacore/pkg/util/route"
 	"io"
 )
 
@@ -48,7 +49,7 @@ func (r *RemoteRPC) create(ctx context.Context, p *query.Pack) error {
 	s.Segment(func() {
 		for {
 			rfl, cOk := p.Model().ChanRecv()
-			if !cOk {
+			if !cOk || route.CtxDone(ctx) {
 				break
 			}
 			stream, err := r.scp.Acquire(rfl.StructFieldByName(csFieldNode).Interface().(*models.Node))
@@ -81,13 +82,8 @@ func (r *RemoteRPC) retrieve(ctx context.Context, p *query.Pack) error {
 		go func() {
 			for {
 				res, sErr := s.Recv()
-				if sErr == io.EOF {
+				if sErr == io.EOF || route.CtxDone(ctx) {
 					break
-				}
-				select {
-				case <-ctx.Done():
-					return
-				default:
 				}
 				if sErr != nil {
 					goe.Errors <- sErr

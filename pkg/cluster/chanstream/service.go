@@ -10,7 +10,6 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/util/query/streamq"
 	"github.com/arya-analytics/aryacore/pkg/util/route"
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
-	"reflect"
 )
 
 // |||| SERVICE |||
@@ -54,9 +53,6 @@ func (s *Service) Exec(ctx context.Context, p *query.Pack) error {
 const (
 	cfgRelNode         = "Node"
 	CfgFieldNodeIsHost = "Node.IsHost"
-	csFieldCfgID       = "ChannelConfigID"
-	csFieldCfg         = "ChannelConfig"
-	csFieldNodeIsHost  = "ChannelConfig.Node.IsHost"
 	csFieldNode        = "ChannelConfig.Node"
 )
 
@@ -65,62 +61,66 @@ func nodeFields() []string {
 }
 
 func (s *Service) tsCreate(ctx context.Context, p *query.Pack) error {
-	var (
-		st    = stream(p)
-		rs    = make(chan *models.ChannelSample)
-		ls    = make(chan *models.ChannelSample)
-		rsRfl = model.NewReflect(&rs)
-		lsRfl = model.NewReflect(&ls)
-	)
-
-	_, err := streamq.NewTSCreate().Model(lsRfl).BindStream(st).BindExec(s.local.exec).Stream(ctx)
-	if err != nil {
-		return err
-	}
-	_, err = streamq.NewTSCreate().Model(rsRfl).BindStream(st).BindExec(s.remote.exec).Stream(ctx)
+	c := *query.ConcreteModel[*chan *models.ChannelSample](p)
+	remoteStream, localStream, st, cancel, err := s.openTSCreateQueries(ctx, p)
 	if err != nil {
 		return err
 	}
 
 	st.Segment(func() {
-		for {
-			sample, sampleOk := p.Model().ChanRecv()
-			if !sampleOk {
+		defer func() {
+			cancel()
+			close(remoteStream)
+			close(localStream)
+		}()
+		for sa := range c {
+			if route.CtxDone(ctx) {
 				break
 			}
-			select {
-			case <-ctx.Done():
-				return
-			default:
-			}
-			pkc := sample.FieldsByName(csFieldCfgID).ToPKChain()
-			cc, err := s.retrieveConfigs(ctx, pkc)
+			cc, err := s.retrieveConfigsQuery(ctx, sa.ChannelConfigID)
 			if err != nil {
 				st.Errors <- err
 				continue
 			}
-			sample.StructFieldByName(csFieldCfg).Set(reflect.ValueOf(cc[0]))
-			sampleNodeIsHostSwitchEach(sample, lsRfl.ChanSend, rsRfl.ChanSend)
+			sa.ChannelConfig = cc[0]
+			if sa.ChannelConfig.Node.IsHost {
+				remoteStream <- sa
+			} else {
+				localStream <- sa
+			}
 		}
 	})
-
 	return nil
 }
 
-func (s *Service) tsRetrieve(ctx context.Context, p *query.Pack) error {
-	var (
-		st  = stream(p)
-		pkc = pkOpt(p)
-	)
+func (s *Service) openTSCreateQueries(ctx context.Context, p *query.Pack) (rs, ls chan *models.ChannelSample, st *streamq.Stream, cancel context.CancelFunc, err error) {
+	st = stream(p)
+	rs = make(chan *models.ChannelSample)
+	ls = make(chan *models.ChannelSample)
+	bCtx, cancel := context.WithCancel(ctx)
+	_, err = streamq.NewTSCreate().Model(&rs).BindStream(st).BindExec(s.local.exec).Stream(bCtx)
+	if err != nil {
+		cancel()
+		return nil, nil, nil, nil, err
+	}
+	_, err = streamq.NewTSCreate().Model(&ls).BindStream(st).BindExec(s.remote.exec).Stream(bCtx)
+	if err != nil {
+		cancel()
+		return nil, nil, nil, nil, err
+	}
+	return rs, ls, st, cancel, nil
+}
 
-	cc, err := s.retrieveConfigs(ctx, pkc)
+func (s *Service) tsRetrieve(ctx context.Context, p *query.Pack) error {
+	st, pkc := stream(p), pkOpt(p)
+	cc, err := s.retrieveConfigsQuery(ctx, pkc)
 	if err != nil {
 		return err
 	}
 
 	c := errutil.NewCatchContext(ctx)
 	route.ModelSwitchBoolean(
-		model.NewReflect(&cc),
+		&cc,
 		CfgFieldNodeIsHost,
 		func(m *model.Reflect) {
 			c.Exec(func(ctx context.Context) (err error) {
@@ -139,15 +139,13 @@ func (s *Service) tsRetrieve(ctx context.Context, p *query.Pack) error {
 	return c.Error()
 }
 
-func (s *Service) retrieveConfigs(ctx context.Context, pkc model.PKChain) (cc []*models.ChannelConfig, err error) {
-	err = query.NewRetrieve().
+func (s *Service) retrieveConfigsQuery(ctx context.Context, pks interface{}) (cc []*models.ChannelConfig, err error) {
+	return cc, query.NewRetrieve().
 		Model(&cc).
-		WherePKs(pkc).
+		WherePKs(pks).
 		WithMemo(s.ccMemo).
 		Relation(cfgRelNode, nodeFields()...).
-		BindExec(s.local.exec).
-		Exec(ctx)
-	return cc, err
+		BindExec(s.local.exec).Exec(ctx)
 }
 
 // |||| QUERY |||
@@ -180,16 +178,6 @@ func retrieveSamplesQuery(p *query.Pack, m *model.Reflect) *streamq.TSRetrieve {
 		m.FieldsByName(cfgRelNode).ToReflect().RawValue().Interface().([]*models.Node),
 	)
 	return q
-}
-
-// |||| ROUTING ||||
-
-func sampleNodeIsHostSwitchEach(mRfl *model.Reflect, localF, remoteF func(m *model.Reflect)) {
-	route.ModelSwitchBoolean(mRfl,
-		csFieldNodeIsHost,
-		func(m *model.Reflect) { m.ForEach(func(rfl *model.Reflect, i int) { localF(rfl) }) },
-		func(m *model.Reflect) { m.ForEach(func(rfl *model.Reflect, i int) { remoteF(rfl) }) },
-	)
 }
 
 // |||| CATALOG ||||

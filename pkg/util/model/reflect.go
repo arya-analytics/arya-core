@@ -386,6 +386,17 @@ func (r *Reflect) RawValue() reflect.Value {
 	return r.PointerValue().Elem()
 }
 
+// AsFieldValue returns the value of the type when set on a nested field.
+func (r *Reflect) AsFieldValue() reflect.Value {
+	if r.IsChain() {
+		return r.ChainValue()
+	}
+	if r.IsChan() {
+		return r.ChanValue()
+	}
+	return r.StructValue()
+}
+
 // FieldTypeByName returns the type of the field by its name. Supports
 // nested types such as ChannelConfig.Node.
 func (r *Reflect) FieldTypeByName(name string) reflect.Type {

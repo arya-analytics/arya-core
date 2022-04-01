@@ -23,9 +23,6 @@ func (w *Where) WherePK(pk interface{}) {
 }
 
 func (w *Where) WherePKs(pks interface{}) {
-	if reflect.TypeOf(pks).Kind() != reflect.Slice {
-		panic("wherepks can't be called with a single primary key!")
-	}
 	newPKOpt(w.Pack(), pks)
 }
 

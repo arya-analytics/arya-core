@@ -95,3 +95,9 @@ func (p *Pack) String() string {
 	}
 	return fmt.Sprintf("Variant: %T, Model: %s, Count: %v, Opts: %s", p.query, p.model.Type(), count, p.opts)
 }
+
+// |||| UTILITIES ||||
+
+func ConcreteModel[T any](p *Pack) T {
+	return p.Model().Pointer().(T)
+}
