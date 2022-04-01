@@ -20,12 +20,8 @@ go_library(
 
 go_test(
     name = "chanstream_test",
-    srcs = [
-        "chanstream_suite_test.go",
-        "server_test.go",
-    ],
+    srcs = ["chanstream_suite_test.go"],
     deps = [
-        ":chanstream",
         "@com_github_onsi_ginkgo_v2//:ginkgo",
         "@com_github_onsi_gomega//:gomega",
     ],

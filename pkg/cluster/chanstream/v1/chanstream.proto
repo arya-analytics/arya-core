@@ -31,5 +31,10 @@ message RetrieveRequest {
 
 message RetrieveResponse {
   ChannelSample Sample = 1;
+  Error Error = 2;
+}
+
+message Error {
+  string Message = 1;
 }
 

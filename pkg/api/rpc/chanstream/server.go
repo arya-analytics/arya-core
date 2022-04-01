@@ -27,7 +27,6 @@ func (s *Server) BindTo(srv *grpc.Server) {
 }
 
 func (s *Server) RetrieveStream(rpcStream chanstreamv1.ChannelStreamService_RetrieveServer) error {
-	ch := make(chan *models.ChannelSample)
 	var (
 		wg      errgroup.Group
 		qStream = &streamq.Stream{Errors: make(chan error, 1)}
@@ -49,17 +48,16 @@ func (s *Server) RetrieveStream(rpcStream chanstreamv1.ChannelStreamService_Retr
 			if err != nil {
 				return err
 			}
-			ch = make(chan *models.ChannelSample, len(pkc))
+			ch := make(chan *models.ChannelSample, len(pkc))
 			if qStream, err = streamq.
 				NewTSRetrieve().
 				Model(&ch).
 				WherePKs(pkc).BindExec(s.svc.Exec).Stream(rpcStream.Context()); err != nil {
 				return err
 			}
-			for s := range ch {
-				res := &chanstreamv1.RetrieveResponse{CCR: &chanstreamv1.ChannelSample{}}
-				exc := rpc.NewModelExchange(res.CCR, s)
-				exc.ToSource()
+			for sample := range ch {
+				res := &chanstreamv1.RetrieveResponse{Sample: &chanstreamv1.ChannelSample{}}
+				rpc.NewModelExchange(res.Sample, sample).ToSource()
 				if err := rpcStream.Send(res); err != nil {
 					return err
 				}
@@ -88,7 +86,7 @@ func (s *Server) CreateStream(rpcStream chanstreamv1.ChannelStreamService_Create
 				return err
 			}
 			sRfl := model.NewReflect(&models.ChannelSample{})
-			rpc.NewModelExchange(req.CCR, sRfl).ToDest()
+			rpc.NewModelExchange(req.Sample, sRfl).ToDest()
 			rfl.ChanSend(sRfl)
 		}
 	})

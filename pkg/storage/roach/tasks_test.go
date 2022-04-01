@@ -7,6 +7,7 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/util/tasks"
 	. "github.com/onsi/ginkgo/v2"
 	log "github.com/sirupsen/logrus"
+	"github.com/uptrace/bun"
 	"time"
 
 	. "github.com/onsi/gomega"
@@ -45,11 +46,15 @@ var _ = Describe("NewTasks", func() {
 			Expect(count).To(Equal(1))
 		})
 		Context("Extra nodes", func() {
-			a, err := pool.Acquire(engine)
-			Expect(err).To(BeNil())
-			bunDB := roach.UnsafeDB(a)
-			var extraNode *models.Node
+
+			var (
+				extraNode *models.Node
+				bunDB     *bun.DB
+			)
 			BeforeEach(func() {
+				a, err := p.Acquire(engine)
+				Expect(err).To(BeNil())
+				bunDB = roach.UnsafeDB(a)
 				extraNode = &models.Node{ID: 2}
 			})
 			JustBeforeEach(func() {

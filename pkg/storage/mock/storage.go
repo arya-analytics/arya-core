@@ -3,9 +3,11 @@ package mock
 import (
 	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/storage"
+	"github.com/arya-analytics/aryacore/pkg/storage/internal"
 	"github.com/arya-analytics/aryacore/pkg/storage/minio"
 	"github.com/arya-analytics/aryacore/pkg/storage/redis"
 	"github.com/arya-analytics/aryacore/pkg/storage/roach"
+	"github.com/arya-analytics/aryacore/pkg/util/pool"
 )
 
 type Storage struct {
@@ -42,13 +44,19 @@ func NewStorage(opts ...StorageOpt) *Storage {
 	driverMinio := DriverMinio{}
 	driverRedis := DriverRedis{}
 
-	pool := storage.NewPool()
+	p := pool.New[internal.Engine]()
+	engineMD := roach.New(driverRoach, p)
+	engineCache := redis.New(driverRedis, p)
+	engineObject := minio.New(driverMinio, p)
+	p.AddFactory(engineMD)
+	p.AddFactory(engineCache)
+	p.AddFactory(engineObject)
 
 	s := &Storage{
 		Storage: storage.New(storage.Config{
-			EngineMD:     roach.New(driverRoach, pool),
-			EngineCache:  redis.New(driverRedis, pool),
-			EngineObject: minio.New(driverMinio, pool),
+			EngineMD:     engineMD,
+			EngineCache:  engineCache,
+			EngineObject: engineObject,
 		}),
 		DriverRoach: driverRoach,
 		DriverMinio: driverMinio,

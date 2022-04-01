@@ -140,13 +140,14 @@ func (s *Service) tsRetrieve(ctx context.Context, p *query.Pack) error {
 }
 
 func (s *Service) retrieveConfigs(ctx context.Context, pkc model.PKChain) (cc []*models.ChannelConfig, err error) {
-	return cc, query.NewRetrieve().
+	err = query.NewRetrieve().
 		Model(&cc).
 		WherePKs(pkc).
 		WithMemo(s.ccMemo).
 		Relation(cfgRelNode, nodeFields()...).
 		BindExec(s.local.exec).
 		Exec(ctx)
+	return cc, err
 }
 
 // |||| QUERY |||

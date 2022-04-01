@@ -4,7 +4,6 @@ go_library(
     name = "storage",
     srcs = [
         "config.go",
-        "pool.go",
         "storage.go",
     ],
     importpath = "github.com/arya-analytics/aryacore/pkg/storage",

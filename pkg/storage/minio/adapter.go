@@ -2,6 +2,7 @@ package minio
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/storage/internal"
+	"github.com/arya-analytics/aryacore/pkg/util/pool"
 	"github.com/minio/minio-go/v7"
 	"time"
 )
@@ -9,21 +10,26 @@ import (
 type adapter struct {
 	client     *minio.Client
 	driver     Driver
-	demand     internal.Demand
-	expiration internal.Expiration
+	demand     pool.Demand
+	expiration pool.Expire
 }
 
 func newAdapter(driver Driver) (*adapter, error) {
 	a := &adapter{
 		driver:     driver,
-		expiration: internal.Expiration{Duration: driver.Expiration(), Start: time.Now()},
-		demand:     internal.Demand{Max: driver.DemandCap()},
+		expiration: pool.Expire{Duration: driver.Expiration(), Start: time.Now()},
+		demand:     pool.Demand{Max: driver.DemandCap()},
 	}
 	return a, a.open()
 }
 
-func client(a internal.Adapter) *minio.Client {
+func client(a pool.Adapt[internal.Engine]) *minio.Client {
 	return a.(*adapter).client
+}
+
+func (a *adapter) Match(e internal.Engine) bool {
+	_, ok := e.(*Engine)
+	return ok
 }
 
 func (a *adapter) Acquire() {

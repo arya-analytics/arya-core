@@ -231,6 +231,7 @@ var _ = Describe("Service", func() {
 			It("Should retrieve a stream of samples correctly", func() {
 				c := make(chan *models.ChannelSample)
 				sRfl := model.NewReflect(&c)
+				ctx, cancel := context.WithCancel(ctx)
 				stream, err := streamq.NewTSRetrieve().Model(sRfl).WherePK(channelConfig.ID).BindExec(clust.Exec).Stream(ctx)
 				Expect(err).To(BeNil())
 				go func() {
@@ -244,6 +245,7 @@ var _ = Describe("Service", func() {
 					case s := <-c:
 						resSamples = append(resSamples, s)
 					case <-t.C:
+						cancel()
 						break o
 					}
 				}

@@ -19,6 +19,7 @@ go_library(
         "//pkg/storage/redis/timeseries",
         "//pkg/util/errutil",
         "//pkg/util/model",
+        "//pkg/util/pool",
         "//pkg/util/query",
         "//pkg/util/query/streamq",
         "//pkg/util/telem",
@@ -41,9 +42,9 @@ go_test(
     deps = [
         ":redis",
         "//pkg/models",
-        "//pkg/storage",
         "//pkg/storage/internal",
         "//pkg/storage/mock",
+        "//pkg/util/pool",
         "//pkg/util/query",
         "//pkg/util/telem",
         "@com_github_google_uuid//:uuid",

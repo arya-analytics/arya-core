@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"github.com/arya-analytics/aryacore/pkg/util/pool"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/arya-analytics/aryacore/pkg/util/query/streamq"
 	"github.com/arya-analytics/aryacore/pkg/util/tasks"
@@ -16,8 +17,7 @@ import (
 // These responsibilities are assigned in the model struct using the storage.re key.
 // If no responsibility is assigned, EngineMD is assumed responsible.
 type Engine interface {
-	NewAdapter() (Adapter, error)
-	IsAdapter(a Adapter) bool
+	pool.AdaptFactory[Engine]
 }
 
 // || META DATA ||

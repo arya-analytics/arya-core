@@ -2,8 +2,8 @@ package redis
 
 import (
 	"context"
-	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/storage/internal"
+	"github.com/arya-analytics/aryacore/pkg/util/pool"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/arya-analytics/aryacore/pkg/util/query/streamq"
 )
@@ -11,12 +11,12 @@ import (
 // |||| ENGINE ||||
 
 type Engine struct {
-	pool   *storage.Pool
+	pool   *pool.Pool[internal.Engine]
 	driver Driver
 	streamq.AssembleTS
 }
 
-func New(driver Driver, pool *storage.Pool) *Engine {
+func New(driver Driver, pool *pool.Pool[internal.Engine]) *Engine {
 	e := &Engine{driver: driver, pool: pool}
 	e.AssembleTS = streamq.NewAssemble(e.Exec)
 	return e
@@ -39,12 +39,12 @@ func (e *Engine) Exec(ctx context.Context, p *query.Pack) error {
 	return newErrorConvert().Exec(err)
 }
 
-func (e *Engine) NewAdapter() (internal.Adapter, error) {
+func (e *Engine) NewAdapt() (pool.Adapt[internal.Engine], error) {
 	return newAdapter(e.driver)
 }
 
-func (e *Engine) IsAdapter(a internal.Adapter) bool {
-	_, ok := a.(*adapter)
+func (e *Engine) Match(ce internal.Engine) bool {
+	_, ok := ce.(*Engine)
 	return ok
 }
 

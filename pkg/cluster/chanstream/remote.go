@@ -102,7 +102,7 @@ func (r *RemoteRPC) create(ctx context.Context, p *query.Pack) error {
 			}
 			exc := newExchange(rfl)
 			exc.ToDest()
-			if sErr := stream.Send(&api.CreateRequest{CCR: exc.Dest().Pointer().(*api.ChannelSample)}); sErr != nil {
+			if sErr := stream.Send(&api.CreateRequest{Sample: exc.Dest().Pointer().(*api.ChannelSample)}); sErr != nil {
 				s.Errors <- sErr
 			}
 		}
@@ -136,7 +136,7 @@ func (r *RemoteRPC) retrieve(ctx context.Context, p *query.Pack) error {
 					goe.Errors <- sErr
 					break
 				}
-				exc := rpc.NewModelExchange(res.CCR, &models.ChannelSample{})
+				exc := rpc.NewModelExchange(res.Sample, &models.ChannelSample{})
 				exc.ToDest()
 				p.Model().ChanSend(exc.Dest())
 			}

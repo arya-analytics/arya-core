@@ -1,23 +1,17 @@
-package internal
+package pool
 
 import "time"
 
-type Adapter interface {
-	Healthy() bool
-	Acquire()
-	Release()
-}
-
-type Expiration struct {
+type Expire struct {
 	Start    time.Time
 	Duration time.Duration
 }
 
-func (e Expiration) Remaining() time.Duration {
+func (e Expire) Remaining() time.Duration {
 	return -1 * time.Since(e.Start.Add(e.Duration))
 }
 
-func (e *Expiration) Expired() bool {
+func (e *Expire) Expired() bool {
 	return e.Remaining() < 0
 }
 
@@ -41,7 +35,6 @@ func (d Demand) Exceeded() bool {
 
 func (d Demand) TooHigh() bool {
 	return d.Value > d.Max
-
 }
 
 func (d Demand) TooLow() bool {
