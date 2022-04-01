@@ -134,4 +134,31 @@ var _ = Describe("Delta", func() {
 			Expect(oTwo.data).To(HaveLen(20))
 		})
 	})
+	Describe("Delta with data rate", func() {
+		It("Should run the delta at the correct rate", func() {
+			inlet := &DeltaInletTest{
+				data: make(chan int),
+				err:  make(chan error),
+			}
+			delta := route.NewDelta[int, int](inlet, route.WithDataRate(1000))
+			go delta.Start()
+			oOne := &DeltaOutletTest{errC: make(chan error), valC: make(chan int)}
+			oOne.Start()
+			oTwo := &DeltaOutletTest{errC: make(chan error), valC: make(chan int)}
+			oTwo.Start()
+			delta.AddOutlet(oOne)
+			delta.AddOutlet(oTwo)
+			t := time.NewTimer(10 * time.Millisecond)
+		o:
+			for {
+				select {
+				case inlet.data <- 1:
+				case <-t.C:
+					break o
+				}
+			}
+			Expect(oOne.data).To(HaveLen(10))
+			Expect(oTwo.data).To(HaveLen(10))
+		})
+	})
 })

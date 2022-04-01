@@ -115,7 +115,8 @@ func (tsc *tsCreate) execSeries(ctx context.Context, p *query.Pack) error {
 }
 
 func (tsc *tsCreate) execSample(ctx context.Context, p *query.Pack) error {
-	return tsc.base.client.TSCreateSamples(ctx, tsc.exc.samples()...).Err()
+	c := tsc.base.client.TSCreateSamples(ctx, tsc.exc.samples()...)
+	return c.Err()
 }
 
 type queryVariant int

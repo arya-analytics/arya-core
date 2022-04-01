@@ -11,14 +11,17 @@ import (
 
 var _ = Describe("QueryTsCreate", func() {
 	var (
-		series *models.ChannelConfig
-		sample *models.ChannelSample
+		series    *models.ChannelConfig
+		seriesTwo *models.ChannelConfig
+		sample    *models.ChannelSample
 	)
 	BeforeEach(func() {
 		series = &models.ChannelConfig{ID: uuid.New()}
+		seriesTwo = &models.ChannelConfig{ID: uuid.New()}
 	})
 	JustBeforeEach(func() {
 		err := engine.NewTSCreate().Model(series).Exec(ctx)
+		err = engine.NewTSCreate().Model(seriesTwo).Exec(ctx)
 		Expect(err).To(BeNil())
 	})
 	Describe("Standard Usage", func() {
