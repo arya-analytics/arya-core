@@ -23,7 +23,13 @@ func (sr *streamRetrieve) exec(ctx context.Context, p *query.Pack) error {
 	if !ok {
 		panic("no pk")
 	}
-	d := &deltaOutlet{qStream: s, pkc: pkc, valStream: make(chan *models.ChannelSample), model: p.Model()}
+	d := &deltaOutlet{
+		qStream:     s,
+		pkc:         pkc,
+		inValStream: make(chan *models.ChannelSample),
+		d:           sr.delta,
+		oValStream:  *query.ConcreteModel[*chan *models.ChannelSample](p),
+	}
 	d.Start(ctx)
 	sr.delta.AddOutlet(d)
 	return nil
@@ -32,10 +38,11 @@ func (sr *streamRetrieve) exec(ctx context.Context, p *query.Pack) error {
 // || DELTA OUTLET IMPL ||
 
 type deltaOutlet struct {
-	pkc       model.PKChain
-	model     *model.Reflect
-	qStream   *streamq.Stream
-	valStream chan *models.ChannelSample
+	d           *route.Delta[*models.ChannelSample, outletContext]
+	pkc         model.PKChain
+	oValStream  chan *models.ChannelSample
+	qStream     *streamq.Stream
+	inValStream chan *models.ChannelSample
 }
 
 func (o *deltaOutlet) SendError() chan<- error {
@@ -43,7 +50,7 @@ func (o *deltaOutlet) SendError() chan<- error {
 }
 
 func (o *deltaOutlet) Send() chan<- *models.ChannelSample {
-	return o.valStream
+	return o.inValStream
 }
 
 func (o *deltaOutlet) Context() outletContext {
@@ -52,17 +59,14 @@ func (o *deltaOutlet) Context() outletContext {
 
 func (o *deltaOutlet) Start(ctx context.Context) {
 	o.qStream.Segment(func() {
-		for v := range o.valStream {
-			select {
-			case <-ctx.Done():
-				return
-			default:
-				r := model.NewReflect(v)
-				if o.pkc.Contains(r.PK()) {
-					o.model.ChanSend(r)
-				}
+		defer o.d.RemoveOutlet(o)
+		for v := range o.inValStream {
+			if route.CtxDone(ctx) {
+				break
 			}
-
+			if o.pkc.Contains(v.ChannelConfigID) {
+				o.oValStream <- v
+			}
 		}
 	})
 }
