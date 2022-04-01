@@ -19,6 +19,7 @@ go_library(
         "//pkg/util/errutil",
         "//pkg/util/model",
         "//pkg/util/model/filter",
+        "//pkg/util/pool",
         "//pkg/util/query",
         "//pkg/util/query/streamq",
         "//pkg/util/route",

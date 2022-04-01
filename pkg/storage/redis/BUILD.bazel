@@ -42,7 +42,6 @@ go_test(
     deps = [
         ":redis",
         "//pkg/models",
-        "//pkg/storage/internal",
         "//pkg/storage/mock",
         "//pkg/util/pool",
         "//pkg/util/query",

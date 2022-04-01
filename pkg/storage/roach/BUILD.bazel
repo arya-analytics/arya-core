@@ -59,7 +59,6 @@ go_test(
     deps = [
         ":roach",
         "//pkg/models",
-        "//pkg/storage/internal",
         "//pkg/storage/mock",
         "//pkg/util/model",
         "//pkg/util/pool",

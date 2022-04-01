@@ -45,7 +45,6 @@ go_test(
     deps = [
         ":minio",
         "//pkg/models",
-        "//pkg/storage/internal",
         "//pkg/storage/mock",
         "//pkg/util/pool",
         "//pkg/util/query",
