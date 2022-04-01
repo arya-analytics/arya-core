@@ -118,7 +118,7 @@ var _ = Describe("streamRetrieve", func() {
 		}
 		Expect(len(resSamples)).To(BeNumerically(">", 7))
 	})
-	FIt("Should serve multiple concurrent streams correctly", func() {
+	It("Should serve multiple concurrent streams correctly", func() {
 		pkc := model.NewPKChain([]uuid.UUID{ccOne.ID})
 		pkc2 := model.NewPKChain([]uuid.UUID{ccTwo.ID})
 		c1 := make(chan *models.ChannelSample)
@@ -156,7 +156,6 @@ var _ = Describe("streamRetrieve", func() {
 				break o
 			}
 		}
-		time.Sleep(5 * time.Millisecond)
 
 		Expect(len(resSamples2)).To(BeNumerically(">", 8))
 		Expect(len(resSamples2)).To(BeNumerically("<", 12))

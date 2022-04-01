@@ -46,13 +46,12 @@ var _ = Describe("NewTasks", func() {
 			Expect(count).To(Equal(1))
 		})
 		Context("Extra nodes", func() {
-
 			var (
 				extraNode *models.Node
 				bunDB     *bun.DB
 			)
 			BeforeEach(func() {
-				a, err := p.Acquire(engine)
+				a, err := engine.Pool.Acquire(engine)
 				Expect(err).To(BeNil())
 				bunDB = roach.UnsafeDB(a)
 				extraNode = &models.Node{ID: 2}

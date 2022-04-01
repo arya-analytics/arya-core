@@ -1,7 +1,6 @@
 package roach
 
 import (
-	"github.com/arya-analytics/aryacore/pkg/storage/internal"
 	"github.com/arya-analytics/aryacore/pkg/util/pool"
 	"github.com/uptrace/bun"
 	"time"
@@ -25,7 +24,7 @@ func newAdapter(driver Driver) (*adapter, error) {
 	return a, a.open()
 }
 
-func UnsafeDB(a pool.Adapt[internal.Engine]) *bun.DB {
+func UnsafeDB(a pool.Adapt[*Engine]) *bun.DB {
 	return a.(*adapter).db
 }
 
@@ -33,9 +32,8 @@ func (a *adapter) Acquire() {
 	a.demand.Increment()
 }
 
-func (a *adapter) Match(e internal.Engine) bool {
-	_, ok := e.(*Engine)
-	return ok
+func (a *adapter) Match(e *Engine) bool {
+	return true
 }
 
 func (a *adapter) Release() {

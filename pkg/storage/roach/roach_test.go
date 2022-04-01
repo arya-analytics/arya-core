@@ -1,17 +1,17 @@
 package roach_test
 
 import (
-	"github.com/arya-analytics/aryacore/pkg/storage/internal"
+	"github.com/arya-analytics/aryacore/pkg/storage/roach"
 	"github.com/arya-analytics/aryacore/pkg/util/pool"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Roach", func() {
-	var a pool.Adapt[internal.Engine]
+	var a pool.Adapt[*roach.Engine]
 	BeforeEach(func() {
 		var err error
-		a, err = engine.NewAdapt()
+		a, err = engine.NewAdapt(nil)
 		Expect(err).To(BeNil())
 	})
 	Describe("Adapter", func() {

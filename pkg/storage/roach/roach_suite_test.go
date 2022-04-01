@@ -2,10 +2,8 @@ package roach_test
 
 import (
 	"context"
-	"github.com/arya-analytics/aryacore/pkg/storage/internal"
 	"github.com/arya-analytics/aryacore/pkg/storage/mock"
 	"github.com/arya-analytics/aryacore/pkg/storage/roach"
-	"github.com/arya-analytics/aryacore/pkg/util/pool"
 	"testing"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -15,12 +13,10 @@ import (
 var (
 	ctx    = context.Background()
 	driver = mock.NewDriverRoach(false, false)
-	p      = pool.New[internal.Engine]()
-	engine = roach.New(driver, p)
+	engine = roach.New(driver)
 )
 
 var _ = BeforeSuite(func() {
-	p.AddFactory(engine)
 	migrateErr := engine.NewMigrate().Exec(ctx)
 	Expect(migrateErr).To(BeNil())
 })

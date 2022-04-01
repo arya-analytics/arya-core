@@ -2,7 +2,6 @@ package roach
 
 import (
 	"context"
-	"github.com/arya-analytics/aryacore/pkg/storage/internal"
 	"github.com/arya-analytics/aryacore/pkg/util/pool"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/arya-analytics/aryacore/pkg/util/tasks"
@@ -12,13 +11,14 @@ import (
 // implements the storage.EngineMD interface.
 type Engine struct {
 	query.AssembleBase
-	driver Driver
-	pool   *pool.Pool[internal.Engine]
+	Driver Driver
+	Pool   *pool.Pool[*Engine]
 }
 
 // New creates a new roach.Engine with the provided Driver and storage.Pool.
-func New(driver Driver, pool *pool.Pool[internal.Engine]) *Engine {
-	e := &Engine{driver: driver, pool: pool}
+func New(driver Driver) *Engine {
+	e := &Engine{Driver: driver, Pool: pool.New[*Engine]()}
+	e.Pool.Factory = e
 	e.AssembleBase = query.NewAssemble(e.Exec)
 	return e
 }
@@ -28,7 +28,7 @@ func (e *Engine) Exec(ctx context.Context, p *query.Pack) error {
 	if !e.shouldHandle(p) {
 		return nil
 	}
-	a, err := e.pool.Acquire(e)
+	a, err := e.Pool.Acquire(e)
 	if err != nil {
 		return newErrorConvert().Exec(err)
 	}
@@ -40,22 +40,17 @@ func (e *Engine) Exec(ctx context.Context, p *query.Pack) error {
 		&query.Update{}:   newUpdate(db).exec,
 		&query.Migrate{}:  newMigrate(db).exec,
 	}, query.SwitchWithoutPanic())
-	e.pool.Release(a)
+	e.Pool.Release(a)
 	return newErrorConvert().Exec(err)
 }
 
 // NewAdapt opens a new connection with the data store and returns a storage.Adapter.
-func (e *Engine) NewAdapt() (pool.Adapt[internal.Engine], error) {
-	return newAdapter(e.driver)
-}
-
-func (e *Engine) Match(ce internal.Engine) bool {
-	_, ok := ce.(*Engine)
-	return ok
+func (e *Engine) NewAdapt(*Engine) (pool.Adapt[*Engine], error) {
+	return newAdapter(e.Driver)
 }
 
 func (e *Engine) NewTasks(opts ...tasks.ScheduleOpt) (tasks.Schedule, error) {
-	a, err := e.pool.Acquire(e)
+	a, err := e.Pool.Acquire(e)
 	return newTaskScheduler(UnsafeDB(a), opts...), err
 }
 

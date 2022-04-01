@@ -8,10 +8,12 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/util/query/streamq"
 	"reflect"
 	"strings"
+	"sync"
 )
 
 type DataSourceMem struct {
 	query.AssembleBase
+	mu   sync.RWMutex
 	Data model.DataSource
 	*query.HookRunner
 }
@@ -68,11 +70,15 @@ func (s *DataSourceMem) delete(ctx context.Context, p *query.Pack) error {
 			newData.ChainAppend(rfl)
 		}
 	})
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	s.Data[f.Type()] = newData
 	return nil
 }
 
 func (s *DataSourceMem) create(ctx context.Context, p *query.Pack) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	dRfl := s.Data.Retrieve(p.Model().Type())
 	p.Model().ForEach(func(rfl *model.Reflect, i int) {
 		dRfl.ChainAppendEach(rfl)

@@ -1,7 +1,6 @@
 package minio
 
 import (
-	"github.com/arya-analytics/aryacore/pkg/storage/internal"
 	"github.com/arya-analytics/aryacore/pkg/util/pool"
 	"github.com/minio/minio-go/v7"
 	"time"
@@ -23,13 +22,12 @@ func newAdapter(driver Driver) (*adapter, error) {
 	return a, a.open()
 }
 
-func client(a pool.Adapt[internal.Engine]) *minio.Client {
+func client(a pool.Adapt[*Engine]) *minio.Client {
 	return a.(*adapter).client
 }
 
-func (a *adapter) Match(e internal.Engine) bool {
-	_, ok := e.(*Engine)
-	return ok
+func (a *adapter) Match(e *Engine) bool {
+	return true
 }
 
 func (a *adapter) Acquire() {

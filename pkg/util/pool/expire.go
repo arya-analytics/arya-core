@@ -21,22 +21,22 @@ type Demand struct {
 	Value int
 }
 
-func (d Demand) Increment() {
+func (d *Demand) Increment() {
 	d.Value++
 }
 
-func (d Demand) Decrement() {
+func (d *Demand) Decrement() {
 	d.Value--
 }
 
-func (d Demand) Exceeded() bool {
+func (d *Demand) Exceeded() bool {
 	return d.TooHigh() || d.TooLow()
 }
 
-func (d Demand) TooHigh() bool {
+func (d *Demand) TooHigh() bool {
 	return d.Value > d.Max
 }
 
-func (d Demand) TooLow() bool {
+func (d *Demand) TooLow() bool {
 	return d.Value < d.Min
 }

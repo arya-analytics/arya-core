@@ -12,52 +12,33 @@ type Adapt[T any] interface {
 }
 
 type AdaptFactory[T any] interface {
-	NewAdapt() (Adapt[T], error)
-	Match(T) bool
+	NewAdapt(T) (Adapt[T], error)
 }
 
 type Pool[T any] struct {
-	mu        sync.RWMutex
-	Factories map[AdaptFactory[T]]bool
-	Adapters  map[Adapt[T]]bool
+	mu       sync.RWMutex
+	Factory  AdaptFactory[T]
+	Adapters map[Adapt[T]]bool
 }
 
 func New[T any]() *Pool[T] {
 	return &Pool[T]{
-		Factories: make(map[AdaptFactory[T]]bool),
-		Adapters:  make(map[Adapt[T]]bool),
+		Adapters: make(map[Adapt[T]]bool),
 	}
 }
 
 func (p *Pool[T]) Acquire(match T) (a Adapt[T], err error) {
 	a, ok := p.findAdapter(match)
 	if !ok {
-		a, err = p.findFactory(match).NewAdapt()
+		a, err = p.Factory.NewAdapt(match)
 		p.addAdapt(a)
 	}
 	a.Acquire()
 	return a, err
 }
 
-func (p *Pool[T]) AddFactory(f AdaptFactory[T]) {
-	p.mu.Lock()
-	defer p.mu.Unlock()
-	p.Factories[f] = true
-}
-
 func (p *Pool[T]) Release(a Adapt[T]) {
 	a.Release()
-}
-
-func (p *Pool[T]) findFactory(match T) AdaptFactory[T] {
-	p.mu.RLock()
-	defer p.mu.RUnlock()
-	for f := range p.Factories {
-		if f.Match(match) {
-			return f
-		}
-	}
-	panic("no factory could be found for pool")
 }
 
 func (p *Pool[T]) findAdapter(match T) (Adapt[T], bool) {

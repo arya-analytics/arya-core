@@ -1,7 +1,6 @@
 package internal
 
 import (
-	"github.com/arya-analytics/aryacore/pkg/util/pool"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/arya-analytics/aryacore/pkg/util/query/streamq"
 	"github.com/arya-analytics/aryacore/pkg/util/tasks"
@@ -17,7 +16,7 @@ import (
 // These responsibilities are assigned in the model struct using the storage.re key.
 // If no responsibility is assigned, EngineMD is assumed responsible.
 type Engine interface {
-	pool.AdaptFactory[Engine]
+	query.AssembleExec
 }
 
 // || META DATA ||
@@ -39,7 +38,6 @@ type EngineObject interface {
 	query.AssembleRetrieve
 	query.AssembleDelete
 	query.AssembleMigrate
-	query.AssembleExec
 }
 
 // || CACHE ||
@@ -50,5 +48,4 @@ type EngineCache interface {
 	Engine
 	streamq.AssembleTSCreate
 	streamq.AssembleTSRetrieve
-	query.AssembleExec
 }
