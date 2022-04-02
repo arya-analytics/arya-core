@@ -288,7 +288,7 @@ var _ = Describe("Service", func() {
 				}
 				Expect(len(resSamples)).To(BeNumerically(">", 16))
 			})
-			It("Should stop retrieving samples after a context is canceled", func() {
+			It("Should stop retrieving samples after a context iSamples canceled", func() {
 				c := make(chan *models.ChannelSample)
 				sRfl := model.NewReflect(&c)
 				aCtx, cancel := context.WithCancel(ctx)

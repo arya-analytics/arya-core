@@ -31,11 +31,11 @@ func (rsr *remoteStreamRetrieve) exec(ctx context.Context, p *query.Pack) error 
 			return err
 		}
 		ldi := &remoteDeltaOutlet{
-			d:           s.delta,
-			pkc:         pkc,
-			qStream:     qStream,
-			oValStream:  *query.ConcreteModel[*chan *models.ChannelSample](p),
-			inValStream: make(chan *models.ChannelSample, len(pkc)),
+			delta:    s.delta,
+			pkc:      pkc,
+			qStream:  qStream,
+			oSamples: *query.ConcreteModel[*chan *models.ChannelSample](p),
+			iSamples: make(chan *models.ChannelSample, len(pkc)),
 		}
 		ldi.Start(ctx)
 	}
@@ -49,11 +49,11 @@ type outletContext struct {
 }
 
 type remoteDeltaOutlet struct {
-	d           *route.Delta[*models.ChannelSample, outletContext]
-	pkc         model.PKChain
-	oValStream  chan *models.ChannelSample
-	qStream     *streamq.Stream
-	inValStream chan *models.ChannelSample
+	delta    *route.Delta[*models.ChannelSample, outletContext]
+	pkc      model.PKChain
+	oSamples chan *models.ChannelSample
+	qStream  *streamq.Stream
+	iSamples chan *models.ChannelSample
 }
 
 func (rdo *remoteDeltaOutlet) SendError() chan<- error {
@@ -61,7 +61,7 @@ func (rdo *remoteDeltaOutlet) SendError() chan<- error {
 }
 
 func (rdo *remoteDeltaOutlet) Send() chan<- *models.ChannelSample {
-	return rdo.inValStream
+	return rdo.iSamples
 }
 
 func (rdo *remoteDeltaOutlet) Context() outletContext {
@@ -70,14 +70,14 @@ func (rdo *remoteDeltaOutlet) Context() outletContext {
 
 func (rdo *remoteDeltaOutlet) Start(ctx context.Context) {
 	rdo.qStream.Segment(func() {
-		rdo.d.AddOutlet(rdo)
-		defer rdo.d.RemoveOutlet(rdo)
-		for v := range rdo.inValStream {
+		rdo.delta.AddOutlet(rdo)
+		defer rdo.delta.RemoveOutlet(rdo)
+		for v := range rdo.iSamples {
 			if route.CtxDone(ctx) {
 				break
 			}
 			if rdo.pkc.Contains(v.ChannelConfigID) {
-				rdo.oValStream <- v
+				rdo.oSamples <- v
 			}
 		}
 	})

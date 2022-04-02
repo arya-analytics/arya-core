@@ -185,7 +185,7 @@ func newNodeOpt(p *query.Pack, nodes []*models.Node) {
 func nodeOpt(p *query.Pack) []*models.Node {
 	n, ok := p.RetrieveOpt(nodeOptKey)
 	if !ok {
-		panic("node opt not specified. this is a bug")
+		panic("node opt not specified. this iSamples a bug")
 	}
 	return n.([]*models.Node)
 }
