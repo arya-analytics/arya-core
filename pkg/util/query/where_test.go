@@ -81,11 +81,6 @@ var _ = Describe("Where", func() {
 				Entry("Delete", asm.NewDelete().WherePKs([]int{1, 2, 3})),
 			)
 			Describe("Invalid primary keys", func() {
-				It("Should panic when the caller passes a single primary key to WherePKs", func() {
-					Expect(func() {
-						asm.NewRetrieve().WherePKs(1)
-					}).To(Panic())
-				})
 				It("Should panic when the caller passes a slice of priamry keys to WherePK", func() {
 					Expect(func() {
 						asm.NewRetrieve().WherePK([]int{1, 2, 3})
