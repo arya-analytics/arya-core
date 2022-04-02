@@ -9,7 +9,6 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/arya-analytics/aryacore/pkg/util/query/streamq"
 	"github.com/arya-analytics/aryacore/pkg/util/route"
-	"github.com/arya-analytics/aryacore/pkg/util/telem"
 )
 
 // |||| SERVICE |||
@@ -20,18 +19,9 @@ type Service struct {
 	ccMemo *query.Memo
 }
 
-func NewService(local query.Execute, remote *RemoteRPC) *Service {
-	r := &localRelay{
-		ctx: context.Background(),
-		qe:  local,
-		dr:  telem.DataRate(100),
-		add: make(chan *query.Pack),
-	}
-	go r.start()
-
-	l := &LocalStorage{relay: r, qe: local}
+func NewService(qExec query.Execute, remote *RemoteRPC) *Service {
 	memo := query.NewMemo(model.NewReflect(&[]*models.ChannelConfig{}))
-	return &Service{remote: remote, local: l, ccMemo: memo}
+	return &Service{remote: remote, local: NewLocalStorage(qExec), ccMemo: memo}
 }
 
 // CanHandle implements cluster.Service.

@@ -248,7 +248,7 @@ var _ = Describe("Service", func() {
 					panic(<-stream.Errors)
 				}()
 				var resSamples []*models.ChannelSample
-				t := time.NewTimer(100 * time.Millisecond)
+				t := time.NewTimer(120 * time.Millisecond)
 			o:
 				for {
 					select {
@@ -305,7 +305,7 @@ var _ = Describe("Service", func() {
 				}()
 				time.Sleep(20 * time.Millisecond)
 				cancel()
-				time.Sleep(50 * time.Millisecond)
+				time.Sleep(10 * time.Millisecond)
 				Expect(len(resSamples)).To(BeNumerically("<", 4))
 			})
 		})

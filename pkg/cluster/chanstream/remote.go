@@ -24,7 +24,7 @@ func newExchange(m interface{}) *model.Exchange {
 
 type RemoteRPC struct {
 	rpcPool *cluster.NodeRPCPool
-	srp     *streamRetrievePool
+	srp     *remoteStreamRetrievePool
 }
 
 func NewRemoteRPC(rpcPool *cluster.NodeRPCPool) *RemoteRPC {
@@ -37,6 +37,6 @@ func NewRemoteRPC(rpcPool *cluster.NodeRPCPool) *RemoteRPC {
 func (r *RemoteRPC) exec(ctx context.Context, p *query.Pack) error {
 	return query.Switch(ctx, p, query.Ops{
 		&streamq.TSCreate{}:   newStreamCreate(r.rpcPool).exec,
-		&streamq.TSRetrieve{}: newStreamRetrieve(r.srp).exec,
+		&streamq.TSRetrieve{}: newRemoteStreamRetrieve(r.srp).exec,
 	})
 }
