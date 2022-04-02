@@ -31,7 +31,6 @@ func (sr *streamRetrieve) exec(ctx context.Context, p *query.Pack) error {
 		oValStream:  *query.ConcreteModel[*chan *models.ChannelSample](p),
 	}
 	d.Start(ctx)
-	sr.delta.AddOutlet(d)
 	return nil
 }
 
@@ -59,6 +58,7 @@ func (o *deltaOutlet) Context() outletContext {
 
 func (o *deltaOutlet) Start(ctx context.Context) {
 	o.qStream.Segment(func() {
+		o.d.AddOutlet(o)
 		defer o.d.RemoveOutlet(o)
 		for v := range o.inValStream {
 			if route.CtxDone(ctx) {

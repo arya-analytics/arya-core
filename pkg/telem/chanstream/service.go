@@ -14,7 +14,10 @@ type Service struct {
 }
 
 func NewService(qExec query.Execute) *Service {
-	d := route.NewDelta[*models.ChannelSample, outletContext](&deltaInlet{qExec: qExec, qStream: &streamq.Stream{Errors: make(chan error, errorPipeCapacity)}})
+	d := route.NewDelta[*models.ChannelSample, outletContext](&deltaInlet{
+		qExec:   qExec,
+		qStream: &streamq.Stream{Errors: make(chan error, errorPipeCapacity)},
+	})
 	go d.Start()
 	return &Service{qExec: qExec, delta: d}
 }
