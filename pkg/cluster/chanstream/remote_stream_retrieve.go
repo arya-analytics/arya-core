@@ -89,7 +89,7 @@ type remoteStreamRetrievePool struct {
 	*pool.Pool[*models.Node]
 }
 
-func newStreamRetrievePool(ctx context.Context, rpcPool *cluster.NodeRPCPool) *remoteStreamRetrievePool {
+func newStreamRetrievePool(rpcPool *cluster.NodeRPCPool) *remoteStreamRetrievePool {
 	p := &remoteStreamRetrievePool{pool.New[*models.Node]()}
 	p.Factory = &remoteStreamRetrieveFactory{ctx: context.Background(), rpcPool: rpcPool}
 	return p
@@ -106,10 +106,11 @@ type remoteStreamRetrieveAdapter struct {
 	nodePK    int
 	rpcStream api.ChannelStreamService_RetrieveClient
 	delta     *route.Delta[*models.ChannelSample, outletContext]
+	demand    pool.Demand
 }
 
 func (ra *remoteStreamRetrieveAdapter) Acquire() {
-
+	ra.demand.Increment()
 }
 
 func (ra *remoteStreamRetrieveAdapter) Healthy() bool {
@@ -117,7 +118,7 @@ func (ra *remoteStreamRetrieveAdapter) Healthy() bool {
 }
 
 func (ra *remoteStreamRetrieveAdapter) Release() {
-
+	ra.demand.Decrement()
 }
 
 func (ra *remoteStreamRetrieveAdapter) Match(n *models.Node) bool {

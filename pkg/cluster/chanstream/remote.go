@@ -29,7 +29,7 @@ type RemoteRPC struct {
 
 func NewRemoteRPC(rpcPool *cluster.NodeRPCPool) *RemoteRPC {
 	return &RemoteRPC{
-		srp:     newStreamRetrievePool(context.Background(), rpcPool),
+		srp:     newStreamRetrievePool(rpcPool),
 		rpcPool: rpcPool,
 	}
 }
