@@ -42,6 +42,9 @@ func Switch(ctx context.Context, p *Pack, ops Ops, opts ...SwitchOpt) error {
 			return e(ctx, p)
 		}
 	}
+	if so.defaultExecute != nil {
+		return so.defaultExecute(ctx, p)
+	}
 	if so.panic {
 		panic(fmt.Sprintf("%T not supported for model %s", p.Query(), p.Model().Type().Name()))
 	}
@@ -57,7 +60,8 @@ func parseOpts(opts ...SwitchOpt) *switchOpts {
 }
 
 type switchOpts struct {
-	panic bool
+	panic          bool
+	defaultExecute Execute
 }
 
 type SwitchOpt func(s *switchOpts)
@@ -65,5 +69,12 @@ type SwitchOpt func(s *switchOpts)
 func SwitchWithoutPanic() SwitchOpt {
 	return func(so *switchOpts) {
 		so.panic = false
+	}
+}
+
+func SwitchWithDefault(q Execute) SwitchOpt {
+	return func(so *switchOpts) {
+		so.panic = false
+		so.defaultExecute = q
 	}
 }
