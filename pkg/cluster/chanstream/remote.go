@@ -36,7 +36,7 @@ func NewRemoteRPC(rpcPool *cluster.NodeRPCPool) *RemoteRPC {
 
 func (r *RemoteRPC) exec(ctx context.Context, p *query.Pack) error {
 	return query.Switch(ctx, p, query.Ops{
-		&streamq.TSCreate{}:   newStreamCreate(r.rpcPool).exec,
+		&streamq.TSCreate{}:   newRemoteStreamCreate(r.rpcPool).exec,
 		&streamq.TSRetrieve{}: newRemoteStreamRetrieve(r.srp).exec,
 	})
 }

@@ -5,6 +5,7 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/arya-analytics/aryacore/pkg/util/query/streamq"
+	"github.com/arya-analytics/aryacore/pkg/util/route"
 )
 
 type localStreamCreate struct {
@@ -20,10 +21,13 @@ func (lsc *localStreamCreate) exec(ctx context.Context, p *query.Pack) error {
 	streamQ := stream(p)
 	streamQ.Segment(func() {
 		for s := range sampleStream {
+			if route.CtxDone(ctx) {
+				return
+			}
 			if err := streamq.NewTSCreate().Model(s).BindExec(lsc.qe).Exec(ctx); err != nil {
 				streamQ.Errors <- err
 			}
 		}
-	})
+	}, streamq.WithSegmentName("cluster.chanstream.localStreamCreate"))
 	return nil
 }

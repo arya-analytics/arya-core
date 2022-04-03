@@ -12,7 +12,6 @@ import (
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 	"io"
-	"time"
 )
 
 type ServerRPC struct {
@@ -130,7 +129,6 @@ func (r *rpcRetrieve) listenForUpdates() error {
 }
 
 func (r *rpcRetrieve) updateQuery(pkcStr []string) error {
-	time.Sleep(1 * time.Millisecond)
 	pkc, err := model.NewPK(uuid.UUID{}).NewChainFromStrings(pkcStr...)
 	if err != nil {
 		return err

@@ -79,7 +79,7 @@ func (s *Service) tsCreate(ctx context.Context, p *query.Pack) error {
 				localStream <- sa
 			}
 		}
-	})
+	}, streamq.WithSegmentName("chanstream.Service.tsCreate"))
 	return nil
 }
 

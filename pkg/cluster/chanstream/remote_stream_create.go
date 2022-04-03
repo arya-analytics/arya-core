@@ -6,18 +6,19 @@ import (
 	api "github.com/arya-analytics/aryacore/pkg/cluster/gen/proto/go/chanstream/v1"
 	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
+	"github.com/arya-analytics/aryacore/pkg/util/query/streamq"
 	"github.com/arya-analytics/aryacore/pkg/util/route"
 )
 
-type streamCreate struct {
+type remoteStreamCreate struct {
 	rpcPool *cluster.NodeRPCPool
 }
 
-func newStreamCreate(rpcPool *cluster.NodeRPCPool) *streamCreate {
-	return &streamCreate{rpcPool: rpcPool}
+func newRemoteStreamCreate(rpcPool *cluster.NodeRPCPool) *remoteStreamCreate {
+	return &remoteStreamCreate{rpcPool: rpcPool}
 }
 
-func (s *streamCreate) newCreateStream(ctx context.Context, n *models.Node) (api.ChannelStreamService_CreateClient, error) {
+func (s *remoteStreamCreate) newRPC(ctx context.Context, n *models.Node) (api.ChannelStreamService_CreateClient, error) {
 	client, err := s.rpcPool.Retrieve(n)
 	if err != nil {
 		return nil, err
@@ -25,7 +26,7 @@ func (s *streamCreate) newCreateStream(ctx context.Context, n *models.Node) (api
 	return api.NewChannelStreamServiceClient(client).Create(ctx)
 }
 
-func (s *streamCreate) exec(ctx context.Context, p *query.Pack) error {
+func (s *remoteStreamCreate) exec(ctx context.Context, p *query.Pack) error {
 	qStream := stream(p)
 	qStream.Segment(func() {
 		for {
@@ -33,7 +34,7 @@ func (s *streamCreate) exec(ctx context.Context, p *query.Pack) error {
 			if !cOk || route.CtxDone(ctx) {
 				break
 			}
-			rpcStream, err := s.newCreateStream(ctx, rfl.StructFieldByName(csFieldNode).Interface().(*models.Node))
+			rpcStream, err := s.newRPC(ctx, rfl.StructFieldByName(csFieldNode).Interface().(*models.Node))
 			if err != nil {
 				qStream.Errors <- err
 				break
@@ -44,6 +45,6 @@ func (s *streamCreate) exec(ctx context.Context, p *query.Pack) error {
 				qStream.Errors <- sErr
 			}
 		}
-	})
+	}, streamq.WithSegmentName("cluster.chanstream.remoteStreamCreate"))
 	return nil
 }

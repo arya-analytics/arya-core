@@ -116,7 +116,8 @@ var _ = Describe("Service", func() {
 			It("Should create a stream of samples correctly", func() {
 				c := make(chan *models.ChannelSample)
 				sRfl := model.NewReflect(&c)
-				stream, err := streamq.NewTSCreate().Model(sRfl).BindExec(clust.Exec).Stream(ctx)
+				aCtx, cancel := context.WithCancel(ctx)
+				stream, err := streamq.NewTSCreate().Model(sRfl).BindExec(clust.Exec).Stream(aCtx)
 				Expect(err).To(BeNil())
 				go func() {
 					panic(<-stream.Errors)
@@ -124,7 +125,9 @@ var _ = Describe("Service", func() {
 				for _, s := range samples {
 					c <- s
 				}
+				close(c)
 				time.Sleep(20 * time.Millisecond)
+				cancel()
 				var resSamples []*models.ChannelSample
 				Expect(persist.NewRetrieve().Model(&resSamples).Exec(ctx)).To(BeNil())
 				Expect(samples).To(HaveLen(sampleCount))
@@ -135,6 +138,7 @@ var _ = Describe("Service", func() {
 				stream, err := streamq.NewTSCreate().Model(&c).BindExec(clust.Exec).Stream(ctx)
 				Expect(err).To(BeNil())
 				stream2, err := streamq.NewTSCreate().Model(&c2).BindExec(clust.Exec).Stream(ctx)
+
 				Expect(err).To(BeNil())
 				wg := &sync.WaitGroup{}
 				wg.Add(2)
@@ -242,7 +246,8 @@ var _ = Describe("Service", func() {
 			It("Should retrieve a stream of samples correctly", func() {
 				c := make(chan *models.ChannelSample)
 				sRfl := model.NewReflect(&c)
-				stream, err := streamq.NewTSRetrieve().Model(sRfl).WherePK(channelConfig.ID).BindExec(clust.Exec).Stream(ctx)
+				aCtx, cancel := context.WithCancel(ctx)
+				stream, err := streamq.NewTSRetrieve().Model(sRfl).WherePK(channelConfig.ID).BindExec(clust.Exec).Stream(aCtx)
 				Expect(err).To(BeNil())
 				go func() {
 					panic(<-stream.Errors)
@@ -258,6 +263,7 @@ var _ = Describe("Service", func() {
 						break o
 					}
 				}
+				cancel()
 				Expect(len(resSamples)).To(BeNumerically(">", 8))
 			})
 			It("Should retrieve a streamq of samples form multi channels correctly", func() {
