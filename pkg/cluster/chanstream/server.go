@@ -91,7 +91,7 @@ func (r *rpcRetrieve) relaySamples() error {
 			rpc.NewModelExchange(res.Sample, s).ToSource()
 			err := r.rpcStream.Send(res)
 			if err == io.EOF {
-				break
+				return nil
 			}
 			if err != nil {
 				return err

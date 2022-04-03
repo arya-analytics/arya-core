@@ -21,7 +21,9 @@ message CreateRequest {
   ChannelSample Sample = 1;
 }
 
-message CreateResponse {}
+message CreateResponse {
+  Error Error = 1;
+}
 
 // |||| RETRIEVE ||||
 
@@ -31,5 +33,11 @@ message RetrieveRequest {
 
 message RetrieveResponse {
   ChannelSample Sample = 1;
+  Error Error = 2;
 }
 
+// |||| ERROR ||||
+
+message Error {
+  string Message = 1;
+}
