@@ -416,10 +416,10 @@ var file_bulktelem_v1_bulktelem_proto_goTypes = []interface{}{
 }
 var file_bulktelem_v1_bulktelem_proto_depIdxs = []int32{
 	2, // 0: bulktelem.v1.CreateStreamResponse.Error:type_name -> bulktelem.v1.error
-	0, // 1: bulktelem.v1.BulkTelemService.CreateStream:input_type -> bulktelem.v1.CreateStreamRequest
-	3, // 2: bulktelem.v1.BulkTelemService.RetrieveStream:input_type -> bulktelem.v1.RetrieveStreamRequest
-	1, // 3: bulktelem.v1.BulkTelemService.CreateStream:output_type -> bulktelem.v1.CreateStreamResponse
-	4, // 4: bulktelem.v1.BulkTelemService.RetrieveStream:output_type -> bulktelem.v1.RetrieveStreamResponse
+	0, // 1: bulktelem.v1.BulkTelemService.createStream:input_type -> bulktelem.v1.CreateStreamRequest
+	3, // 2: bulktelem.v1.BulkTelemService.retrieveStream:input_type -> bulktelem.v1.RetrieveStreamRequest
+	1, // 3: bulktelem.v1.BulkTelemService.createStream:output_type -> bulktelem.v1.CreateStreamResponse
+	4, // 4: bulktelem.v1.BulkTelemService.retrieveStream:output_type -> bulktelem.v1.RetrieveStreamResponse
 	3, // [3:5] is the sub-list for method output_type
 	1, // [1:3] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name

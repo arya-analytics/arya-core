@@ -34,7 +34,7 @@ func (s *Server) CreateStream(rpcStream api.ChannelStreamService_CreateServer) e
 	return qcc.CreateStream(s.svc, &RPCCreateProtocol{rpcStream})
 }
 
-// ||||| RETRIEVE QUERY PROTOCOL |||||
+// |||| RETRIEVE PROTOCOL ||||
 
 type RPCRetrieveProtocol struct {
 	rpcStream api.ChannelStreamService_RetrieveServer
@@ -59,7 +59,7 @@ func (r *RPCRetrieveProtocol) Send(response qcc.RetrieveResponse) error {
 	return r.rpcStream.Send(resp)
 }
 
-// |||| CREATE QUERY PROTOCOL ||||
+// |||| CREATE PROTOCOL ||||
 
 type RPCCreateProtocol struct {
 	rpcStream api.ChannelStreamService_CreateServer

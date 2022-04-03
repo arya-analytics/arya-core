@@ -110,5 +110,7 @@ func (r *Retrieve) updateQuery(pkc model.PKChain) error {
 }
 
 func (r *Retrieve) closeQuery() {
-
+	if r.cancelQ != nil {
+		r.cancelQ()
+	}
 }
