@@ -11,8 +11,8 @@ type Where struct {
 	Base
 }
 
-func (w *Where) WhereFields(flds WhereFields) {
-	NewWhereFieldsOpt(w.Pack(), flds)
+func (w *Where) WhereFields(fields WhereFields) {
+	NewWhereFieldsOpt(w.Pack(), fields)
 }
 
 func (w *Where) WherePK(pk interface{}) {

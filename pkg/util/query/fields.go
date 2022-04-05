@@ -45,7 +45,7 @@ func (fo FieldsOpt) ContainsAll(fields ...string) bool {
 	return true
 }
 
-// AllExcept returns a new FieldsOpt with all the same fields except for the provided flds.
+// AllExcept returns a new FieldsOpt with all the same fields except for the provided fields.
 func (fo FieldsOpt) AllExcept(fields ...string) (filteredFqo FieldsOpt) {
 	for _, fld := range fo {
 		for _, eFld := range fields {
@@ -57,7 +57,7 @@ func (fo FieldsOpt) AllExcept(fields ...string) (filteredFqo FieldsOpt) {
 	return filteredFqo
 }
 
-// Append returns a new FieldsOpt with the provided flds appended to it.
+// Append returns a new FieldsOpt with the provided fields appended to it.
 // NOTE: Will remove duplicates.
 func (fo FieldsOpt) Append(fields ...string) (nFo FieldsOpt) {
 	nFo = fo

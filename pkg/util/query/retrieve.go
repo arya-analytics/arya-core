@@ -42,8 +42,8 @@ func (r *Retrieve) WherePKs(pks interface{}) *Retrieve {
 
 // WhereFields queries by a set of key value pairs where the key represents a field name
 // and the value represent a value to match with.
-func (r *Retrieve) WhereFields(flds WhereFields) *Retrieve {
-	r.Where.WhereFields(flds)
+func (r *Retrieve) WhereFields(fields WhereFields) *Retrieve {
+	r.Where.WhereFields(fields)
 	return r
 }
 
@@ -75,14 +75,14 @@ func (r *Retrieve) Limit(limit int) *Retrieve {
 // || FIELDS ||
 
 // Fields retrieves only the fields specified.
-func (r *Retrieve) Fields(flds ...string) *Retrieve {
-	NewFieldsOpt(r.Pack(), flds...)
+func (r *Retrieve) Fields(fields ...string) *Retrieve {
+	NewFieldsOpt(r.Pack(), fields...)
 	return r
 }
 
 // Relation retrieves the specified fields from the relation.
-func (r *Retrieve) Relation(rel string, flds ...string) *Retrieve {
-	NewRelationOpt(r.Pack(), rel, flds...)
+func (r *Retrieve) Relation(rel string, fields ...string) *Retrieve {
+	NewRelationOpt(r.Pack(), rel, fields...)
 	return r
 }
 
