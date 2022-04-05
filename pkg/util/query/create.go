@@ -7,7 +7,7 @@ type Create struct {
 
 // || CONSTRUCTOR ||
 
-// NewCreate instantiates a new Create query.
+// NewCreate creates a new Create query.
 func NewCreate() *Create {
 	c := &Create{}
 	c.Base.Init(c)

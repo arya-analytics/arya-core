@@ -49,7 +49,7 @@ type AssembleBase struct {
 	e Execute
 }
 
-// NewAssemble initializes a new AssembleBase that will run queries against the given Execute implementation.
+// NewAssemble creates a new AssembleBase that will run queries against the given Execute implementation.
 func NewAssemble(e Execute) Assemble {
 	return AssembleBase{e}
 }

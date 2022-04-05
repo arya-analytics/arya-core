@@ -28,13 +28,13 @@ func (r *Retrieve) Model(m interface{}) *Retrieve {
 
 // || WHERE ||
 
-// WherePK queries by the primary of the model to be deleted.
+// WherePK queries by the primary of the model to be retrieved.
 func (r *Retrieve) WherePK(pk interface{}) *Retrieve {
 	r.Where.WherePK(pk)
 	return r
 }
 
-// WherePKs queries by a set of primary keys of models to be deleted.
+// WherePKs queries by a set of primary keys of models to be retrieved.
 func (r *Retrieve) WherePKs(pks interface{}) *Retrieve {
 	r.Where.WherePKs(pks)
 	return r

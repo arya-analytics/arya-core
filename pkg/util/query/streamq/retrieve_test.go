@@ -12,7 +12,7 @@ import (
 var _ = Describe("TSRetrieve", func() {
 	var (
 		exec = &mock.Exec{}
-		asm  = streamq.NewAssemble(exec.Exec)
+		asm  = streamq.NewAssembleTS(exec.Exec)
 	)
 	Describe("TimeRangeOpt", func() {
 		It("Should set the time range all opt properly", func() {

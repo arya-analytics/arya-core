@@ -7,7 +7,7 @@ import (
 var _ = Describe("TSCreate", func() {
 	var (
 	//exec = &mock.Exec{}
-	//asm  = streamq.NewAssemble(exec.Exec)
+	//asm  = streamq.NewAssembleTS(exec.Exec)
 	)
 	Describe("base", func() {})
 

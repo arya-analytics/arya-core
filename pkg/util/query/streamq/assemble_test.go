@@ -14,7 +14,7 @@ import (
 var _ = Describe("Assemble", func() {
 	var (
 		exec = &mock.Exec{}
-		asm  = streamq.NewAssemble(exec.Exec)
+		asm  = streamq.NewAssembleTS(exec.Exec)
 	)
 	Describe("Common Query Functionality", func() {
 		DescribeTable("Model",
