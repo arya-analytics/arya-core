@@ -188,7 +188,7 @@ var _ = Describe("Service", func() {
 				go func() {
 					panic(<-stream.Errors)
 				}()
-				time.Sleep(20 * time.Millisecond)
+				time.Sleep(50 * time.Millisecond)
 				var resSamples []*models.ChannelSample
 				Expect(persist.NewRetrieve().Model(&resSamples).Exec(ctx)).To(BeNil())
 				Expect(resSamples).To(HaveLen(sampleCount))
