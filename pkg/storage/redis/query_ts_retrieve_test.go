@@ -20,13 +20,13 @@ var _ = Describe("QueryTsRetrieve", func() {
 		series = &models.ChannelConfig{ID: uuid.New()}
 	})
 	JustBeforeEach(func() {
-		err := engine.NewTSCreate().Series().Model(series).Exec(ctx)
+		err := engine.NewTSCreate().Model(series).Exec(ctx)
 		Expect(err).To(BeNil())
 	})
 	Describe("Standard Usage", func() {
 		Context("Single sample", func() {
 			JustBeforeEach(func() {
-				sampleErr := engine.NewTSCreate().Sample().Model(sample).Exec(ctx)
+				sampleErr := engine.NewTSCreate().Model(sample).Exec(ctx)
 				Expect(sampleErr).To(BeNil())
 			})
 			BeforeEach(func() {
@@ -39,8 +39,7 @@ var _ = Describe("QueryTsRetrieve", func() {
 			Describe("Retrieving the most recent sample", func() {
 				It("Should retrieve the correct item", func() {
 					var resSample = &models.ChannelSample{}
-					err := engine.NewTSRetrieve().Model(resSample).WherePK(
-						series.ID).Exec(ctx)
+					err := engine.NewTSRetrieve().Model(resSample).WherePK(series.ID).Exec(ctx)
 					Expect(err).To(BeNil())
 					Expect(sample).To(Equal(resSample))
 				})
@@ -48,7 +47,7 @@ var _ = Describe("QueryTsRetrieve", func() {
 		})
 		Context("Multiple Samples", func() {
 			JustBeforeEach(func() {
-				err := engine.NewTSCreate().Sample().Model(&samples).Exec(ctx)
+				err := engine.NewTSCreate().Model(&samples).Exec(ctx)
 				Expect(err).To(BeNil())
 			})
 			Describe("Retrieving all samples", func() {
@@ -72,8 +71,7 @@ var _ = Describe("QueryTsRetrieve", func() {
 				})
 				It("Should retrieve the correct items", func() {
 					var resSamples []*models.ChannelSample
-					err := engine.NewTSRetrieve().Model(&resSamples).WherePK(
-						series.ID).AllTimeRange().Exec(ctx)
+					err := engine.NewTSRetrieve().Model(&resSamples).WherePK(series.ID).AllTime().Exec(ctx)
 					Expect(err).To(BeNil())
 					Expect(resSamples).To(HaveLen(3))
 				})
@@ -86,7 +84,7 @@ var _ = Describe("QueryTsRetrieve", func() {
 						Name: "SG_03",
 						ID:   uuid.New(),
 					}
-					err := engine.NewTSCreate().Series().Model(seriesTwo).Exec(ctx)
+					err := engine.NewTSCreate().Model(seriesTwo).Exec(ctx)
 					Expect(err).To(BeNil())
 					samples = []*models.ChannelSample{
 						{
@@ -104,8 +102,7 @@ var _ = Describe("QueryTsRetrieve", func() {
 				})
 				It("Should retrieve the correct items", func() {
 					var resSamples []*models.ChannelSample
-					err := engine.NewTSRetrieve().Model(&resSamples).WherePKs(
-						[]uuid.UUID{seriesTwo.ID, series.ID}).AllTimeRange().Exec(ctx)
+					err := engine.NewTSRetrieve().Model(&resSamples).WherePKs([]uuid.UUID{seriesTwo.ID, series.ID}).AllTime().Exec(ctx)
 					Expect(err).To(BeNil())
 					Expect(samples).To(HaveLen(2))
 				})
@@ -134,10 +131,11 @@ var _ = Describe("QueryTsRetrieve", func() {
 				})
 				It("Should retrieve without error", func() {
 					var resSamples []*models.ChannelSample
-					toTS := time.Now().Add(3 * time.Second).UnixMicro()
-					fromTS := time.Now().Add(-15 * time.Second).UnixMicro()
-					err = engine.NewTSRetrieve().Model(&resSamples).WherePK(
-						series.ID).WhereTimeRange(fromTS, toTS).Exec(ctx)
+					tr := telem.NewTimeRange(
+						telem.NewTimeStamp(time.Now().Add(-15*time.Second)),
+						telem.NewTimeStamp(time.Now().Add(3*time.Second)),
+					)
+					err = engine.NewTSRetrieve().Model(&resSamples).WherePK(series.ID).WhereTimeRange(tr).Exec(ctx)
 					Expect(err).To(BeNil())
 					Expect(resSamples).To(HaveLen(2))
 				})
@@ -147,9 +145,8 @@ var _ = Describe("QueryTsRetrieve", func() {
 			BeforeEach(func() { series = &models.ChannelConfig{ID: uuid.New()} })
 			Context("The series does not exist", func() {
 				It("Should return false", func() {
-					e, err := engine.NewTSRetrieve().SeriesExists(ctx, uuid.New())
-					Expect(e).To(BeFalse())
-					Expect(err).To(BeNil())
+					err := engine.NewTSRetrieve().Model(series).WherePK(uuid.New()).Exec(ctx)
+					Expect(err).ToNot(BeNil())
 				})
 			})
 		})
@@ -163,17 +160,14 @@ var _ = Describe("QueryTsRetrieve", func() {
 			}}
 		})
 		JustBeforeEach(func() {
-			err := engine.NewTSCreate().Sample().Model(&samples).Exec(
-				ctx)
+			err := engine.NewTSCreate().Model(&samples).Exec(ctx)
 			Expect(err).To(BeNil())
 		})
 		Context("Retrieving a sample", func() {
 			s := &models.ChannelSample{}
 			Context("No PKC provided", func() {
-				It("Should return the correct storage error", func() {
-					err := engine.NewTSRetrieve().Model(s).Exec(ctx)
-					Expect(err).ToNot(BeNil())
-					Expect(err.(query.Error).Type).To(Equal(query.ErrorTypeInvalidArgs))
+				It("Should panic", func() {
+					Expect(func() { engine.NewTSRetrieve().Model(s).Exec(ctx) }).To(Panic())
 				})
 			})
 			Context("Invalid PKC provided", func() {

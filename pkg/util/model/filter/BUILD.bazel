@@ -1,0 +1,27 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "filter",
+    srcs = ["filter.go"],
+    importpath = "github.com/arya-analytics/aryacore/pkg/util/model/filter",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/util/model",
+        "//pkg/util/query",
+    ],
+)
+
+go_test(
+    name = "filter_test",
+    srcs = [
+        "filter_suite_test.go",
+        "filter_test.go",
+    ],
+    deps = [
+        ":filter",
+        "//pkg/util/model/mock",
+        "//pkg/util/query",
+        "@com_github_onsi_ginkgo_v2//:ginkgo",
+        "@com_github_onsi_gomega//:gomega",
+    ],
+)

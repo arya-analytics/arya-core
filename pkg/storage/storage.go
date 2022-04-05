@@ -13,7 +13,7 @@
 // Engines (Engine) can fulfill one of three roles:
 //
 // EngineMD - Reads and writes lightweight, strongly consistent data to storage.
-// EngineObject - Saves bulktelem data to node localstorage data storage.
+// EngineObject - Saves bulk data to node local data storage.
 // EngineCache - High speed cache that can read and write time series data.
 //
 // Initialization
@@ -29,6 +29,7 @@ import (
 	"context"
 	"github.com/arya-analytics/aryacore/pkg/storage/internal"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
+	"github.com/arya-analytics/aryacore/pkg/util/query/streamq"
 	"github.com/arya-analytics/aryacore/pkg/util/tasks"
 )
 
@@ -52,7 +53,7 @@ import (
 // returned.
 //
 // If an unexpected error is encountered,
-// will return a storage.Error with an ErrorTypeUnknown. Error.Base
+// will return a storage.Error with an ErrorTypeUnknown. Error.base
 // can be used to access the original error.
 //
 // Implementing a new Engine
@@ -61,19 +62,20 @@ import (
 // see Engine and its sub-interfaces.
 type Storage interface {
 	query.Assemble
-	NewTSRetrieve() *QueryTSRetrieve
-	NewTSCreate() *QueryTSCreate
-	AddQueryHook(hook QueryHook)
+	streamq.AssembleTS
+	AddQueryHook(hook query.Hook)
+	ClearQueryHooks()
 	Start(ctx context.Context, opts ...tasks.ScheduleOpt) error
 	Stop()
 	Errors() chan error
 }
 
 type storage struct {
-	query.AssembleBase
-	cfg        Config
-	tasks      tasks.Schedule
-	queryHooks []QueryHook
+	query.Assemble
+	streamq.AssembleTS
+	cfg Config
+	ts  tasks.Schedule
+	*query.HookRunner
 }
 
 // New creates a new Storage based on the provided Config.
@@ -87,55 +89,44 @@ type storage struct {
 // Storage cannot operate without Config.EngineMD,
 // as it relies on this engine to maintain consistency with other engines.
 func New(cfg Config) Storage {
-	s := &storage{cfg: cfg}
-	s.AssembleBase = query.NewAssemble(s.Exec)
+	s := &storage{cfg: cfg, HookRunner: query.NewHookRunner()}
+	s.Assemble = query.NewAssemble(s.Exec)
+	s.AssembleTS = streamq.NewAssembleTS(s.Exec)
 	return s
 }
 
 // Exec implements query.Execute
 func (s *storage) Exec(ctx context.Context, p *query.Pack) error {
-	return query.Switch(ctx, p, query.Ops{
-		Create:   newDef(s).exec,
-		Retrieve: newDef(s).exec,
-		Delete:   newDef(s).exec,
-		Update:   newUpdate(s).exec,
-		Migrate:  newDef(s).exec,
-	})
+	qc := query.NewCatch(ctx, p)
+	qc.Exec(s.Before)
+	qc.Exec(s.cfg.EngineMD.Exec)
+	qc.Exec(s.cfg.EngineObject.Exec)
+	qc.Exec(s.cfg.EngineCache.Exec)
+	qc.Exec(s.After)
+	return qc.Error()
 }
 
-// NewTSRetrieve opens a new QueryTSRetrieve.
-func (s *storage) NewTSRetrieve() *QueryTSRetrieve {
-	return newTSRetrieve(s)
-}
-
-// NewTSCreate opens a new QueryTSCreate.
-func (s *storage) NewTSCreate() *QueryTSCreate {
-	return newTSCreate(s)
-}
-
-// Start starts storage internal tasks.
+// Start starts storage internal ts.
 func (s *storage) Start(ctx context.Context, opts ...tasks.ScheduleOpt) error {
 	mdT, err := s.cfg.EngineMD.NewTasks(opts...)
 	if err != nil {
 		return err
 	}
-	s.tasks = tasks.NewScheduleBatch(mdT)
-	go s.tasks.Start(ctx)
+	s.ts = tasks.NewScheduleBatch(mdT)
+	go s.ts.Start(ctx)
 	return err
 }
 
-// Stop stops storage internal tasks.
+// Stop stops storage internal ts.
 func (s *storage) Stop() {
-	s.tasks.Stop()
-	s.tasks = nil
+	if s.ts != nil {
+		s.ts.Stop()
+		s.ts = nil
+	}
 }
 
 func (s *storage) Errors() chan error {
-	return s.tasks.Errors()
-}
-
-func (s *storage) AddQueryHook(hook QueryHook) {
-	s.queryHooks = append(s.queryHooks, hook)
+	return s.ts.Errors()
 }
 
 // |||| CONFIG ||||

@@ -44,7 +44,7 @@ type Query interface {
 // |||| PACK ||||
 
 // Pack is a representation of a query as a struct. It stores the model, variant, and options for a query.
-// A Pack can be easily transported from where it's assembled to where it needs to be executed.
+// A Pack can be easily transported from Where it's assembled to Where it needs to be executed.
 //
 // Pack should generally not be instantiated directly, and should instead be created by using a Query such as
 // Create.
@@ -56,7 +56,18 @@ type Pack struct {
 }
 
 func NewPack(q Query) *Pack {
-	return &Pack{query: q, opts: map[optKey]interface{}{}}
+	return &Pack{query: q, opts: map[OptKey]interface{}{}}
+}
+
+// SetOpt sets a new option on the Pack with the provided OptKey.
+func (p *Pack) SetOpt(key OptKey, val interface{}) {
+	p.opts[key] = val
+}
+
+// RetrieveOpt sets retrieves the option on the Pack with the specified OptKey.
+func (p *Pack) RetrieveOpt(key OptKey) (interface{}, bool) {
+	o, ok := p.opts[key]
+	return o, ok
 }
 
 func (p *Pack) bindModel(m interface{}) {
@@ -85,4 +96,12 @@ func (p *Pack) String() string {
 		count = p.Model().ChainValue().Len()
 	}
 	return fmt.Sprintf("Variant: %T, Model: %s, Count: %v, Opts: %s", p.query, p.model.Type(), count, p.opts)
+}
+
+// |||| UTILITIES ||||
+
+// ConcreteModel asserts the Pack.Model to a concrete type.
+// Panics if the Pack.Model is not of the provided type T.
+func ConcreteModel[T any](p *Pack) T {
+	return p.Model().Pointer().(T)
 }

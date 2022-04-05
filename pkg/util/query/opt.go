@@ -1,17 +1,34 @@
 package query
 
-type opts map[optKey]interface{}
+type opts map[OptKey]interface{}
 
-type optKey string
+// OptKey is a unique key for a specified option in a query.
+// If you're creating a new option, please be careful not to duplicate any of the OptKey already set.
+type OptKey string
 
 const (
-	pkOptKey          optKey = "pk"
-	whereFieldsOptKey optKey = "wFld"
-	relationOptKey    optKey = "rel"
-	fieldsOptKey      optKey = "fld"
-	calculateOptKey   optKey = "calc"
-	bulkUpdateOptKey  optKey = "bulkU"
-	orderOptKey       optKey = "order"
-	limitOptKey       optKey = "limit"
-	verifyOptKey      optKey = "verify"
+	pkOptKey          OptKey = "pk"
+	whereFieldsOptKey OptKey = "wFld"
+	relationOptKey    OptKey = "rel"
+	fieldsOptKey      OptKey = "fld"
+	calculateOptKey   OptKey = "calc"
+	bulkUpdateOptKey  OptKey = "bulkU"
+	orderOptKey       OptKey = "order"
+	limitOptKey       OptKey = "limit"
+	verifyOptKey      OptKey = "verify"
+	memoOptKey        OptKey = "memo"
 )
+
+// OptConvertChain wraps a slice of OptConvert and provides an Exec function to run them in sequence.
+type OptConvertChain []OptConvert
+
+// OptConvert is a simple utility function that allows a package implementing a query runner (Execute) to convert
+// the options in a provided query.
+type OptConvert func(p *Pack)
+
+// Exec executes all OptConvert in the chain.
+func (ocs OptConvertChain) Exec(p *Pack) {
+	for _, oc := range ocs {
+		oc(p)
+	}
+}

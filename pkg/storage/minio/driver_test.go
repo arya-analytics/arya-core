@@ -2,7 +2,6 @@ package minio_test
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/models"
-	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/storage/minio"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/google/uuid"
@@ -22,21 +21,19 @@ var _ = Describe("Driver", func() {
 			Expect(cfg.Endpoint).To(Equal("badep:9000"))
 		})
 	})
-	Describe("Connection Errors", func() {
+	Describe("Connection errors", func() {
 		It("Should return the correct query error", func() {
-			pool := storage.NewPool()
 			driver := &minio.DriverMinio{Config: minio.Config{}.Viper()}
-			engine := minio.New(driver, pool)
+			engine := minio.New(driver)
 			err := engine.NewRetrieve().Model(&models.ChannelChunkReplica{}).WherePK(uuid.New()).Exec(ctx)
 			Expect(err.(query.Error).Type).To(Equal(query.ErrorTypeConnection))
 		})
 		Context("Config Formatting Error", func() {
 			It("Should return the correct query error", func() {
-				pool := storage.NewPool()
 				cfg := minio.Config{}.Viper()
 				cfg.Endpoint = "//awdawd"
 				driver := &minio.DriverMinio{Config: cfg}
-				engine := minio.New(driver, pool)
+				engine := minio.New(driver)
 				err := engine.NewRetrieve().Model(&models.ChannelChunkReplica{}).WherePK(uuid.New()).Exec(ctx)
 				Expect(err.(query.Error).Type).To(Equal(query.ErrorTypeInvalidArgs))
 			})

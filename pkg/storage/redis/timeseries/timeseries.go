@@ -98,18 +98,32 @@ func (c *Client) TSGet(ctx context.Context, key string) *redis.Cmd {
 }
 
 func (c *Client) TSGetAll(ctx context.Context, key string) *redis.Cmd {
-	return c.TSGetRange(ctx, key, 0, 0)
+	return c.TSGetRange(ctx, key, telem.AllTime())
 }
 
-func (c *Client) TSGetRange(ctx context.Context, key string, fromTS int64,
-	toTS int64) *redis.Cmd {
-	fromTSArg := "-"
-	if fromTS != 0 {
-		fromTSArg = strconv.FormatInt(fromTS, 10)
+func (c *Client) TSGetRange(ctx context.Context, key string, tr telem.TimeRange) *redis.Cmd {
+	return c.exec(ctx, CMDRange, key, parseStartTS(tr), parseEndTS(tr))
+}
+
+const (
+	timeRangeMin = "-"
+	timeRangeMax = "+"
+)
+
+func parseStartTS(tr telem.TimeRange) string {
+	if tr.Start() != telem.TimeStampMin {
+		return parseTS(tr.Start())
 	}
-	toTSArg := "+"
-	if toTS != 0 {
-		toTSArg = strconv.FormatInt(toTS, 10)
+	return timeRangeMin
+}
+
+func parseEndTS(tr telem.TimeRange) string {
+	if tr.End() != telem.TimeStampMax {
+		return parseTS(tr.End())
 	}
-	return c.exec(ctx, CMDRange, key, fromTSArg, toTSArg)
+	return timeRangeMax
+}
+
+func parseTS(ts telem.TimeStamp) string {
+	return strconv.FormatInt(int64(ts), 10)
 }

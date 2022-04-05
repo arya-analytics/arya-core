@@ -27,8 +27,8 @@ import (
 // startCmd represents the start command
 var startCmd = &cobra.Command{
 	Use:   "start",
-	Short: "Start the arya core server",
-	Long:  "Start the arya core server",
+	Short: "Send the arya core server",
+	Long:  "Send the arya core server",
 	Args:  cobra.NoArgs,
 	RunE:  runStart,
 }
@@ -96,16 +96,14 @@ func runStart(cmd *cobra.Command, _ []string) error {
 }
 
 func startStorage(cmd *cobra.Command) (storage.Storage, error) {
-	pool := storage.NewPool()
-
 	mdDriver := roach.DriverRoach{Config: roach.Config{}.Viper()}
-	mdEngine := roach.New(mdDriver, pool)
+	mdEngine := roach.New(mdDriver)
 
 	objDriver := minio.DriverMinio{Config: minio.Config{}.Viper()}
-	objEngine := minio.New(objDriver, pool)
+	objEngine := minio.New(objDriver)
 
 	cacheDriver := redis.DriverRedis{Config: redis.Config{}.Viper()}
-	cacheEngine := redis.New(cacheDriver, pool)
+	cacheEngine := redis.New(cacheDriver)
 
 	s := storage.New(storage.Config{EngineMD: mdEngine, EngineObject: objEngine, EngineCache: cacheEngine})
 	models.BindHooks(s)
@@ -120,7 +118,7 @@ func startStorage(cmd *cobra.Command) (storage.Storage, error) {
 func startCluster(cmd *cobra.Command, store storage.Storage) cluster.Cluster {
 	pool := startNodeRPCPool()
 	clust := cluster.New()
-	clust.BindService(chanchunk.NewService(store.Exec, chanchunk.NewServiceRemoteRPC(pool)))
+	clust.BindService(chanchunk.NewService(store.Exec, chanchunk.NewRemoteRPC(pool)))
 	clust.BindService(cluster.NewStorageService(store))
 	return clust
 }
@@ -158,8 +156,7 @@ func startGRPCServer(clust cluster.Cluster, chanChunkSvc *telemchanchunk.Service
 
 	// || CLUSTER CHANCHUNK ||
 
-	persist := &chanchunk.ServerRPCPersistCluster{Cluster: clust}
-	ccServer := chanchunk.NewServerRPC(persist)
+	ccServer := chanchunk.NewServerRPC(clust)
 	ccServer.BindTo(grpcServer)
 
 	// || TELEM CHANCHUNK ||

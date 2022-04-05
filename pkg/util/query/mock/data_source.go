@@ -2,36 +2,50 @@ package mock
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
+	"github.com/arya-analytics/aryacore/pkg/util/query/streamq"
 	"reflect"
 	"strings"
+	"sync"
 )
 
 type DataSourceMem struct {
-	query.AssembleBase
-	Data model.DataSource
+	query.Assemble
+	mu   sync.RWMutex
+	Data *model.DataSource
+	*query.HookRunner
 }
 
 func NewDataSourceMem() *DataSourceMem {
-	ds := &DataSourceMem{Data: map[reflect.Type]*model.Reflect{}}
-	ds.AssembleBase = query.NewAssemble(ds.Exec)
+	ds := &DataSourceMem{Data: model.NewDataSource(), HookRunner: query.NewHookRunner()}
+	ds.Assemble = query.NewAssemble(ds.Exec)
 	return ds
 }
 
 func (s *DataSourceMem) Exec(ctx context.Context, p *query.Pack) error {
-	return query.Switch(ctx, p, query.Ops{
-		Create:   s.create,
-		Retrieve: s.retrieve,
-		Update:   s.update,
+	c := query.NewCatch(ctx, p)
+	c.Exec(s.Before)
+	c.Exec(func(ctx context.Context, p *query.Pack) error {
+		return query.Switch(ctx, p, query.Ops{
+			&query.Create{}:       s.create,
+			&streamq.TSCreate{}:   s.create,
+			&query.Retrieve{}:     s.retrieve,
+			&streamq.TSRetrieve{}: s.retrieve,
+			&query.Update{}:       s.update,
+			&query.Delete{}:       s.delete,
+		})
 	})
+	c.Exec(s.After)
+	return c.Error()
 }
 
 func (s *DataSourceMem) retrieve(ctx context.Context, p *query.Pack) error {
 	f := s.filter(p)
 	if f.ChainValue().Len() == 0 {
-		return query.NewSimpleError(query.ErrorTypeItemNotFound, nil)
+		return query.NewSimpleError(query.ErrorTypeItemNotFound, errors.New(fmt.Sprintf("%s", p)))
 	}
 	var exc *model.Exchange
 	if p.Model().IsStruct() {
@@ -43,7 +57,29 @@ func (s *DataSourceMem) retrieve(ctx context.Context, p *query.Pack) error {
 	return nil
 }
 
+func (s *DataSourceMem) delete(ctx context.Context, p *query.Pack) error {
+	f := s.filter(p)
+	newData := f.NewChain()
+	s.Data.Retrieve(f.Type()).ForEach(func(rfl *model.Reflect, i int) {
+		match := false
+		f.ForEach(func(nFRfl *model.Reflect, i int) {
+			if rfl.PK().Equals(nFRfl.PK()) {
+				match = true
+			}
+		})
+		if !match {
+			newData.ChainAppend(rfl)
+		}
+	})
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.Data.Write(newData)
+	return nil
+}
+
 func (s *DataSourceMem) create(ctx context.Context, p *query.Pack) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	dRfl := s.Data.Retrieve(p.Model().Type())
 	p.Model().ForEach(func(rfl *model.Reflect, i int) {
 		dRfl.ChainAppendEach(rfl)
@@ -131,7 +167,7 @@ func (s *DataSourceMem) runCalculations(sRfl *model.Reflect, calc query.CalcOpt)
 }
 
 func (s *DataSourceMem) retrieveRelation(sRfl *model.Reflect, rel query.RelationOpt) {
-	names := model.SplitFieldNames(rel.Rel)
+	names := model.SplitFieldNames(rel.Name)
 	name := names[0]
 	fldT := sRfl.FieldTypeByName(name)
 	st, ok := sRfl.StructTagChain().RetrieveByFieldName(name)
@@ -156,7 +192,7 @@ func (s *DataSourceMem) retrieveRelation(sRfl *model.Reflect, rel query.Relation
 			if sFld.Interface() == dFld.Interface() {
 				if len(names) > 1 {
 					s.retrieveRelation(nDRfl, query.RelationOpt{
-						Rel:    strings.Join(names[1:], "."),
+						Name:   strings.Join(names[1:], "."),
 						Fields: rel.Fields,
 					})
 				}
@@ -206,7 +242,7 @@ func (s *DataSourceMem) filterByWhereFields(sRfl *model.Reflect, wFld query.Wher
 	for k := range wFld {
 		fn, ln := model.SplitLastFieldName(k)
 		if fn != "" {
-			s.retrieveRelation(sRfl, query.RelationOpt{Rel: fn, Fields: query.FieldsOpt{ln}})
+			s.retrieveRelation(sRfl, query.RelationOpt{Name: fn, Fields: query.FieldsOpt{ln}})
 		}
 	}
 	sRfl.ForEach(func(rfl *model.Reflect, i int) {

@@ -13,5 +13,5 @@ func (sc ServiceChain) Exec(ctx context.Context, p *query.Pack) error {
 			return s.Exec(ctx, p)
 		}
 	}
-	panic("no service could handle the request!")
+	panic("cluster - no service could handle the request!")
 }

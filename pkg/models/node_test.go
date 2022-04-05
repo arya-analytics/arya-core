@@ -19,31 +19,31 @@ var _ = Describe("Node", func() {
 		})
 	})
 	Describe("Query Hook", func() {
-		Describe("BeforeQuery", func() {
+		Describe("Before", func() {
 			Describe("Setting default RPC port", func() {
 				It("Should set the default port when none is provided", func() {
 					n := &models.Node{ID: 1}
 					qh := &models.NodeQueryHook{}
 					p := query.NewCreate().Model(n).Pack()
-					Expect(qh.BeforeQuery(ctx, p)).To(BeNil())
+					Expect(qh.Before(ctx, p)).To(BeNil())
 					Expect(n.RPCPort).To(Equal(models.NodeDefaultRPCPort))
 				})
 				It("Shouldn't set the port when a value is provided", func() {
 					n := &models.Node{ID: 1, RPCPort: 22}
 					qh := &models.NodeQueryHook{}
 					p := query.NewCreate().Model(n).Pack()
-					Expect(qh.BeforeQuery(ctx, p)).To(BeNil())
+					Expect(qh.Before(ctx, p)).To(BeNil())
 					Expect(n.RPCPort).To(Equal(22))
 				})
 			})
 		})
 	})
-	Describe("AfterQuery", func() {
+	Describe("After", func() {
 		It("Should do nothing", func() {
 			n := &models.Node{ID: 1, RPCPort: 22}
 			qh := &models.NodeQueryHook{}
 			p := query.NewRetrieve().Model(n).Pack()
-			Expect(qh.AfterQuery(ctx, p)).To(BeNil())
+			Expect(qh.After(ctx, p)).To(BeNil())
 		})
 	})
 

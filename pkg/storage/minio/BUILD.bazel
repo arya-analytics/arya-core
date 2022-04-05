@@ -19,6 +19,7 @@ go_library(
         "//pkg/util/caseconv",
         "//pkg/util/errutil",
         "//pkg/util/model",
+        "//pkg/util/pool",
         "//pkg/util/query",
         "//pkg/util/telem",
         "//pkg/util/validate",
@@ -44,9 +45,8 @@ go_test(
     deps = [
         ":minio",
         "//pkg/models",
-        "//pkg/storage",
-        "//pkg/storage/internal",
         "//pkg/storage/mock",
+        "//pkg/util/pool",
         "//pkg/util/query",
         "//pkg/util/telem",
         "@com_github_google_uuid//:uuid",

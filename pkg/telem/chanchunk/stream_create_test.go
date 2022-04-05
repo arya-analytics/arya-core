@@ -66,7 +66,7 @@ var _ = Describe("StreamCreate", func() {
 				By("Sending a new chunk")
 				stream.Send(telem.TimeStamp(0), data)
 
-				By("Closing the stream")
+				By("Closing the streamq")
 				stream.Close()
 
 				By("Retrieving the chunk after creation")
@@ -93,7 +93,7 @@ var _ = Describe("StreamCreate", func() {
 					stream.Send(c.Start(), c.ChunkData)
 				}
 
-				By("Closing the stream")
+				By("Closing the streamq")
 				stream.Close()
 
 				By("Retrieving the chunk after creation")
@@ -120,7 +120,7 @@ var _ = Describe("StreamCreate", func() {
 					stream.Send(c.Start(), c.ChunkData)
 				}
 
-				By("Closing the stream")
+				By("Closing the streamq")
 				stream.Close()
 
 				By("Retrieving the chunk after creation")
@@ -155,7 +155,7 @@ var _ = Describe("StreamCreate", func() {
 				Expect(resCCActive.ID).To(Equal(config.ID))
 				Expect(resCCActive.Status).To(Equal(models.ChannelStatusActive))
 
-				By("Closing the stream")
+				By("Closing the streamq")
 				stream.Close()
 
 				resCCInactive := &models.ChannelConfig{}
@@ -163,7 +163,7 @@ var _ = Describe("StreamCreate", func() {
 				Expect(resCCInactive.ID).To(Equal(config.ID))
 				Expect(resCCInactive.Status).To(Equal(models.ChannelStatusInactive))
 			})
-			Describe("Opening a stream to a channel that already has data", func() {
+			Describe("Opening a streamq to a channel that already has data", func() {
 				It("Should create all the chunks correctly", func() {
 					cc := mock.ChunkSet(
 						5,
@@ -179,7 +179,7 @@ var _ = Describe("StreamCreate", func() {
 						}
 					}
 
-					By("Closing the stream")
+					By("Closing the streamq")
 					stream.Close()
 
 					stream = svc.NewStreamCreate()
@@ -412,7 +412,7 @@ var _ = Describe("StreamCreate", func() {
 				// Sending the second piece of data
 				stream.Send(start.Add(telem.NewTimeSpan(200*time.Millisecond)), data)
 
-				// Close the stream
+				// Close the streamq
 				stream.Close()
 				wg.Wait()
 

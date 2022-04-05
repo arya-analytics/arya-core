@@ -2,15 +2,14 @@ syntax = "proto3";
 
 import "tagger/tagger.proto";
 
-
 package chanchunk.v1;
 
 // |||| SVC ||||
 
 service ChannelChunkService {
-  rpc CreateReplicas(stream ChannelChunkServiceCreateReplicasRequest) returns (ChannelChunkServiceCreateReplicasResponse);
-  rpc RetrieveReplicas(ChannelChunkServiceRetrieveReplicasRequest) returns (stream ChannelChunkServiceRetrieveReplicasResponse);
-  rpc DeleteReplicas(ChannelChunkServiceDeleteReplicasRequest) returns (ChannelChunkServiceDeleteReplicasResponse);
+  rpc CreateReplicas(stream CreateReplicasRequest) returns (CreateReplicasResponse);
+  rpc RetrieveReplicas(RetrieveReplicasRequest) returns (stream RetrieveReplicasResponse);
+  rpc DeleteReplicas(DeleteReplicasRequest) returns (DeleteReplicasResponse);
 }
 
 // |||| MODEL ||||
@@ -24,28 +23,28 @@ message ChannelChunkReplica {
 
 // |||| CREATE ||||
 
-message ChannelChunkServiceCreateReplicasRequest {
+message CreateReplicasRequest {
   ChannelChunkReplica CCR = 1;
 }
 
-message ChannelChunkServiceCreateReplicasResponse {}
+message CreateReplicasResponse {}
 
 // |||| RETRIEVE ||||
 
-message ChannelChunkServiceRetrieveReplicasResponse {
+message RetrieveReplicasResponse {
   ChannelChunkReplica CCR = 1;
 }
 
-message ChannelChunkServiceRetrieveReplicasRequest {
+message RetrieveReplicasRequest {
   repeated string PKC = 1;
 }
 
 // |||| DELETE ||||
 
-message ChannelChunkServiceDeleteReplicasRequest {
+message DeleteReplicasRequest {
   repeated string PKC = 1;
 }
 
-message ChannelChunkServiceDeleteReplicasResponse {}
+message DeleteReplicasResponse {}
 
 

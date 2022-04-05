@@ -2,7 +2,6 @@ package roach
 
 import (
 	"context"
-	"github.com/arya-analytics/aryacore/pkg/storage/internal"
 	"github.com/arya-analytics/aryacore/pkg/util/errutil"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
@@ -70,14 +69,14 @@ func (c *create) exec(ctx context.Context, p *query.Pack) error {
 	beforeInsertSetUUID(c.exc.Dest())
 	_, err := c.bunQ.Exec(ctx)
 	c.exc.ToSource()
-	return newErrorConvert().Exec(err)
+	return err
 }
 
 func (e *retrieve) exec(ctx context.Context, p *query.Pack) error {
 	e.convertOpts(p)
 	err := e.bunQ.Scan(ctx, e.scanArgs...)
 	e.exc.ToSource()
-	return newErrorConvert().Exec(err)
+	return err
 }
 
 func (u *update) exec(ctx context.Context, p *query.Pack) error {
@@ -85,20 +84,20 @@ func (u *update) exec(ctx context.Context, p *query.Pack) error {
 	u.exc.ToDest()
 	_, err := u.bunQ.Exec(ctx)
 	u.exc.ToSource()
-	return newErrorConvert().Exec(err)
+	return err
 }
 
 func (d *del) exec(ctx context.Context, p *query.Pack) error {
 	d.convertOpts(p)
 	_, err := d.bunQ.Exec(ctx)
-	return newErrorConvert().Exec(err)
+	return err
 }
 
 func (m *migrate) exec(ctx context.Context, p *query.Pack) error {
 	c := errutil.NewCatchContext(ctx)
 	if m.verify(p) {
 		_, err := m.db.NewSelect().Model((*ChannelConfig)(nil)).Count(ctx)
-		return newErrorConvert().Exec(err)
+		return err
 	}
 	bindMigrations(m.bunQ)
 	bunMig := bunMigrate.NewMigrator(m.db, m.bunQ)
@@ -107,21 +106,21 @@ func (m *migrate) exec(ctx context.Context, p *query.Pack) error {
 		_, err := bunMig.Migrate(ctx)
 		return err
 	})
-	return newErrorConvert().Exec(c.Error())
+	return c.Error()
 }
 
 // |||| OPT CONVERTERS ||||
 
 func (c *create) convertOpts(p *query.Pack) {
-	internal.OptConverters{c.model}.Exec(p)
+	query.OptConvertChain{c.model}.Exec(p)
 }
 
 func (u *update) convertOpts(p *query.Pack) {
-	internal.OptConverters{u.model, u.pk, u.fields, u.bulk}.Exec(p)
+	query.OptConvertChain{u.model, u.pk, u.fields, u.bulk}.Exec(p)
 }
 
 func (e *retrieve) convertOpts(p *query.Pack) {
-	internal.OptConverters{
+	query.OptConvertChain{
 		e.model,
 		e.pk,
 		e.fields,
@@ -135,17 +134,7 @@ func (e *retrieve) convertOpts(p *query.Pack) {
 }
 
 func (d *del) convertOpts(p *query.Pack) {
-	internal.OptConverters{d.model, d.pk}.Exec(p)
-}
-
-// |||| BASE ||||
-
-func (b *base) exchangeToDest() {
-	b.exc.ToDest()
-}
-
-func (b *base) exchangeToSource() {
-	b.exc.ToSource()
+	query.OptConvertChain{d.model, d.pk}.Exec(p)
 }
 
 // |||| MODEL ||||
@@ -229,7 +218,7 @@ func (e *retrieve) relations(p *query.Pack) {
 		// CLARIFICATION: Still don't know exactly why it needs to be called this way, but it does for the
 		// correct opt to be provided.
 		func(opt query.RelationOpt) {
-			e.bunQ = e.bunQ.Relation(opt.Rel, func(sq *bun.SelectQuery) *bun.SelectQuery {
+			e.bunQ = e.bunQ.Relation(opt.Name, func(sq *bun.SelectQuery) *bun.SelectQuery {
 				return sq.Column(e.sql.fieldNames(opt.Fields...)...)
 			})
 		}(opt)
@@ -251,7 +240,7 @@ func (e *retrieve) limit(p *query.Pack) {
 
 func (e *retrieve) order(p *query.Pack) {
 	if o, ok := query.RetrieveOrderOpt(p); ok {
-		e.bunQ = e.bunQ.Order(e.sql.order(o.Order, o.Field))
+		e.bunQ = e.bunQ.Order(e.sql.order(o.Direction, o.Field))
 	}
 }
 

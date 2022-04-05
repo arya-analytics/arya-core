@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"sync"
 )
 
 type Catalog []interface{}
@@ -35,12 +36,29 @@ func (mc Catalog) retrieveCM(t reflect.Type) (*Reflect, bool) {
 	return nil, false
 }
 
-type DataSource map[reflect.Type]*Reflect
+type DataSource struct {
+	mu   sync.Mutex
+	data map[reflect.Type]*Reflect
+}
 
-func (ds DataSource) Retrieve(t reflect.Type) *Reflect {
-	_, ok := ds[t]
-	if !ok {
-		ds[t] = NewReflectFromType(t).NewChain()
+func NewDataSource() *DataSource {
+	return &DataSource{
+		data: make(map[reflect.Type]*Reflect),
 	}
-	return ds[t]
+}
+
+func (ds *DataSource) Retrieve(t reflect.Type) *Reflect {
+	ds.mu.Lock()
+	defer ds.mu.Unlock()
+	_, ok := ds.data[t]
+	if !ok {
+		ds.data[t] = NewReflectFromType(t).NewChain()
+	}
+	return ds.data[t]
+}
+
+func (ds *DataSource) Write(rfl *Reflect) {
+	ds.mu.Lock()
+	defer ds.mu.Unlock()
+	ds.data[rfl.Type()] = rfl
 }

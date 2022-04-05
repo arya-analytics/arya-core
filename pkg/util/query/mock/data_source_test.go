@@ -3,7 +3,6 @@ package mock_test
 import (
 	"context"
 	"github.com/arya-analytics/aryacore/pkg/models"
-	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/arya-analytics/aryacore/pkg/util/query/mock"
 	"github.com/google/uuid"
@@ -14,22 +13,20 @@ import (
 
 var _ = Describe("DataSourceMem", func() {
 	var (
-		data model.DataSource
-		ds   *mock.DataSourceMem
-		asm  query.Assemble
-		ctx  context.Context
+		ds  *mock.DataSourceMem
+		asm query.Assemble
+		ctx context.Context
 	)
 	BeforeEach(func() {
 		ctx = context.Background()
-		data = model.DataSource{}
-		ds = &mock.DataSourceMem{Data: data}
+		ds = mock.NewDataSourceMem()
 		asm = query.NewAssemble(ds.Exec)
 	})
 
 	Describe("Create", func() {
 		It("Should add the item to the data", func() {
 			Expect(asm.NewCreate().Model(&models.Range{ID: uuid.New()}).Exec(ctx)).To(BeNil())
-			Expect(data.Retrieve(reflect.TypeOf(models.Range{})).ChainValue().Interface()).To(HaveLen(1))
+			Expect(ds.Data.Retrieve(reflect.TypeOf(models.Range{})).ChainValue().Interface()).To(HaveLen(1))
 		})
 	})
 	Describe("Retrieve", func() {
@@ -141,6 +138,16 @@ var _ = Describe("DataSourceMem", func() {
 			Expect(resRR.NodeID).To(Equal(3))
 			resRRTwo := &models.RangeReplica{}
 			err := asm.NewRetrieve().Model(resRRTwo).WhereFields(query.WhereFields{"NodeID": 2}).Exec(ctx)
+			Expect(err).ToNot(BeNil())
+			Expect(err.(query.Error).Type).To(Equal(query.ErrorTypeItemNotFound))
+		})
+	})
+	Describe("Update", func() {
+		It("Should delete an item correctly", func() {
+			n := &models.Node{ID: 1}
+			Expect(asm.NewCreate().Model(n).Exec(ctx)).To(BeNil())
+			Expect(asm.NewDelete().Model(n).WherePK(n.ID).Exec(ctx)).To(BeNil())
+			err := asm.NewRetrieve().Model(n).WherePK(n.ID).Exec(ctx)
 			Expect(err).ToNot(BeNil())
 			Expect(err.(query.Error).Type).To(Equal(query.ErrorTypeItemNotFound))
 		})

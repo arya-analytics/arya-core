@@ -10,7 +10,7 @@ import (
 )
 
 var _ = Describe("errChan", func() {
-	Describe("New Errors", func() {
+	Describe("New errors", func() {
 		Describe("NewSimpleError", func() {
 			It("Should return an error with the correct type", func() {
 				err := query.NewSimpleError(query.ErrorTypeConnection, nil)
@@ -69,6 +69,16 @@ var _ = Describe("errChan", func() {
 				Expect(sErr.Message).To(Equal("random error"))
 			})
 		})
+		Context("Canceled Context", func() {
+			It("Should return a canceled error", func() {
+				ctx, cancel := context.WithCancel(context.Background())
+				cancel()
+				handler := query.NewErrorConvertChain()
+				err := handler.Exec(ctx.Err())
+				Expect(err.(query.Error).Type).To(Equal(query.ErrorTypeInvalidArgs))
+			})
+		})
+
 	})
 	Describe("Catch", func() {
 		It("Should execute the catch correctly", func() {

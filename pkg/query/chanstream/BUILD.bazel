@@ -1,0 +1,19 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "chanstream",
+    srcs = [
+        "create.go",
+        "retrieve.go",
+    ],
+    importpath = "github.com/arya-analytics/aryacore/pkg/query/chanstream",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/models",
+        "//pkg/query",
+        "//pkg/telem/chanstream",
+        "//pkg/util/model",
+        "//pkg/util/query/streamq",
+        "@org_golang_x_sync//errgroup",
+    ],
+)

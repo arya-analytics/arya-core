@@ -11,12 +11,12 @@ import (
 )
 
 type Service struct {
-	localExec query.Execute
-	remote    ServiceRemote
+	exec   query.Execute
+	remote Remote
 }
 
-func NewService(local query.Execute, remote ServiceRemote) *Service {
-	return &Service{remote: remote, localExec: local}
+func NewService(exec query.Execute, remote Remote) *Service {
+	return &Service{remote: remote, exec: exec}
 }
 
 func (s *Service) CanHandle(p *query.Pack) bool {
@@ -25,10 +25,10 @@ func (s *Service) CanHandle(p *query.Pack) bool {
 
 func (s *Service) Exec(ctx context.Context, p *query.Pack) error {
 	return query.Switch(ctx, p, query.Ops{
-		Create:   s.createReplica,
-		Retrieve: s.retrieveReplica,
-		Delete:   s.deleteReplica,
-		Update:   s.updateReplica,
+		&query.Create{}:   s.create,
+		&query.Retrieve{}: s.retrieve,
+		&query.Delete{}:   s.delete,
+		&query.Update{}:   s.update,
 	})
 }
 
@@ -60,17 +60,17 @@ func retrieveRRQuery(m *model.Reflect) query.Query {
 		WherePKs(m.FieldsByName(ccrFieldRRID).ToPKChain())
 }
 
-func (s *Service) createReplica(ctx context.Context, p *query.Pack) error {
+func (s *Service) create(ctx context.Context, p *query.Pack) error {
 	// CLARIFICATION: Retrieves information about the rng replicas and nodes model belongs to.
 	// It will bind the results to p.Model itself.
-	if err := s.localExec(ctx, retrieveRRQuery(p.Model()).Pack()); err != nil {
+	if err := s.exec(ctx, retrieveRRQuery(p.Model()).Pack()); err != nil {
 		return err
 	}
 
 	// CLARIFICATION: Now that we have the RangeReplicas.Node.IsHost field populated, we can switch on it.
 	return replicaNodeIsHostSwitch(
 		p.Model(),
-		func(m *model.Reflect) error { return s.localExec(ctx, query.NewCreate().Model(m).Pack()) },
+		func(m *model.Reflect) error { return s.exec(ctx, query.NewCreate().Model(m).Pack()) },
 		func(m *model.Reflect) error { return s.remote.Create(ctx, remCreateOpts(m)) },
 	)
 }
@@ -82,24 +82,24 @@ func retrieveRequiredFields() []string {
 }
 
 func augmentedRetrieveQuery(p *query.Pack) *query.Pack {
-	fldsOpt, _ := query.RetrieveFieldsOpt(p)
-	query.NewFieldsOpt(p, fldsOpt.AllExcept(ccrTelemField).Append(retrieveRequiredFields()...)...)
+	fo, _ := query.RetrieveFieldsOpt(p)
+	query.NewFieldsOpt(p, fo.AllExcept(ccrTelemField).Append(retrieveRequiredFields()...)...)
 	query.NewRelationOpt(p, "RangeReplica", "ID")
 	query.NewRelationOpt(p, "RangeReplica.Node", "ID", "Address", "IsHost", "RPCPort")
 	return p
 }
 
-func (s *Service) retrieveReplica(ctx context.Context, p *query.Pack) error {
-	fldsOpt, fldsOptOk := query.RetrieveFieldsOpt(p)
+func (s *Service) retrieve(ctx context.Context, p *query.Pack) error {
+	fo, foOk := query.RetrieveFieldsOpt(p)
 	// CLARIFICATION: If we don't need to retrieve any telemetry, just
 	// run the original query and return the result.
-	if fldsOptOk && !fldsOpt.ContainsAny(ccrTelemField) {
-		return s.localExec(ctx, p)
+	if foOk && !fo.ContainsAny(ccrTelemField) {
+		return s.exec(ctx, p)
 	}
 
 	// CLARIFICATION: Retrieves information about the rng replicas and nodes model belongs to.
 	// It will bind the results to p.Model itself.
-	if err := s.localExec(ctx, augmentedRetrieveQuery(p)); err != nil {
+	if err := s.exec(ctx, augmentedRetrieveQuery(p)); err != nil {
 		return err
 	}
 
@@ -107,13 +107,13 @@ func (s *Service) retrieveReplica(ctx context.Context, p *query.Pack) error {
 	return replicaNodeIsHostSwitch(
 		p.Model(),
 		func(m *model.Reflect) error {
-			return s.localExec(ctx, query.NewRetrieve().Model(m).WherePKs(m.PKChain()).Pack())
+			return query.NewRetrieve().Model(m).WherePKs(m.PKChain()).BindExec(s.exec).Exec(ctx)
 		},
 		func(m *model.Reflect) error { return s.remote.Retrieve(ctx, m.Pointer(), remRetrieveOpts(m)) },
 	)
 }
 
-func preDeleteRetrieveQuery(p *query.Pack) query.Query {
+func preDeleteRetrieveQuery(p *query.Pack) *query.Retrieve {
 	q := query.NewRetrieve().Model(p.Model().Pointer())
 	pkc, pkOk := query.PKOpt(p)
 	if pkOk {
@@ -131,39 +131,39 @@ func preDeleteRetrieveQuery(p *query.Pack) query.Query {
 	return q
 }
 
-func (s *Service) deleteReplica(ctx context.Context, p *query.Pack) error {
+func (s *Service) delete(ctx context.Context, p *query.Pack) error {
 	// CLARIFICATION: Retrieves information about the rng replicas and nodes model belongs to.
 	// It will bind the results to p .Model itself.
-	if err := s.localExec(ctx, preDeleteRetrieveQuery(p).Pack()); err != nil {
+	if err := preDeleteRetrieveQuery(p).BindExec(s.exec).Exec(ctx); err != nil {
 		return err
 	}
 	// CLARIFICATION: Now that we have the RangeReplicas.Node.IsHost field populated, we can switch on it.
 	return replicaNodeIsHostSwitch(
 		p.Model(),
 		func(m *model.Reflect) error {
-			return s.localExec(ctx, query.NewDelete().Model(m).WherePKs(m.PKChain()).Pack())
+			return query.NewDelete().Model(m).WherePKs(m.PKChain()).BindExec(s.exec).Exec(ctx)
 		},
 		func(m *model.Reflect) error { return s.remote.Delete(ctx, remDeleteOpts(m)) },
 	)
 }
 
-func (s *Service) updateReplica(ctx context.Context, p *query.Pack) error {
+func (s *Service) update(ctx context.Context, p *query.Pack) error {
 	if !p.Model().FieldsByName("Telem").AllNonZero() {
 		log.
 			WithFields(log.Fields{"ID": p.Model().PKChain().Raw()}).
 			Warn("can't perform update on replica's telemetry, but was still specified!")
 	}
-	return s.localExec(ctx, p)
+	return s.exec(ctx, p)
 }
 
 // |||| ROUTING ||||
 
-func replicaNodeIsHostSwitch(mRfl *model.Reflect, localF, remoteF func(m *model.Reflect) error) error {
+func replicaNodeIsHostSwitch(m *model.Reflect, localF, remoteF func(m *model.Reflect) error) error {
 	c := errutil.NewCatchSimple()
-	route.ModelSwitchBoolean(mRfl,
+	route.ModelSwitchBoolean(m,
 		ccrFieldNodeIsHost,
-		func(_ bool, m *model.Reflect) { c.Exec(func() error { return localF(m) }) },
-		func(_ bool, m *model.Reflect) { c.Exec(func() error { return remoteF(m) }) },
+		func(m *model.Reflect) { c.Exec(func() error { return localF(m) }) },
+		func(m *model.Reflect) { c.Exec(func() error { return remoteF(m) }) },
 	)
 	return c.Error()
 }

@@ -24,6 +24,7 @@ go_library(
         "//pkg/util/errutil",
         "//pkg/util/model",
         "//pkg/util/pg",
+        "//pkg/util/pool",
         "//pkg/util/query",
         "//pkg/util/tasks",
         "//pkg/util/telem",
@@ -58,10 +59,9 @@ go_test(
     deps = [
         ":roach",
         "//pkg/models",
-        "//pkg/storage",
-        "//pkg/storage/internal",
         "//pkg/storage/mock",
         "//pkg/util/model",
+        "//pkg/util/pool",
         "//pkg/util/query",
         "//pkg/util/tasks",
         "//pkg/util/telem",
@@ -70,5 +70,6 @@ go_test(
         "@com_github_onsi_gomega//:gomega",
         "@com_github_sirupsen_logrus//:logrus",
         "@com_github_spf13_viper//:viper",
+        "@com_github_uptrace_bun//:bun",
     ],
 )

@@ -1,8 +1,8 @@
 package internal
 
 import (
-	"context"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
+	"github.com/arya-analytics/aryacore/pkg/util/query/streamq"
 	"github.com/arya-analytics/aryacore/pkg/util/tasks"
 )
 
@@ -16,8 +16,7 @@ import (
 // These responsibilities are assigned in the model struct using the storage.re key.
 // If no responsibility is assigned, EngineMD is assumed responsible.
 type Engine interface {
-	NewAdapter() (Adapter, error)
-	IsAdapter(a Adapter) bool
+	query.AssembleExec
 }
 
 // || META DATA ||
@@ -27,7 +26,6 @@ type Engine interface {
 type EngineMD interface {
 	Engine
 	query.Assemble
-	Exec(ctx context.Context, p *query.Pack) error
 	NewTasks(opts ...tasks.ScheduleOpt) (tasks.Schedule, error)
 }
 
@@ -40,7 +38,6 @@ type EngineObject interface {
 	query.AssembleRetrieve
 	query.AssembleDelete
 	query.AssembleMigrate
-	Exec(ctx context.Context, p *query.Pack) error
 }
 
 // || CACHE ||
@@ -49,42 +46,6 @@ type EngineObject interface {
 // ephemeral data at high speeds.
 type EngineCache interface {
 	Engine
-	// NewTSRetrieve opens a new QueryCacheTSRetrieve.
-	NewTSRetrieve() QueryCacheTSRetrieve
-	// NewTSCreate opens a new QueryCacheTSCreate.
-	NewTSCreate() QueryCacheTSCreate
-}
-
-// |||| QUERY ||||
-
-type Query interface {
-	Exec(ctx context.Context) error
-}
-
-// || TS CACHE ||
-
-type QueryCacheBase interface {
-	Query
-}
-
-type QueryCacheCreate interface {
-	QueryCacheBase
-	Model(model interface{}) QueryCacheCreate
-}
-
-type QueryCacheTSRetrieve interface {
-	QueryCacheBase
-	SeriesExists(ctx context.Context, pk interface{}) (bool, error)
-	Model(model interface{}) QueryCacheTSRetrieve
-	WherePK(pk interface{}) QueryCacheTSRetrieve
-	WherePKs(pks interface{}) QueryCacheTSRetrieve
-	AllTimeRange() QueryCacheTSRetrieve
-	WhereTimeRange(fromTS int64, toTS int64) QueryCacheTSRetrieve
-}
-
-type QueryCacheTSCreate interface {
-	QueryCacheBase
-	Model(model interface{}) QueryCacheTSCreate
-	Series() QueryCacheTSCreate
-	Sample() QueryCacheTSCreate
+	streamq.AssembleTSCreate
+	streamq.AssembleTSRetrieve
 }

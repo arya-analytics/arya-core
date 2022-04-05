@@ -17,6 +17,7 @@ type Storage struct {
 
 func (s *Storage) Stop() {
 	s.DriverRoach.Stop()
+	s.Storage.Stop()
 }
 
 type storageOpts struct {
@@ -41,13 +42,15 @@ func NewStorage(opts ...StorageOpt) *Storage {
 	driverMinio := DriverMinio{}
 	driverRedis := DriverRedis{}
 
-	pool := storage.NewPool()
+	engineMD := roach.New(driverRoach)
+	engineCache := redis.New(driverRedis)
+	engineObject := minio.New(driverMinio)
 
 	s := &Storage{
 		Storage: storage.New(storage.Config{
-			EngineMD:     roach.New(driverRoach, pool),
-			EngineCache:  redis.New(driverRedis, pool),
-			EngineObject: minio.New(driverMinio, pool),
+			EngineMD:     engineMD,
+			EngineCache:  engineCache,
+			EngineObject: engineObject,
 		}),
 		DriverRoach: driverRoach,
 		DriverMinio: driverMinio,

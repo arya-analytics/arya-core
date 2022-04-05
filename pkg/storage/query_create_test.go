@@ -68,7 +68,7 @@ var _ = Describe("Create", func() {
 			By("Creating without error")
 			cErr := store.NewCreate().Model(&channelConfigs).Exec(ctx)
 			Expect(cErr).To(BeNil())
-			By("Being re-retrieved after creation")
+			By("Being re-retrieved After creation")
 			pks := []uuid.UUID{channelConfigs[0].ID, channelConfigs[1].ID}
 			rErr := store.NewRetrieve().Model(&resChannelConfigs).WherePKs(pks).
 				Exec(ctx)

@@ -25,7 +25,7 @@ var _ = Describe("QueryTsRetrieve", func() {
 		Expect(nErr).To(BeNil())
 		cErr := store.NewCreate().Model(channelConfig).Exec(ctx)
 		Expect(cErr).To(BeNil())
-		sErr := store.NewTSCreate().Series().Model(channelConfig).Exec(ctx)
+		sErr := store.NewTSCreate().Model(channelConfig).Exec(ctx)
 		Expect(sErr).To(BeNil())
 	})
 	JustAfterEach(func() {
@@ -44,7 +44,7 @@ var _ = Describe("QueryTsRetrieve", func() {
 				}
 			})
 			JustBeforeEach(func() {
-				err := store.NewTSCreate().Sample().Model(sample).Exec(ctx)
+				err := store.NewTSCreate().Model(sample).Exec(ctx)
 				Expect(err).To(BeNil())
 			})
 			It("Should Acquire the correct sample", func() {
@@ -78,7 +78,7 @@ var _ = Describe("QueryTsRetrieve", func() {
 				}
 			})
 			JustBeforeEach(func() {
-				err := store.NewTSCreate().Sample().Model(&samples).Exec(ctx)
+				err := store.NewTSCreate().Model(&samples).Exec(ctx)
 				Expect(err).To(BeNil())
 			})
 			It("Should Acquire the samples correctly", func() {
@@ -87,8 +87,7 @@ var _ = Describe("QueryTsRetrieve", func() {
 				fromTs := sampleTime.Add(-800 * time.Millisecond)
 				toTs := sampleTime.Add(500 * time.Millisecond)
 				err := store.NewTSRetrieve().Model(&resSamples).WherePK(
-					channelConfig.ID).WhereTimeRange(fromTs.UnixMicro(), toTs.UnixMicro()).
-					Exec(ctx)
+					channelConfig.ID).WhereTimeRange(telem.NewTimeRange(telem.NewTimeStamp(fromTs), telem.NewTimeStamp(toTs))).Exec(ctx)
 				Expect(err).To(BeNil())
 				Expect(resSamples).To(HaveLen(2))
 				for _, s := range resSamples {

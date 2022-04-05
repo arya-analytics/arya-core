@@ -17,13 +17,13 @@ import (
 //
 // Instantiate QueryAssemble by calling NewQueryAssemble.
 type QueryAssemble struct {
-	query.AssembleBase
+	query.Assemble
 }
 
 // |||| CONSTRUCTOR |||
 
 func NewQueryAssemble(exec query.Execute) *QueryAssemble {
-	return &QueryAssemble{AssembleBase: query.NewAssemble(exec)}
+	return &QueryAssemble{Assemble: query.NewAssemble(exec)}
 }
 
 // |||| CREATE ||||

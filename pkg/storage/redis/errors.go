@@ -6,7 +6,7 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/util/query"
 )
 
-func newErrorConvertChain() errutil.ConvertChain {
+func newErrorConvert() errutil.ConvertChain {
 	return query.NewErrorConvertChain(internal.ErrorConvertConnection, errorConvertDefault)
 }
 
