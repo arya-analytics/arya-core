@@ -70,8 +70,8 @@ var _ = Describe("Catalog", func() {
 	})
 	Describe("Data Source", func() {
 		It("Should retrieve the data source item correctly", func() {
-			ds := &model.DataSource{}
-			t := reflect.TypeOf(&mock.ModelA{})
+			ds := model.NewDataSource()
+			t := reflect.TypeOf(mock.ModelA{})
 			ds.Write(model.NewReflect(&[]*mock.ModelA{}))
 			m := ds.Retrieve(t)
 			Expect(m.Type()).To(Equal(reflect.TypeOf(mock.ModelA{})))

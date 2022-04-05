@@ -8,7 +8,7 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/util/errutil"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/websocket/v2"
-	"github.com/prometheus/common/log"
+	log "github.com/sirupsen/logrus"
 	"github.com/vmihailenco/msgpack/v5"
 	"io"
 )

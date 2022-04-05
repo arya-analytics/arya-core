@@ -148,7 +148,7 @@ var _ = Describe("Delta", func() {
 			oTwo.Start()
 			delta.AddOutlet(oOne)
 			delta.AddOutlet(oTwo)
-			t := time.NewTimer(10 * time.Millisecond)
+			t := time.NewTimer(11 * time.Millisecond)
 		o:
 			for {
 				select {
@@ -157,8 +157,8 @@ var _ = Describe("Delta", func() {
 					break o
 				}
 			}
-			Expect(oOne.data).To(HaveLen(10))
-			Expect(oTwo.data).To(HaveLen(10))
+			Expect(len(oOne.data)).To(BeNumerically(">=", 10))
+			Expect(len(oTwo.data)).To(BeNumerically(">=", 10))
 		})
 	})
 })
