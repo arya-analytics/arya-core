@@ -1,42 +1,6 @@
 load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
-    name = "tsquery",
-    srcs = [
-        "assemble.go",
-        "create.go",
-        "go_exec.go",
-        "retrieve.go",
-    ],
-    importpath = "github.com/arya-analytics/aryacore/pkg/util/query/tsquery",
-    visibility = ["//visibility:public"],
-    deps = [
-        "//pkg/util/query",
-        "//pkg/util/telem",
-    ],
-)
-
-go_test(
-    name = "tsquery_test",
-    srcs = [
-        "assemble_test.go",
-        "create_test.go",
-        "retrieve_test.go",
-        "tsquery_suite_test.go",
-    ],
-    deps = [
-        ":tsquery",
-        "//pkg/util/model",
-        "//pkg/util/model/mock",
-        "//pkg/util/query",
-        "//pkg/util/query/mock",
-        "//pkg/util/telem",
-        "@com_github_onsi_ginkgo_v2//:ginkgo",
-        "@com_github_onsi_gomega//:gomega",
-    ],
-)
-
-go_library(
     name = "streamq",
     srcs = [
         "assemble.go",

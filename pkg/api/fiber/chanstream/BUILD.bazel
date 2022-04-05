@@ -1,0 +1,18 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "chanstream",
+    srcs = ["server.go"],
+    importpath = "github.com/arya-analytics/aryacore/pkg/api/fiber/chanstream",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/query",
+        "//pkg/query/chanstream",
+        "//pkg/telem/chanstream",
+        "//pkg/util/errutil",
+        "@com_github_gofiber_fiber_v2//:fiber",
+        "@com_github_gofiber_websocket_v2//:websocket",
+        "@com_github_sirupsen_logrus//:logrus",
+        "@com_github_vmihailenco_msgpack_v5//:msgpack",
+    ],
+)

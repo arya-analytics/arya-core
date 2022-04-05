@@ -36,10 +36,13 @@ go_test(
     name = "query_test",
     srcs = [
         "base_test.go",
+        "delete_test.go",
         "errors_test.go",
         "fields_test.go",
+        "hook_test.go",
         "memo_test.go",
         "migrate_test.go",
+        "opt_test.go",
         "query_suite_test.go",
         "query_test.go",
         "retrieve_test.go",

@@ -214,7 +214,7 @@ var _ = Describe("Server", func() {
 				}
 
 				Expect(stream.CloseSend()).To(Succeed())
-				time.Sleep(100 * time.Millisecond)
+				time.Sleep(300 * time.Millisecond)
 
 				var resSamples []*models.ChannelSample
 				Expect(persist.NewRetrieve().Model(&resSamples).WherePK(ccOne.ID).Exec(ctx)).To(Succeed())

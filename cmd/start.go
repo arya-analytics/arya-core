@@ -96,16 +96,14 @@ func runStart(cmd *cobra.Command, _ []string) error {
 }
 
 func startStorage(cmd *cobra.Command) (storage.Storage, error) {
-	pool := storage.NewPool()
-
 	mdDriver := roach.DriverRoach{Config: roach.Config{}.Viper()}
-	mdEngine := roach.New(mdDriver, pool)
+	mdEngine := roach.New(mdDriver)
 
 	objDriver := minio.DriverMinio{Config: minio.Config{}.Viper()}
-	objEngine := minio.New(objDriver, pool)
+	objEngine := minio.New(objDriver)
 
 	cacheDriver := redis.DriverRedis{Config: redis.Config{}.Viper()}
-	cacheEngine := redis.New(cacheDriver, pool)
+	cacheEngine := redis.New(cacheDriver)
 
 	s := storage.New(storage.Config{EngineMD: mdEngine, EngineObject: objEngine, EngineCache: cacheEngine})
 	models.BindHooks(s)

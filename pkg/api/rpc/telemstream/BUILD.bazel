@@ -1,28 +1,44 @@
 load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
-    name = "chanstream",
+    name = "telemstream",
     srcs = ["server.go"],
-    importpath = "github.com/arya-analytics/aryacore/pkg/api/rpc/chanstream",
+    importpath = "github.com/arya-analytics/aryacore/pkg/api/rpc/telemstream",
     visibility = ["//visibility:public"],
     deps = [
-        "//pkg/cluster/gen/proto/go/chanstream/v1:chanstream",
+        "//pkg/api/rpc/gen/proto/go/telemstream/v1:telemstream",
         "//pkg/models",
+        "//pkg/query",
+        "//pkg/query/chanstream",
         "//pkg/rpc",
         "//pkg/telem/chanstream",
-        "//pkg/util/model",
-        "//pkg/util/query/streamq",
-        "@com_github_google_uuid//:uuid",
         "@org_golang_google_grpc//:grpc",
-        "@org_golang_x_sync//errgroup",
     ],
 )
 
 go_test(
-    name = "chanstream_test",
-    srcs = ["chanstream_suite_test.go"],
+    name = "telemstream_test",
+    srcs = [
+        "chanstream_suite_test.go",
+        "server_test.go",
+    ],
     deps = [
+        ":telemstream",
+        "//pkg/api/rpc/gen/proto/go/telemstream/v1:telemstream",
+        "//pkg/cluster",
+        "//pkg/cluster/chanstream",
+        "//pkg/cluster/chanstream/mock",
+        "//pkg/cluster/mock",
+        "//pkg/models",
+        "//pkg/telem/chanstream",
+        "//pkg/util/model",
+        "//pkg/util/query/mock",
+        "//pkg/util/route",
+        "//pkg/util/telem",
+        "@com_github_google_uuid//:uuid",
         "@com_github_onsi_ginkgo_v2//:ginkgo",
         "@com_github_onsi_gomega//:gomega",
+        "@org_golang_google_grpc//:grpc",
+        "@org_golang_google_grpc//credentials/insecure",
     ],
 )
