@@ -64,13 +64,13 @@ func (sg sqlGen) parseFldExp(fldName string, fldVal interface{}) (string, []inte
 	}
 	switch exp.Op {
 	case query.FieldOpInRange:
-		return fmt.Sprintf("%s BETWEEN ? and ?", fldName), exp.Vals
+		return fmt.Sprintf("%s BETWEEN ? and ?", fldName), exp.Values
 	case query.FieldOpLessThan:
-		return fmt.Sprintf("%s < ?", fldName), exp.Vals
+		return fmt.Sprintf("%s < ?", fldName), exp.Values
 	case query.FieldOpGreaterThan:
-		return fmt.Sprintf("%s > (?)", fldName), exp.Vals
+		return fmt.Sprintf("%s > (?)", fldName), exp.Values
 	case query.FieldOpIn:
-		return fmt.Sprintf("%s IN (?)", fldName), []interface{}{bun.In(exp.Vals)}
+		return fmt.Sprintf("%s IN (?)", fldName), []interface{}{bun.In(exp.Values)}
 	default:
 		log.Warnf("roach sql gen could not parse expression opt %s. attempting equality", exp.Op)
 		return fmt.Sprintf("%s = ?", fldName), []interface{}{exp}

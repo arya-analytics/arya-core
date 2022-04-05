@@ -18,7 +18,7 @@ type Engine struct {
 func New(driver Driver) *Engine {
 	e := &Engine{driver: driver, pool: pool.New[*Engine]()}
 	e.pool.Factory = e
-	e.AssembleTS = streamq.NewAssemble(e.Exec)
+	e.AssembleTS = streamq.NewAssembleTS(e.Exec)
 	return e
 }
 

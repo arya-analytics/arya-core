@@ -16,13 +16,13 @@ type Cluster interface {
 }
 
 type cluster struct {
-	query.AssembleBase
+	query.Assemble
 	svc ServiceChain
 }
 
 func New() Cluster {
 	c := &cluster{}
-	c.AssembleBase = query.NewAssemble(c.Exec)
+	c.Assemble = query.NewAssemble(c.Exec)
 	return c
 }
 

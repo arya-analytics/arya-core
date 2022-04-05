@@ -91,7 +91,7 @@ type storage struct {
 func New(cfg Config) Storage {
 	s := &storage{cfg: cfg, HookRunner: query.NewHookRunner()}
 	s.Assemble = query.NewAssemble(s.Exec)
-	s.AssembleTS = streamq.NewAssemble(s.Exec)
+	s.AssembleTS = streamq.NewAssembleTS(s.Exec)
 	return s
 }
 

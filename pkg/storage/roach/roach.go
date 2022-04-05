@@ -10,7 +10,7 @@ import (
 // Engine opens connections and execute queries with a roach database.
 // implements the storage.EngineMD interface.
 type Engine struct {
-	query.AssembleBase
+	query.Assemble
 	Driver Driver
 	Pool   *pool.Pool[*Engine]
 }
@@ -19,7 +19,7 @@ type Engine struct {
 func New(driver Driver) *Engine {
 	e := &Engine{Driver: driver, Pool: pool.New[*Engine]()}
 	e.Pool.Factory = e
-	e.AssembleBase = query.NewAssemble(e.Exec)
+	e.Assemble = query.NewAssemble(e.Exec)
 	return e
 }
 
