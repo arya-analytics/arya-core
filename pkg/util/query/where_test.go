@@ -12,8 +12,8 @@ import (
 var _ = Describe("Where", func() {
 	DescribeTable("Field Expressions", func(exp query.FieldExp, expOp query.FieldOp, expVals []interface{}) {
 		Expect(exp.Op).To(Equal(expOp))
-		Expect(exp.Vals).To(HaveLen(len(expVals)))
-		Expect(exp.Vals).To(Equal(expVals))
+		Expect(exp.Values).To(HaveLen(len(expVals)))
+		Expect(exp.Values).To(Equal(expVals))
 	},
 		Entry("Greater Than", query.GreaterThan(1), query.FieldOpGreaterThan, []interface{}{1}),
 		Entry("Less Than", query.LessThan(1), query.FieldOpLessThan, []interface{}{1}),

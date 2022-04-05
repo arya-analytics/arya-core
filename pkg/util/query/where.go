@@ -47,29 +47,29 @@ const (
 )
 
 type FieldExp struct {
-	Op   FieldOp
-	Vals []interface{}
+	Op     FieldOp
+	Values []interface{}
 }
 
 // GreaterThan is an option for WhereFields that will filter the results of a query by a field greater than the
 // given value.
 func GreaterThan(value interface{}) FieldExp {
-	return FieldExp{Op: FieldOpGreaterThan, Vals: []interface{}{value}}
+	return FieldExp{Op: FieldOpGreaterThan, Values: []interface{}{value}}
 }
 
 // LessThan is an option for WhereFields that will filter the results of a query by a field less than the given value.
 func LessThan(value interface{}) FieldExp {
-	return FieldExp{Op: FieldOpLessThan, Vals: []interface{}{value}}
+	return FieldExp{Op: FieldOpLessThan, Values: []interface{}{value}}
 }
 
 // InRange is an option for WhereFields that will filter the results of a query by a field in the given range.
 func InRange(start interface{}, stop interface{}) FieldExp {
-	return FieldExp{Op: FieldOpInRange, Vals: []interface{}{start, stop}}
+	return FieldExp{Op: FieldOpInRange, Values: []interface{}{start, stop}}
 }
 
 // In is an option for WhereFields that will filter the results of a query by a field in the given values.
 func In(values ...interface{}) FieldExp {
-	return FieldExp{Op: FieldOpIn, Vals: values}
+	return FieldExp{Op: FieldOpIn, Values: values}
 }
 
 // |||| OPTS ||||
