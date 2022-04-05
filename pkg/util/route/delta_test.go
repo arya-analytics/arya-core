@@ -148,7 +148,7 @@ var _ = Describe("Delta", func() {
 			oTwo.Start()
 			delta.AddOutlet(oOne)
 			delta.AddOutlet(oTwo)
-			t := time.NewTimer(11 * time.Millisecond)
+			t := time.NewTimer(13 * time.Millisecond)
 		o:
 			for {
 				select {
