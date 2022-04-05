@@ -101,7 +101,7 @@ func (p *Pack) String() string {
 // |||| UTILITIES ||||
 
 // ConcreteModel asserts the Pack.Model to a concrete type.
-// Panicks if the Pack.Model is not of the provided type T.
+// Panics if the Pack.Model is not of the provided type T.
 func ConcreteModel[T any](p *Pack) T {
 	return p.Model().Pointer().(T)
 }
