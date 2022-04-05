@@ -80,7 +80,7 @@ func (rdo *remoteDeltaOutlet) Start(ctx context.Context) {
 				rdo.oSamples <- v
 			}
 		}
-	}, streamq.WithSegmentName("cluster.chanstream.remoteDeltaOutlet"))
+	}, streamq.WithSegmentName("cluster.telemstream.remoteDeltaOutlet"))
 }
 
 // |||| POOL ||||

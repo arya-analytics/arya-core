@@ -2,6 +2,7 @@ package mock
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
@@ -14,12 +15,12 @@ import (
 type DataSourceMem struct {
 	query.AssembleBase
 	mu   sync.RWMutex
-	Data model.DataSource
+	Data *model.DataSource
 	*query.HookRunner
 }
 
 func NewDataSourceMem() *DataSourceMem {
-	ds := &DataSourceMem{Data: map[reflect.Type]*model.Reflect{}, HookRunner: query.NewHookRunner()}
+	ds := &DataSourceMem{Data: model.NewDataSource(), HookRunner: query.NewHookRunner()}
 	ds.AssembleBase = query.NewAssemble(ds.Exec)
 	return ds
 }
@@ -44,7 +45,7 @@ func (s *DataSourceMem) Exec(ctx context.Context, p *query.Pack) error {
 func (s *DataSourceMem) retrieve(ctx context.Context, p *query.Pack) error {
 	f := s.filter(p)
 	if f.ChainValue().Len() == 0 {
-		return query.NewSimpleError(query.ErrorTypeItemNotFound, nil)
+		return query.NewSimpleError(query.ErrorTypeItemNotFound, errors.New(fmt.Sprintf("%s", p)))
 	}
 	var exc *model.Exchange
 	if p.Model().IsStruct() {
@@ -72,7 +73,7 @@ func (s *DataSourceMem) delete(ctx context.Context, p *query.Pack) error {
 	})
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.Data[f.Type()] = newData
+	s.Data.Write(newData)
 	return nil
 }
 

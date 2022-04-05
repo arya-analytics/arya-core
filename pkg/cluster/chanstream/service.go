@@ -27,7 +27,7 @@ func NewService(qExec query.Execute, remote *RemoteRPC) *Service {
 // CanHandle implements cluster.Service.
 func (s *Service) CanHandle(p *query.Pack) bool {
 	if !p.Model().IsChan() {
-		panic("chanstream service can't handle non-channel models yet!")
+		panic("telemstream service can't handle non-channel models yet!")
 	}
 	return catalog().Contains(p.Model())
 }
@@ -79,7 +79,7 @@ func (s *Service) tsCreate(ctx context.Context, p *query.Pack) error {
 				localStream <- sa
 			}
 		}
-	}, streamq.WithSegmentName("chanstream.Service.tsCreate"))
+	}, streamq.WithSegmentName("telemstream.Service.tsCreate"))
 	return nil
 }
 
@@ -145,7 +145,7 @@ func (s *Service) retrieveConfigsQuery(ctx context.Context, pks interface{}) (cc
 func stream(p *query.Pack) *streamq.Stream {
 	s, ok := streamq.StreamOpt(p)
 	if !ok {
-		panic("chanstream queries must be run using goexec")
+		panic("telemstream queries must be run using goexec")
 	}
 	return s
 }
@@ -153,7 +153,7 @@ func stream(p *query.Pack) *streamq.Stream {
 func pkOpt(p *query.Pack) model.PKChain {
 	pkc, ok := query.PKOpt(p)
 	if !ok {
-		panic("chanstream queries require a pk")
+		panic("telemstream queries require a pk")
 	}
 	return pkc
 

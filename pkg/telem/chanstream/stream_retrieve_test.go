@@ -90,7 +90,7 @@ var _ = Describe("streamRetrieve", func() {
 	})
 	BeforeEach(func() { persist.AddQueryHook(clustermock.HostInterceptQueryHook(1)) })
 	AfterEach(func() { persist.ClearQueryHooks() })
-	It("Should retrieve a qStream of samples correctly", func() {
+	It("Should retrieve a stream of samples correctly", func() {
 		pkc := model.NewPKChain([]uuid.UUID{ccOne.ID})
 		c := make(chan *models.ChannelSample)
 		aCtx, cancel := context.WithCancel(ctx)

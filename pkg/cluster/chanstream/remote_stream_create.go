@@ -45,6 +45,6 @@ func (s *remoteStreamCreate) exec(ctx context.Context, p *query.Pack) error {
 				qStream.Errors <- sErr
 			}
 		}
-	}, streamq.WithSegmentName("cluster.chanstream.remoteStreamCreate"))
+	}, streamq.WithSegmentName("cluster.telemstream.remoteStreamCreate"))
 	return nil
 }

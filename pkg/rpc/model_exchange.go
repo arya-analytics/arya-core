@@ -16,6 +16,8 @@ func NewModelExchange(sourcePtr, destPtr interface{}) *model.Exchange {
 	)
 }
 
+// |||| BULK TELEM ||||
+
 func FieldHandlerTelemBulk(sourceST, destST model.StructTag, sourceFld, destFld reflect.Value) (reflect.Value, bool) {
 	if !taggedTelemBulk(sourceST) || !taggedTelemBulk(destST) {
 		return reflect.Value{}, false

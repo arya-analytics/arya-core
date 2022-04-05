@@ -68,7 +68,7 @@ func (ldo *localDeltaOutlet) Start(ctx context.Context) {
 				ldo.oValStream <- v
 			}
 		}
-	}, streamq.WithSegmentName("cluster.chanstream.localDeltaOutlet"))
+	}, streamq.WithSegmentName("cluster.telemstream.localDeltaOutlet"))
 }
 
 // |||| INLET ||||

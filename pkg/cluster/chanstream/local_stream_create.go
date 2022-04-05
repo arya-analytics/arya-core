@@ -28,6 +28,6 @@ func (lsc *localStreamCreate) exec(ctx context.Context, p *query.Pack) error {
 				streamQ.Errors <- err
 			}
 		}
-	}, streamq.WithSegmentName("cluster.chanstream.localStreamCreate"))
+	}, streamq.WithSegmentName("cluster.telemstream.localStreamCreate"))
 	return nil
 }

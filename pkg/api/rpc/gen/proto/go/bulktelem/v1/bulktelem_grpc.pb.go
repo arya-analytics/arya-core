@@ -31,7 +31,7 @@ func NewBulkTelemServiceClient(cc grpc.ClientConnInterface) BulkTelemServiceClie
 }
 
 func (c *bulkTelemServiceClient) CreateStream(ctx context.Context, opts ...grpc.CallOption) (BulkTelemService_CreateStreamClient, error) {
-	stream, err := c.cc.NewStream(ctx, &BulkTelemService_ServiceDesc.Streams[0], "/bulktelem.v1.BulkTelemService/createStream", opts...)
+	stream, err := c.cc.NewStream(ctx, &BulkTelemService_ServiceDesc.Streams[0], "/bulktelem.v1.BulkTelemService/CreateStream", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +62,7 @@ func (x *bulkTelemServiceCreateStreamClient) Recv() (*CreateStreamResponse, erro
 }
 
 func (c *bulkTelemServiceClient) RetrieveStream(ctx context.Context, in *RetrieveStreamRequest, opts ...grpc.CallOption) (BulkTelemService_RetrieveStreamClient, error) {
-	stream, err := c.cc.NewStream(ctx, &BulkTelemService_ServiceDesc.Streams[1], "/bulktelem.v1.BulkTelemService/retrieveStream", opts...)
+	stream, err := c.cc.NewStream(ctx, &BulkTelemService_ServiceDesc.Streams[1], "/bulktelem.v1.BulkTelemService/RetrieveStream", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -106,10 +106,10 @@ type UnimplementedBulkTelemServiceServer struct {
 }
 
 func (UnimplementedBulkTelemServiceServer) CreateStream(BulkTelemService_CreateStreamServer) error {
-	return status.Errorf(codes.Unimplemented, "method createStream not implemented")
+	return status.Errorf(codes.Unimplemented, "method CreateStream not implemented")
 }
 func (UnimplementedBulkTelemServiceServer) RetrieveStream(*RetrieveStreamRequest, BulkTelemService_RetrieveStreamServer) error {
-	return status.Errorf(codes.Unimplemented, "method retrieveStream not implemented")
+	return status.Errorf(codes.Unimplemented, "method RetrieveStream not implemented")
 }
 
 // UnsafeBulkTelemServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -179,13 +179,13 @@ var BulkTelemService_ServiceDesc = grpc.ServiceDesc{
 	Methods:     []grpc.MethodDesc{},
 	Streams: []grpc.StreamDesc{
 		{
-			StreamName:    "createStream",
+			StreamName:    "CreateStream",
 			Handler:       _BulkTelemService_CreateStream_Handler,
 			ServerStreams: true,
 			ClientStreams: true,
 		},
 		{
-			StreamName:    "retrieveStream",
+			StreamName:    "RetrieveStream",
 			Handler:       _BulkTelemService_RetrieveStream_Handler,
 			ServerStreams: true,
 		},

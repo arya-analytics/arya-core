@@ -24,7 +24,7 @@ func NewServer(svc *chanstream.Service) *Server {
 }
 
 const (
-	groupEndpoint    = "/chanstream"
+	groupEndpoint    = "/telemstream"
 	retrieveEndpoint = "/retrieve"
 	createEndpoint   = "/create"
 )
