@@ -36,8 +36,8 @@ func (d *Delete) WherePKs(pks interface{}) *Delete {
 
 // WhereFields queries by a set of key value pairs where the key represents a field name
 // and the value represents a value to match with.
-func (d *Delete) WhereFields(flds WhereFields) *Delete {
-	d.Where.WhereFields(flds)
+func (d *Delete) WhereFields(fields WhereFields) *Delete {
+	d.Where.WhereFields(fields)
 	return d
 }
 

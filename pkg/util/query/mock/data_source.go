@@ -13,7 +13,7 @@ import (
 )
 
 type DataSourceMem struct {
-	query.AssembleBase
+	query.Assemble
 	mu   sync.RWMutex
 	Data *model.DataSource
 	*query.HookRunner
@@ -21,7 +21,7 @@ type DataSourceMem struct {
 
 func NewDataSourceMem() *DataSourceMem {
 	ds := &DataSourceMem{Data: model.NewDataSource(), HookRunner: query.NewHookRunner()}
-	ds.AssembleBase = query.NewAssemble(ds.Exec)
+	ds.Assemble = query.NewAssemble(ds.Exec)
 	return ds
 }
 

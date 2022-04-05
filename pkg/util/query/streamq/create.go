@@ -11,17 +11,17 @@ type TSCreate struct {
 
 func NewTSCreate() *TSCreate {
 	c := &TSCreate{}
-	c.base.Init(c)
+	c.Base.Init(c)
 	return c
 }
 
 func (c *TSCreate) Model(m interface{}) *TSCreate {
-	c.base.Model(m)
+	c.Base.Model(m)
 	return c
 }
 
 func (c *TSCreate) BindExec(exec query.Execute) *TSCreate {
-	c.base.BindExec(exec)
+	c.Base.BindExec(exec)
 	return c
 }
 

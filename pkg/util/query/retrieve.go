@@ -116,18 +116,18 @@ type RelationOpt struct {
 
 // NewRelationOpt creates a new RelationOpt.
 func NewRelationOpt(p *Pack, name string, fields ...string) {
-	o := RelationOpt{name, fields}
-	_, ok := p.opts[relationOptKey]
+	nro := RelationOpt{name, fields}
+	ro, ok := p.RetrieveOpt(relationOptKey)
 	if !ok {
-		p.opts[relationOptKey] = []RelationOpt{o}
+		p.SetOpt(relationOptKey, []RelationOpt{nro})
 	} else {
-		p.opts[relationOptKey] = append(p.opts[relationOptKey].([]RelationOpt), o)
+		p.SetOpt(relationOptKey, append(ro.([]RelationOpt), nro))
 	}
 }
 
 // RelationOpts retrieves a slice of all RelationOpt applied to the query.
 func RelationOpts(p *Pack) []RelationOpt {
-	o, ok := p.opts[relationOptKey]
+	o, ok := p.RetrieveOpt(relationOptKey)
 	if !ok {
 		return []RelationOpt{}
 	}
@@ -156,13 +156,13 @@ type OrderOpt struct {
 
 // NewOrderOpt creates a new OrderOpt.
 func NewOrderOpt(p *Pack, order OrderDirection, fld string) {
-	p.opts[orderOptKey] = OrderOpt{Field: fld, Direction: order}
+	p.SetOpt(orderOptKey, OrderOpt{fld, order})
 }
 
 // RetrieveOrderOpt retrieves any order options applied to the query.
 // Returns false for the second argument if no ordering was specified.
 func RetrieveOrderOpt(p *Pack) (OrderOpt, bool) {
-	qo, ok := p.opts[orderOptKey]
+	qo, ok := p.RetrieveOpt(orderOptKey)
 	if !ok {
 		return OrderOpt{}, false
 	}
@@ -189,13 +189,13 @@ func LimitOpt(p *Pack) (int, bool) {
 
 // NewMemoOpt creates a new MemoOpt.
 func NewMemoOpt(p *Pack, memo *Memo) {
-	p.opts[memoOptKey] = memo
+	p.SetOpt(memoOptKey, memo)
 }
 
 // MemoOpt is an option that that applies a Memo to the query.
 // For more information on memoizing query results, see Memo.
 func MemoOpt(p *Pack) (*Memo, bool) {
-	qo, ok := p.opts[memoOptKey]
+	qo, ok := p.RetrieveOpt(memoOptKey)
 	if !ok {
 		return nil, false
 	}

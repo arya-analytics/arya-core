@@ -30,13 +30,13 @@ func (m *Migrate) BindExec(e Execute) *Migrate {
 
 // NewVerifyOpt creates a new VerifyOpt.
 func NewVerifyOpt(p *Pack) {
-	p.opts[verifyOptKey] = true
+	p.SetOpt(verifyOptKey, true)
 }
 
 // VerifyOpt is an option to the Pack indicating that Migrate query
 // should verify migrations are up-to-date instead of running the migrations themselves.
 func VerifyOpt(p *Pack) bool {
-	qo, ok := p.opts[verifyOptKey]
+	qo, ok := p.RetrieveOpt(verifyOptKey)
 	if !ok {
 		return false
 	}

@@ -21,7 +21,6 @@ var _ = Describe("Where", func() {
 		Entry("In", query.In(1, 2, 3), query.FieldOpIn, []interface{}{1, 2, 3}),
 	)
 	Describe("Opt Binding", func() {
-
 		var (
 			exec = &mock.Exec{}
 			asm  = query.NewAssemble(exec.Exec)

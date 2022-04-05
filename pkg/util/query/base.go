@@ -52,7 +52,7 @@ func (b *Base) Exec(ctx context.Context) error {
 		panic("query execute not bound")
 	}
 	err := b.e(ctx, p)
-	if ok {
+	if ok && err == nil {
 		memo.Add(p.Model())
 	}
 	return err

@@ -37,4 +37,46 @@ var _ = Describe("Memo", func() {
 			To(BeNil())
 		Expect(resCC).To(HaveLen(5))
 	})
+	It("Shouldn't return the results of the memoized query when no pk is provided", func() {
+		var resCC []*models.ChannelConfig
+		Expect(query.
+			NewRetrieve().
+			Model(&resCC).
+			WithMemo(memo).
+			BindExec(exec.Exec).
+			Exec(context.Background())).
+			To(BeNil())
+		Expect(resCC).To(HaveLen(0))
+	})
+	It("Should add the results of a query to the memo", func() {
+		newID := uuid.New()
+		resCC := &models.ChannelConfig{}
+		Expect(query.
+			NewRetrieve().
+			Model(resCC).
+			WherePK(newID).
+			WithMemo(memo).
+			BindExec(func(ctx context.Context, p *query.Pack) error {
+				p.Model().Set(model.NewReflect(&models.ChannelConfig{ID: newID, Name: "Hello"}))
+				return nil
+			}).
+			Exec(ctx),
+		)
+		Expect(resCC.Name).To(Equal("Hello"))
+		resCCTwo := &models.ChannelConfig{}
+		Expect(query.
+			NewRetrieve().
+			Model(resCCTwo).
+			WherePK(newID).
+			WithMemo(memo).
+			BindExec(exec.Exec).
+			Exec(ctx),
+		)
+		Expect(resCCTwo.Name).To(Equal("Hello"))
+	})
+	It("Should panic if a non chain is passed to the memo", func() {
+		Expect(func() {
+			query.NewMemo(model.NewReflect(&models.ChannelConfig{}))
+		}).To(Panic())
+	})
 })

@@ -102,16 +102,14 @@ func NewPKOpt(p *Pack, pk interface{}) {
 			pkc = model.NewPKChain([]interface{}{pk})
 		}
 	}
-
-	qo := pkOpt{pkc}
-	p.opts[pkOptKey] = qo
+	p.SetOpt(pkOptKey, pkOpt{pkc})
 }
 
 // || WHERE FIELDS ||
 
 // WhereFieldsOpt retrieves a WhereFields option from a query.
 func WhereFieldsOpt(p *Pack) (WhereFields, bool) {
-	qo, ok := p.opts[whereFieldsOptKey]
+	qo, ok := p.RetrieveOpt(whereFieldsOptKey)
 	if !ok {
 		return WhereFields{}, false
 	}
@@ -120,5 +118,5 @@ func WhereFieldsOpt(p *Pack) (WhereFields, bool) {
 
 // NewWhereFieldsOpt applies a WhereFields option to a query.
 func NewWhereFieldsOpt(p *Pack, fields WhereFields) {
-	p.opts[whereFieldsOptKey] = fields
+	p.SetOpt(whereFieldsOptKey, fields)
 }

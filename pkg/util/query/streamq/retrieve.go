@@ -12,12 +12,12 @@ type TSRetrieve struct {
 
 func NewTSRetrieve() *TSRetrieve {
 	r := &TSRetrieve{}
-	r.base.Init(r)
+	r.Base.Init(r)
 	return r
 }
 
 func (r *TSRetrieve) Model(m interface{}) *TSRetrieve {
-	r.base.Model(m)
+	r.Base.Model(m)
 	return r
 }
 
@@ -41,7 +41,7 @@ func (r *TSRetrieve) WhereTimeRange(tr telem.TimeRange) *TSRetrieve {
 }
 
 func (r *TSRetrieve) BindExec(exec query.Execute) *TSRetrieve {
-	r.base.BindExec(exec)
+	r.Base.BindExec(exec)
 	return r
 }
 

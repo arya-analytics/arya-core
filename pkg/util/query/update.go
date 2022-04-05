@@ -75,7 +75,7 @@ func BulkUpdateOpt(p *Pack) bool {
 	if !ok {
 		panic("can't retrieve a bulk query opt from non bulk query")
 	}
-	bulkOpt, ok := p.opts[bulkUpdateOptKey]
+	bulkOpt, ok := p.RetrieveOpt(bulkUpdateOptKey)
 	if !ok {
 		return false
 	}

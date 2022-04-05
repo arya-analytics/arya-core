@@ -32,7 +32,7 @@ func (m *Memo) Exec(ctx context.Context, p *Pack) error {
 		v, vOk := m.into.ValueByPK(pk)
 		if vOk {
 			if p.Model().IsStruct() {
-				p.Model().PointerValue().Set(v.PointerValue())
+				p.Model().Set(v)
 			}
 			if p.Model().IsChain() {
 				p.Model().ChainAppend(v)
