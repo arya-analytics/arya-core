@@ -17,14 +17,16 @@ func catalog() model.Catalog {
 }
 
 type channelConfig struct {
-	ID        uuid.UUID `model:"role:tsKey"`
-	Name      string
-	DataRate  telem.DataRate
-	Retention time.Duration
+	model.Base `model:"role:tsSeries"`
+	ID         uuid.UUID `model:"role:pk"`
+	Name       string
+	DataRate   telem.DataRate
+	Retention  time.Duration
 }
 
 type channelSample struct {
-	ChannelConfigID uuid.UUID       `model:"role:tsKey,"`
+	model.Base      `model:"role:tsSample"`
+	ChannelConfigID uuid.UUID       `model:"role:pk,"`
 	Value           float64         `model:"role:tsValue,"`
 	Timestamp       telem.TimeStamp `model:"role:tsStamp"`
 }

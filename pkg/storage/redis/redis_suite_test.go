@@ -2,8 +2,6 @@ package redis_test
 
 import (
 	"context"
-	"github.com/arya-analytics/aryacore/pkg/storage"
-	"github.com/arya-analytics/aryacore/pkg/storage/internal"
 	"github.com/arya-analytics/aryacore/pkg/storage/mock"
 	"github.com/arya-analytics/aryacore/pkg/storage/redis"
 	. "github.com/onsi/ginkgo/v2"
@@ -13,12 +11,11 @@ import (
 
 var (
 	ctx    = context.Background()
-	engine internal.EngineCache
+	engine *redis.Engine
 )
 
 var _ = BeforeSuite(func() {
-	pool := storage.NewPool()
-	engine = redis.New(mock.DriverRedis{}, pool)
+	engine = redis.New(mock.DriverRedis{})
 })
 
 func TestRedis(t *testing.T) {

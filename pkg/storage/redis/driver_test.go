@@ -2,7 +2,6 @@ package redis_test
 
 import (
 	"github.com/arya-analytics/aryacore/pkg/models"
-	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/storage/redis"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/google/uuid"
@@ -24,10 +23,9 @@ var _ = Describe("Driver", func() {
 	})
 	Describe("Connection errors", func() {
 		It("Should return the correct query error", func() {
-			pool := storage.NewPool()
 			cfg := redis.Config{}.Viper()
 			driver := &redis.DriverRedis{Config: cfg}
-			engine := redis.New(driver, pool)
+			engine := redis.New(driver)
 			err := engine.NewTSRetrieve().Model(&models.ChannelSample{}).WherePK(uuid.New()).Exec(ctx)
 			Expect(err).ToNot(BeNil())
 			Expect(err.(query.Error).Type).To(Equal(query.ErrorTypeConnection))

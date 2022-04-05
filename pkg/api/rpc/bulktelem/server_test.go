@@ -69,7 +69,7 @@ var _ = Describe("Server", func() {
 			Expect(clust.NewDelete().Model(item).WherePK(model.NewReflect(item).PK()).Exec(ctx)).To(BeNil())
 		}
 	})
-	Describe("CreateStream", func() {
+	Describe("createStream", func() {
 		It("Should create the chunks correctly", func() {
 			cc := mock.ChunkSet(5, telem.TimeStamp(0), config.DataType, config.DataRate, telem.NewTimeSpan(600*time.Second), telem.TimeSpan(0))
 			stream, err := cl.CreateStream(ctx)
@@ -114,7 +114,7 @@ var _ = Describe("Server", func() {
 			Expect(resCC[4].StartTS).To(Equal(cc[4].Start()))
 		})
 	})
-	Describe("RetrieveStream", func() {
+	Describe("retrieveStream", func() {
 		JustBeforeEach(func() {
 			cc := mock.ChunkSet(5, telem.TimeStamp(0), config.DataType, config.DataRate, telem.NewTimeSpan(1*time.Minute), telem.TimeSpan(0))
 			stream, err := cl.CreateStream(ctx)

@@ -1,4 +1,4 @@
-load("@io_bazel_rules_go//go:def.bzl", "go_library")
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
     name = "cluster",
@@ -17,5 +17,22 @@ go_library(
         "//pkg/util/model",
         "//pkg/util/query",
         "@org_golang_google_grpc//:grpc",
+    ],
+)
+
+go_test(
+    name = "cluster_test",
+    srcs = [
+        "cluster_suite_test.go",
+        "service_chain_test.go",
+        "storage_test.go",
+    ],
+    deps = [
+        ":cluster",
+        "//pkg/models",
+        "//pkg/storage/mock",
+        "//pkg/util/query",
+        "@com_github_onsi_ginkgo_v2//:ginkgo",
+        "@com_github_onsi_gomega//:gomega",
     ],
 )

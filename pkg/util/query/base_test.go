@@ -10,8 +10,10 @@ import (
 )
 
 var _ = Describe("Base", func() {
-	var exec = &mock.Exec{}
-	var asm = query.NewAssemble(exec.Exec)
+	var (
+		exec = &mock.Exec{}
+		asm  = query.NewAssemble(exec.Exec)
+	)
 	Describe("Common Query Functionality", func() {
 		DescribeTable("Model",
 			func(q query.Query) {
@@ -27,7 +29,9 @@ var _ = Describe("Base", func() {
 	Describe("Exec", func() {
 		It("Should execute the query", func() {
 			Expect(asm.Exec(ctx, query.NewMigrate().Pack())).To(BeNil())
-
+		})
+		It("Should panic if no execute is bound", func() {
+			Expect(func() { query.NewRetrieve().Exec(ctx) }).To(Panic())
 		})
 	})
 })

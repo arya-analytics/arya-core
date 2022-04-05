@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package telemstream.v1;
+
+service TelemStreamService {
+  rpc Create(stream CreateRequest) returns (stream CreateResponse) {}
+  rpc Retrieve(stream RetrieveRequest) returns (stream RetrieveResponse) {}
+}
+
+// |||| MODEL ||||
+
+message TelemSample {
+  string ChannelConfigID = 1;
+  double Value = 2;
+  int64 Timestamp = 3;
+}
+
+// |||| CREATE ||||
+
+message CreateRequest {
+  TelemSample Sample = 1;
+}
+
+message CreateResponse {
+  Error Error = 1;
+}
+
+// |||| RETRIEVE ||||
+
+message RetrieveRequest {
+  repeated string PKC = 1;
+}
+
+message RetrieveResponse {
+  TelemSample Sample = 1;
+  Error Error = 2;
+}
+
+// |||| ERROR ||||
+
+message Error {
+  string Message = 1;
+}

@@ -7,16 +7,20 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const (
-	errKey = "query"
-)
+const errKey = "query"
 
+// Error represents errors encountered during query execution.
 type Error struct {
-	Base    error
-	Type    ErrorType
+	// Base holds the base error that the Error wraps.
+	Base error
+	// Type holds the type of the error. See ErrorType for possible values.
+	Type ErrorType
+	// Message holds the message associated with the error.
 	Message string
 }
 
+// NewSimpleError creates a new Error with the given type and base error.
+// Sets Error.Message to the base error message.
 func NewSimpleError(t ErrorType, base error) Error {
 	e := Error{Type: t, Base: base}
 	if e.Base != nil {
@@ -25,26 +29,39 @@ func NewSimpleError(t ErrorType, base error) Error {
 	return e
 }
 
+// NewUnknownError creates a new error with ErrorTypeUnknown and the given base error.
 func NewUnknownError(base error) Error {
 	return NewSimpleError(ErrorTypeUnknown, base)
 }
 
+// Error implements the error interface.
 func (e Error) Error() string {
 	return fmt.Sprintf("%s: %s - %s - %s", errKey, e.Type, e.Message, e.Base)
 }
 
+// ErrorType defines the type of the error encountered.
 type ErrorType int
 
 //go:generate stringer -type=ErrorType
 const (
+	// ErrorTypeUnknown is returned when the query encounters an error it cannot parse.
 	ErrorTypeUnknown ErrorType = iota
+	// ErrorTypeItemNotFound is returned when an item can't be found based on the provided query parameters.
 	ErrorTypeItemNotFound
+	// ErrorTypeUniqueViolation is returned when an item can't be inserted because of a unique constraint (duplicate).
 	ErrorTypeUniqueViolation
+	// ErrorTypeRelationshipViolation is returned when an item can't be inserted because of a relationship constraint
+	// such as a foreign or primary key.
 	ErrorTypeRelationshipViolation
+	// ErrorTypeInvalidField is returned when a field provided to query parameters can't be parsed or inserted.
 	ErrorTypeInvalidField
+	// ErrorTypeMigration is returned when migrations to a data store fail.
 	ErrorTypeMigration
+	// ErrorTypeInvalidArgs is returned when query parameters are invalid.
 	ErrorTypeInvalidArgs
+	// ErrorTypeConnection is returned when a connection to a data store fails.
 	ErrorTypeConnection
+	// ErrorTypeMultipleResults is returned when a query for a single item returns multiple results.
 	ErrorTypeMultipleResults
 )
 

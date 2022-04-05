@@ -3,6 +3,7 @@ package query
 import (
 	"context"
 	"fmt"
+	"reflect"
 )
 
 // Execute represents a function or method that can execute the provided Pack
@@ -30,38 +31,54 @@ type Execute func(ctx context.Context, p *Pack) error
 // |||| SWITCH ||||
 
 // Ops represents a set of Execute to call for a specific Query.
-type Ops struct {
-	Create   Execute
-	Retrieve Execute
-	Delete   Execute
-	Update   Execute
-	Migrate  Execute
-}
+type Ops map[Query]Execute
 
 // Switch switches a Pack to a configured set of Execute. Switch allows the caller to implement different query Execute
 // depending on the Query used.
-func Switch(ctx context.Context, p *Pack, ops Ops) error {
-	switch p.Query().(type) {
-	case *Create:
-		if ops.Create != nil {
-			return ops.Create(ctx, p)
-		}
-	case *Retrieve:
-		if ops.Retrieve != nil {
-			return ops.Retrieve(ctx, p)
-		}
-	case *Update:
-		if ops.Update != nil {
-			return ops.Update(ctx, p)
-		}
-	case *Delete:
-		if ops.Delete != nil {
-			return ops.Delete(ctx, p)
-		}
-	case *Migrate:
-		if ops.Migrate != nil {
-			return ops.Migrate(ctx, p)
+func Switch(ctx context.Context, p *Pack, ops Ops, opts ...SwitchOpt) error {
+	so := parseOpts(opts...)
+	for qo, e := range ops {
+		if reflect.TypeOf(qo) == reflect.TypeOf(p.Query()) {
+			return e(ctx, p)
 		}
 	}
-	panic(fmt.Sprintf("%T not supported for model %s", p.Query(), p.Model().Type().Name()))
+	if so.defaultExecute != nil {
+		return so.defaultExecute(ctx, p)
+	}
+	if so.panic {
+		panic(fmt.Sprintf("%T not supported for model %s", p.Query(), p.Model().Type().Name()))
+	}
+	return nil
+}
+
+func parseOpts(opts ...SwitchOpt) *switchOpts {
+	so := &switchOpts{panic: true}
+	for _, o := range opts {
+		o(so)
+	}
+	return so
+}
+
+type switchOpts struct {
+	panic          bool
+	defaultExecute Execute
+}
+
+// SwitchOpt implements the options pattern for Switch.
+type SwitchOpt func(s *switchOpts)
+
+// SwitchWithoutPanic causes Switch to avoid panicking and return a nil error if an unsupported query is provided.
+func SwitchWithoutPanic() SwitchOpt {
+	return func(so *switchOpts) {
+		so.panic = false
+	}
+}
+
+// SwitchWithDefault causes Switch to use the provided Execute if no other Execute is found within the
+// Ops themselves.
+func SwitchWithDefault(q Execute) SwitchOpt {
+	return func(so *switchOpts) {
+		so.panic = false
+		so.defaultExecute = q
+	}
 }

@@ -35,16 +35,13 @@ var _ = Describe("QueryTSCreate", func() {
 	Describe("Standard Usage", func() {
 		Describe("Create a new series", func() {
 			It("Should create the series correctly", func() {
-				err := store.NewTSCreate().Series().Model(channelConfig).Exec(ctx)
+				err := store.NewTSCreate().Model(channelConfig).Exec(ctx)
 				Expect(err).To(BeNil())
-				exists, rErr := store.NewTSRetrieve().SeriesExists(ctx, channelConfig.ID)
-				Expect(rErr).To(BeNil())
-				Expect(exists).To(BeTrue())
 			})
 		})
 		Describe("Create a new sample", func() {
 			JustBeforeEach(func() {
-				sErr := store.NewTSCreate().Series().Model(channelConfig).Exec(ctx)
+				sErr := store.NewTSCreate().Model(channelConfig).Exec(ctx)
 				if sErr != nil {
 					Expect(sErr.(query.Error).Type).To(Equal(query.ErrorTypeUniqueViolation))
 				} else {
@@ -61,7 +58,7 @@ var _ = Describe("QueryTSCreate", func() {
 					}
 				})
 				It("Should create the sample correctly", func() {
-					err := store.NewTSCreate().Sample().Model(sample).Exec(ctx)
+					err := store.NewTSCreate().Model(sample).Exec(ctx)
 					Expect(err).To(BeNil())
 					resSample := &models.ChannelSample{}
 					rErr := store.NewTSRetrieve().Model(resSample).WherePK(channelConfig.ID).Exec(ctx)
@@ -99,15 +96,15 @@ var _ = Describe("QueryTSCreate", func() {
 				JustBeforeEach(func() {
 					cErr := store.NewCreate().Model(channelConfigTwo).Exec(ctx)
 					Expect(cErr).To(BeNil())
-					seriesErr := store.NewTSCreate().Series().Model(channelConfigTwo).Exec(ctx)
+					seriesErr := store.NewTSCreate().Model(channelConfigTwo).Exec(ctx)
 					Expect(seriesErr).To(BeNil())
 				})
-				It("The samples should be able to be retrieved after creation", func() {
+				It("The samples should be able to be retrieved After creation", func() {
 					var resSamples []*models.ChannelSample
-					cErr := store.NewTSCreate().Sample().Model(&samples).Exec(ctx)
+					cErr := store.NewTSCreate().Model(&samples).Exec(ctx)
 					Expect(cErr).To(BeNil())
 					rErr := store.NewTSRetrieve().Model(&resSamples).WherePKs([]uuid.
-						UUID{channelConfigTwo.ID, channelConfig.ID}).AllTimeRange().Exec(ctx)
+						UUID{channelConfigTwo.ID, channelConfig.ID}).AllTime().Exec(ctx)
 					Expect(rErr).To(BeNil())
 					Expect(resSamples).To(HaveLen(3))
 				})

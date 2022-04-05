@@ -25,7 +25,7 @@ type CalcOpt struct {
 	Op Calc
 	// Field is the model field to perform the calculation on.
 	Field string
-	// Into is the value to bind the calculation result into.
+	// Into is the value to bind the calculation result Into.
 	// NOT: Into must be a pointer.
 	Into interface{}
 }

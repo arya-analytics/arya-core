@@ -12,8 +12,8 @@ import (
 var _ = Describe("Where", func() {
 	DescribeTable("Field Expressions", func(exp query.FieldExp, expOp query.FieldOp, expVals []interface{}) {
 		Expect(exp.Op).To(Equal(expOp))
-		Expect(exp.Vals).To(HaveLen(len(expVals)))
-		Expect(exp.Vals).To(Equal(expVals))
+		Expect(exp.Values).To(HaveLen(len(expVals)))
+		Expect(exp.Values).To(Equal(expVals))
 	},
 		Entry("Greater Than", query.GreaterThan(1), query.FieldOpGreaterThan, []interface{}{1}),
 		Entry("Less Than", query.LessThan(1), query.FieldOpLessThan, []interface{}{1}),
@@ -21,7 +21,6 @@ var _ = Describe("Where", func() {
 		Entry("In", query.In(1, 2, 3), query.FieldOpIn, []interface{}{1, 2, 3}),
 	)
 	Describe("Opt Binding", func() {
-
 		var (
 			exec = &mock.Exec{}
 			asm  = query.NewAssemble(exec.Exec)
@@ -81,11 +80,6 @@ var _ = Describe("Where", func() {
 				Entry("Delete", asm.NewDelete().WherePKs([]int{1, 2, 3})),
 			)
 			Describe("Invalid primary keys", func() {
-				It("Should panic when the caller passes a single primary key to WherePKs", func() {
-					Expect(func() {
-						asm.NewRetrieve().WherePKs(1)
-					}).To(Panic())
-				})
 				It("Should panic when the caller passes a slice of priamry keys to WherePK", func() {
 					Expect(func() {
 						asm.NewRetrieve().WherePK([]int{1, 2, 3})
@@ -95,14 +89,14 @@ var _ = Describe("Where", func() {
 
 		})
 		Describe("Where Fields", func() {
-			It("Should create the correct where fields opt", func() {
+			It("Should create the correct Where fields opt", func() {
 				p := asm.NewRetrieve().WhereFields(query.WhereFields{"RandomField": "RandomValue"}).Pack()
 				wf, ok := query.WhereFieldsOpt(p)
 				Expect(ok).To(BeTrue())
 				Expect(wf["RandomField"]).To(Equal("RandomValue"))
 				Expect(len(wf)).To(Equal(1))
 			})
-			It("Should return false when a where fields opt wasn't specified", func() {
+			It("Should return false when a Where fields opt wasn't specified", func() {
 				p := asm.NewRetrieve().Pack()
 				wf, ok := query.WhereFieldsOpt(p)
 				Expect(ok).To(BeFalse())

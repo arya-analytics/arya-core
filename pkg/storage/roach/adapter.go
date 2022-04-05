@@ -1,8 +1,7 @@
 package roach
 
 import (
-	"github.com/arya-analytics/aryacore/pkg/storage/internal"
-	"github.com/google/uuid"
+	"github.com/arya-analytics/aryacore/pkg/util/pool"
 	"github.com/uptrace/bun"
 	"time"
 )
@@ -10,41 +9,31 @@ import (
 // || ADAPTER ||
 
 type adapter struct {
-	id         uuid.UUID
 	db         *bun.DB
 	driver     Driver
-	demand     internal.Demand
-	expiration internal.Expiration
+	demand     pool.Demand
+	expiration pool.Expire
 }
 
 func newAdapter(driver Driver) (*adapter, error) {
 	a := &adapter{
-		id:     uuid.New(),
-		driver: driver,
-		expiration: internal.Expiration{
-			Start:    time.Now(),
-			Duration: driver.Expiration(),
-		},
-		demand: internal.Demand{Max: driver.DemandCap()},
+		driver:     driver,
+		expiration: pool.Expire{Start: time.Now(), Duration: driver.Expiration()},
+		demand:     pool.Demand{Max: driver.DemandCap()},
 	}
 	return a, a.open()
 }
 
-func bindAdapter(a internal.Adapter) (*adapter, bool) {
-	ra, ok := a.(*adapter)
-	return ra, ok
-}
-
-func conn(a internal.Adapter) *bun.DB {
-	ra, ok := bindAdapter(a)
-	if !ok {
-		panic("couldn't bind roach adapter.")
-	}
-	return ra.db
+func UnsafeDB(a pool.Adapt[*Engine]) *bun.DB {
+	return a.(*adapter).db
 }
 
 func (a *adapter) Acquire() {
 	a.demand.Increment()
+}
+
+func (a *adapter) Match(e *Engine) bool {
+	return true
 }
 
 func (a *adapter) Release() {
@@ -59,8 +48,4 @@ func (a *adapter) open() error {
 	var err error
 	a.db, err = a.driver.Connect()
 	return newErrorConvert().Exec(err)
-}
-
-func UnsafeConn(a internal.Adapter) *bun.DB {
-	return conn(a)
 }

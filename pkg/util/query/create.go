@@ -2,15 +2,15 @@ package query
 
 // Create is used for writing Queries that create/persist models to storage.
 type Create struct {
-	base
+	Base
 }
 
 // || CONSTRUCTOR ||
 
-// NewCreate instantiates a new Create query.
+// NewCreate creates a new Create query.
 func NewCreate() *Create {
 	c := &Create{}
-	c.baseInit(c)
+	c.Base.Init(c)
 	return c
 }
 
@@ -20,7 +20,7 @@ func NewCreate() *Create {
 // The model can be a pointer to a struct or a pointer to a slice.
 // The model must contain all necessary values and satisfy any relationships.
 func (c *Create) Model(m interface{}) *Create {
-	c.baseModel(m)
+	c.Base.Model(m)
 	return c
 }
 
@@ -29,6 +29,6 @@ func (c *Create) Model(m interface{}) *Create {
 // BindExec binds Execute that Create will use to run the query.
 // This method MUST be called before calling Exec.
 func (c *Create) BindExec(e Execute) *Create {
-	c.baseBindExec(e)
+	c.Base.BindExec(e)
 	return c
 }

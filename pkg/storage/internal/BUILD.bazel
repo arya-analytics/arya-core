@@ -3,15 +3,14 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library")
 go_library(
     name = "internal",
     srcs = [
-        "adapter.go",
         "engine.go",
         "errors.go",
-        "opts.go",
     ],
     importpath = "github.com/arya-analytics/aryacore/pkg/storage/internal",
     visibility = ["//pkg/storage:__subpackages__"],
     deps = [
         "//pkg/util/query",
+        "//pkg/util/query/streamq",
         "//pkg/util/tasks",
     ],
 )

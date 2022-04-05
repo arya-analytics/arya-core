@@ -4,6 +4,8 @@ go_library(
     name = "mock",
     srcs = [
         "cluster.go",
+        "hook.go",
+        "persist.go",
         "pool.go",
         "service.go",
     ],
@@ -12,9 +14,12 @@ go_library(
     deps = [
         "//pkg/cluster",
         "//pkg/cluster/chanchunk",
+        "//pkg/models",
         "//pkg/rpc",
         "//pkg/storage/mock",
+        "//pkg/util/model",
         "//pkg/util/query",
+        "//pkg/util/query/mock",
         "@org_golang_google_grpc//:grpc",
         "@org_golang_google_grpc//credentials/insecure",
     ],

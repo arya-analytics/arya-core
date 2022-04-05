@@ -2,19 +2,20 @@ package minio
 
 import (
 	"context"
-	"github.com/arya-analytics/aryacore/pkg/storage"
-	"github.com/arya-analytics/aryacore/pkg/storage/internal"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
+	"github.com/arya-analytics/aryacore/pkg/util/pool"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
 )
 
 type Engine struct {
-	pool   *storage.Pool
+	pool   *pool.Pool[*Engine]
 	driver Driver
 }
 
-func New(driver Driver, pool *storage.Pool) *Engine {
-	return &Engine{driver: driver, pool: pool}
+func New(driver Driver) *Engine {
+	e := &Engine{driver: driver, pool: pool.New[*Engine]()}
+	e.pool.Factory = e
+	return e
 }
 
 func (e *Engine) Exec(ctx context.Context, p *query.Pack) error {
@@ -25,24 +26,19 @@ func (e *Engine) Exec(ctx context.Context, p *query.Pack) error {
 	if err != nil {
 		return newErrorConvert().Exec(err)
 	}
-	c := conn(a)
+	c := client(a)
 	err = query.Switch(ctx, p, query.Ops{
-		Create:   newCreate(c).exec,
-		Retrieve: newRetrieve(c).exec,
-		Delete:   newDelete(c).exec,
-		Migrate:  newMigrate(c).exec,
-	})
+		&query.Create{}:   newCreate(c).exec,
+		&query.Retrieve{}: newRetrieve(c).exec,
+		&query.Delete{}:   newDelete(c).exec,
+		&query.Migrate{}:  newMigrate(c).exec,
+	}, query.SwitchWithoutPanic())
 	e.pool.Release(a)
-	return err
+	return newErrorConvert().Exec(err)
 }
 
-func (e *Engine) NewAdapter() (internal.Adapter, error) {
+func (e *Engine) NewAdapt(*Engine) (pool.Adapt[*Engine], error) {
 	return newAdapter(e.driver)
-}
-
-func (e *Engine) IsAdapter(a internal.Adapter) bool {
-	_, ok := bindAdapter(a)
-	return ok
 }
 
 func (e *Engine) shouldHandle(p *query.Pack) bool {
@@ -50,12 +46,12 @@ func (e *Engine) shouldHandle(p *query.Pack) bool {
 	if ok {
 		return true
 	}
-	if !catalog().Contains(p.Model().Pointer()) {
+	if !catalog().Contains(p.Model()) {
 		return false
 	}
 	fldsOpt, ok := query.RetrieveFieldsOpt(p)
 	if ok {
-		rfl := model.NewReflect(catalog().New(p.Model().Pointer()))
+		rfl := model.NewReflect(catalog().New(p.Model()))
 		return rfl.StructTagChain().HasAnyFields(fldsOpt.AllExcept("ID")...)
 	}
 	return true

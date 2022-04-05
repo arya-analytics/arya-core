@@ -115,6 +115,13 @@ func (s StructTagChain) RetrieveByFieldRole(role string) (StructTag, bool) {
 	return s.Retrieve(TagCat, RoleKey, role)
 }
 
+// RetrieveBase retrieves the model.Base tag for hte field.
+const baseFieldName = "base"
+
+func (s StructTagChain) RetrieveBase() (StructTag, bool) {
+	return s.RetrieveByFieldName(baseFieldName)
+}
+
 // HasAnyFields determines if the chain contains and struct fields with a name in the provided WhereFields.
 func (s StructTagChain) HasAnyFields(flds ...string) bool {
 	for _, st := range s {

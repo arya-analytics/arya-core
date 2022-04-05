@@ -5,7 +5,8 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 )
 
-func BatchModel[T comparable](rfl *model.Reflect, fld string) map[T]*model.Reflect {
+func BatchModel[T comparable](m interface{}, fld string) map[T]*model.Reflect {
+	rfl := model.NewReflect(m)
 	b := map[T]*model.Reflect{}
 	rfl.ForEach(func(nRfl *model.Reflect, i int) {
 		rawFldV := nRfl.StructFieldByName(fld)

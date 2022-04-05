@@ -2,10 +2,12 @@ package rpc
 
 import (
 	"google.golang.org/grpc"
+	"sync"
 )
 
 type Pool struct {
 	dialOpts []grpc.DialOption
+	mu       sync.RWMutex
 	conns    map[string]*grpc.ClientConn
 }
 
@@ -28,5 +30,7 @@ func (p *Pool) newConn(addr string) (*grpc.ClientConn, error) {
 }
 
 func (p *Pool) addConn(target string, conn *grpc.ClientConn) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
 	p.conns[target] = conn
 }

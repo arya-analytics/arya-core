@@ -18,17 +18,17 @@ import (
 type Service struct {
 	obs    observe
 	qa     query.Assemble
-	rngSVC *rng.Service
+	rngSvc *rng.Service
 }
 
 // NewService creates a new service with the provided parameters.
 func NewService(qa query.Assemble, rngSVC *rng.Service) *Service {
-	return &Service{qa: qa, obs: newObserveMem(), rngSVC: rngSVC}
+	return &Service{qa: qa, obs: newObserveMem(), rngSvc: rngSVC}
 }
 
 // NewStreamCreate opens a StreamCreate.
 func (s *Service) NewStreamCreate() *StreamCreate {
-	return newStreamCreate(s.qa.Exec, s.obs, s.rngSVC)
+	return newStreamCreate(s.qa.Exec, s.obs, s.rngSvc)
 }
 
 // NewStreamRetrieve opens a StreamCreate.

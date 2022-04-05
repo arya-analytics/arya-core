@@ -21,28 +21,28 @@ var _ = Describe("Query", func() {
 	Describe("Switch", func() {
 		DescribeTable("Executing the correct query", func(q query.Query, expected int) {
 			actual := 0
-			query.Switch(ctx, q.Pack(), query.Ops{
-				Create: func(ctx context.Context, p *query.Pack) error {
+			Expect(query.Switch(ctx, q.Pack(), query.Ops{
+				&query.Create{}: func(ctx context.Context, p *query.Pack) error {
 					actual = 1
 					return nil
 				},
-				Retrieve: func(ctx context.Context, p *query.Pack) error {
+				&query.Retrieve{}: func(ctx context.Context, p *query.Pack) error {
 					actual = 2
 					return nil
 				},
-				Update: func(ctx context.Context, p *query.Pack) error {
+				&query.Update{}: func(ctx context.Context, p *query.Pack) error {
 					actual = 3
 					return nil
 				},
-				Delete: func(ctx context.Context, p *query.Pack) error {
+				&query.Delete{}: func(ctx context.Context, p *query.Pack) error {
 					actual = 4
 					return nil
 				},
-				Migrate: func(ctx context.Context, p *query.Pack) error {
+				&query.Migrate{}: func(ctx context.Context, p *query.Pack) error {
 					actual = 5
 					return nil
 				},
-			})
+			})).To(BeNil())
 			Expect(actual).To(Equal(expected))
 		},
 			Entry("Create Query", query.NewCreate(), 1),
@@ -51,10 +51,28 @@ var _ = Describe("Query", func() {
 			Entry("Delete Query", query.NewDelete(), 4),
 			Entry("Migrate Query", query.NewMigrate(), 5),
 		)
-		It("Should panic when there is no viable query handler", func() {
-			Expect(func() {
-				query.Switch(ctx, query.NewRetrieve().Pack(), query.Ops{})
-			}).To(Panic())
+		Describe("No viable handler", func() {
+			It("Should panic when there is no viable query handler", func() {
+				Expect(func() {
+					query.Switch(ctx, query.NewRetrieve().Pack(), query.Ops{})
+				}).To(Panic())
+			})
+			It("Shouldn't panic when a WithoutPanic opt is specified", func() {
+				Expect(func() {
+					query.Switch(ctx, query.NewRetrieve().Pack(), query.Ops{}, query.SwitchWithoutPanic())
+				}).ToNot(Panic())
+
+			})
+		})
+		Describe("Default handler", func() {
+			It("Should call the default handler when no viable handler is provided", func() {
+				actual := 0
+				Expect(query.Switch(ctx, query.NewRetrieve().Pack(), query.Ops{}, query.SwitchWithDefault(func(ctx context.Context, p *query.Pack) error {
+					actual = 1
+					return nil
+				}))).To(BeNil())
+				Expect(actual).To(Equal(1))
+			})
 		})
 	})
 	Describe("Pack", func() {
@@ -66,5 +84,13 @@ var _ = Describe("Query", func() {
 			})
 		})
 	})
-
+	Describe("Concrete Model", func() {
+		It("Should bind the model to a concrete type", func() {
+			m := &modelmock.ModelA{}
+			p := query.NewRetrieve().Model(model.NewReflect(m)).Pack()
+			Expect(func() {
+				query.ConcreteModel[*modelmock.ModelA](p)
+			}).NotTo(Panic())
+		})
+	})
 })

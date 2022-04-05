@@ -10,7 +10,7 @@ import (
 
 const (
 	roleStamp = "tsStamp"
-	roleKey   = "tsKey"
+	roleKey   = "pk"
 	roleValue = "tsValue"
 )
 
@@ -30,11 +30,7 @@ func (m *exchange) samples() (samples []timeseries.Sample) {
 }
 
 func (m *exchange) seriesNames() (names []string) {
-	m.Exchange.Dest().ForEach(func(rfl *model.Reflect, i int) {
-		pk := model.NewPK(keyField(rfl).Interface())
-		names = append(names, pk.String())
-	})
-	return names
+	return m.Exchange.Dest().PKChain().Strings()
 }
 
 func (m *exchange) bindRes(key string, res interface{}) error {

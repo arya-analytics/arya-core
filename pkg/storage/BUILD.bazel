@@ -4,13 +4,6 @@ go_library(
     name = "storage",
     srcs = [
         "config.go",
-        "hook.go",
-        "pool.go",
-        "query.go",
-        "query_base.go",
-        "query_ts_base.go",
-        "query_ts_create.go",
-        "query_ts_retrieve.go",
         "storage.go",
     ],
     importpath = "github.com/arya-analytics/aryacore/pkg/storage",
@@ -18,9 +11,8 @@ go_library(
     deps = [
         "//pkg/storage/internal",
         "//pkg/util/config",
-        "//pkg/util/errutil",
-        "//pkg/util/model",
         "//pkg/util/query",
+        "//pkg/util/query/streamq",
         "//pkg/util/tasks",
     ],
 )

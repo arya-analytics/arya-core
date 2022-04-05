@@ -7,7 +7,7 @@ import (
 
 type Service interface {
 	CanHandle(q *query.Pack) bool
-	Exec(ctx context.Context, p *query.Pack) error
+	query.AssembleExec
 }
 
 type Cluster interface {
@@ -16,13 +16,13 @@ type Cluster interface {
 }
 
 type cluster struct {
-	query.AssembleBase
+	query.Assemble
 	svc ServiceChain
 }
 
 func New() Cluster {
 	c := &cluster{}
-	c.AssembleBase = query.NewAssemble(c.Exec)
+	c.Assemble = query.NewAssemble(c.Exec)
 	return c
 }
 

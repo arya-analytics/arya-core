@@ -4,19 +4,19 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 )
 
-func ModelSwitchIter[T comparable](rfl *model.Reflect, fld string, action func(fld T, rfl *model.Reflect)) {
-	switchMap := BatchModel[T](rfl, fld)
+func ModelSwitchIter[T comparable](m interface{}, fld string, action func(fld T, rfl *model.Reflect)) {
+	switchMap := BatchModel[T](m, fld)
 	for k, v := range switchMap {
 		action(k, v)
 	}
 }
 
-func ModelSwitchBoolean(rfl *model.Reflect, boolFld string, trueAction, falseAction func(fld bool, rfl *model.Reflect)) {
-	switchMap := BatchModel[bool](rfl, boolFld)
+func ModelSwitchBoolean(m interface{}, boolFld string, trueAction, falseAction func(rfl *model.Reflect)) {
+	switchMap := BatchModel[bool](m, boolFld)
 	if trueRfl, ok := switchMap[true]; ok {
-		trueAction(true, trueRfl)
+		trueAction(trueRfl)
 	}
 	if falseRfl, ok := switchMap[false]; ok {
-		falseAction(false, falseRfl)
+		falseAction(falseRfl)
 	}
 }

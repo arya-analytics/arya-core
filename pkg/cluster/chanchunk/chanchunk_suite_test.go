@@ -16,8 +16,7 @@ var (
 
 var _ = BeforeSuite(func() {
 	store = mock.NewStorage()
-	err := store.NewMigrate().Exec(ctx)
-	Expect(err).To(BeNil())
+	Expect(store.NewMigrate().Exec(ctx)).To(BeNil())
 })
 
 var _ = AfterSuite(func() {

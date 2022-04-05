@@ -4,6 +4,7 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/storage"
 	"github.com/arya-analytics/aryacore/pkg/util/errutil"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
+	"github.com/arya-analytics/aryacore/pkg/util/query"
 )
 
 type queryHookRunner struct {
@@ -16,7 +17,7 @@ func (qhr *queryHookRunner) Exec(action func(rfl *model.Reflect) error) {
 }
 
 func BindHooks(s storage.Storage) {
-	hooks := []storage.QueryHook{
+	hooks := []query.Hook{
 		&NodeQueryHook{},
 	}
 	for _, hook := range hooks {

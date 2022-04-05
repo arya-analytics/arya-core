@@ -26,8 +26,8 @@ func newSchedulePartition(pd *partitionDetect, opts ...tasks.ScheduleOpt) tasks.
 			Interval: detectPersistInterval,
 		},
 		{
-			Name:     "Detect observe",
-			Action:   pd.detectObserver,
+			Name:     "Detect Observe",
+			Action:   pd.detectObserve,
 			Interval: detectObserveInterval,
 		},
 	}
@@ -44,7 +44,7 @@ type partitionDetect struct {
 	qa      *QueryAssemble
 }
 
-func (pd *partitionDetect) detectObserver(ctx context.Context, opt tasks.ScheduleConfig) error {
+func (pd *partitionDetect) detectObserve(ctx context.Context, opt tasks.ScheduleConfig) error {
 	openRanges := pd.observe.RetrieveFilter(ObservedRange{Status: models.RangeStatusOpen})
 	return pd.detect(ctx, openRanges, opt)
 }
