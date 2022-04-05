@@ -227,6 +227,7 @@ var _ = Describe("Service", func() {
 					resSamples    []*models.ChannelSample
 					resSamplesTwo []*models.ChannelSample
 				)
+				time.Sleep(50 * time.Millisecond)
 				Expect(persist.NewRetrieve().Model(&resSamples).WherePK(channelConfig.ID).Exec(ctx)).To(BeNil())
 				Expect(persist.NewRetrieve().Model(&resSamplesTwo).WherePK(channelConfigTwo.ID).Exec(ctx)).To(BeNil())
 				Expect(resSamplesTwo).To(HaveLen(sampleCount))
