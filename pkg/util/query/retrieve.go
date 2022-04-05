@@ -7,6 +7,7 @@ type Retrieve struct {
 
 // || CONSTRUCTOR ||
 
+// NewRetrieve opens a new Retrieve query.
 func NewRetrieve() *Retrieve {
 	r := &Retrieve{}
 	r.Base.Init(r)
@@ -58,8 +59,8 @@ func (r *Retrieve) Calc(op Calc, fld string, into interface{}) *Retrieve {
 // || ORDER ||
 
 // Order orders the results in a specific direction.
-func (r *Retrieve) Order(order Order, fld string) *Retrieve {
-	NewOrderOpt(r.Pack(), order, fld)
+func (r *Retrieve) Order(dir OrderDirection, fld string) *Retrieve {
+	NewOrderOpt(r.Pack(), dir, fld)
 	return r
 }
 
@@ -105,13 +106,17 @@ func (r *Retrieve) BindExec(e Execute) *Retrieve {
 
 // || RELATION ||
 
+// RelationOpt is an option for retrieving a model's relation.
 type RelationOpt struct {
-	Rel    string
+	// Name specifies the name of the relation to retrieve.
+	Name string
+	// Fields specifies the fields to retrieve from the relation.
 	Fields FieldsOpt
 }
 
-func NewRelationOpt(p *Pack, rel string, flds ...string) {
-	o := RelationOpt{rel, flds}
+// NewRelationOpt creates a new RelationOpt.
+func NewRelationOpt(p *Pack, name string, fields ...string) {
+	o := RelationOpt{name, fields}
 	_, ok := p.opts[relationOptKey]
 	if !ok {
 		p.opts[relationOptKey] = []RelationOpt{o}
@@ -120,6 +125,7 @@ func NewRelationOpt(p *Pack, rel string, flds ...string) {
 	}
 }
 
+// RelationOpts retrieves a slice of all RelationOpt applied to the query.
 func RelationOpts(p *Pack) []RelationOpt {
 	o, ok := p.opts[relationOptKey]
 	if !ok {
@@ -130,22 +136,31 @@ func RelationOpts(p *Pack) []RelationOpt {
 
 // || ORDER ||
 
-type Order int
+// OrderDirection is a type that specifies the direction in which to order the results of a query.
+type OrderDirection int
 
 const (
-	OrderASC Order = iota + 1
+	// OrderASC orders the results in ascending order.
+	OrderASC OrderDirection = iota + 1
+	// OrderDSC orders the results in descending order.
 	OrderDSC
 )
 
+// OrderOpt is an option for ordering the results of a query.
 type OrderOpt struct {
+	// Field represents the field to order by.
 	Field string
-	Order Order
+	// Direction stores the direction in which to order the results.
+	Direction OrderDirection
 }
 
-func NewOrderOpt(p *Pack, order Order, fld string) {
-	p.opts[orderOptKey] = OrderOpt{Field: fld, Order: order}
+// NewOrderOpt creates a new OrderOpt.
+func NewOrderOpt(p *Pack, order OrderDirection, fld string) {
+	p.opts[orderOptKey] = OrderOpt{Field: fld, Direction: order}
 }
 
+// RetrieveOrderOpt retrieves any order options applied to the query.
+// Returns false for the second argument if no ordering was specified.
 func RetrieveOrderOpt(p *Pack) (OrderOpt, bool) {
 	qo, ok := p.opts[orderOptKey]
 	if !ok {
@@ -156,10 +171,12 @@ func RetrieveOrderOpt(p *Pack) (OrderOpt, bool) {
 
 // || LIMIT ||
 
+// NewLimitOpt creates a new LimitOpt.
 func NewLimitOpt(p *Pack, limit int) {
 	p.opts[limitOptKey] = limit
 }
 
+// LimitOpt is an option for limiting the number of results returned by a query.
 func LimitOpt(p *Pack) (int, bool) {
 	qo, ok := p.opts[limitOptKey]
 	if !ok {
@@ -170,10 +187,13 @@ func LimitOpt(p *Pack) (int, bool) {
 
 // || MEMO ||
 
+// NewMemoOpt creates a new MemoOpt.
 func NewMemoOpt(p *Pack, memo *Memo) {
 	p.opts[memoOptKey] = memo
 }
 
+// MemoOpt is an option that that applies a Memo to the query.
+// For more information on memoizing query results, see Memo.
 func MemoOpt(p *Pack) (*Memo, bool) {
 	qo, ok := p.opts[memoOptKey]
 	if !ok {

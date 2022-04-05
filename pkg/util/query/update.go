@@ -7,6 +7,7 @@ type Update struct {
 
 // || CONSTRUCTOR ||
 
+// NewUpdate opens a new Update query.
 func NewUpdate() *Update {
 	u := &Update{}
 	u.Base.Init(u)
@@ -35,8 +36,8 @@ func (u *Update) WherePK(pk interface{}) *Update {
 // will replace all fields.
 //
 // NOTE: When calling Bulk, order matters. Fields must be called before Bulk.
-func (u *Update) Fields(flds ...string) *Update {
-	NewFieldsOpt(u.Pack(), flds...)
+func (u *Update) Fields(fields ...string) *Update {
+	NewFieldsOpt(u.Pack(), fields...)
 	return u
 }
 
@@ -46,7 +47,7 @@ func (u *Update) Fields(flds ...string) *Update {
 // the update of multiple records. When Bulk updating,
 // the primary key field of each model must be defined.
 func (u *Update) Bulk() *Update {
-	newBulkUpdateOpt(u.Pack())
+	NewBulkUpdateOpt(u.Pack())
 	return u
 }
 
@@ -63,10 +64,12 @@ func (u *Update) BindExec(e Execute) *Update {
 
 // || BULK ||
 
-func newBulkUpdateOpt(p *Pack) {
+// NewBulkUpdateOpt creates a new BulkUpdateOpt.
+func NewBulkUpdateOpt(p *Pack) {
 	p.opts[bulkUpdateOptKey] = true
 }
 
+// BulkUpdateOpt returns true if the Update is a bulk update.
 func BulkUpdateOpt(p *Pack) bool {
 	_, ok := p.Query().(*Update)
 	if !ok {

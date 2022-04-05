@@ -11,7 +11,7 @@ import (
 
 var _ = Describe("ScheduleSimple", func() {
 	Describe("Standard usage", func() {
-		Context("Base Schedule", func() {
+		Context("base Schedule", func() {
 			It("Should execute tasks at the correct interval", func() {
 				count := 0
 				s := tasks.NewScheduleSimple([]tasks.Task{

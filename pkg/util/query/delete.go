@@ -6,6 +6,7 @@ type Delete struct {
 	Where
 }
 
+// NewDelete opens a new Delete query.
 func NewDelete() *Delete {
 	d := &Delete{}
 	d.Base.Init(d)

@@ -37,5 +37,4 @@ var _ = Describe("Memo", func() {
 			To(BeNil())
 		Expect(resCC).To(HaveLen(5))
 	})
-
 })

@@ -44,15 +44,15 @@ var _ = Describe("Retrieve", func() {
 	})
 	Describe("Relation", func() {
 		It("Should create a relation opt correctly", func() {
-			p := asm.NewRetrieve().Relation("Rel", "Fld").Pack()
+			p := asm.NewRetrieve().Relation("Name", "Fld").Pack()
 			ro := query.RelationOpts(p)
 			Expect(ro).To(HaveLen(1))
-			Expect(ro[0].Rel).To(Equal("Rel"))
+			Expect(ro[0].Name).To(Equal("Name"))
 			Expect(ro[0].Fields).To(Equal(query.FieldsOpt{"Fld"}))
 		})
 		It("Should allow for multiple relation opts", func() {
 			p := asm.NewRetrieve().
-				Relation("Rel", "Fld").
+				Relation("Name", "Fld").
 				Relation("RelTwo", "FldTwo").
 				Pack()
 			ro := query.RelationOpts(p)
@@ -87,13 +87,13 @@ var _ = Describe("Retrieve", func() {
 			Expect(limit).To(Equal(0))
 		})
 	})
-	Describe("Order", func() {
+	Describe("OrderDirection", func() {
 		It("Should set an order opt on the correct field", func() {
 			p := asm.NewRetrieve().Order(query.OrderASC, "Field").Pack()
 			order, ok := query.RetrieveOrderOpt(p)
 			Expect(ok).To(BeTrue())
 			Expect(order.Field).To(Equal("Field"))
-			Expect(order.Order).To(Equal(query.OrderASC))
+			Expect(order.Direction).To(Equal(query.OrderASC))
 		})
 		It("Should return false if no order is specified", func() {
 			p := asm.NewRetrieve().Pack()

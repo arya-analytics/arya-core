@@ -59,10 +59,12 @@ func NewPack(q Query) *Pack {
 	return &Pack{query: q, opts: map[OptKey]interface{}{}}
 }
 
+// SetOpt sets a new option on the Pack with the provided OptKey.
 func (p *Pack) SetOpt(key OptKey, val interface{}) {
 	p.opts[key] = val
 }
 
+// RetrieveOpt sets retrieves the option on the Pack with the specified OptKey.
 func (p *Pack) RetrieveOpt(key OptKey) (interface{}, bool) {
 	o, ok := p.opts[key]
 	return o, ok
@@ -98,6 +100,8 @@ func (p *Pack) String() string {
 
 // |||| UTILITIES ||||
 
+// ConcreteModel asserts the Pack.Model to a concrete type.
+// Panicks if the Pack.Model is not of the provided type T.
 func ConcreteModel[T any](p *Pack) T {
 	return p.Model().Pointer().(T)
 }

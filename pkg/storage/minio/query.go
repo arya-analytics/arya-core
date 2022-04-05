@@ -128,15 +128,15 @@ func (m *migrate) exec(ctx context.Context, p *query.Pack) error {
 // |||| OPT CONVERTERS ||||
 
 func (c *create) convertOpts(p *query.Pack) {
-	query.OptConverters{c.model}.Exec(p)
+	query.OptConvertChain{c.model}.Exec(p)
 }
 
 func (d *del) convertOpts(p *query.Pack) {
-	query.OptConverters{d.model, d.pk}.Exec(p)
+	query.OptConvertChain{d.model, d.pk}.Exec(p)
 }
 
 func (r *retrieve) convertOpts(p *query.Pack) {
-	query.OptConverters{r.model, r.pk}.Exec(p)
+	query.OptConvertChain{r.model, r.pk}.Exec(p)
 }
 
 // |||| MODEL ||||

@@ -12,22 +12,28 @@ type Where struct {
 }
 
 func (w *Where) WhereFields(flds WhereFields) {
-	newWhereFieldsOpt(w.Pack(), flds)
+	NewWhereFieldsOpt(w.Pack(), flds)
 }
 
 func (w *Where) WherePK(pk interface{}) {
 	if reflect.TypeOf(pk).Kind() == reflect.Slice {
 		panic("wherepk can't be called with multiple primary keys!")
 	}
-	newPKOpt(w.Pack(), pk)
+	NewPKOpt(w.Pack(), pk)
 }
 
 func (w *Where) WherePKs(pks interface{}) {
-	newPKOpt(w.Pack(), pks)
+	NewPKOpt(w.Pack(), pks)
 }
 
 // |||| WHERE FIELDS ||||
 
+// WhereFields holds parameters that can be used to filter the results of a query on arbitrary fields.
+//
+// The key of the map is the field name, and the value is the value to filter by.
+//
+// The value can be wrapped in a specific matcher operation such as GreaterThan, LessThan, or InRange. For all available
+// operations, see the FieldOp type.
 type WhereFields map[string]interface{}
 
 type FieldOp int
@@ -45,24 +51,30 @@ type FieldExp struct {
 	Vals []interface{}
 }
 
+// GreaterThan is an option for WhereFields that will filter the results of a query by a field greater than the
+// given value.
 func GreaterThan(value interface{}) FieldExp {
 	return FieldExp{Op: FieldOpGreaterThan, Vals: []interface{}{value}}
 }
 
+// LessThan is an option for WhereFields that will filter the results of a query by a field less than the given value.
 func LessThan(value interface{}) FieldExp {
 	return FieldExp{Op: FieldOpLessThan, Vals: []interface{}{value}}
 }
 
+// InRange is an option for WhereFields that will filter the results of a query by a field in the given range.
 func InRange(start interface{}, stop interface{}) FieldExp {
 	return FieldExp{Op: FieldOpInRange, Vals: []interface{}{start, stop}}
 }
 
-func In(vals ...interface{}) FieldExp {
-	return FieldExp{Op: FieldOpIn, Vals: vals}
+// In is an option for WhereFields that will filter the results of a query by a field in the given values.
+func In(values ...interface{}) FieldExp {
+	return FieldExp{Op: FieldOpIn, Vals: values}
 }
 
 // |||| OPTS ||||
 
+// PKOpt is an option that will filter the results of a query by a primary key.
 func PKOpt(p *Pack) (model.PKChain, bool) {
 	qo, ok := p.opts[pkOptKey]
 	if !ok {
@@ -75,7 +87,8 @@ type pkOpt struct {
 	PKChain model.PKChain
 }
 
-func newPKOpt(p *Pack, pk interface{}) {
+// NewPKOpt creates a new option that stores a primary key.
+func NewPKOpt(p *Pack, pk interface{}) {
 	var pkc model.PKChain
 	switch pk.(type) {
 	case model.PK:
@@ -96,6 +109,7 @@ func newPKOpt(p *Pack, pk interface{}) {
 
 // || WHERE FIELDS ||
 
+// WhereFieldsOpt retrieves a WhereFields option from a query.
 func WhereFieldsOpt(p *Pack) (WhereFields, bool) {
 	qo, ok := p.opts[whereFieldsOptKey]
 	if !ok {
@@ -104,6 +118,7 @@ func WhereFieldsOpt(p *Pack) (WhereFields, bool) {
 	return qo.(WhereFields), true
 }
 
-func newWhereFieldsOpt(p *Pack, flds WhereFields) {
-	p.opts[whereFieldsOptKey] = flds
+// NewWhereFieldsOpt applies a WhereFields option to a query.
+func NewWhereFieldsOpt(p *Pack, fields WhereFields) {
+	p.opts[whereFieldsOptKey] = fields
 }

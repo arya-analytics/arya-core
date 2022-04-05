@@ -73,11 +73,11 @@ func (tsr *tsRetrieve) exec(ctx context.Context, p *query.Pack) error {
 // |||| OPT CONVERTERS ||||
 
 func (tsc *tsCreate) convertOpts(p *query.Pack) {
-	query.OptConverters{tsc.model, tsc.variant}.Exec(p)
+	query.OptConvertChain{tsc.model, tsc.variant}.Exec(p)
 }
 
 func (tsr *tsRetrieve) convertOpts(p *query.Pack) {
-	query.OptConverters{tsr.model, tsr.pk, tsr.timeRange}.Exec(p)
+	query.OptConvertChain{tsr.model, tsr.pk, tsr.timeRange}.Exec(p)
 }
 
 // |||| MODEL ||||

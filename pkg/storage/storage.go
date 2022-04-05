@@ -53,7 +53,7 @@ import (
 // returned.
 //
 // If an unexpected error is encountered,
-// will return a storage.Error with an ErrorTypeUnknown. Error.Base
+// will return a storage.Error with an ErrorTypeUnknown. Error.base
 // can be used to access the original error.
 //
 // Implementing a new Engine
@@ -71,8 +71,8 @@ type Storage interface {
 }
 
 type storage struct {
-	query.AssembleBase
-	streamq.AssembleTSBase
+	query.Assemble
+	streamq.AssembleTS
 	cfg Config
 	ts  tasks.Schedule
 	*query.HookRunner
@@ -90,8 +90,8 @@ type storage struct {
 // as it relies on this engine to maintain consistency with other engines.
 func New(cfg Config) Storage {
 	s := &storage{cfg: cfg, HookRunner: query.NewHookRunner()}
-	s.AssembleBase = query.NewAssemble(s.Exec)
-	s.AssembleTSBase = streamq.NewAssemble(s.Exec)
+	s.Assemble = query.NewAssemble(s.Exec)
+	s.AssembleTS = streamq.NewAssemble(s.Exec)
 	return s
 }
 

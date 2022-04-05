@@ -112,15 +112,15 @@ func (m *migrate) exec(ctx context.Context, p *query.Pack) error {
 // |||| OPT CONVERTERS ||||
 
 func (c *create) convertOpts(p *query.Pack) {
-	query.OptConverters{c.model}.Exec(p)
+	query.OptConvertChain{c.model}.Exec(p)
 }
 
 func (u *update) convertOpts(p *query.Pack) {
-	query.OptConverters{u.model, u.pk, u.fields, u.bulk}.Exec(p)
+	query.OptConvertChain{u.model, u.pk, u.fields, u.bulk}.Exec(p)
 }
 
 func (e *retrieve) convertOpts(p *query.Pack) {
-	query.OptConverters{
+	query.OptConvertChain{
 		e.model,
 		e.pk,
 		e.fields,
@@ -134,7 +134,7 @@ func (e *retrieve) convertOpts(p *query.Pack) {
 }
 
 func (d *del) convertOpts(p *query.Pack) {
-	query.OptConverters{d.model, d.pk}.Exec(p)
+	query.OptConvertChain{d.model, d.pk}.Exec(p)
 }
 
 // |||| MODEL ||||
@@ -218,7 +218,7 @@ func (e *retrieve) relations(p *query.Pack) {
 		// CLARIFICATION: Still don't know exactly why it needs to be called this way, but it does for the
 		// correct opt to be provided.
 		func(opt query.RelationOpt) {
-			e.bunQ = e.bunQ.Relation(opt.Rel, func(sq *bun.SelectQuery) *bun.SelectQuery {
+			e.bunQ = e.bunQ.Relation(opt.Name, func(sq *bun.SelectQuery) *bun.SelectQuery {
 				return sq.Column(e.sql.fieldNames(opt.Fields...)...)
 			})
 		}(opt)
@@ -240,7 +240,7 @@ func (e *retrieve) limit(p *query.Pack) {
 
 func (e *retrieve) order(p *query.Pack) {
 	if o, ok := query.RetrieveOrderOpt(p); ok {
-		e.bunQ = e.bunQ.Order(e.sql.order(o.Order, o.Field))
+		e.bunQ = e.bunQ.Order(e.sql.order(o.Direction, o.Field))
 	}
 }
 

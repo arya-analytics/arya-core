@@ -127,7 +127,7 @@ const (
 	orderSQLDSC = "DESC"
 )
 
-func (sg sqlGen) order(o query.Order, fld string) string {
+func (sg sqlGen) order(o query.OrderDirection, fld string) string {
 	var orderSQL string
 	if o == query.OrderASC {
 		orderSQL = orderSQLASC

@@ -9,6 +9,6 @@ var _ = Describe("TSCreate", func() {
 	//exec = &mock.Exec{}
 	//asm  = streamq.NewAssemble(exec.Exec)
 	)
-	Describe("Base", func() {})
+	Describe("base", func() {})
 
 })

@@ -116,7 +116,7 @@ func (s StructTagChain) RetrieveByFieldRole(role string) (StructTag, bool) {
 }
 
 // RetrieveBase retrieves the model.Base tag for hte field.
-const baseFieldName = "Base"
+const baseFieldName = "base"
 
 func (s StructTagChain) RetrieveBase() (StructTag, bool) {
 	return s.RetrieveByFieldName(baseFieldName)

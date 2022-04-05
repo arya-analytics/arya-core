@@ -167,7 +167,7 @@ func (s *DataSourceMem) runCalculations(sRfl *model.Reflect, calc query.CalcOpt)
 }
 
 func (s *DataSourceMem) retrieveRelation(sRfl *model.Reflect, rel query.RelationOpt) {
-	names := model.SplitFieldNames(rel.Rel)
+	names := model.SplitFieldNames(rel.Name)
 	name := names[0]
 	fldT := sRfl.FieldTypeByName(name)
 	st, ok := sRfl.StructTagChain().RetrieveByFieldName(name)
@@ -192,7 +192,7 @@ func (s *DataSourceMem) retrieveRelation(sRfl *model.Reflect, rel query.Relation
 			if sFld.Interface() == dFld.Interface() {
 				if len(names) > 1 {
 					s.retrieveRelation(nDRfl, query.RelationOpt{
-						Rel:    strings.Join(names[1:], "."),
+						Name:   strings.Join(names[1:], "."),
 						Fields: rel.Fields,
 					})
 				}
@@ -242,7 +242,7 @@ func (s *DataSourceMem) filterByWhereFields(sRfl *model.Reflect, wFld query.Wher
 	for k := range wFld {
 		fn, ln := model.SplitLastFieldName(k)
 		if fn != "" {
-			s.retrieveRelation(sRfl, query.RelationOpt{Rel: fn, Fields: query.FieldsOpt{ln}})
+			s.retrieveRelation(sRfl, query.RelationOpt{Name: fn, Fields: query.FieldsOpt{ln}})
 		}
 	}
 	sRfl.ForEach(func(rfl *model.Reflect, i int) {

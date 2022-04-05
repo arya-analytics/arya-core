@@ -64,14 +64,18 @@ type switchOpts struct {
 	defaultExecute Execute
 }
 
+// SwitchOpt implements the options pattern for Switch.
 type SwitchOpt func(s *switchOpts)
 
+// SwitchWithoutPanic causes Switch to avoid panicking and return a nil error if an unsupported query is provided.
 func SwitchWithoutPanic() SwitchOpt {
 	return func(so *switchOpts) {
 		so.panic = false
 	}
 }
 
+// SwitchWithDefault causes Switch to use the provided Execute if no other Execute is found within the
+// Ops themselves.
 func SwitchWithDefault(q Execute) SwitchOpt {
 	return func(so *switchOpts) {
 		so.panic = false
