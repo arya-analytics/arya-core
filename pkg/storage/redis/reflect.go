@@ -14,26 +14,26 @@ const (
 	roleValue = "tsValue"
 )
 
-type exchange struct {
-	*model.Exchange
+type reflectRedis struct {
+	*model.Reflect
 }
 
-func wrapExchange(sma *model.Exchange) *exchange {
-	return &exchange{sma}
+func wrapReflect(rfl *model.Reflect) *reflectRedis {
+	return &reflectRedis{rfl}
 }
 
-func (m *exchange) samples() (samples []timeseries.Sample) {
-	m.Exchange.Dest().ForEach(func(rfl *model.Reflect, i int) {
+func (m *reflectRedis) samples() (samples []timeseries.Sample) {
+	m.ForEach(func(rfl *model.Reflect, i int) {
 		samples = append(samples, m.newSampleFromRFL(rfl))
 	})
 	return samples
 }
 
-func (m *exchange) seriesNames() (names []string) {
-	return m.Exchange.Dest().PKChain().Strings()
+func (m *reflectRedis) seriesNames() (names []string) {
+	return m.PKChain().Strings()
 }
 
-func (m *exchange) bindRes(key string, res interface{}) error {
+func (m *reflectRedis) bindRes(key string, res interface{}) error {
 	resVal := reflect.ValueOf(res)
 	if resVal.Type().Kind() != reflect.Slice {
 		panic("received unknown response from cache")
@@ -48,7 +48,7 @@ func (m *exchange) bindRes(key string, res interface{}) error {
 			if err != nil {
 				return err
 			}
-			if m.Dest().IsChain() {
+			if m.IsChain() {
 				m.appendSample(sample)
 			} else {
 				panic("can't bind multiple result values to a non-chain")
@@ -59,16 +59,16 @@ func (m *exchange) bindRes(key string, res interface{}) error {
 		if err != nil {
 			return err
 		}
-		if m.Dest().IsChain() {
+		if m.IsChain() {
 			m.appendSample(sample)
 		} else {
-			m.setFields(m.Dest(), sample)
+			m.setFields(m.Reflect, sample)
 		}
 	}
 	return nil
 }
 
-func (m *exchange) newSampleFromRFL(rfl *model.Reflect) timeseries.Sample {
+func (m *reflectRedis) newSampleFromRFL(rfl *model.Reflect) timeseries.Sample {
 	return timeseries.Sample{
 		Key:       model.NewPK(keyField(rfl).Interface()).String(),
 		Timestamp: stampField(rfl).Interface().(telem.TimeStamp),
@@ -76,13 +76,13 @@ func (m *exchange) newSampleFromRFL(rfl *model.Reflect) timeseries.Sample {
 	}
 }
 
-func (m *exchange) appendSample(sample timeseries.Sample) {
-	newRfl := m.Dest().NewStruct()
+func (m *reflectRedis) appendSample(sample timeseries.Sample) {
+	newRfl := m.NewStruct()
 	m.setFields(newRfl, sample)
-	m.Dest().ChainAppend(newRfl)
+	m.ChainAppend(newRfl)
 }
 
-func (m *exchange) setFields(rfl *model.Reflect, sample timeseries.Sample) {
+func (m *reflectRedis) setFields(rfl *model.Reflect, sample timeseries.Sample) {
 	kf := keyField(rfl)
 	kf.Set(convertKeyString(kf.Type(), sample.Key))
 	stampField(rfl).Set(reflect.ValueOf(sample.Timestamp))

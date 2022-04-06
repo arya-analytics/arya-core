@@ -12,8 +12,8 @@ import (
 )
 
 type base struct {
-	client *timeseries.Client
-	exc    *exchange
+	client       *timeseries.Client
+	wrappedModel *reflectRedis
 }
 
 type tsCreate struct {
@@ -39,13 +39,11 @@ func newTSRetrieve(client *timeseries.Client) *tsRetrieve {
 
 func (tsc *tsCreate) exec(ctx context.Context, p *query.Pack) (err error) {
 	tsc.convertOpts(p)
-	tsc.exc.ToDest()
 	if tsc.qt == queryVariantSeries {
 		err = tsc.execSeries(ctx, p)
 	} else {
 		err = tsc.execSample(ctx, p)
 	}
-	tsc.exc.ToSource()
 	return err
 }
 
@@ -62,11 +60,10 @@ func (tsr *tsRetrieve) exec(ctx context.Context, p *query.Pack) error {
 		if err != nil {
 			return err
 		}
-		if bErr := tsr.exc.bindRes(pk.String(), res); bErr != nil {
+		if bErr := tsr.wrappedModel.bindRes(pk.String(), res); bErr != nil {
 			return bErr
 		}
 	}
-	tsr.exc.ToSource()
 	return nil
 }
 
@@ -83,7 +80,7 @@ func (tsr *tsRetrieve) convertOpts(p *query.Pack) {
 // |||| MODEL ||||
 
 func (b *base) model(p *query.Pack) {
-	b.exc = wrapExchange(model.NewExchange(p.Model(), catalog().New(p.Model())))
+	b.wrappedModel = wrapReflect(p.Model())
 }
 
 // |||| PK ||||
@@ -106,7 +103,7 @@ func (tsr *tsRetrieve) timeRange(p *query.Pack) {
 // |||| CUSTOM CREATE ||||
 
 func (tsc *tsCreate) execSeries(ctx context.Context, p *query.Pack) error {
-	for _, sn := range tsc.exc.seriesNames() {
+	for _, sn := range tsc.wrappedModel.seriesNames() {
 		if err := tsc.base.client.TSCreateSeries(ctx, sn, timeseries.CreateOptions{}).Err(); err != nil {
 			return err
 		}
@@ -115,7 +112,7 @@ func (tsc *tsCreate) execSeries(ctx context.Context, p *query.Pack) error {
 }
 
 func (tsc *tsCreate) execSample(ctx context.Context, p *query.Pack) error {
-	c := tsc.base.client.TSCreateSamples(ctx, tsc.exc.samples()...)
+	c := tsc.base.client.TSCreateSamples(ctx, tsc.wrappedModel.samples()...)
 	return c.Err()
 }
 
@@ -127,7 +124,7 @@ const (
 )
 
 func (tsc *tsCreate) variant(p *query.Pack) {
-	bt, ok := tsc.exc.Dest().StructTagChain().RetrieveBase()
+	bt, ok := tsc.wrappedModel.StructTagChain().RetrieveBase()
 	if !ok {
 		panic(fmt.Sprintf("model %s does not specify a base tag", p.Model()))
 	}

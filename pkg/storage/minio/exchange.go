@@ -12,20 +12,20 @@ type data struct {
 	Data *telem.ChunkData
 }
 
-type exchange struct {
-	*model.Exchange
+type reflectMinio struct {
+	*model.Reflect
 }
 
-func wrapExchange(sma *model.Exchange) *exchange {
-	return &exchange{sma}
+func wrapReflect(rfl *model.Reflect) *reflectMinio {
+	return &reflectMinio{rfl}
 }
 
-func (m *exchange) bucket() string {
-	return caseconv.PascalToKebab(m.Dest().Type().Name())
+func (m *reflectMinio) bucket() string {
+	return caseconv.PascalToKebab(m.Type().Name())
 }
 
-func (m *exchange) dataVals() (dvc []data) {
-	m.Dest().ForEach(func(rfl *model.Reflect, i int) {
+func (m *reflectMinio) dataValues() (dvc []data) {
+	m.ForEach(func(rfl *model.Reflect, i int) {
 		dvc = append(dvc, data{
 			PK:   rfl.PK(),
 			Data: rfl.StructFieldByRole("telemChunkData").Interface().(*telem.ChunkData),
@@ -34,20 +34,20 @@ func (m *exchange) dataVals() (dvc []data) {
 	return dvc
 }
 
-func (m *exchange) bindDataVals(dvc []data) {
+func (m *reflectMinio) bindDataVals(dvc []data) {
 	for _, dv := range dvc {
-		rfl, ok := m.Dest().ValueByPK(dv.PK)
+		rfl, ok := m.ValueByPK(dv.PK)
 		if ok {
 			rfl.StructFieldByRole("telemChunkData").Set(reflect.ValueOf(dv.Data))
 		} else {
-			nRfl := m.Dest()
-			if m.Dest().IsChain() {
-				nRfl = m.Dest().NewStruct()
+			nRfl := m.Reflect
+			if m.IsChain() {
+				nRfl = m.NewStruct()
 			}
 			nRfl.StructFieldByRole("telemChunkData").Set(reflect.ValueOf(dv.Data))
 			nRfl.StructFieldByName("ID").Set(dv.PK.Value())
-			if m.Dest().IsChain() {
-				m.Dest().ChainAppend(nRfl)
+			if m.IsChain() {
+				m.ChainAppend(nRfl)
 			}
 		}
 	}

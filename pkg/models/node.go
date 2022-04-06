@@ -7,24 +7,27 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/util/errutil"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
+	"github.com/uptrace/bun"
 	"reflect"
 	"strings"
 	"time"
 )
 
 type Node struct {
-	ID              int `model:"role:pk"`
-	Address         string
-	RPCPort         int `model:"role:rpc_port"`
-	StartedAt       time.Time
-	IsLive          bool
-	IsHost          bool
-	Epoch           int
-	Expiration      string
-	Draining        bool
-	Decommissioning bool
-	Membership      string
-	UpdatedAt       time.Time
+	model.Base      `storage:"engines:md,"`
+	bun.BaseModel   `bun:"select:nodes_gossip,table:nodes"`
+	ID              int       `model:"role:pk" bun:",pk"`
+	RPCPort         int       `model:"role:rpc_port" bun:"rpc_port"`
+	Address         string    `bun:"type:text,scanonly"`
+	IsHost          bool      `bun:"type:boolean,scanonly"`
+	StartedAt       time.Time `bun:"type:timestamp,scanonly"`
+	IsLive          bool      `bun:"type:boolean,scanonly"`
+	Epoch           int       `bun:"type:bigint,scanonly"`
+	Expiration      string    `bun:"type:text,scanonly"`
+	Draining        bool      `bun:"type:boolean,scanonly"`
+	Decommissioning bool      `bun:"type:boolean,scanonly"`
+	Membership      string    `bun:"type:text,scanonly"`
+	UpdatedAt       time.Time `bun:"type:timestamp,scanonly"`
 }
 
 // |||| VALUE ACCESSORS ||||
