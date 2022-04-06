@@ -65,8 +65,8 @@ func BindStreamOpt(p *query.Pack, s *Stream) {
 	p.SetOpt(streamOptKey, s)
 }
 
-func StreamOpt(p *query.Pack) (*Stream, bool) {
-	opt, ok := p.RetrieveOpt(streamOptKey)
+func StreamOpt(p *query.Pack, opts ...query.OptRetrieveOpt) (*Stream, bool) {
+	opt, ok := p.RetrieveOpt(streamOptKey, opts...)
 	if !ok {
 		return &Stream{}, false
 	}

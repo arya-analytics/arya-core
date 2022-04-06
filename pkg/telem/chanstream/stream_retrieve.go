@@ -18,11 +18,8 @@ func newStreamRetrieve(delta *route.Delta[*models.ChannelSample, outletContext])
 }
 
 func (sr *streamRetrieve) exec(ctx context.Context, p *query.Pack) error {
-	s := stream(p)
-	pkc, ok := query.PKOpt(p)
-	if !ok {
-		panic("no pk")
-	}
+	s, _ := streamq.StreamOpt(p, query.PanicIfOptNotPresent())
+	pkc, _ := query.PKOpt(p, query.PanicIfOptNotPresent())
 	d := &deltaOutlet{
 		qStream:     s,
 		pkc:         pkc,
@@ -114,12 +111,4 @@ func parsePKC(dCtx route.DeltaContext[*models.ChannelSample, outletContext]) (pk
 		pkc = append(pkc, o.Context().pkc...)
 	}
 	return pkc.Unique()
-}
-
-func stream(p *query.Pack) *streamq.Stream {
-	s, ok := streamq.StreamOpt(p)
-	if !ok {
-		panic("qStream not found on query")
-	}
-	return s
 }

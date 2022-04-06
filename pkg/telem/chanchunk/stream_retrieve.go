@@ -4,63 +4,65 @@ import (
 	"context"
 	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/util/errutil"
-	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
+	"github.com/arya-analytics/aryacore/pkg/util/query/streamq"
+	"github.com/arya-analytics/aryacore/pkg/util/route"
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
+	"github.com/google/uuid"
 )
 
-type StreamRetrieve struct {
-	qa    query.Assemble
-	cfgPK interface{}
-	_cfg  *models.ChannelConfig
-	tRng  telem.TimeRange
-	catch *errutil.CatchContext
+type streamRetrieve struct {
+	qExec    query.Execute
+	configPK uuid.UUID
+	_config  *models.ChannelConfig
+	tRng     telem.TimeRange
+	catch    *errutil.CatchContext
 }
 
-func newStreamRetrieve(qa query.Assemble) *StreamRetrieve {
-	return &StreamRetrieve{qa: qa, _cfg: &models.ChannelConfig{}}
+func newStreamRetrieve(qExec query.Execute) *streamRetrieve {
+	return &streamRetrieve{qExec: qExec, _config: &models.ChannelConfig{}}
 }
 
-func (sr *StreamRetrieve) WhereConfigPK(cfgPK interface{}) *StreamRetrieve {
-	sr.cfgPK = cfgPK
-	return sr
-}
-
-func (sr *StreamRetrieve) WhereTimeRange(tRng telem.TimeRange) *StreamRetrieve {
-	sr.tRng = tRng
-	return sr
-}
-
-func (sr *StreamRetrieve) config() *models.ChannelConfig {
-	if model.NewPK(sr._cfg.ID).IsZero() {
-		sr.catch.Exec(sr.qa.NewRetrieve().Model(sr._cfg).WherePK(sr.cfgPK).Exec)
-	}
-	return sr._cfg
-}
-
-func (sr *StreamRetrieve) Exec(ctx context.Context) (chan *telem.Chunk, error) {
+func (sr *streamRetrieve) exec(ctx context.Context, p *query.Pack) error {
 	sr.catch = errutil.NewCatchContext(ctx)
 	var (
-		stream   = make(chan *telem.Chunk)
-		replicas []*models.ChannelChunkReplica
+		replicas   []*models.ChannelChunkReplica
+		c          = *query.ConcreteModel[*chan *telem.Chunk](p)
+		streamQ, _ = streamq.StreamOpt(p, query.PanicIfOptNotPresent())
+		tRng, _    = streamq.TimeRangeOpt(p, query.PanicIfOptNotPresent())
 	)
-	cfg := sr.config()
-	sr.catch.Exec(sr.qa.NewRetrieve().
+	sr.catch.Exec(query.NewRetrieve().
+		BindExec(sr.qExec).
 		Model(&replicas).
 		Relation("ChannelChunk", "StartTS").
 		WhereFields(query.WhereFields{
-			"ChannelChunk.StartTS":          query.InRange(sr.tRng.Start(), sr.tRng.End()),
-			"ChannelChunk.ChannelConfig.ID": cfg.ID,
+			"ChannelChunk.StartTS":          query.InRange(tRng.Start(), tRng.End()),
+			"ChannelChunk.ChannelConfig.ID": sr.config().ID,
 		}).
 		Exec)
 	if sr.catch.Error() != nil {
-		return stream, sr.catch.Error()
+		return sr.catch.Error()
 	}
-	go func() {
+	streamQ.Segment(func() {
+		defer close(c)
 		for _, r := range replicas {
-			stream <- telem.NewChunk(r.ChannelChunk.StartTS, cfg.DataType, cfg.DataRate, r.Telem)
+			if route.CtxDone(ctx) {
+				return
+			}
+			c <- telem.NewChunk(r.ChannelChunk.StartTS, sr.config().DataType, sr.config().DataRate, r.Telem)
 		}
-		close(stream)
-	}()
-	return stream, nil
+	})
+	return nil
+}
+
+func (sr *streamRetrieve) config() *models.ChannelConfig {
+	sr.catch.Exec(query.
+		NewRetrieve().
+		BindExec(sr.qExec).
+		Model(sr._config).
+		WherePK(sr.configPK).
+		WithMemo(query.NewMemo(sr._config)).
+		Exec,
+	)
+	return sr._config
 }

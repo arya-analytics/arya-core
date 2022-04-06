@@ -15,11 +15,8 @@ type Memo struct {
 
 // NewMemo instantiates a new Memo that saves and looks up query results from into.
 // NewMemo panics if into is not a chain.
-func NewMemo(into *model.Reflect) *Memo {
-	if !into.IsChain() {
-		panic("memo requires a chain")
-	}
-	return &Memo{into: into}
+func NewMemo(into interface{}) *Memo {
+	return &Memo{into: model.NewReflect(into)}
 }
 
 // Exec implements query.Execute, and will attempt to satisfy the query using memoized results.
@@ -47,6 +44,10 @@ func (m *Memo) Exec(ctx context.Context, p *Pack) error {
 // Add adds a query result to the memo.
 func (m *Memo) Add(resRfl *model.Reflect) {
 	resRfl.ForEach(func(rfl *model.Reflect, i int) {
-		m.into.ChainAppend(rfl)
+		if m.into.IsStruct() {
+			m.into.Set(rfl)
+		} else {
+			m.into.ChainAppend(rfl)
+		}
 	})
 }

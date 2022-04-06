@@ -32,3 +32,23 @@ func (ocs OptConvertChain) Exec(p *Pack) {
 		oc(p)
 	}
 }
+
+type optRetrieveOpts struct {
+	panicIfNotPresent bool
+}
+
+func newOptRetrieveOpts(opts ...OptRetrieveOpt) *optRetrieveOpts {
+	ret := &optRetrieveOpts{}
+	for _, opt := range opts {
+		opt(ret)
+	}
+	return ret
+}
+
+type OptRetrieveOpt func(o *optRetrieveOpts)
+
+func PanicIfOptNotPresent() OptRetrieveOpt {
+	return func(o *optRetrieveOpts) {
+		o.panicIfNotPresent = true
+	}
+}

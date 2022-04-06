@@ -86,8 +86,8 @@ func NewTimeRangeOpt(p *query.Pack, tr telem.TimeRange) {
 	p.SetOpt(timeRangeOptKey, tr)
 }
 
-func TimeRangeOpt(p *query.Pack) (telem.TimeRange, bool) {
-	opt, ok := p.RetrieveOpt(timeRangeOptKey)
+func TimeRangeOpt(p *query.Pack, opts ...query.OptRetrieveOpt) (telem.TimeRange, bool) {
+	opt, ok := p.RetrieveOpt(timeRangeOptKey, opts...)
 	if !ok {
 		return telem.TimeRange{}, false
 	}

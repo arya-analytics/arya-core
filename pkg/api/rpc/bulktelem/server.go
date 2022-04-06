@@ -49,7 +49,7 @@ func (s *Server) RetrieveStream(req *bulktelemv1.RetrieveStreamRequest, server b
 }
 
 func (s *Server) CreateStream(server bulktelemv1.BulkTelemService_CreateStreamServer) error {
-	stream := s.svc.NewStreamCreate()
+	stream := s.svc.NewTSCreate()
 	wg := errgroup.Group{}
 	wg.Go(func() error { return relayErrors(stream, server) })
 	wg.Go(func() error {

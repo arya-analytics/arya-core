@@ -3,95 +3,73 @@ package chanchunk
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/telem/rng"
 	"github.com/arya-analytics/aryacore/pkg/util/errutil"
-	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
+	"github.com/arya-analytics/aryacore/pkg/util/query/streamq"
+	"github.com/arya-analytics/aryacore/pkg/util/route"
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"github.com/arya-analytics/aryacore/pkg/util/validate"
 	"github.com/google/uuid"
 )
 
-const errorPipeCapacity = 10
-
-// StreamCreate creates a set of contiguous data chunks.
-// Avoid instantiating directly, and instead instantiate by calling Service.NewStreamCreate.
-type StreamCreate struct {
+type streamCreate struct {
 	obs        observe
-	exec       query.Execute
+	qExec      query.Execute
 	rngSvc     *rng.Service
 	configPK   uuid.UUID
 	_config    *models.ChannelConfig
 	_prevChunk *telem.Chunk
 	prevCCPK   uuid.UUID
-	errors     chan error
 	catch      *errutil.CatchContext
-	done       chan bool
-	stream     chan streamCreateArgs
+	streamQ    *streamq.Stream
+	valStream  chan StreamCreateArgs
 	ctx        context.Context
 }
 
-type streamCreateArgs struct {
-	start telem.TimeStamp
-	data  *telem.ChunkData
+type StreamCreateArgs struct {
+	Start telem.TimeStamp
+	Data  *telem.ChunkData
 }
 
-func newStreamCreate(qExec query.Execute, obs observe, rngSvc *rng.Service) *StreamCreate {
-	return &StreamCreate{
-		obs:     obs,
-		exec:    qExec,
-		rngSvc:  rngSvc,
-		_config: &models.ChannelConfig{},
-		errors:  make(chan error, errorPipeCapacity),
-		stream:  make(chan streamCreateArgs),
-		done:    make(chan bool),
-	}
+func newStreamCreate(qExec query.Execute, obs observe, rngSvc *rng.Service) *streamCreate {
+	return &streamCreate{qExec: qExec, obs: obs, rngSvc: rngSvc}
 }
 
-// Start starts streamq. Start must be called before Send. Returns any errors encountered during streamq start.
-func (sc *StreamCreate) Start(ctx context.Context, configPk uuid.UUID) error {
+func (sc *streamCreate) exec(ctx context.Context, p *query.Pack) error {
 	sc.ctx = ctx
-	sc.configPK = configPk
-	sc.catch = errutil.NewCatchContext(ctx, errutil.WithHooks(errutil.NewPipeHook(sc.errors)))
+	pkc, _ := query.PKOpt(p, query.PanicIfOptNotPresent())
+	if len(pkc) != 1 {
+		panic(fmt.Sprintf("stream_create: expected 1 pk, got %v", len(pkc)))
+	}
+	sc.configPK = pkc[0].Raw().(uuid.UUID)
+	streamQ, _ := streamq.StreamOpt(p, query.PanicIfOptNotPresent())
+	sc.catch = errutil.NewCatchContext(ctx, errutil.WithHooks(errutil.NewPipeHook(streamQ.Errors)))
 	if err := sc.validateStart(); err != nil {
 		return err
 	}
-	go sc.listen()
+	sc.listen()
 	return nil
-}
-
-// Send creates a new chunk of data starting at the specified timestamp.
-func (sc *StreamCreate) Send(start telem.TimeStamp, data *telem.ChunkData) {
-	sc.stream <- streamCreateArgs{start: start, data: data}
-}
-
-// Close safely closes the streamq.
-func (sc *StreamCreate) Close() {
-	close(sc.stream)
-	<-sc.done
-	close(sc.errors)
-}
-
-// Errors returns errors encountered during streamq operation.
-func (sc *StreamCreate) Errors() chan error {
-	return sc.errors
 }
 
 // |||| PROCESS ||||
 
-func (sc *StreamCreate) listen() {
-	sc.updateConfigStatus(models.ChannelStatusActive)
-	defer func() {
-		sc.updateConfigStatus(models.ChannelStatusInactive)
-		sc.done <- true
-	}()
-	for args := range sc.stream {
-		sc.processNextChunk(args.start, args.data)
-	}
+func (sc *streamCreate) listen() {
+	sc.streamQ.Segment(func() {
+		sc.updateConfigStatus(models.ChannelStatusActive)
+		defer sc.updateConfigStatus(models.ChannelStatusInactive)
+		for args := range sc.valStream {
+			if route.CtxDone(sc.ctx) {
+				return
+			}
+			sc.processNextChunk(args.Start, args.Data)
+		}
+	}, streamq.WithSegmentName("telem.chanchunk.streamCreate"))
 }
 
-func (sc *StreamCreate) processNextChunk(startTS telem.TimeStamp, data *telem.ChunkData) {
+func (sc *streamCreate) processNextChunk(startTS telem.TimeStamp, data *telem.ChunkData) {
 	nc := telem.NewChunk(startTS, sc.config().DataType, sc.config().DataRate, data)
 	sc.validateResolveNextChunk(nc)
 
@@ -116,40 +94,43 @@ func (sc *StreamCreate) processNextChunk(startTS telem.TimeStamp, data *telem.Ch
 	sc.catch.Exec(a.Chunk(sc.config().NodeID, cc).Exec)
 	sc.catch.Exec(a.ChunkReplica(ccr).Exec)
 
-	sc.catch.Exec(query.NewCreate().BindExec(sc.exec).Model(cc).Exec)
-	sc.catch.Exec(query.NewCreate().BindExec(sc.exec).Model(ccr).Exec)
+	sc.catch.Exec(query.NewCreate().BindExec(sc.qExec).Model(cc).Exec)
+	sc.catch.Exec(query.NewCreate().BindExec(sc.qExec).Model(ccr).Exec)
 
 	sc.setPrevChunk(nc)
 	sc.catch.Reset()
 }
 
-// ||| VALUE ACCESS |||
-
-func (sc *StreamCreate) config() *models.ChannelConfig {
-	if model.NewPK(sc._config.ID).IsZero() {
-		sc.catch.Exec(query.NewRetrieve().BindExec(sc.exec).Model(sc._config).WherePK(sc.configPK).Exec)
-	}
+func (sc *streamCreate) config() *models.ChannelConfig {
+	sc.catch.Exec(query.
+		NewRetrieve().
+		BindExec(sc.qExec).
+		Model(sc._config).
+		WherePK(sc.configPK).
+		WithMemo(query.NewMemo(sc._config)).
+		Exec,
+	)
 	return sc._config
 }
 
-func (sc *StreamCreate) updateConfigStatus(status models.ChannelStatus) {
+func (sc *streamCreate) updateConfigStatus(status models.ChannelStatus) {
 	sc.obs.Add(observedChannelConfig{Status: status, PK: sc.configPK})
-	sc._config.Status = status
+	sc.config().Status = status
 	sc.catch.CatchSimple.Exec(func() error {
 		return query.NewUpdate().
-			BindExec(sc.exec).
-			Model(sc._config).
+			BindExec(sc.qExec).
+			Model(sc.config()).
 			WherePK(sc.configPK).
 			Fields("Status").Exec(context.Background())
 	})
 }
 
-func (sc *StreamCreate) prevChunk() *telem.Chunk {
+func (sc *streamCreate) prevChunk() *telem.Chunk {
 	if sc._prevChunk == nil {
 		sc.catch.Exec(func(ctx context.Context) error {
 			ccr := &models.ChannelChunkReplica{}
 			err := query.NewRetrieve().
-				BindExec(sc.exec).
+				BindExec(sc.qExec).
 				Model(ccr).
 				Relation("ChannelChunk", "ID", "StartTS", "Size").
 				WhereFields(query.WhereFields{"ChannelChunk.ChannelConfigID": sc.config().ID}).Exec(sc.ctx)
@@ -158,7 +139,7 @@ func (sc *StreamCreate) prevChunk() *telem.Chunk {
 				return err
 			}
 			// If we don't find the item, this isn't an exceptional case, it just means the channel doesn't have any
-			// data, so we can just return nil early.
+			// Data, so we can just return nil early.
 			if sErr.Type == query.ErrorTypeItemNotFound {
 				return nil
 			}
@@ -169,17 +150,16 @@ func (sc *StreamCreate) prevChunk() *telem.Chunk {
 	return sc._prevChunk
 }
 
-func (sc *StreamCreate) setPrevChunk(chunk *telem.Chunk) {
+func (sc *streamCreate) setPrevChunk(chunk *telem.Chunk) {
 	sc._prevChunk = chunk
 }
 
 // |||| VALIDATE + RESOLVE ||||
 
-func (sc *StreamCreate) validateStart() error {
+func (sc *streamCreate) validateStart() error {
 	return validateStart().Exec(validateStartContext{cfg: sc.config(), obs: sc.obs}).Error()
 }
-
-func (sc *StreamCreate) validateResolveNextChunk(nextChunk *telem.Chunk) {
+func (sc *streamCreate) validateResolveNextChunk(nextChunk *telem.Chunk) {
 	nc := nextChunkContext{cfg: sc.config(), prev: sc.prevChunk(), next: nextChunk}
 	sc.catch.CatchSimple.Exec(func() error {
 		for _, vErr := range validateNextChunk().Exec(nc).Errors() {
@@ -191,7 +171,7 @@ func (sc *StreamCreate) validateResolveNextChunk(nextChunk *telem.Chunk) {
 	})
 }
 
-func (sc *StreamCreate) resolveNextChunkError(err error, nCtx nextChunkContext) error {
+func (sc *streamCreate) resolveNextChunkError(err error, nCtx nextChunkContext) error {
 	return resolveNextChunk().Exec(err, nCtx).Error()
 }
 
@@ -210,7 +190,11 @@ func validateStart() *validate.Validate[validateStartContext] {
 func validateConfigState(sCtx validateStartContext) error {
 	oc, _ := sCtx.obs.Retrieve(sCtx.cfg.ID)
 	if sCtx.cfg.Status == models.ChannelStatusActive || oc.Status == models.ChannelStatusActive {
-		return errors.New("open a second streamq to an active channel")
+		return query.NewSimpleError(
+			query.ErrorTypeInvalidArgs,
+			errors.New("cannot open a second stream on an active channel"),
+		)
+
 	}
 	return nil
 }

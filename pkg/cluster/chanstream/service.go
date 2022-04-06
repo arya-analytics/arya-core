@@ -20,7 +20,7 @@ type Service struct {
 }
 
 func NewService(qExec query.Execute, remote *RemoteRPC) *Service {
-	memo := query.NewMemo(model.NewReflect(&[]*models.ChannelConfig{}))
+	memo := query.NewMemo(&[]*models.ChannelConfig{})
 	return &Service{remote: remote, local: NewLocalStorage(qExec), ccMemo: memo}
 }
 
@@ -84,7 +84,7 @@ func (s *Service) tsCreate(ctx context.Context, p *query.Pack) error {
 }
 
 func (s *Service) openTSCreateQueries(ctx context.Context, p *query.Pack) (rs, ls chan *models.ChannelSample, st *streamq.Stream, cancel context.CancelFunc, err error) {
-	st = stream(p)
+	st, _ = streamq.StreamOpt(p, query.PanicIfOptNotPresent())
 	rs = make(chan *models.ChannelSample)
 	ls = make(chan *models.ChannelSample)
 	bCtx, cancel := context.WithCancel(ctx)
@@ -102,7 +102,8 @@ func (s *Service) openTSCreateQueries(ctx context.Context, p *query.Pack) (rs, l
 }
 
 func (s *Service) tsRetrieve(ctx context.Context, p *query.Pack) error {
-	st, pkc := stream(p), pkOpt(p)
+	st, _ := streamq.StreamOpt(p, query.PanicIfOptNotPresent())
+	pkc, _ := query.PKOpt(p, query.PanicIfOptNotPresent())
 	cc, err := s.retrieveConfigsQuery(ctx, pkc)
 	if err != nil {
 		return err
@@ -140,25 +141,6 @@ func (s *Service) retrieveConfigsQuery(ctx context.Context, pks interface{}) (cc
 
 // |||| QUERY |||
 
-// || OPT ||
-
-func stream(p *query.Pack) *streamq.Stream {
-	s, ok := streamq.StreamOpt(p)
-	if !ok {
-		panic("telemstream queries must be run using goexec")
-	}
-	return s
-}
-
-func pkOpt(p *query.Pack) model.PKChain {
-	pkc, ok := query.PKOpt(p)
-	if !ok {
-		panic("telemstream queries require a pk")
-	}
-	return pkc
-
-}
-
 // || SAMPLES ||
 
 func retrieveSamplesQuery(p *query.Pack, m *model.Reflect) *streamq.TSRetrieve {
@@ -183,9 +165,6 @@ func newNodeOpt(p *query.Pack, nodes []*models.Node) {
 }
 
 func nodeOpt(p *query.Pack) []*models.Node {
-	n, ok := p.RetrieveOpt(nodeOptKey)
-	if !ok {
-		panic("node opt not specified. this iSamples a bug")
-	}
+	n, _ := p.RetrieveOpt(nodeOptKey, query.PanicIfOptNotPresent())
 	return n.([]*models.Node)
 }

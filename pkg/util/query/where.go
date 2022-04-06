@@ -75,8 +75,8 @@ func In(values ...interface{}) FieldExp {
 // |||| OPTS ||||
 
 // PKOpt is an option that will filter the results of a query by a primary key.
-func PKOpt(p *Pack) (model.PKChain, bool) {
-	qo, ok := p.opts[pkOptKey]
+func PKOpt(p *Pack, opts ...OptRetrieveOpt) (model.PKChain, bool) {
+	qo, ok := p.RetrieveOpt(pkOptKey, opts...)
 	if !ok {
 		return model.PKChain{}, false
 	}
