@@ -1,7 +1,13 @@
 workspace(name = "arya_core")
 
+# |||| BASE ||||
+
 # Load all of it. All of it. Now.
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+# |||| HTTP ARCHIVES ||||
+
+# || GO ||
 
 # Load go bazel rules, which gives us access to go bazel SDK.
 http_archive(
@@ -13,11 +19,7 @@ http_archive(
     ],
 )
 
-load("@io_bazel_rules_go//go:deps.bzl", "go_register_toolchains", "go_rules_dependencies")
-
-go_rules_dependencies()
-
-go_register_toolchains(version = "1.18")
+# || GAZELLE ||
 
 # Gazelle allows us to auto-gen BUILD.bazel files across directories.
 http_archive(
@@ -29,6 +31,14 @@ http_archive(
     ],
 )
 
+# |||| GO BUILD RULES ||||
+
+load("@io_bazel_rules_go//go:deps.bzl", "go_register_toolchains", "go_rules_dependencies")
+
+go_rules_dependencies()
+
+go_register_toolchains(version = "1.18")
+
 load("@io_bazel_rules_go//go:deps.bzl", "go_register_toolchains", "go_rules_dependencies")
 load("@bazel_gazelle//:deps.bzl", "gazelle_dependencies")
 load("//:deps.bzl", "go_dependencies")
@@ -37,3 +47,28 @@ load("//:deps.bzl", "go_dependencies")
 go_dependencies()
 
 gazelle_dependencies()
+
+# |||| NODEJS BUILD RULES ||||
+
+http_archive(
+    name = "build_bazel_rules_nodejs",
+    sha256 = "523da2d6b50bc00eaf14b00ed28b1a366b3ab456e14131e9812558b26599125c",
+    urls = ["https://github.com/bazelbuild/rules_nodejs/releases/download/5.3.1/rules_nodejs-5.3.1.tar.gz"],
+)
+
+load("@build_bazel_rules_nodejs//:repositories.bzl", "build_bazel_rules_nodejs_dependencies")
+
+build_bazel_rules_nodejs_dependencies()
+
+load("@build_bazel_rules_nodejs//:index.bzl", "node_repositories", "yarn_install")
+
+node_repositories(
+    node_version = "17.8.0",
+    yarn_version = "1.22.18",
+)
+
+yarn_install(
+    name = "npm",
+    package_json = "//pkg/ui:package.json",
+    yarn_lock = "//pkg/ui:yarn.lock",
+)
