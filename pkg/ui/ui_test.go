@@ -12,8 +12,9 @@ var _ = Describe("UI", func() {
 		It("Should serve the application correctly", func() {
 			app := fiber.New()
 			server := ui.NewServer()
-			server.BindTo(app)
-			Expect(app.Listen(":3030")).To(Succeed())
+			Expect(func() {
+				server.BindTo(app)
+			}).ToNot(Panic())
 		})
 	})
 })
