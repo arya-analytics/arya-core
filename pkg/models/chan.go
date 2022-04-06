@@ -29,11 +29,11 @@ type ChannelConfig struct {
 	Name           string
 	Node           *Node `model:"rel:belongs-to,join:NodeID=ID" bun:"rel:belongs-to,join:node_id=id,"`
 	NodeID         int
-	DataRate       telem.DataRate        `bun:"type:decimal"`
-	DataType       telem.DataType        `bun:"default:0"`
+	DataRate       telem.DataRate
+	DataType       telem.DataType
 	ConflictPolicy ChannelConflictPolicy `bun:"default:1"`
 	Status         ChannelStatus         `bun:"default:1"`
-	Retention      telem.TimeSpan        `bun:"type:int64"`
+	Retention      telem.TimeSpan
 }
 
 const MaxChunkSize = 2e7
@@ -46,7 +46,7 @@ type ChannelChunk struct {
 	ChannelConfig   *ChannelConfig `model:"rel:belongs-to,join:RangeID=ID" bun:"rel:belongs-to,join:channel_config_id=id,"`
 	ChannelConfigID uuid.UUID      `bun:"type:UUID,"`
 	Size            int64
-	StartTS         telem.TimeStamp `bun:"type:int64"`
+	StartTS         telem.TimeStamp
 }
 
 type ChannelChunkReplica struct {

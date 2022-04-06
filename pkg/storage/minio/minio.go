@@ -51,7 +51,7 @@ func (e *Engine) shouldHandle(p *query.Pack) bool {
 	}
 	fieldsOpt, ok := query.RetrieveFieldsOpt(p)
 	if ok {
-		return p.Model().StructTagChain().HasAnyFields(fieldsOpt.AllExcept("ID")...)
+		return fieldsOpt.ContainsAny("TelemChunkData")
 	}
 	return true
 }

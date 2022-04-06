@@ -101,6 +101,7 @@ func (sc *StreamCreate) processNextChunk(startTS telem.TimeStamp, data *telem.Ch
 		StartTS:         nc.Start(),
 		Size:            nc.Size(),
 	}
+
 	ccr := &models.ChannelChunkReplica{
 		ID:             uuid.New(),
 		ChannelChunkID: cc.ID,

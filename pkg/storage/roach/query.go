@@ -28,6 +28,7 @@ type retrieve struct {
 	base
 	bunQ     *bun.SelectQuery
 	scanArgs []interface{}
+	exc      *model.Exchange
 }
 
 func newRetrieve(db *bun.DB) *retrieve {
@@ -73,6 +74,7 @@ func (c *create) exec(ctx context.Context, p *query.Pack) error {
 func (e *retrieve) exec(ctx context.Context, p *query.Pack) error {
 	e.convertOpts(p)
 	err := e.bunQ.Scan(ctx, e.scanArgs...)
+	e.exc.ToSource()
 	return err
 }
 
@@ -148,7 +150,8 @@ func (u *update) model(p *query.Pack) {
 }
 
 func (e *retrieve) model(p *query.Pack) {
-	e.bunQ = e.bunQ.Model(e.base.model(p))
+	e.exc = model.NewExchange(e.base.model(p), p.Model().NewRaw())
+	e.bunQ = e.bunQ.Model(e.exc.Dest().Pointer())
 }
 
 func (d *del) model(p *query.Pack) {

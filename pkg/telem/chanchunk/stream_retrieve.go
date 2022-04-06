@@ -58,7 +58,12 @@ func (sr *StreamRetrieve) Exec(ctx context.Context) (chan *telem.Chunk, error) {
 	}
 	go func() {
 		for _, r := range replicas {
-			stream <- telem.NewChunk(r.ChannelChunk.StartTS, cfg.DataType, cfg.DataRate, r.Telem)
+			stream <- telem.NewChunk(
+				r.ChannelChunk.StartTS,
+				cfg.DataType,
+				cfg.DataRate,
+				r.Telem,
+			)
 		}
 		close(stream)
 	}()

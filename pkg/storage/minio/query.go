@@ -100,6 +100,7 @@ func (r *retrieve) exec(ctx context.Context, p *query.Pack) error {
 		d = append(d, data{PK: pk, Data: bulk})
 	}
 	r.wrappedModel.bindDataVals(d)
+
 	return nil
 }
 

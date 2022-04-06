@@ -26,9 +26,10 @@ func (m *reflectMinio) bucket() string {
 
 func (m *reflectMinio) dataValues() (dvc []data) {
 	m.ForEach(func(rfl *model.Reflect, i int) {
+		d := rfl.StructFieldByRole("telemChunkData").Interface().(*telem.ChunkData)
 		dvc = append(dvc, data{
 			PK:   rfl.PK(),
-			Data: rfl.StructFieldByRole("telemChunkData").Interface().(*telem.ChunkData),
+			Data: d,
 		})
 	})
 	return dvc
