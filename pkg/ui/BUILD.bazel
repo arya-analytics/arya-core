@@ -1,0 +1,23 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "ui",
+    srcs = ["ui.go"],
+    importpath = "github.com/arya-analytics/aryacore/pkg/ui",
+    visibility = ["//visibility:public"],
+    deps = ["@com_github_gofiber_fiber_v2//:fiber"],
+)
+
+go_test(
+    name = "ui_test",
+    srcs = [
+        "ui_suite_test.go",
+        "ui_test.go",
+    ],
+    deps = [
+        ":ui",
+        "@com_github_gofiber_fiber_v2//:fiber",
+        "@com_github_onsi_ginkgo_v2//:ginkgo",
+        "@com_github_onsi_gomega//:gomega",
+    ],
+)
