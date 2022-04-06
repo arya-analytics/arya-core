@@ -46,7 +46,10 @@ go_library(
     ],
     importpath = "github.com/arya-analytics/aryacore/pkg/ui",
     visibility = ["//visibility:public"],
-    deps = ["@com_github_gofiber_fiber_v2//:fiber"],
+    deps = [
+        "@com_github_gofiber_fiber_v2//:fiber",
+        "@com_github_gofiber_fiber_v2//middleware/filesystem",
+    ],
 )
 
 go_test(
