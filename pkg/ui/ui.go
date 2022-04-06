@@ -8,8 +8,8 @@ func NewServer() *Server {
 	return &Server{}
 }
 
-const staticRoot = "./dist"
+const distRoot = "dist"
 
 func (s *Server) BindTo(router fiber.Router) {
-	router.Static("/", staticRoot)
+	router.Static("/", distRoot)
 }
