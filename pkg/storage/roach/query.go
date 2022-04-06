@@ -74,7 +74,9 @@ func (c *create) exec(ctx context.Context, p *query.Pack) error {
 func (e *retrieve) exec(ctx context.Context, p *query.Pack) error {
 	e.convertOpts(p)
 	err := e.bunQ.Scan(ctx, e.scanArgs...)
-	e.exc.ToSource()
+	if e.exc != nil {
+		e.exc.ToSource()
+	}
 	return err
 }
 
@@ -150,8 +152,12 @@ func (u *update) model(p *query.Pack) {
 }
 
 func (e *retrieve) model(p *query.Pack) {
-	e.exc = model.NewExchange(e.base.model(p), p.Model().NewRaw())
-	e.bunQ = e.bunQ.Model(e.exc.Dest().Pointer())
+	if p.Model().IsChain() && p.Model().ChainValue().Len() > 0 {
+		e.exc = model.NewExchange(e.base.model(p), p.Model().NewRaw())
+		e.bunQ = e.bunQ.Model(e.exc.Dest().Pointer())
+	} else {
+		e.bunQ = e.bunQ.Model(e.base.model(p))
+	}
 }
 
 func (d *del) model(p *query.Pack) {
