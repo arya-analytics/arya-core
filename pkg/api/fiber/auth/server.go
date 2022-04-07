@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"github.com/arya-analytics/aryacore/pkg/api"
 	"github.com/arya-analytics/aryacore/pkg/auth"
 	"github.com/gofiber/fiber/v2"
 )
@@ -41,11 +42,19 @@ func (s *Server) login(c *fiber.Ctx) error {
 	}
 	user, err := s.svc.Login(c.UserContext(), p.Username, p.Password)
 	if err != nil {
-		return err
+		c.Status(fiber.StatusBadRequest)
+		return c.JSON(api.ErrorResponse{
+			Type:    api.ErrorTypeAuthentication,
+			Message: err.Error(),
+		})
 	}
 	token, err := auth.NewToken(user.ID)
 	if err != nil {
-		return err
+		c.Status(fiber.StatusInternalServerError)
+		return c.JSON(api.ErrorResponse{
+			Type:    api.ErrorTypeUnknown,
+			Message: err.Error(),
+		})
 	}
 	c.Cookie(&fiber.Cookie{Name: cookieName, Value: token})
 	return c.JSON(loginResponse{Token: token})

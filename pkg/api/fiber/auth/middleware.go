@@ -15,6 +15,7 @@ func TokenMiddleware(c *fiber.Ctx) error {
 		return c.JSON(err)
 	}
 	if err = auth.ValidateToken(token); err != nil {
+		c.Status(fiber.StatusUnauthorized)
 		return c.JSON(api.ErrorResponse{
 			Type:    api.ErrorTypeUnauthorized,
 			Message: "Invalid token",

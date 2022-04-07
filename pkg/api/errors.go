@@ -15,7 +15,9 @@ func (e ErrorResponse) Error() string {
 type ErrorType int
 
 const (
-	ErrorTypeUnauthorized ErrorType = 0
+	ErrorTypeUnknown ErrorType = iota
+	ErrorTypeUnauthorized
+	ErrorTypeAuthentication
 )
 
 func NewErrorResponse(t ErrorType, message string) ErrorResponse {
