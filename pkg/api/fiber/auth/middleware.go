@@ -7,6 +7,8 @@ import (
 	"strings"
 )
 
+// |||| TOKEN ||||
+
 func TokenMiddleware(c *fiber.Ctx) error {
 	token, err := parseToken(c)
 	if err != nil {
@@ -33,7 +35,7 @@ func parseToken(c *fiber.Ctx) (string, error) {
 	}
 	return "", api.ErrorResponse{
 		Type:    api.ErrorTypeUnauthorized,
-		Message: "No authentication token provided. Please provide a valid token.",
+		Message: "No authentication token provided. Please token as cookie or in headers.",
 	}
 }
 

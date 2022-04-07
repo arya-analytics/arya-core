@@ -1,11 +1,26 @@
-package errors
+package api
+
+import "fmt"
 
 type ErrorResponse struct {
-	Message string `json:"message"`
+	Type    ErrorType `json:"type"`
+	Message string    `json:"message"`
 }
 
+func (e ErrorResponse) Error() string {
+	return fmt.Sprintf("%s - %s", e.Type, e.Message)
+}
+
+//go:generate stringer -type=ErrorType
 type ErrorType int
 
 const (
-	Unauthorized = 0
+	ErrorTypeUnauthorized ErrorType = 0
 )
+
+func NewErrorResponse(t ErrorType, message string) ErrorResponse {
+	return ErrorResponse{
+		Type:    t,
+		Message: message,
+	}
+}

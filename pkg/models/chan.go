@@ -41,9 +41,9 @@ const MaxChunkSize = 2e7
 type ChannelChunk struct {
 	model.Base      `storage:"engines:md,"`
 	ID              uuid.UUID      `model:"role:pk," bun:"type:UUID,pk"`
-	Range           *Range         `bun:"rel:belongs-to,join:range_id=id,"`
+	Range           *Range         `model:"rel:belongs-to,join:RangeID=ID" bun:"rel:belongs-to,join:range_id=id,"`
 	RangeID         uuid.UUID      `bun:"type:UUID,"`
-	ChannelConfig   *ChannelConfig `model:"rel:belongs-to,join:RangeID=ID" bun:"rel:belongs-to,join:channel_config_id=id,"`
+	ChannelConfig   *ChannelConfig `model:"rel:belongs-to,join:ChannelConfigID=ID" bun:"rel:belongs-to,join:channel_config_id=id,"`
 	ChannelConfigID uuid.UUID      `bun:"type:UUID,"`
 	Size            int64
 	StartTS         telem.TimeStamp
