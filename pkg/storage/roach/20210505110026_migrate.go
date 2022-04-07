@@ -64,6 +64,7 @@ func (m *migrateCatcher) Exec(execFunc migrationExecFunc) {
 
 func migrateUpFunc() bunMigrate.MigrationFunc {
 	return func(ctx context.Context, db *bun.DB) error {
+
 		c := &migrateCatcher{CatchContext: errutil.NewCatchContext(ctx)}
 
 		// |||| NODE ||||
@@ -124,6 +125,20 @@ func migrateUpFunc() bunMigrate.MigrationFunc {
 			ForeignKey(`("range_replica_id") REFERENCES range_replicas ("id") ON DELETE CASCADE`).
 			Exec,
 		)
+
+		// |||| AUTH ||||
+
+		db.RegisterModel((*models.UserToGroup)(nil))
+
+		c.Exec(db.NewCreateTable().Model((*models.User)(nil)).Exec)
+		c.Exec(db.NewCreateTable().Model((*models.Group)(nil)).Exec)
+		c.Exec(db.NewCreateTable().
+			Model((*models.UserToGroup)(nil)).
+			ForeignKey(`("group_id") REFERENCES groups ("id") ON DELETE CASCADE`).
+			ForeignKey(`("user_id") REFERENCES users ("id") ON DELETE CASCADE`).
+			Exec,
+		)
+
 		return c.Error()
 	}
 }
