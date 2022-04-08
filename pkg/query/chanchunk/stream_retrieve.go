@@ -48,8 +48,8 @@ func (sr *streamRetrieve) Stream(req StreamRetrieveRequest) error {
 	wg := &errgroup.Group{}
 	sr.chunkStream = make(chan *telem.Chunk)
 	stream, qErr := sr.svc.NewTSRetrieve().
+		WhereConfigPK(req.ChannelConfigID).
 		Model(&sr.chunkStream).
-		WherePK(req.ChannelConfigID).
 		WhereTimeRange(req.TimeRange).
 		Stream(sr.Context())
 	if qErr != nil {

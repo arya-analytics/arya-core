@@ -60,7 +60,7 @@ var _ = Describe("StreamCreate", func() {
 			aCtx, cancel = context.WithCancel(ctx)
 			chunkStream = make(chan chanchunk.StreamCreateArgs)
 			var err error
-			streamQ, err = svc.NewTSCreate().Model(&chunkStream).Stream(aCtx, chanchunk.ContextArg{ConfigPK: config.ID})
+			streamQ, err = svc.NewTSCreate().WhereConfigPK(config.ID).Model(&chunkStream).Stream(aCtx)
 			Expect(err).To(BeNil())
 			go func() {
 				defer GinkgoRecover()
@@ -199,7 +199,7 @@ var _ = Describe("StreamCreate", func() {
 
 					aCtxTwo, cancelTwo := context.WithCancel(context.Background())
 					var err error
-					streamQ, err = svc.NewTSCreate().Model(&chunkStream).Stream(aCtxTwo, chanchunk.ContextArg{ConfigPK: config.ID})
+					streamQ, err = svc.NewTSCreate().WhereConfigPK(config.ID).Model(&chunkStream).Stream(aCtxTwo)
 					Expect(err).To(BeNil())
 
 					for i, c := range cc {
@@ -237,7 +237,7 @@ var _ = Describe("StreamCreate", func() {
 				aCtx, cancel = context.WithCancel(ctx)
 				chunkStream = make(chan chanchunk.StreamCreateArgs)
 				var err error
-				streamQ, err = svc.NewTSCreate().Model(&chunkStream).Stream(aCtx, chanchunk.ContextArg{ConfigPK: config.ID})
+				streamQ, err = svc.NewTSCreate().WhereConfigPK(config.ID).Model(&chunkStream).Stream(aCtx)
 				Expect(err).To(BeNil())
 			})
 			Context("Chunks in reverse order", func() {
@@ -396,9 +396,9 @@ var _ = Describe("StreamCreate", func() {
 		Describe("Duplicate streams", func() {
 			It("Should prevent duplicate write streams to the same channel", func() {
 				chunkStream := make(chan chanchunk.StreamCreateArgs)
-				_, err := svc.NewTSCreate().Model(&chunkStream).Stream(ctx, chanchunk.ContextArg{ConfigPK: config.ID})
+				_, err := svc.NewTSCreate().WhereConfigPK(config.ID).Model(&chunkStream).Stream(ctx)
 				Expect(err).To(BeNil())
-				_, err = svc.NewTSCreate().Model(&chunkStream).Stream(ctx, chanchunk.ContextArg{ConfigPK: config.ID})
+				_, err = svc.NewTSCreate().WhereConfigPK(config.ID).Model(&chunkStream).Stream(ctx)
 				Expect(err).ToNot(BeNil())
 			})
 		})

@@ -17,13 +17,11 @@ type Service struct {
 	obs    observe
 	rngSvc *rng.Service
 	qExec  query.Execute
-	streamq.AssembleTS
 }
 
 // NewService creates a new service with the provided parameters.
 func NewService(qExec query.Execute, rngSvc *rng.Service) *Service {
 	svc := &Service{qExec: qExec, obs: newObserveMem(), rngSvc: rngSvc}
-	svc.AssembleTS = streamq.NewAssembleTS(svc.Exec)
 	return svc
 }
 
@@ -32,4 +30,12 @@ func (s *Service) Exec(ctx context.Context, p *query.Pack) error {
 		&streamq.TSRetrieve{}: newStreamRetrieve(s.qExec).exec,
 		&streamq.TSCreate{}:   newStreamCreate(s.qExec, s.obs, s.rngSvc).exec,
 	})
+}
+
+func (s *Service) NewTSCreate() *StreamCreate {
+	return newStreamCreate(s.qExec, s.obs, s.rngSvc)
+}
+
+func (s *Service) NewTSRetrieve() *StreamRetrieve {
+	return newStreamRetrieve(s.qExec)
 }

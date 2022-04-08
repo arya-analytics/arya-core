@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-var _ = Describe("streamRetrieve", func() {
+var _ = Describe("StreamRetrieve", func() {
 	var (
 		node   *models.Node
 		config *models.ChannelConfig
@@ -51,7 +51,7 @@ var _ = Describe("streamRetrieve", func() {
 		JustBeforeEach(func() {
 			aCtx, cancel := context.WithCancel(ctx)
 			chunkStream := make(chan chanchunk.StreamCreateArgs)
-			streamQ, err := svc.NewTSCreate().Model(&chunkStream).Stream(aCtx, chanchunk.ContextArg{ConfigPK: config.ID})
+			streamQ, err := svc.NewTSCreate().WhereConfigPK(config.ID).Model(&chunkStream).Stream(aCtx)
 			Expect(err).To(BeNil())
 			defer func() {
 				cancel()
@@ -80,10 +80,10 @@ var _ = Describe("streamRetrieve", func() {
 				}
 			}
 		})
-		It("Should retrieve a streamq of chunks within the correct time range", func() {
+		It("Should retrieve a stream of chunks within the correct time range", func() {
 			tr := telem.NewTimeRange(telem.TimeStamp(0), telem.TimeStamp(0).Add(telem.NewTimeSpan(170*time.Second)))
 			chunkStream := make(chan *telem.Chunk)
-			_, err := svc.NewTSRetrieve().Model(&chunkStream).WherePK(config.ID).WhereTimeRange(tr).Stream(ctx)
+			_, err := svc.NewTSRetrieve().WhereConfigPK(config.ID).Model(&chunkStream).WhereTimeRange(tr).Stream(ctx)
 			Expect(err).To(BeNil())
 			var chunks []*telem.Chunk
 			for c := range chunkStream {

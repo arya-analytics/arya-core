@@ -14,11 +14,11 @@ import (
 	"github.com/google/uuid"
 )
 
-type streamCreate struct {
+type StreamCreate struct {
+	streamq.TSCreate
 	obs          observe
 	qExec        query.Execute
 	rngSvc       *rng.Service
-	configPK     uuid.UUID
 	_config      *models.ChannelConfig
 	_prevChunk   *telem.Chunk
 	prevCCPK     uuid.UUID
@@ -28,23 +28,26 @@ type streamCreate struct {
 	cancelStream context.CancelFunc
 }
 
-type ContextArg struct {
-	ConfigPK uuid.UUID
-}
-
 type StreamCreateArgs struct {
 	Start telem.TimeStamp
 	Data  *telem.ChunkData
 }
 
-func newStreamCreate(qExec query.Execute, obs observe, rngSvc *rng.Service) *streamCreate {
-	return &streamCreate{qExec: qExec, obs: obs, rngSvc: rngSvc, _config: &models.ChannelConfig{}}
+func newStreamCreate(qExec query.Execute, obs observe, rngSvc *rng.Service) *StreamCreate {
+	sc := &StreamCreate{qExec: qExec, obs: obs, rngSvc: rngSvc, _config: &models.ChannelConfig{}}
+	sc.Base.Init(sc)
+	sc.BindExec(sc.exec)
+	return sc
 }
 
-func (sc *streamCreate) exec(ctx context.Context, p *query.Pack) error {
+func (sc *StreamCreate) WhereConfigPK(configPK uuid.UUID) *StreamCreate {
+	newConfigPKOpt(sc.Pack(), configPK)
+	return sc
+}
+
+func (sc *StreamCreate) exec(ctx context.Context, p *query.Pack) error {
 	sc.valStream = *query.ConcreteModel[*chan StreamCreateArgs](p)
 	sc.streamQ, _ = streamq.RetrieveStreamOpt(p, query.RequireOpt())
-	sc.configPK = streamq.ContextArg[ContextArg](sc.streamQ).ConfigPK
 	sc.catch = errutil.NewCatchContext(context.Background(), errutil.WithHooks(errutil.NewPipeHook(sc.streamQ.Errors)))
 	if err := sc.validateStart(); err != nil {
 		return err
@@ -55,16 +58,16 @@ func (sc *streamCreate) exec(ctx context.Context, p *query.Pack) error {
 
 // |||| PROCESS ||||
 
-func (sc *streamCreate) listen(ctx context.Context) {
+func (sc *StreamCreate) listen(ctx context.Context) {
 	sc.streamQ.Segment(func() {
 		sc.updateConfigStatus(models.ChannelStatusActive)
 		defer sc.streamQ.Complete()
 		defer sc.updateConfigStatus(models.ChannelStatusInactive)
 		route.RangeContext(ctx, sc.valStream, sc.processNextChunk)
-	}, streamq.WithSegmentName("telem.chanchunk.streamCreate"))
+	}, streamq.WithSegmentName("telem.chanchunk.StreamCreate"))
 }
 
-func (sc *streamCreate) processNextChunk(args StreamCreateArgs) {
+func (sc *StreamCreate) processNextChunk(args StreamCreateArgs) {
 	nc := telem.NewChunk(args.Start, sc.config().DataType, sc.config().DataRate, args.Data)
 	sc.validateResolveNextChunk(nc)
 
@@ -97,31 +100,32 @@ func (sc *streamCreate) processNextChunk(args StreamCreateArgs) {
 	sc.catch.Reset()
 }
 
-func (sc *streamCreate) config() *models.ChannelConfig {
+func (sc *StreamCreate) config() *models.ChannelConfig {
+	configPK, _ := retrieveConfigPKOpt(sc.Pack(), query.RequireOpt())
 	sc.catch.Exec(query.
 		NewRetrieve().
 		BindExec(sc.qExec).
 		Model(sc._config).
-		WherePK(sc.configPK).
+		WherePK(configPK).
 		WithMemo(query.NewMemo(sc._config)).
 		Exec,
 	)
 	return sc._config
 }
 
-func (sc *streamCreate) updateConfigStatus(status models.ChannelState) {
-	sc.obs.Add(observedChannelConfig{State: status, PK: sc.configPK})
+func (sc *StreamCreate) updateConfigStatus(status models.ChannelState) {
+	sc.obs.Add(observedChannelConfig{State: status, PK: sc.config().ID})
 	sc.config().State = status
 	sc.catch.CatchSimple.Exec(func() error {
 		return query.NewUpdate().
 			BindExec(sc.qExec).
 			Model(sc.config()).
-			WherePK(sc.configPK).
+			WherePK(sc.config().ID).
 			Fields("State").Exec(context.Background())
 	})
 }
 
-func (sc *streamCreate) prevChunk() *telem.Chunk {
+func (sc *StreamCreate) prevChunk() *telem.Chunk {
 	if sc._prevChunk == nil {
 		sc.catch.Exec(func(ctx context.Context) error {
 			ccr := &models.ChannelChunkReplica{}
@@ -146,16 +150,16 @@ func (sc *streamCreate) prevChunk() *telem.Chunk {
 	return sc._prevChunk
 }
 
-func (sc *streamCreate) setPrevChunk(chunk *telem.Chunk) {
+func (sc *StreamCreate) setPrevChunk(chunk *telem.Chunk) {
 	sc._prevChunk = chunk
 }
 
 // |||| VALIDATE + RESOLVE ||||
 
-func (sc *streamCreate) validateStart() error {
+func (sc *StreamCreate) validateStart() error {
 	return validateStart().Exec(validateStartContext{cfg: sc.config(), obs: sc.obs}).Error()
 }
-func (sc *streamCreate) validateResolveNextChunk(nextChunk *telem.Chunk) {
+func (sc *StreamCreate) validateResolveNextChunk(nextChunk *telem.Chunk) {
 	nc := nextChunkContext{cfg: sc.config(), prev: sc.prevChunk(), next: nextChunk}
 	sc.catch.CatchSimple.Exec(func() error {
 		for _, vErr := range validateNextChunk().Exec(nc).Errors() {
@@ -167,7 +171,7 @@ func (sc *streamCreate) validateResolveNextChunk(nextChunk *telem.Chunk) {
 	})
 }
 
-func (sc *streamCreate) resolveNextChunkError(err error, nCtx nextChunkContext) error {
+func (sc *StreamCreate) resolveNextChunkError(err error, nCtx nextChunkContext) error {
 	return resolveNextChunk().Exec(err, nCtx).Error()
 }
 

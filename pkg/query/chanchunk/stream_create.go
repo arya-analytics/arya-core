@@ -53,9 +53,10 @@ func (sc *streamCreate) Stream() error {
 	sc.chunkStream = make(chan chanchunk.StreamCreateArgs)
 	ctx, cancel := context.WithCancel(sc.Context())
 	stream, qErr := sc.svc.NewTSCreate().
+		WhereConfigPK(fReq.ConfigPK).
 		Model(&sc.chunkStream).
 		BindExec(sc.svc.Exec).
-		Stream(ctx, chanchunk.ContextArg{ConfigPK: fReq.ConfigPK})
+		Stream(ctx)
 	if qErr != nil {
 		cancel()
 		return qErr
@@ -65,7 +66,6 @@ func (sc *streamCreate) Stream() error {
 		Data:  fReq.ChunkData,
 	}
 	sc.qStream = stream
-	go sc.relayErrors()
 	wg.Go(sc.relayErrors)
 	wg.Go(sc.relayRequests)
 	cancel()

@@ -11,44 +11,42 @@ import (
 	"github.com/google/uuid"
 )
 
-type streamRetrieve struct {
-	qExec    query.Execute
-	configPK uuid.UUID
-	_config  *models.ChannelConfig
-	tRng     telem.TimeRange
-	catch    *errutil.CatchContext
+type StreamRetrieve struct {
+	streamq.TSRetrieve
+	qExec   query.Execute
+	_config *models.ChannelConfig
+	tRng    telem.TimeRange
+	catch   *errutil.CatchContext
 }
 
-func newStreamRetrieve(qExec query.Execute) *streamRetrieve {
-	return &streamRetrieve{qExec: qExec, _config: &models.ChannelConfig{}}
+func newStreamRetrieve(qExec query.Execute) *StreamRetrieve {
+	sr := &StreamRetrieve{qExec: qExec, _config: &models.ChannelConfig{}}
+	sr.Base.Init(sr)
+	sr.BindExec(sr.exec)
+	return sr
 }
 
-func (sr *streamRetrieve) exec(ctx context.Context, p *query.Pack) error {
-	pkc, _ := query.RetrievePKOpt(p, query.RequireOpt())
-	sr.configPK = pkc[0].Raw().(uuid.UUID)
+func (sr *StreamRetrieve) WhereConfigPK(configPK uuid.UUID) *StreamRetrieve {
+	newConfigPKOpt(sr.Pack(), configPK)
+	return sr
+}
+
+func (sr *StreamRetrieve) exec(ctx context.Context, p *query.Pack) error {
 	sr.catch = errutil.NewCatchContext(context.Background())
 	var (
-		replicas   []*models.ChannelChunkReplica
+		ccr        []*models.ChannelChunkReplica
 		c          = *query.ConcreteModel[*chan *telem.Chunk](p)
 		streamQ, _ = streamq.RetrieveStreamOpt(p, query.RequireOpt())
-		tRng, _    = streamq.RetrieveTimeRangeOpt(p, query.RequireOpt())
+		tr, _      = streamq.RetrieveTimeRangeOpt(p, query.RequireOpt())
 	)
-	sr.catch.Exec(query.NewRetrieve().
-		BindExec(sr.qExec).
-		Model(&replicas).
-		Relation("ChannelChunk", "StartTS").
-		WhereFields(query.WhereFields{
-			"ChannelChunk.StartTS":         query.InRange(tRng.Start(), tRng.End()),
-			"ChannelChunk.ChannelConfigID": sr.config().ID,
-		}).
-		Exec)
+	sr.catch.Exec(retrieveCCRQuery(sr.qExec, sr.config().ID, tr, &ccr).Exec)
 	if sr.catch.Error() != nil {
 		return sr.catch.Error()
 	}
 	streamQ.Segment(func() {
 		defer close(c)
 		defer close(streamQ.Errors)
-		for _, r := range replicas {
+		for _, r := range ccr {
 			if route.CtxDone(ctx) {
 				return
 			}
@@ -58,14 +56,49 @@ func (sr *streamRetrieve) exec(ctx context.Context, p *query.Pack) error {
 	return nil
 }
 
-func (sr *streamRetrieve) config() *models.ChannelConfig {
+func (sr *StreamRetrieve) config() *models.ChannelConfig {
+	configPK, _ := retrieveConfigPKOpt(sr.Pack(), query.RequireOpt())
 	sr.catch.Exec(query.
 		NewRetrieve().
 		BindExec(sr.qExec).
 		Model(sr._config).
-		WherePK(sr.configPK).
+		WherePK(configPK).
 		WithMemo(query.NewMemo(sr._config)).
 		Exec,
 	)
 	return sr._config
+}
+
+/// |||| QUERY UTILS ||||
+
+func retrieveCCRQuery(
+	qExec query.Execute,
+	configPK uuid.UUID,
+	tr telem.TimeRange,
+	ccr *[]*models.ChannelChunkReplica,
+) *query.Retrieve {
+	return query.NewRetrieve().
+		BindExec(qExec).
+		Model(ccr).
+		Relation("ChannelChunk", "StartTS").
+		WhereFields(query.WhereFields{
+			"ChannelChunk.ChannelConfigID": configPK,
+			"ChannelChunk.StartTS":         query.InRange(tr.Start(), tr.End()),
+		})
+}
+
+// |||| OPTS ||||
+
+const configPKOptKey query.OptKey = "configPK"
+
+func newConfigPKOpt(p *query.Pack, configPK uuid.UUID) {
+	p.SetOpt(configPKOptKey, configPK)
+}
+
+func retrieveConfigPKOpt(p *query.Pack, opts ...query.OptRetrieveOpt) (uuid.UUID, bool) {
+	o, ok := p.RetrieveOpt(configPKOptKey, opts...)
+	if !ok {
+		return uuid.Nil, false
+	}
+	return o.(uuid.UUID), true
 }
