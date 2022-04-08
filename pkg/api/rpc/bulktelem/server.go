@@ -3,13 +3,12 @@ package bulktelem
 import (
 	"context"
 	bulktelemv1 "github.com/arya-analytics/aryacore/pkg/api/rpc/gen/proto/go/bulktelem/v1"
+	qcc "github.com/arya-analytics/aryacore/pkg/query/chanchunk"
 	"github.com/arya-analytics/aryacore/pkg/telem/chanchunk"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"github.com/google/uuid"
-	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
-	"io"
 )
 
 type Server struct {
@@ -26,83 +25,69 @@ func (s *Server) BindTo(srv *grpc.Server) {
 }
 
 func (s *Server) RetrieveStream(req *bulktelemv1.RetrieveStreamRequest, server bulktelemv1.BulkTelemService_RetrieveStreamServer) error {
-	pk, err := parsePK(req.ChannelConfigId)
-	if err != nil {
-		return err
-	}
-	tr := telem.NewTimeRange(telem.TimeStamp(req.StartTs), telem.TimeStamp(req.EndTs))
-	stream, err := s.svc.NewStreamRetrieve().WherePK(pk).WhereTimeRange(tr).Exec(server.Context())
-	if err != nil {
-		return err
-	}
-	for c := range stream {
-		if sErr := server.Send(&bulktelemv1.RetrieveStreamResponse{
-			StartTs:  int64(c.Start()),
-			DataType: int64(c.DataType),
-			DataRate: float32(c.DataRate),
-			Data:     c.Bytes(),
-		}); sErr != nil {
-			return sErr
-		}
-	}
-	return nil
+	return qcc.RetrieveStream(
+		s.svc,
+		&RPCStreamRetrieveProtocol{rpcStream: server},
+		qcc.StreamRetrieveRequest{ChannelConfigID: parsePK(req.ChannelConfigId)},
+	)
 }
 
 func (s *Server) CreateStream(server bulktelemv1.BulkTelemService_CreateStreamServer) error {
-	stream := s.svc.NewTSCreate()
-	wg := errgroup.Group{}
-	wg.Go(func() error { return relayErrors(stream, server) })
-	wg.Go(func() error {
-		defer stream.Close()
-		start := true
-		for {
-			req, err := server.Recv()
-			if err == io.EOF {
-				return nil
-			}
-			if err != nil {
-				return err
-			}
-			if start {
-				if sErr := startStream(server.Context(), stream, req); sErr != nil {
-					return sErr
-				}
-				start = false
-			}
-			if dErr := sendData(stream, req); dErr != nil {
-				return dErr
-			}
-		}
+	return qcc.CreateStream(s.svc, &RPCStreamCreateProtocol{rpcStream: server})
+}
+
+func parsePK(pkStr string) uuid.UUID {
+	pk, _ := model.NewPK(uuid.UUID{}).NewFromString(pkStr)
+	return pk.Raw().(uuid.UUID)
+}
+
+// ||||| RETRIEVE PROTOCOL |||||
+
+type RPCStreamRetrieveProtocol struct {
+	rpcStream bulktelemv1.BulkTelemService_RetrieveStreamServer
+}
+
+func (r *RPCStreamRetrieveProtocol) Context() context.Context {
+	return r.rpcStream.Context()
+}
+
+func (r *RPCStreamRetrieveProtocol) Send(resp qcc.StreamRetrieveResponse) error {
+	return r.rpcStream.Send(&bulktelemv1.RetrieveStreamResponse{
+		StartTs:  int64(resp.StartTS),
+		DataType: int64(resp.DataType),
+		DataRate: float32(resp.DataRate),
+		Data:     resp.Data.Bytes(),
 	})
-	return wg.Wait()
 }
 
-func startStream(ctx context.Context, stream *chanchunk.StreamCreate, req *bulktelemv1.CreateStreamRequest) error {
-	pk, err := parsePK(req.ChannelConfigId)
+// ||||| CREATE PROTOCOL |||||
+
+type RPCStreamCreateProtocol struct {
+	rpcStream bulktelemv1.BulkTelemService_CreateStreamServer
+}
+
+func (c *RPCStreamCreateProtocol) Context() context.Context {
+	return c.rpcStream.Context()
+}
+
+func (c *RPCStreamCreateProtocol) Send(resp qcc.StreamCreateResponse) error {
+	return c.rpcStream.Send(&bulktelemv1.CreateStreamResponse{
+		Error: &bulktelemv1.Error{Message: resp.Error.Error()},
+	})
+}
+
+func (c *RPCStreamCreateProtocol) Receive() (qcc.StreamCreateRequest, error) {
+	req, err := c.rpcStream.Recv()
 	if err != nil {
-		return err
+		return qcc.StreamCreateRequest{}, err
 	}
-	return stream.Start(ctx, pk.Raw().(uuid.UUID))
-}
-
-func sendData(stream *chanchunk.StreamCreate, req *bulktelemv1.CreateStreamRequest) error {
 	cd := telem.NewChunkData(make([]byte, len(req.Data)))
 	if _, err := cd.Write(req.Data); err != nil {
-		return err
+		return qcc.StreamCreateRequest{}, err
 	}
-	stream.Send(telem.TimeStamp(req.StartTs), cd)
-	return nil
-}
-
-func relayErrors(stream *chanchunk.StreamCreate, server bulktelemv1.BulkTelemService_CreateStreamServer) error {
-	for err := range stream.Errors() {
-		if sErr := server.Send(&bulktelemv1.CreateStreamResponse{Error: &bulktelemv1.Error{Message: err.Error()}}); sErr != nil {
-			return sErr
-		}
-	}
-	return nil
-}
-
-func parsePK(pkStr string) (model.PK, error) {
-	return model.NewPK(uuid.UUID{}).NewFromString(pkStr)
+	return qcc.StreamCreateRequest{
+		ConfigPK:  parsePK(req.ChannelConfigId),
+		ChunkData: cd,
+		StartTS:   telem.TimeStamp(req.StartTs),
+	}, nil
 }

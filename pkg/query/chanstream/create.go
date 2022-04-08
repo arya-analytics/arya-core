@@ -23,7 +23,7 @@ type CreateResponse struct {
 	Error error
 }
 
-type Create struct {
+type create struct {
 	CreateProtocol
 	svc          *chanstream.Service
 	qStream      *streamq.Stream
@@ -31,14 +31,14 @@ type Create struct {
 }
 
 func CreateStream(svc *chanstream.Service, rp CreateProtocol) error {
-	c := &Create{
+	c := &create{
 		CreateProtocol: rp,
 		svc:            svc,
 	}
 	return c.Stream()
 }
 
-func (c *Create) Stream() error {
+func (c *create) Stream() error {
 	wg := errgroup.Group{}
 	c.sampleStream = make(chan *models.ChannelSample)
 	stream, qErr := streamq.NewTSCreate().Model(&c.sampleStream).BindExec(c.svc.Exec).Stream(c.Context())
@@ -51,7 +51,7 @@ func (c *Create) Stream() error {
 	return wg.Wait()
 }
 
-func (c *Create) relayErrors() error {
+func (c *create) relayErrors() error {
 	for err := range c.qStream.Errors {
 		if sErr, done := query.StreamDone(c.Context(), c.Send(CreateResponse{Error: err})); done {
 			return sErr
@@ -60,7 +60,7 @@ func (c *Create) relayErrors() error {
 	return nil
 }
 
-func (c *Create) relayRequests() error {
+func (c *create) relayRequests() error {
 	for {
 		req, rErr := c.Receive()
 		if err, done := query.StreamDone(c.Context(), rErr); done {

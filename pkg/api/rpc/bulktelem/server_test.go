@@ -33,7 +33,7 @@ var _ = Describe("Server", func() {
 		// || MODEL DEFINITIONS ||
 		rngObs := rng.NewObserveMem([]rng.ObservedRange{})
 		rngSvc := rng.NewService(rngObs, clust.Exec)
-		svc = chanchunk.NewService(clust, rngSvc)
+		svc = chanchunk.NewService(clust.Exec, rngSvc)
 		node = &models.Node{ID: 1}
 		config = &models.ChannelConfig{
 			Name:           "Awesome Channel",
