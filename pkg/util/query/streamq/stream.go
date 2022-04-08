@@ -19,7 +19,7 @@ import (
 // such as validating query parameters, resolving hosts, doing lookups on context items from the data store).
 //
 // The Stream returned pipes any errors encountered during the actual transportation of query results to
-// Stream.Errors. In short, errors encountered during construction of the stream are returned upon completing construction, while
+// Stream.Errors. IsIn short, errors encountered during construction of the stream are returned upon completing construction, while
 // errors encountered during stream operation will be piped through Stream.Errors.
 //
 // Stream.Ctx is the same context used to construct the stream. This is useful for canceling the stream.

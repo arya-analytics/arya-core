@@ -167,19 +167,19 @@ func (d *del) model(p *query.Pack) {
 // |||| PK ||||
 
 func (u *update) pk(p *query.Pack) {
-	if pkc, ok := query.PKOpt(p); ok {
+	if pkc, ok := query.RetrievePKOpt(p); ok {
 		u.bunQ = u.bunQ.Where(u.sql.pks(), bun.In(pkc.Raw()))
 	}
 }
 
 func (d *del) pk(p *query.Pack) {
-	if pkc, ok := query.PKOpt(p); ok {
+	if pkc, ok := query.RetrievePKOpt(p); ok {
 		d.bunQ = d.bunQ.Where(d.sql.pks(), bun.In(pkc.Raw()))
 	}
 }
 
 func (e *retrieve) pk(p *query.Pack) {
-	if pkc, ok := query.PKOpt(p); ok {
+	if pkc, ok := query.RetrievePKOpt(p); ok {
 		e.bunQ = e.bunQ.Where(e.sql.pks(), bun.In(pkc.Raw()))
 	}
 }

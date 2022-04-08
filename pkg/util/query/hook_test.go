@@ -15,7 +15,7 @@ func (m *MockQueryHook) Before(ctx context.Context, p *query.Pack) error {
 }
 
 func (m *MockQueryHook) After(ctx context.Context, p *query.Pack) error {
-	_, ok := query.PKOpt(p)
+	_, ok := query.RetrievePKOpt(p)
 	if ok {
 		return errors.New("A really badass error")
 	}

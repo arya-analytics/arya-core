@@ -7,7 +7,7 @@ import (
 
 func Exec(p *query.Pack, on interface{}) {
 	filtered := p.Model()
-	pkc, ok := query.PKOpt(p)
+	pkc, ok := query.RetrievePKOpt(p)
 	if ok {
 		filtered = execPK(filtered, pkc)
 	}

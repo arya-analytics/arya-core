@@ -25,7 +25,7 @@ func newRemoteStreamRetrieve(pool *remoteStreamRetrievePool) *remoteStreamRetrie
 
 func (rsr *remoteStreamRetrieve) exec(ctx context.Context, p *query.Pack) error {
 	qStream, _ := streamq.RetrieveStreamOpt(p, query.RequireOpt())
-	pkc, _ := query.PKOpt(p, query.RequireOpt())
+	pkc, _ := query.RetrievePKOpt(p, query.RequireOpt())
 	nodes := nodeOpt(p)
 	for _, n := range nodes {
 		s, err := rsr.pool.Acquire(n)

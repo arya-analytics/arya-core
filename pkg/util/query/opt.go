@@ -51,7 +51,7 @@ type OptRetrieveOpt func(o *optRetrieveOpts)
 // Panics if the option is not present.
 //
 // Example:
-// 		pkc, _ := query.PKOpt(p, query.RequireOpt())
+// 		pkc, _ := query.RetrievePKOpt(p, query.RequireOpt())
 //
 //  The function will panic if the pk option was not set on the query.
 func RequireOpt() OptRetrieveOpt {

@@ -153,7 +153,7 @@ func (b *base) model(p *query.Pack) {
 // |||| PK ||||
 
 func (w *where) pk(p *query.Pack) {
-	if pkc, ok := query.PKOpt(p); ok {
+	if pkc, ok := query.RetrievePKOpt(p); ok {
 		w.pkc = pkc
 	} else if p.Model().PKChain().AllNonZero() {
 		// CLARIFICATION: If there wasn't a primary key specified, try to pull the primary key

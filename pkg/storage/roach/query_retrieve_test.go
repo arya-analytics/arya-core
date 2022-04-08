@@ -210,7 +210,7 @@ var _ = Describe("QueryRetrieve", func() {
 			It("Should retrieve the field by a great than expression", func() {
 
 			})
-			DescribeTable("Field Expressions", func(exp query.FieldExp) {
+			DescribeTable("Field Expressions", func(exp query.FieldExpression) {
 				cc := &models.ChannelChunk{ChannelConfigID: channelConfig.ID, Size: 4000, RangeID: rng.ID}
 				cErr := engine.NewCreate().Model(cc).Exec(ctx)
 				Expect(cErr).To(BeNil())
@@ -221,7 +221,7 @@ var _ = Describe("QueryRetrieve", func() {
 			},
 				Entry("Greater than", query.GreaterThan(3500)),
 				Entry("Less than", query.LessThan(4500)),
-				Entry("In Range", query.InRange(3000, 4500)),
+				Entry("IsIn Range", query.InRange(3000, 4500)),
 			)
 
 			It("Should return a not found error when no item can be found", func() {

@@ -86,7 +86,7 @@ func (b *base) model(p *query.Pack) {
 // |||| PK ||||
 
 func (tsr *tsRetrieve) pk(p *query.Pack) {
-	pkc, ok := query.PKOpt(p)
+	pkc, ok := query.RetrievePKOpt(p)
 	if !ok {
 		panic("tsRetrieve queries require a primary key!")
 	}

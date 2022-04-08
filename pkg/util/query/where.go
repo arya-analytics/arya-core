@@ -33,58 +33,54 @@ func (w *Where) WherePKs(pks interface{}) {
 // The key of the map is the field name, and the value is the value to filter by.
 //
 // The value can be wrapped in a specific matcher operation such as GreaterThan, LessThan, or InRange. For all available
-// operations, see the FieldOp type.
+// operations, see the FieldFilter type.
 type WhereFields map[string]interface{}
 
-type FieldOp int
+type FieldFilter int
 
 //go:generate stringer -type=FieldOp
 const (
-	FieldOpGreaterThan FieldOp = iota
-	FieldOpLessThan
-	FieldOpInRange
-	FieldOpIn
+	FieldFilterGreaterThan FieldFilter = iota
+	FieldFilterLessThan
+	FieldFilterInRange
+	FilterFilterIsIn
 )
 
-type FieldExp struct {
-	Op     FieldOp
+type FieldExpression struct {
+	Op     FieldFilter
 	Values []interface{}
 }
 
 // GreaterThan is an option for WhereFields that will filter the results of a query by a field greater than the
 // given value.
-func GreaterThan(value interface{}) FieldExp {
-	return FieldExp{Op: FieldOpGreaterThan, Values: []interface{}{value}}
+func GreaterThan(value interface{}) FieldExpression {
+	return FieldExpression{Op: FieldFilterGreaterThan, Values: []interface{}{value}}
 }
 
 // LessThan is an option for WhereFields that will filter the results of a query by a field less than the given value.
-func LessThan(value interface{}) FieldExp {
-	return FieldExp{Op: FieldOpLessThan, Values: []interface{}{value}}
+func LessThan(value interface{}) FieldExpression {
+	return FieldExpression{Op: FieldFilterLessThan, Values: []interface{}{value}}
 }
 
 // InRange is an option for WhereFields that will filter the results of a query by a field in the given range.
-func InRange(start interface{}, stop interface{}) FieldExp {
-	return FieldExp{Op: FieldOpInRange, Values: []interface{}{start, stop}}
+func InRange(start interface{}, stop interface{}) FieldExpression {
+	return FieldExpression{Op: FieldFilterInRange, Values: []interface{}{start, stop}}
 }
 
-// In is an option for WhereFields that will filter the results of a query by a field in the given values.
-func In(values ...interface{}) FieldExp {
-	return FieldExp{Op: FieldOpIn, Values: values}
+// IsIn is an option for WhereFields that will filter the results of a query by a field in the given values.
+func IsIn(values ...interface{}) FieldExpression {
+	return FieldExpression{Op: FilterFilterIsIn, Values: values}
 }
 
 // |||| OPTS ||||
 
-// PKOpt is an option that will filter the results of a query by a primary key.
-func PKOpt(p *Pack, opts ...OptRetrieveOpt) (model.PKChain, bool) {
+// RetrievePKOpt is an option that will filter the results of a query by a primary key.
+func RetrievePKOpt(p *Pack, opts ...OptRetrieveOpt) (model.PKChain, bool) {
 	qo, ok := p.RetrieveOpt(pkOptKey, opts...)
 	if !ok {
 		return model.PKChain{}, false
 	}
-	return qo.(pkOpt).PKChain, true
-}
-
-type pkOpt struct {
-	PKChain model.PKChain
+	return qo.(model.PKChain), true
 }
 
 // NewPKOpt creates a new option that stores a primary key.
@@ -102,7 +98,7 @@ func NewPKOpt(p *Pack, pk interface{}) {
 			pkc = model.NewPKChain([]interface{}{pk})
 		}
 	}
-	p.SetOpt(pkOptKey, pkOpt{pkc})
+	p.SetOpt(pkOptKey, pkc)
 }
 
 // || WHERE FIELDS ||

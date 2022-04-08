@@ -24,7 +24,7 @@ var _ = Describe("Opt", func() {
 			It("Should panic if the option is not present in the query", func() {
 				p := query.NewRetrieve().Pack()
 				Expect(func() {
-					query.PKOpt(p, query.RequireOpt())
+					query.RetrievePKOpt(p, query.RequireOpt())
 				})
 
 			})

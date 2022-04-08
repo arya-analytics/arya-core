@@ -21,7 +21,7 @@ func NewMemo(into interface{}) *Memo {
 
 // Exec implements query.Execute, and will attempt to satisfy the query using memoized results.
 func (m *Memo) Exec(ctx context.Context, p *Pack) error {
-	pkc, pkcOk := PKOpt(p)
+	pkc, pkcOk := RetrievePKOpt(p)
 	if !pkcOk {
 		return NewSimpleError(ErrorTypeItemNotFound, errors.New("item not found in memo"))
 	}

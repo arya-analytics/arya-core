@@ -103,7 +103,7 @@ func (s *Service) openTSCreateQueries(ctx context.Context, p *query.Pack) (rs, l
 
 func (s *Service) tsRetrieve(ctx context.Context, p *query.Pack) error {
 	st, _ := streamq.RetrieveStreamOpt(p, query.RequireOpt())
-	pkc, _ := query.PKOpt(p, query.RequireOpt())
+	pkc, _ := query.RetrievePKOpt(p, query.RequireOpt())
 	cc, err := s.retrieveConfigsQuery(ctx, pkc)
 	if err != nil {
 		return err

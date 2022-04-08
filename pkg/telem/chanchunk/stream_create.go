@@ -40,7 +40,7 @@ func newStreamCreate(qExec query.Execute, obs observe, rngSvc *rng.Service) *str
 
 func (sc *streamCreate) exec(ctx context.Context, p *query.Pack) error {
 	sc.ctx = ctx
-	pkc, _ := query.PKOpt(p, query.RequireOpt())
+	pkc, _ := query.RetrievePKOpt(p, query.RequireOpt())
 	if len(pkc) != 1 {
 		panic(fmt.Sprintf("stream_create: expected 1 pk, got %v", len(pkc)))
 	}

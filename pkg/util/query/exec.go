@@ -17,7 +17,7 @@ import (
 // 1. To parse the Pack, use the different opts available to retrieve options from the Pack. As an example, here's how
 // to retrieve the primary key of a query.
 //
-//		pkc, ok := query.PKOpt(p)
+//		pkc, ok := query.RetrievePKOpt(p)
 //
 // pkc will hold a model.PKChain representing the primary keys of the query. ok will be false if the primary keys don't
 // exist. Repeat this process with the different options you want to provide support for to extract all the info you need.
@@ -30,11 +30,11 @@ type Execute func(ctx context.Context, p *Pack) error
 
 // |||| SWITCH ||||
 
-// Ops represents a set of Execute to call for a specific Query.
+// Ops represents a set of Execute to call for a specific Query variant (Create, Retrieve, Update, etc).
 type Ops map[Query]Execute
 
 // Switch switches a Pack to a configured set of Execute. Switch allows the caller to implement different query Execute
-// depending on the Query used.
+// depending on the Query type used.
 func Switch(ctx context.Context, p *Pack, ops Ops, opts ...SwitchOpt) error {
 	so := parseOpts(opts...)
 	for qo, e := range ops {
@@ -49,19 +49,6 @@ func Switch(ctx context.Context, p *Pack, ops Ops, opts ...SwitchOpt) error {
 		panic(fmt.Sprintf("%T not supported for model %s", p.Query(), p.Model().Type().Name()))
 	}
 	return nil
-}
-
-func parseOpts(opts ...SwitchOpt) *switchOpts {
-	so := &switchOpts{panic: true}
-	for _, o := range opts {
-		o(so)
-	}
-	return so
-}
-
-type switchOpts struct {
-	panic          bool
-	defaultExecute Execute
 }
 
 // SwitchOpt implements the options pattern for Switch.
@@ -81,4 +68,17 @@ func SwitchWithDefault(q Execute) SwitchOpt {
 		so.panic = false
 		so.defaultExecute = q
 	}
+}
+
+func parseOpts(opts ...SwitchOpt) *switchOpts {
+	so := &switchOpts{panic: true}
+	for _, o := range opts {
+		o(so)
+	}
+	return so
+}
+
+type switchOpts struct {
+	panic          bool
+	defaultExecute Execute
 }

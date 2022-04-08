@@ -92,7 +92,7 @@ func (s *DataSourceMem) update(ctx context.Context, p *query.Pack) error {
 	if bulk {
 		return s.bulkUpdate(ctx, p)
 	}
-	pk, ok := query.PKOpt(p)
+	pk, ok := query.RetrievePKOpt(p)
 	if !ok {
 		panic("non-bulk update must havea pk")
 	}
@@ -137,7 +137,7 @@ func (s *DataSourceMem) bulkUpdate(ctx context.Context, p *query.Pack) error {
 
 func (s *DataSourceMem) filter(p *query.Pack) *model.Reflect {
 	var filteredRfl = s.Data.Retrieve(p.Model().Type())
-	pkC, ok := query.PKOpt(p)
+	pkC, ok := query.RetrievePKOpt(p)
 	if ok {
 		filteredRfl = s.filterByPK(filteredRfl, pkC)
 	}
@@ -264,7 +264,7 @@ func fieldExpMatch(wFldName string, wFldVal interface{}, source *model.Reflect) 
 	if !fldVal.IsValid() {
 		return false
 	}
-	_, ok := wFldVal.(query.FieldExp)
+	_, ok := wFldVal.(query.FieldExpression)
 	// We don't currently support any field expressions.
 	if ok {
 		panic("field expressions not currently supported")
