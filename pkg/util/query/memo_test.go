@@ -74,9 +74,4 @@ var _ = Describe("Memo", func() {
 		)
 		Expect(resCCTwo.Name).To(Equal("Hello"))
 	})
-	It("Should panic if a non chain is passed to the memo", func() {
-		Expect(func() {
-			query.NewMemo(model.NewReflect(&models.ChannelConfig{}))
-		}).To(Panic())
-	})
 })
