@@ -18,13 +18,13 @@ func tokenSecret() []byte {
 
 // |||| NEW ||||
 
+// NewToken generates a new JWT with the PK of the user as the claim Issuer.
 func NewToken(userPK uuid.UUID) (string, error) {
 	claims := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.StandardClaims{
 		Issuer:    userPK.String(),
 		ExpiresAt: time.Now().Add(tokenExpiration()).Unix(),
 	})
-	token, err := claims.SignedString(tokenSecret())
-	return token, err
+	return claims.SignedString(tokenSecret())
 }
 
 // |||| PARSE ||||
@@ -39,6 +39,7 @@ func parseToken(token string) (*jwt.StandardClaims, error) {
 
 // |||| VALIDATE ||||
 
+// ValidateToken validates if the token matches the prov
 func ValidateToken(token string) error {
 	if _, err := parseToken(token); err != nil {
 		return Error{

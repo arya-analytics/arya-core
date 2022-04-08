@@ -16,7 +16,7 @@ func (e Error) Error() string {
 	return fmt.Sprintf("%s - %s", e.Type, e.Message)
 }
 
-func NewSimpleError(errType ErrorType, base error) error {
+func newSimpleError(errType ErrorType, base error) error {
 	return Error{Type: errType, Message: base.Error(), Base: base}
 }
 
@@ -45,7 +45,7 @@ func errorConvertQuery(err error) (error, bool) {
 		return err, false
 	}
 	t, ok := queryErrors()[qe.Type]
-	return NewSimpleError(t, qe), ok
+	return newSimpleError(t, qe), ok
 }
 
 func errorConvertDefault(err error) (error, bool) {
@@ -53,5 +53,5 @@ func errorConvertDefault(err error) (error, bool) {
 	if ok {
 		return err, true
 	}
-	return NewSimpleError(ErrorTypeUnknown, err), true
+	return newSimpleError(ErrorTypeUnknown, err), true
 }

@@ -11,6 +11,8 @@ type Service struct {
 	qExec query.Execute
 }
 
+// NewService creates a new authentication Service that runs queries against
+// the provided data store.
 func NewService(qExec query.Execute) *Service {
 	return &Service{qExec: qExec}
 }
@@ -19,7 +21,7 @@ func (s *Service) Login(ctx context.Context, username, password string) (*models
 	user := &models.User{}
 	c := errutil.NewCatchSimple(errutil.WithConvert(newErrorConvert()))
 	c.Exec(func() error { return s.retrieveUserByUsername(ctx, user, username) })
-	c.Exec(func() error { return compareHashAndPassword(user.Password, password) })
+	c.Exec(func() error { return ValidatePassword(user.Password, password) })
 	return user, c.Error()
 }
 

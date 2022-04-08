@@ -36,7 +36,7 @@ func parseToken(c *fiber.Ctx) (string, error) {
 	}
 	return "", api.ErrorResponse{
 		Type:    api.ErrorTypeUnauthorized,
-		Message: "No authentication token provided. Please token as cookie or in headers.",
+		Message: "No authentication token provided. Please provide token as cookie or in headers.",
 	}
 }
 
@@ -59,7 +59,7 @@ func parseHeaderToken(c *fiber.Ctx) (string, error, bool) {
 	if len(splitToken) != 2 {
 		return "", api.ErrorResponse{
 			Type:    api.ErrorTypeUnauthorized,
-			Message: "Invalid authorization header. Expected format: 'Authorization: Bearer <token>'",
+			Message: "Invalid authorization header. Expected format: 'Authorization: Bearer <token>'.",
 		}, true
 	}
 	return splitToken[1], nil, true

@@ -20,7 +20,7 @@ var _ = Describe("Service", func() {
 	})
 	Describe("Login", func() {
 		It("Should log the user in correctly", func() {
-			hash, err := auth.GenerateFromPassword("password")
+			hash, err := auth.HashPassword("password")
 			Expect(err).To(BeNil())
 			user := &models.User{
 				ID:       uuid.New(),
@@ -38,7 +38,7 @@ var _ = Describe("Service", func() {
 			Expect(err.(auth.Error).Type).To(Equal(auth.ErrorTypeUserNotFound))
 		})
 		It("Should return the correct auth error if the credentials are invalid", func() {
-			hash, err := auth.GenerateFromPassword("password")
+			hash, err := auth.HashPassword("password")
 			Expect(err).To(BeNil())
 			user := &models.User{
 				ID:       uuid.New(),
