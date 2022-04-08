@@ -139,7 +139,7 @@ func startRngSvc(cmd *cobra.Command, clust cluster.Cluster) (*rng.Service, error
 }
 
 func startChanChunkSvc(cmd *cobra.Command, rngSvc *rng.Service, clust cluster.Cluster) *telemchanchunk.Service {
-	svc := telemchanchunk.NewService(clust, rngSvc)
+	svc := telemchanchunk.NewService(clust.Exec, rngSvc)
 	return svc
 }
 
