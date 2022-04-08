@@ -84,10 +84,13 @@ func (r *TSRetrieve) Stream(ctx context.Context) (*Stream, error) {
 
 const timeRangeOptKey query.OptKey = "tsRange"
 
+// NewTimeRangeOpt creates a new time range opt.
 func NewTimeRangeOpt(p *query.Pack, tr telem.TimeRange) {
 	p.SetOpt(timeRangeOptKey, tr)
 }
 
+// RetrieveTimeRangeOpt retrieves an option that limits the time range of the query.
+// If the option is not set, the default value is to retrieve only the most recent value.
 func RetrieveTimeRangeOpt(p *query.Pack, opts ...query.OptRetrieveOpt) (telem.TimeRange, bool) {
 	opt, ok := p.RetrieveOpt(timeRangeOptKey, opts...)
 	if !ok {

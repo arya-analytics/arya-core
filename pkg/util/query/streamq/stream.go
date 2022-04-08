@@ -7,7 +7,7 @@ import (
 )
 
 // Stream represents a query that returns a stream of data as opposed a single value (i.e. a streaming operation
-// instead of a unary operation).  This is common for time series and event data such as TSRetrieve and TSCreate.
+// instead of a unary operation). This is common for time series and event data such as TSRetrieve and TSCreate.
 //
 // Using a Stream as a Client:
 //
@@ -18,21 +18,21 @@ import (
 // The error returned as the second value represents an error encountered during pipeline 'segment' assembly (things
 // such as validating query parameters, resolving hosts, doing lookups on context items from the data store).
 //
-// The Stream returned pipes any errors encountered during the actual transportation of values to satisfy the query to
-// Stream.Errors . In short, errors encountered during construction of the stream are returned upon completing construction, while
+// The Stream returned pipes any errors encountered during the actual transportation of query results to
+// Stream.Errors. In short, errors encountered during construction of the stream are returned upon completing construction, while
 // errors encountered during stream operation will be piped through Stream.Errors.
 //
-// Stream.Ctx is the context using the same context used to construct the stream. This is useful for canceling the stream.
+// Stream.Ctx is the same context used to construct the stream. This is useful for canceling the stream.
 //
 // To cancel a Stream that receives values (a query that retrieves things), DO NOT CLOSE THE CHANNEL. Instead, cancel
 // the context associated with the stream. Closing the channel will most likely result in a panic further down the road.
 //
 // To cancel a Stream that sends values (a query that creates, deletes, or updates things), it's ok to close the channel
-// as long as you're sure nothing else is sending values to the channel. Cancelling the context will work as well.
+// as long as you're sure nothing else is sending values to it. Cancelling the context will work as well.
 //
 // Using a Stream as a query provider:
 //
-// A stream can be retrieved using a similar API to the request of the query utilities. Simply call:
+// A stream can be retrieved using a similar API to other query options. Simply call:
 //
 // 		stream, ok := streamq.RetrieveStreamOpt(p)
 //
@@ -40,13 +40,12 @@ import (
 //
 //		stream, _ := streamq.RetrieveStreamOpt(p, query.RequireOpt())
 //
-// It's useful to think of a stream of values as a set of pipe segments that received values from the previous segment
+// It's useful to think of a stream of values as a comprised by segments that received values from the previous segment
 // and sent values to the next segment (most likely doing some routing, filtering, modification in each stage). These
-// segments will most likely involve a set of goroutines.
+// segments will involve using goroutines.
 //
-// For diagnostic and debug reasons, we want to track the
-// quantity and identity of the goroutines that are used to serve a query. As a result, we recommend using Stream.Segment
-// to start these goroutines.
+// For diagnostic and debug reasons, we want to track the quantity and identity of the goroutines used to serve a query.
+// Use Stream.Segment to start these goroutines.
 //
 // For error handling, return errors encountered during construction (i.e. outside of those goroutines) directly instead
 // of using Stream.Errors. This is useful for separating error types and maximizing runtime safety. Pipe errors encountered
