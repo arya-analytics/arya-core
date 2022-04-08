@@ -13,13 +13,13 @@ import (
 //
 // Typically, a stream is returned as the first return value of a query run using .Stream(ctx). For example:
 //
-//		stream, err := tsquery.NewRetrieve().Stream(ctx)
-//
-// The error returned as the second value represents an error encountered during pipeline 'segment' assembly (things
-// such as validating query parameters, resolving hosts, doing lookups on context items from the data store).
+//		stream, err := tsquery.NewRetrieve().Model(&models.MyModel{}).WherePK(uuid.New()).Stream(ctx)
 //
 // The Stream returned pipes any errors encountered during the actual transportation of query results to
-// Stream.Errors. IsIn short, errors encountered during construction of the stream are returned upon completing construction, while
+// Stream.Errors. The error returned as the second value represents an error encountered during pipeline 'segment'
+// assembly (things such as validating query parameters, resolving hosts, doing lookups on context items from the data store).
+//
+// In short, errors encountered during construction of the stream are returned upon completing construction, while
 // errors encountered during stream operation will be piped through Stream.Errors.
 //
 // Stream.Ctx is the same context used to construct the stream. This is useful for canceling the stream.
@@ -40,12 +40,12 @@ import (
 //
 //		stream, _ := streamq.RetrieveStreamOpt(p, query.RequireOpt())
 //
-// It's useful to think of a stream of values as a comprised by segments that received values from the previous segment
-// and sent values to the next segment (most likely doing some routing, filtering, modification in each stage). These
-// segments will involve using goroutines.
+// It's useful to think of a stream of values as a set of segments. Each segment receives values from the previous segment
+// and sends values to the next segment (most likely doing some routing, filtering, modification in each stage). Each segment
+// uses one or more goroutines to do its work.
 //
 // For diagnostic and debug reasons, we want to track the quantity and identity of the goroutines used to serve a query.
-// Use Stream.Segment to start these goroutines.
+// In consequence, use Stream.Segment to start these goroutines.
 //
 // For error handling, return errors encountered during construction (i.e. outside of those goroutines) directly instead
 // of using Stream.Errors. This is useful for separating error types and maximizing runtime safety. Pipe errors encountered

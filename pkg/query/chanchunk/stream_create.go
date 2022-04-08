@@ -5,9 +5,9 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/query"
 	"github.com/arya-analytics/aryacore/pkg/telem/chanchunk"
 	"github.com/arya-analytics/aryacore/pkg/util/query/streamq"
+	"github.com/arya-analytics/aryacore/pkg/util/route"
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"github.com/google/uuid"
-	log "github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -33,6 +33,8 @@ type streamCreate struct {
 	svc         *chanchunk.Service
 	qStream     *streamq.Stream
 	chunkStream chan chanchunk.StreamCreateArgs
+	cancel      context.CancelFunc
+	ctx         context.Context
 }
 
 func CreateStream(svc *chanchunk.Service, cp StreamCreateProtocol) error {
@@ -45,53 +47,42 @@ func CreateStream(svc *chanchunk.Service, cp StreamCreateProtocol) error {
 }
 
 func (sc *streamCreate) Stream() error {
-	wg := &errgroup.Group{}
-	fReq, rErr := sc.Receive()
-	if err, done := query.StreamDone(sc.Context(), rErr); done {
+	if err := sc.startStream(); err != nil {
 		return err
 	}
-	sc.chunkStream = make(chan chanchunk.StreamCreateArgs)
-	ctx, cancel := context.WithCancel(sc.Context())
-	stream, qErr := sc.svc.NewTSCreate().
-		WhereConfigPK(fReq.ConfigPK).
-		Model(&sc.chunkStream).
-		BindExec(sc.svc.Exec).
-		Stream(ctx)
-	if qErr != nil {
-		cancel()
-		return qErr
-	}
-	sc.chunkStream <- chanchunk.StreamCreateArgs{
-		Start: fReq.StartTS,
-		Data:  fReq.ChunkData,
-	}
-	sc.qStream = stream
+	wg := errgroup.Group{}
 	wg.Go(sc.relayErrors)
 	wg.Go(sc.relayRequests)
-	cancel()
-	stream.Wait()
-	log.Info("Waiting DOne")
 	return wg.Wait()
 }
 
-func (sc *streamCreate) relayRequests() error {
-	for {
-		req, rErr := sc.Receive()
-		if err, done := query.StreamDone(sc.Context(), rErr); done {
-			return err
-		}
-		sc.chunkStream <- chanchunk.StreamCreateArgs{
-			Start: req.StartTS,
-			Data:  req.ChunkData,
-		}
+func (sc *streamCreate) startStream() error {
+	fReq, rErr := sc.Receive()
+	if err, done := query.StreamDone(rErr); done || route.CtxDone(sc.Context()) {
+		return err
 	}
+	sc.chunkStream = make(chan chanchunk.StreamCreateArgs)
+	sc.ctx, sc.cancel = context.WithCancel(sc.Context())
+	stream, qErr := sc.svc.NewTSCreate().WhereConfigPK(fReq.ConfigPK).Model(&sc.chunkStream).Stream(sc.ctx)
+	if qErr != nil {
+		sc.cancel()
+		return qErr
+	}
+	sc.chunkStream <- chanchunk.StreamCreateArgs{Start: fReq.StartTS, Data: fReq.ChunkData}
+	sc.qStream = stream
+	return nil
+}
+
+func (sc *streamCreate) relayRequests() error {
+	defer sc.cancel()
+	return query.StreamFor(sc.Context(), sc.Receive, func(req StreamCreateRequest) error {
+		sc.chunkStream <- chanchunk.StreamCreateArgs{Start: req.StartTS, Data: req.ChunkData}
+		return nil
+	})
 }
 
 func (sc *streamCreate) relayErrors() error {
-	for err := range sc.qStream.Errors {
-		if sErr, done := query.StreamDone(sc.Context(), sc.Send(StreamCreateResponse{Error: err})); done {
-			return sErr
-		}
-	}
-	return nil
+	return query.StreamRange[error](sc.ctx, sc.qStream.Errors, func(err error) error {
+		return sc.Send(StreamCreateResponse{Error: err})
+	})
 }

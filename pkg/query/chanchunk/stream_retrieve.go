@@ -33,6 +33,8 @@ type streamRetrieve struct {
 	svc         *chanchunk.Service
 	qStream     *streamq.Stream
 	chunkStream chan *telem.Chunk
+	ctx         context.Context
+	cancel      context.CancelFunc
 }
 
 func RetrieveStream(svc *chanchunk.Service, sp StreamRetrieveProtocol, req StreamRetrieveRequest) error {
@@ -47,12 +49,14 @@ func RetrieveStream(svc *chanchunk.Service, sp StreamRetrieveProtocol, req Strea
 func (sr *streamRetrieve) Stream(req StreamRetrieveRequest) error {
 	wg := &errgroup.Group{}
 	sr.chunkStream = make(chan *telem.Chunk)
+	sr.ctx, sr.cancel = context.WithCancel(sr.Context())
 	stream, qErr := sr.svc.NewTSRetrieve().
 		WhereConfigPK(req.ChannelConfigID).
 		Model(&sr.chunkStream).
 		WhereTimeRange(req.TimeRange).
-		Stream(sr.Context())
+		Stream(sr.ctx)
 	if qErr != nil {
+		sr.cancel()
 		return qErr
 	}
 	sr.qStream = stream
@@ -62,24 +66,19 @@ func (sr *streamRetrieve) Stream(req StreamRetrieveRequest) error {
 }
 
 func (sr *streamRetrieve) relayErrors() error {
-	for err := range sr.qStream.Errors {
-		if sErr, done := query.StreamDone(sr.Context(), sr.Send(StreamRetrieveResponse{Error: err})); done {
-			return sErr
-		}
-	}
-	return nil
+	return query.StreamRange[error](sr.ctx, sr.qStream.Errors, func(err error) error {
+		return sr.Send(StreamRetrieveResponse{Error: err})
+	})
 }
 
 func (sr *streamRetrieve) relayChunks() error {
-	for chunk := range sr.chunkStream {
-		if sErr, done := query.StreamDone(sr.Context(), sr.Send(StreamRetrieveResponse{
+	defer sr.cancel()
+	return query.StreamRange(sr.ctx, sr.chunkStream, func(chunk *telem.Chunk) error {
+		return sr.Send(StreamRetrieveResponse{
 			StartTS:  chunk.Start(),
 			DataType: chunk.DataType,
 			DataRate: chunk.DataRate,
 			Data:     chunk.ChunkData,
-		})); done {
-			return sErr
-		}
-	}
-	return nil
+		})
+	})
 }
