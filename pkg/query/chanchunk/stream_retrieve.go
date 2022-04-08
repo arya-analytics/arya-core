@@ -17,6 +17,7 @@ type StreamRetrieveProtocol interface {
 
 type StreamRetrieveRequest struct {
 	ChannelConfigID uuid.UUID
+	TimeRange       telem.TimeRange
 }
 
 type StreamRetrieveResponse struct {
@@ -49,12 +50,14 @@ func (sr *streamRetrieve) Stream(req StreamRetrieveRequest) error {
 	stream, qErr := sr.svc.NewTSRetrieve().
 		Model(&sr.chunkStream).
 		WherePK(req.ChannelConfigID).
+		WhereTimeRange(req.TimeRange).
 		Stream(sr.Context())
 	if qErr != nil {
 		return qErr
 	}
 	sr.qStream = stream
 	wg.Go(sr.relayErrors)
+	wg.Go(sr.relayChunks)
 	return wg.Wait()
 }
 

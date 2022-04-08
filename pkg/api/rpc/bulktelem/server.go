@@ -8,6 +8,7 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"github.com/google/uuid"
+	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 )
 
@@ -28,12 +29,17 @@ func (s *Server) RetrieveStream(req *bulktelemv1.RetrieveStreamRequest, server b
 	return qcc.RetrieveStream(
 		s.svc,
 		&RPCStreamRetrieveProtocol{rpcStream: server},
-		qcc.StreamRetrieveRequest{ChannelConfigID: parsePK(req.ChannelConfigId)},
+		qcc.StreamRetrieveRequest{
+			ChannelConfigID: parsePK(req.ChannelConfigId),
+			TimeRange:       telem.NewTimeRange(telem.TimeStamp(req.StartTs), telem.TimeStamp(req.EndTs)),
+		},
 	)
 }
 
 func (s *Server) CreateStream(server bulktelemv1.BulkTelemService_CreateStreamServer) error {
-	return qcc.CreateStream(s.svc, &RPCStreamCreateProtocol{rpcStream: server})
+	err := qcc.CreateStream(s.svc, &RPCStreamCreateProtocol{rpcStream: server})
+	log.Info("returning")
+	return err
 }
 
 func parsePK(pkStr string) uuid.UUID {
@@ -90,4 +96,7 @@ func (c *RPCStreamCreateProtocol) Receive() (qcc.StreamCreateRequest, error) {
 		ChunkData: cd,
 		StartTS:   telem.TimeStamp(req.StartTs),
 	}, nil
+}
+
+func (c *RPCStreamCreateProtocol) CloseSend() {
 }

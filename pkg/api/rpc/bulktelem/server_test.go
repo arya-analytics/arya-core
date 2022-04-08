@@ -70,17 +70,18 @@ var _ = Describe("Server", func() {
 		}
 	})
 	Describe("createStream", func() {
-		It("Should create the chunks correctly", func() {
+		FIt("Should create the chunks correctly", func() {
 			cc := mock.ChunkSet(5, telem.TimeStamp(0), config.DataType, config.DataRate, telem.NewTimeSpan(600*time.Second), telem.TimeSpan(0))
 			stream, err := cl.CreateStream(ctx)
 			Expect(err).To(BeNil())
 
-			wg := sync.WaitGroup{}
-			wg.Add(1)
+			wg := &sync.WaitGroup{}
 			var errors []*bulktelemv1.Error
+			wg.Add(1)
 			go func() {
 				for {
 					res, err := stream.Recv()
+					log.Info(err)
 					if err == io.EOF {
 						wg.Done()
 						break
@@ -99,6 +100,7 @@ var _ = Describe("Server", func() {
 			Expect(stream.CloseSend()).To(BeNil())
 
 			wg.Wait()
+
 			By("Not returning any errors")
 			Expect(errors).To(HaveLen(0))
 
@@ -120,14 +122,11 @@ var _ = Describe("Server", func() {
 			stream, err := cl.CreateStream(ctx)
 			Expect(err).To(BeNil())
 
-			wg := sync.WaitGroup{}
-			wg.Add(1)
 			var errors []*bulktelemv1.Error
 			go func() {
 				for {
 					res, err := stream.Recv()
 					if err == io.EOF {
-						wg.Done()
 						break
 					}
 					errors = append(errors, res.Error)
@@ -141,9 +140,6 @@ var _ = Describe("Server", func() {
 					Data:            c.Bytes(),
 				})).To(BeNil())
 			}
-			Expect(stream.CloseSend()).To(BeNil())
-
-			wg.Wait()
 		})
 		It("Should retrieve the chunks correctly", func() {
 			req := &bulktelemv1.RetrieveStreamRequest{

@@ -7,6 +7,7 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/util/query/streamq"
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"github.com/google/uuid"
+	log "github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -14,6 +15,7 @@ type StreamCreateProtocol interface {
 	Context() context.Context
 	Receive() (StreamCreateRequest, error)
 	Send(StreamCreateResponse) error
+	CloseSend()
 }
 
 type StreamCreateRequest struct {
@@ -49,16 +51,26 @@ func (sc *streamCreate) Stream() error {
 		return err
 	}
 	sc.chunkStream = make(chan chanchunk.StreamCreateArgs)
+	ctx, cancel := context.WithCancel(sc.Context())
 	stream, qErr := sc.svc.NewTSCreate().
 		Model(&sc.chunkStream).
 		BindExec(sc.svc.Exec).
-		Stream(sc.Context(), chanchunk.ContextArg{ConfigPK: fReq.ConfigPK})
+		Stream(ctx, chanchunk.ContextArg{ConfigPK: fReq.ConfigPK})
 	if qErr != nil {
+		cancel()
 		return qErr
 	}
+	sc.chunkStream <- chanchunk.StreamCreateArgs{
+		Start: fReq.StartTS,
+		Data:  fReq.ChunkData,
+	}
 	sc.qStream = stream
+	go sc.relayErrors()
 	wg.Go(sc.relayErrors)
 	wg.Go(sc.relayRequests)
+	cancel()
+	stream.Wait()
+	log.Info("Waiting DOne")
 	return wg.Wait()
 }
 
