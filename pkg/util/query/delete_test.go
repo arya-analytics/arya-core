@@ -14,7 +14,7 @@ var _ = Describe("Delete", func() {
 	)
 	Describe("WhereFields", func() {
 		p := asm.NewDelete().WhereFields(query.WhereFields{"Hello": "World"}).Pack()
-		wf, ok := query.WhereFieldsOpt(p)
+		wf, ok := query.RetrieveWhereFieldsOpt(p)
 		Expect(ok).To(BeTrue())
 		Expect(wf["Hello"]).To(Equal("World"))
 	})

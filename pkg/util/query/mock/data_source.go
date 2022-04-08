@@ -88,7 +88,7 @@ func (s *DataSourceMem) create(ctx context.Context, p *query.Pack) error {
 }
 
 func (s *DataSourceMem) update(ctx context.Context, p *query.Pack) error {
-	bulk := query.BulkUpdateOpt(p)
+	bulk := query.RetrieveBulkUpdateOpt(p)
 	if bulk {
 		return s.bulkUpdate(ctx, p)
 	}
@@ -141,7 +141,7 @@ func (s *DataSourceMem) filter(p *query.Pack) *model.Reflect {
 	if ok {
 		filteredRfl = s.filterByPK(filteredRfl, pkC)
 	}
-	wFld, ok := query.WhereFieldsOpt(p)
+	wFld, ok := query.RetrieveWhereFieldsOpt(p)
 	if ok {
 		filteredRfl = s.filterByWhereFields(filteredRfl, wFld)
 	}
@@ -149,7 +149,7 @@ func (s *DataSourceMem) filter(p *query.Pack) *model.Reflect {
 	if ok {
 		s.runCalculations(filteredRfl, calcOpt)
 	}
-	ro := query.RelationOpts(p)
+	ro := query.RetrieveRelationOpts(p)
 	for _, r := range ro {
 		s.retrieveRelation(filteredRfl, r)
 	}

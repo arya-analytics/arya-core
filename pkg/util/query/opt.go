@@ -34,7 +34,7 @@ func (ocs OptConvertChain) Exec(p *Pack) {
 }
 
 type optRetrieveOpts struct {
-	panicIfNotPresent bool
+	optRequired bool
 }
 
 func newOptRetrieveOpts(opts ...OptRetrieveOpt) *optRetrieveOpts {
@@ -47,8 +47,15 @@ func newOptRetrieveOpts(opts ...OptRetrieveOpt) *optRetrieveOpts {
 
 type OptRetrieveOpt func(o *optRetrieveOpts)
 
-func PanicIfOptNotPresent() OptRetrieveOpt {
+// RequireOpt is passed as an option to a RetrieveOpt function that requires the option to be present.
+// Panics if the option is not present.
+//
+// Example:
+// 		pkc, _ := query.PKOpt(p, query.RequireOpt())
+//
+//  The function will panic if the pk option was not set on the query.
+func RequireOpt() OptRetrieveOpt {
 	return func(o *optRetrieveOpts) {
-		o.panicIfNotPresent = true
+		o.optRequired = true
 	}
 }

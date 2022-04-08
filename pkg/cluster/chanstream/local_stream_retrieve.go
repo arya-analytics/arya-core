@@ -22,8 +22,8 @@ func newLocalStreamRetrieve(delta *route.Delta[*models.ChannelSample, outletCont
 }
 
 func (lsr *localStreamRetrieve) exec(ctx context.Context, p *query.Pack) error {
-	qStream, _ := streamq.StreamOpt(p, query.PanicIfOptNotPresent())
-	pkc, _ := query.PKOpt(p, query.PanicIfOptNotPresent())
+	qStream, _ := streamq.RetrieveStreamOpt(p, query.RequireOpt())
+	pkc, _ := query.PKOpt(p, query.RequireOpt())
 	ldo := &localDeltaOutlet{
 		d:           lsr.delta,
 		pkc:         pkc,

@@ -201,7 +201,7 @@ func (u *update) fields(p *query.Pack) {
 // |||| WHERE FIELDS
 
 func (e *retrieve) whereFields(p *query.Pack) {
-	if wf, ok := query.WhereFieldsOpt(p); ok {
+	if wf, ok := query.RetrieveWhereFieldsOpt(p); ok {
 		for fldN, fldV := range wf {
 			relN, _ := model.SplitLastFieldName(fldN)
 			if relN != "" {
@@ -216,7 +216,7 @@ func (e *retrieve) whereFields(p *query.Pack) {
 // |||| CUSTOM RETRIEVE OPTS ||||
 
 func (e *retrieve) relations(p *query.Pack) {
-	for _, opt := range query.RelationOpts(p) {
+	for _, opt := range query.RetrieveRelationOpts(p) {
 		// CLARIFICATION: Still don't know exactly why it needs to be called this way, but it does for the
 		// correct opt to be provided.
 		func(opt query.RelationOpt) {
@@ -235,7 +235,7 @@ func (e *retrieve) calculate(p *query.Pack) {
 }
 
 func (e *retrieve) limit(p *query.Pack) {
-	if limit, ok := query.LimitOpt(p); ok {
+	if limit, ok := query.RetrieveLimitOpt(p); ok {
 		e.bunQ = e.bunQ.Limit(limit)
 	}
 }
@@ -249,7 +249,7 @@ func (e *retrieve) order(p *query.Pack) {
 // |||| CUSTOM UPDATE OPTS ||||
 
 func (u *update) bulk(p *query.Pack) {
-	if blk := query.BulkUpdateOpt(p); blk {
+	if blk := query.RetrieveBulkUpdateOpt(p); blk {
 		u.bunQ = u.bunQ.Bulk()
 	}
 }
@@ -257,5 +257,5 @@ func (u *update) bulk(p *query.Pack) {
 // |||| CUSTOM MIGRATE OPTS ||||
 
 func (m *migrate) verify(p *query.Pack) bool {
-	return query.VerifyOpt(p)
+	return query.RetrieveVerifyOpt(p)
 }

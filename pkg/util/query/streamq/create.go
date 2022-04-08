@@ -47,7 +47,7 @@ func (c *TSCreate) BindStream(stream *Stream) *TSCreate {
 // To close the stream, call a context.CancelFunc instead of closing the channel.
 //
 func (c *TSCreate) Stream(ctx context.Context) (*Stream, error) {
-	o, ok := StreamOpt(c.Pack())
+	o, ok := RetrieveStreamOpt(c.Pack())
 	if !ok {
 		o = NewStreamOpt(ctx, c.Pack())
 	}

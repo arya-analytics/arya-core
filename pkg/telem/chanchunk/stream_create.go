@@ -40,12 +40,12 @@ func newStreamCreate(qExec query.Execute, obs observe, rngSvc *rng.Service) *str
 
 func (sc *streamCreate) exec(ctx context.Context, p *query.Pack) error {
 	sc.ctx = ctx
-	pkc, _ := query.PKOpt(p, query.PanicIfOptNotPresent())
+	pkc, _ := query.PKOpt(p, query.RequireOpt())
 	if len(pkc) != 1 {
 		panic(fmt.Sprintf("stream_create: expected 1 pk, got %v", len(pkc)))
 	}
 	sc.configPK = pkc[0].Raw().(uuid.UUID)
-	streamQ, _ := streamq.StreamOpt(p, query.PanicIfOptNotPresent())
+	streamQ, _ := streamq.RetrieveStreamOpt(p, query.RequireOpt())
 	sc.catch = errutil.NewCatchContext(ctx, errutil.WithHooks(errutil.NewPipeHook(streamQ.Errors)))
 	if err := sc.validateStart(); err != nil {
 		return err

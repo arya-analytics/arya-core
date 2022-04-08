@@ -27,7 +27,7 @@ func (s *remoteStreamCreate) newRPC(ctx context.Context, n *models.Node) (api.Ch
 }
 
 func (s *remoteStreamCreate) exec(ctx context.Context, p *query.Pack) error {
-	qStream, _ := streamq.StreamOpt(p, query.PanicIfOptNotPresent())
+	qStream, _ := streamq.RetrieveStreamOpt(p, query.RequireOpt())
 	qStream.Segment(func() {
 		for {
 			rfl, cOk := p.Model().ChanRecv()

@@ -43,7 +43,7 @@ func (ps *Persist) tsCreate(ctx context.Context, p *query.Pack) error {
 }
 
 func (ps *Persist) tsChanCreate(ctx context.Context, p *query.Pack) error {
-	goe, _ := streamq.StreamOpt(p)
+	goe, _ := streamq.RetrieveStreamOpt(p)
 	go func() {
 		for {
 			rfl, ok := p.Model().ChanRecv()

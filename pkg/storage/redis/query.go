@@ -96,7 +96,7 @@ func (tsr *tsRetrieve) pk(p *query.Pack) {
 // |||| TIME RANGE ||||
 
 func (tsr *tsRetrieve) timeRange(p *query.Pack) {
-	tr, _ := streamq.TimeRangeOpt(p)
+	tr, _ := streamq.RetrieveTimeRangeOpt(p)
 	tsr.tr = tr
 }
 

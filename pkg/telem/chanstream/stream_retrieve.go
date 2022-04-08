@@ -18,8 +18,8 @@ func newStreamRetrieve(delta *route.Delta[*models.ChannelSample, outletContext])
 }
 
 func (sr *streamRetrieve) exec(ctx context.Context, p *query.Pack) error {
-	s, _ := streamq.StreamOpt(p, query.PanicIfOptNotPresent())
-	pkc, _ := query.PKOpt(p, query.PanicIfOptNotPresent())
+	s, _ := streamq.RetrieveStreamOpt(p, query.RequireOpt())
+	pkc, _ := query.PKOpt(p, query.RequireOpt())
 	d := &deltaOutlet{
 		qStream:     s,
 		pkc:         pkc,

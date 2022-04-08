@@ -84,7 +84,7 @@ func (s *Service) tsCreate(ctx context.Context, p *query.Pack) error {
 }
 
 func (s *Service) openTSCreateQueries(ctx context.Context, p *query.Pack) (rs, ls chan *models.ChannelSample, st *streamq.Stream, cancel context.CancelFunc, err error) {
-	st, _ = streamq.StreamOpt(p, query.PanicIfOptNotPresent())
+	st, _ = streamq.RetrieveStreamOpt(p, query.RequireOpt())
 	rs = make(chan *models.ChannelSample)
 	ls = make(chan *models.ChannelSample)
 	bCtx, cancel := context.WithCancel(ctx)
@@ -102,8 +102,8 @@ func (s *Service) openTSCreateQueries(ctx context.Context, p *query.Pack) (rs, l
 }
 
 func (s *Service) tsRetrieve(ctx context.Context, p *query.Pack) error {
-	st, _ := streamq.StreamOpt(p, query.PanicIfOptNotPresent())
-	pkc, _ := query.PKOpt(p, query.PanicIfOptNotPresent())
+	st, _ := streamq.RetrieveStreamOpt(p, query.RequireOpt())
+	pkc, _ := query.PKOpt(p, query.RequireOpt())
 	cc, err := s.retrieveConfigsQuery(ctx, pkc)
 	if err != nil {
 		return err
@@ -165,6 +165,6 @@ func newNodeOpt(p *query.Pack, nodes []*models.Node) {
 }
 
 func nodeOpt(p *query.Pack) []*models.Node {
-	n, _ := p.RetrieveOpt(nodeOptKey, query.PanicIfOptNotPresent())
+	n, _ := p.RetrieveOpt(nodeOptKey, query.RequireOpt())
 	return n.([]*models.Node)
 }

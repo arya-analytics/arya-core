@@ -192,7 +192,7 @@ func (r *retrieve) getObject(ctx context.Context, pk model.PK) (*telem.ChunkData
 // |||| CUSTOM MIGRATE ||||
 
 func (m *migrate) verify(p *query.Pack) bool {
-	return query.VerifyOpt(p)
+	return query.RetrieveVerifyOpt(p)
 }
 
 // |||| VALIDATORS ||||

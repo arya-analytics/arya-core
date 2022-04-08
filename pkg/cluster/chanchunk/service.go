@@ -119,7 +119,7 @@ func preDeleteRetrieveQuery(p *query.Pack) *query.Retrieve {
 	if pkOk {
 		q.WherePKs(pkc.Raw())
 	}
-	wf, wfOk := query.WhereFieldsOpt(p)
+	wf, wfOk := query.RetrieveWhereFieldsOpt(p)
 	if wfOk {
 		q.WhereFields(wf)
 	}

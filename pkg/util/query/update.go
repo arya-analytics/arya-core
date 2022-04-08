@@ -64,13 +64,13 @@ func (u *Update) BindExec(e Execute) *Update {
 
 // || BULK ||
 
-// NewBulkUpdateOpt creates a new BulkUpdateOpt.
+// NewBulkUpdateOpt creates a new RetrieveBulkUpdateOpt.
 func NewBulkUpdateOpt(p *Pack) {
 	p.opts[bulkUpdateOptKey] = true
 }
 
-// BulkUpdateOpt returns true if the Update is a bulk update.
-func BulkUpdateOpt(p *Pack) bool {
+// RetrieveBulkUpdateOpt returns true if the Update is a bulk update.
+func RetrieveBulkUpdateOpt(p *Pack) bool {
 	_, ok := p.Query().(*Update)
 	if !ok {
 		panic("can't retrieve a bulk query opt from non bulk query")

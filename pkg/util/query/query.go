@@ -68,7 +68,7 @@ func (p *Pack) SetOpt(key OptKey, val interface{}) {
 func (p *Pack) RetrieveOpt(key OptKey, opts ...OptRetrieveOpt) (interface{}, bool) {
 	ro := newOptRetrieveOpts(opts...)
 	o, ok := p.opts[key]
-	if ro.panicIfNotPresent && !ok {
+	if ro.optRequired && !ok {
 		panic(fmt.Errorf("required opt %s not found in query", key))
 	}
 	return o, ok

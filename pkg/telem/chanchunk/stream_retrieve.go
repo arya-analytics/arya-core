@@ -28,8 +28,8 @@ func (sr *streamRetrieve) exec(ctx context.Context, p *query.Pack) error {
 	var (
 		replicas   []*models.ChannelChunkReplica
 		c          = *query.ConcreteModel[*chan *telem.Chunk](p)
-		streamQ, _ = streamq.StreamOpt(p, query.PanicIfOptNotPresent())
-		tRng, _    = streamq.TimeRangeOpt(p, query.PanicIfOptNotPresent())
+		streamQ, _ = streamq.RetrieveStreamOpt(p, query.RequireOpt())
+		tRng, _    = streamq.RetrieveTimeRangeOpt(p, query.RequireOpt())
 	)
 	sr.catch.Exec(query.NewRetrieve().
 		BindExec(sr.qExec).

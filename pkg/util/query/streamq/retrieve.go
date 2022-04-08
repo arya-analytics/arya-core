@@ -68,12 +68,14 @@ func (r *TSRetrieve) BindStream(stream *Stream) *TSRetrieve {
 
 // Stream starts the stream that sends values to the passed model.
 // The Stream returned will pipe errors encountered during value streaming.
-// The error returned as the second  argument represents errors encountered during query assembly.
+// The error returned as the second argument represents errors encountered during query assembly.
 //
 // To close the stream, call a context.CancelFunc instead of closing the channel.
 // DO NOT CLOSE THE CHANNEL. This will cause the stream to panic.
+//
+// See Stream for more detailed information on value streaming.
 func (r *TSRetrieve) Stream(ctx context.Context) (*Stream, error) {
-	o, ok := StreamOpt(r.Pack())
+	o, ok := RetrieveStreamOpt(r.Pack())
 	if !ok {
 		o = NewStreamOpt(ctx, r.Pack())
 	}
@@ -86,7 +88,7 @@ func NewTimeRangeOpt(p *query.Pack, tr telem.TimeRange) {
 	p.SetOpt(timeRangeOptKey, tr)
 }
 
-func TimeRangeOpt(p *query.Pack, opts ...query.OptRetrieveOpt) (telem.TimeRange, bool) {
+func RetrieveTimeRangeOpt(p *query.Pack, opts ...query.OptRetrieveOpt) (telem.TimeRange, bool) {
 	opt, ok := p.RetrieveOpt(timeRangeOptKey, opts...)
 	if !ok {
 		return telem.TimeRange{}, false

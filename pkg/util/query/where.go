@@ -107,8 +107,8 @@ func NewPKOpt(p *Pack, pk interface{}) {
 
 // || WHERE FIELDS ||
 
-// WhereFieldsOpt retrieves a WhereFields option from a query.
-func WhereFieldsOpt(p *Pack) (WhereFields, bool) {
+// RetrieveWhereFieldsOpt retrieves a WhereFields option from a query.
+func RetrieveWhereFieldsOpt(p *Pack) (WhereFields, bool) {
 	qo, ok := p.RetrieveOpt(whereFieldsOptKey)
 	if !ok {
 		return WhereFields{}, false
