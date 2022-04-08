@@ -179,7 +179,7 @@ func (s *DataSourceMem) retrieveRelation(sRfl *model.Reflect, rel query.Relation
 	}
 	joinStr, ok := st.Retrieve("model", "join")
 	if !ok {
-		panic("model must have a join tag specified in order to perform lookup")
+		panic(fmt.Sprintf("model %s must have a join tag specified in order to perform lookup", sRfl.Type().Name()))
 	}
 	str := strings.Split(joinStr, "=")
 	if len(str) != 2 {

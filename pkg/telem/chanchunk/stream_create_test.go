@@ -151,8 +151,8 @@ var _ = Describe("StreamCreate", func() {
 						Expect(tc.Start()).To(Equal(telem.TimeStamp(0)))
 						continue
 					}
-					Expect(tc.Start()).To(Equal(resTC[i-1].End()))
 					Expect(tc.Span()).To(Equal(telem.NewTimeSpan(59 * time.Second)))
+					Expect(tc.Start()).To(Equal(resTC[i-1].End()))
 				}
 			})
 			It("Should update the channel cfg states", func() {

@@ -2,6 +2,7 @@ package roach
 
 import (
 	"context"
+	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/util/errutil"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
@@ -10,7 +11,6 @@ import (
 )
 
 type base struct {
-	exc *model.Exchange
 	sql sqlGen
 	db  *bun.DB
 }
@@ -28,6 +28,7 @@ type retrieve struct {
 	base
 	bunQ     *bun.SelectQuery
 	scanArgs []interface{}
+	exc      *model.Exchange
 }
 
 func newRetrieve(db *bun.DB) *retrieve {
@@ -65,25 +66,23 @@ func newMigrate(db *bun.DB) *migrate {
 
 func (c *create) exec(ctx context.Context, p *query.Pack) error {
 	c.convertOpts(p)
-	c.exc.ToDest()
-	beforeInsertSetUUID(c.exc.Dest())
+	beforeInsertSetUUID(p.Model())
 	_, err := c.bunQ.Exec(ctx)
-	c.exc.ToSource()
 	return err
 }
 
 func (e *retrieve) exec(ctx context.Context, p *query.Pack) error {
 	e.convertOpts(p)
 	err := e.bunQ.Scan(ctx, e.scanArgs...)
-	e.exc.ToSource()
+	if e.exc != nil {
+		e.exc.ToSource()
+	}
 	return err
 }
 
 func (u *update) exec(ctx context.Context, p *query.Pack) error {
 	u.convertOpts(p)
-	u.exc.ToDest()
 	_, err := u.bunQ.Exec(ctx)
-	u.exc.ToSource()
 	return err
 }
 
@@ -96,7 +95,7 @@ func (d *del) exec(ctx context.Context, p *query.Pack) error {
 func (m *migrate) exec(ctx context.Context, p *query.Pack) error {
 	c := errutil.NewCatchContext(ctx)
 	if m.verify(p) {
-		_, err := m.db.NewSelect().Model((*ChannelConfig)(nil)).Count(ctx)
+		_, err := m.db.NewSelect().Model((*models.ChannelConfig)(nil)).Count(ctx)
 		return err
 	}
 	bindMigrations(m.bunQ)
@@ -140,10 +139,8 @@ func (d *del) convertOpts(p *query.Pack) {
 // |||| MODEL ||||
 
 func (b *base) model(p *query.Pack) interface{} {
-	ptr := p.Model().Pointer()
-	b.exc = model.NewExchange(ptr, catalog().New(ptr))
-	b.sql = sqlGen{db: b.db, m: b.exc.Dest()}
-	return b.exc.Dest().Pointer()
+	b.sql = sqlGen{db: b.db, m: p.Model()}
+	return p.Model().Pointer()
 }
 
 func (c *create) model(p *query.Pack) {
@@ -155,7 +152,12 @@ func (u *update) model(p *query.Pack) {
 }
 
 func (e *retrieve) model(p *query.Pack) {
-	e.bunQ = e.bunQ.Model(e.base.model(p))
+	if p.Model().IsChain() && p.Model().ChainValue().Len() > 0 {
+		e.exc = model.NewExchange(e.base.model(p), p.Model().NewRaw())
+		e.bunQ = e.bunQ.Model(e.exc.Dest().Pointer())
+	} else {
+		e.bunQ = e.bunQ.Model(e.base.model(p))
+	}
 }
 
 func (d *del) model(p *query.Pack) {

@@ -2,7 +2,7 @@ package minio
 
 import (
 	"context"
-	"github.com/arya-analytics/aryacore/pkg/util/model"
+	"github.com/arya-analytics/aryacore/pkg/storage/internal"
 	"github.com/arya-analytics/aryacore/pkg/util/pool"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
 )
@@ -46,13 +46,12 @@ func (e *Engine) shouldHandle(p *query.Pack) bool {
 	if ok {
 		return true
 	}
-	if !catalog().Contains(p.Model()) {
+	if !internal.RequiresEngine(p.Model(), e) {
 		return false
 	}
-	fldsOpt, ok := query.RetrieveFieldsOpt(p)
+	fieldsOpt, ok := query.RetrieveFieldsOpt(p)
 	if ok {
-		rfl := model.NewReflect(catalog().New(p.Model()))
-		return rfl.StructTagChain().HasAnyFields(fldsOpt.AllExcept("ID")...)
+		return fieldsOpt.ContainsAny("TelemChunkData")
 	}
 	return true
 }

@@ -3,6 +3,7 @@ package minio
 import (
 	"context"
 	"fmt"
+	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/util/errutil"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
@@ -12,8 +13,8 @@ import (
 )
 
 type base struct {
-	client *minio.Client
-	exc    *exchange
+	client       *minio.Client
+	wrappedModel *reflectMinio
 }
 
 type create struct {
@@ -58,29 +59,27 @@ func newMigrate(client *minio.Client) *migrate {
 
 func (c *create) exec(ctx context.Context, p *query.Pack) error {
 	c.convertOpts(p)
-	c.exc.ToDest()
-	for _, dv := range c.exc.dataVals() {
+	for _, dv := range c.wrappedModel.dataValues() {
 		if dv.Data == nil {
 			return query.Error{
 				Type:    query.ErrorTypeInvalidArgs,
-				Message: fmt.Sprintf("Minio data to write is nil! Model %s with id %s", c.exc.Dest().Type(), dv.PK),
+				Message: fmt.Sprintf("Minio data to write is nil! Model %s with id %s", c.wrappedModel.Type(), dv.PK),
 			}
 		}
 		dv.Data.Reset()
-		_, err := c.client.PutObject(ctx, c.exc.bucket(), dv.PK.String(), dv.Data, dv.Data.Size(), minio.PutObjectOptions{})
+		_, err := c.client.PutObject(ctx, c.wrappedModel.bucket(), dv.PK.String(), dv.Data, dv.Data.Size(), minio.PutObjectOptions{})
 		dv.Data.Reset()
 		if err != nil {
 			return err
 		}
 	}
-	c.exc.ToSource()
 	return nil
 }
 
 func (d *del) exec(ctx context.Context, p *query.Pack) error {
 	d.convertOpts(p)
 	for _, pk := range d.pkc {
-		if err := d.client.RemoveObject(ctx, d.exc.bucket(), pk.String(), minio.RemoveObjectOptions{}); err != nil {
+		if err := d.client.RemoveObject(ctx, d.wrappedModel.bucket(), pk.String(), minio.RemoveObjectOptions{}); err != nil {
 			return err
 		}
 	}
@@ -100,14 +99,20 @@ func (r *retrieve) exec(ctx context.Context, p *query.Pack) error {
 		}
 		d = append(d, data{PK: pk, Data: bulk})
 	}
-	r.exc.bindDataVals(d)
-	r.exc.ToSource()
+	r.wrappedModel.bindDataVals(d)
+
 	return nil
 }
 
+func migrationCatalog() model.Catalog {
+	return model.Catalog{
+		&models.ChannelChunkReplica{},
+	}
+}
+
 func (m *migrate) exec(ctx context.Context, p *query.Pack) error {
-	for _, mod := range catalog() {
-		me := wrapExchange(model.NewExchange(mod, mod))
+	for _, mod := range migrationCatalog() {
+		me := wrapReflect(model.NewReflect(mod))
 		exists, err := m.client.BucketExists(ctx, me.bucket())
 		if err != nil {
 			return err
@@ -142,7 +147,7 @@ func (r *retrieve) convertOpts(p *query.Pack) {
 // |||| MODEL ||||
 
 func (b *base) model(p *query.Pack) {
-	b.exc = wrapExchange(model.NewExchange(p.Model(), catalog().New(p.Model())))
+	b.wrappedModel = wrapReflect(p.Model())
 }
 
 // |||| PK ||||
@@ -169,7 +174,7 @@ func (r *retrieve) getObject(ctx context.Context, pk model.PK) (*telem.ChunkData
 		bulk   *telem.ChunkData
 	)
 	c.Exec(func() (err error) {
-		resObj, err = r.client.GetObject(ctx, r.exc.bucket(), pk.String(), minio.GetObjectOptions{})
+		resObj, err = r.client.GetObject(ctx, r.wrappedModel.bucket(), pk.String(), minio.GetObjectOptions{})
 		return err
 	})
 	c.Exec(func() (err error) {
