@@ -36,13 +36,13 @@ func NewCalcOpt(p *Pack, c Calc, fld string, into interface{}) {
 	if reflect.TypeOf(into).Kind() != reflect.Ptr {
 		panic("calc into arg must be ptr")
 	}
-	p.opts[calculateOptKey] = CalcOpt{Op: c, Field: fld, Into: into}
+	p.SetOpt(calculateOptKey, CalcOpt{Op: c, Field: fld, Into: into})
 }
 
 // RetrieveCalcOpt retrieves the CalcOpt from the provided Pack. Returns ok:false
 // if no calculation was specified on the query.
 func RetrieveCalcOpt(p *Pack) (CalcOpt, bool) {
-	qo, ok := p.opts[calculateOptKey]
+	qo, ok := p.RetrieveOpt(calculateOptKey)
 	if !ok {
 		return CalcOpt{}, false
 	}

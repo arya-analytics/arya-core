@@ -74,10 +74,10 @@ func (r *TSRetrieve) BindStream(stream *Stream) *TSRetrieve {
 // DO NOT CLOSE THE CHANNEL. This will cause the stream to panic.
 //
 // See Stream for more detailed information on value streaming.
-func (r *TSRetrieve) Stream(ctx context.Context) (*Stream, error) {
+func (r *TSRetrieve) Stream(ctx context.Context, ca ...interface{}) (*Stream, error) {
 	o, ok := RetrieveStreamOpt(r.Pack())
 	if !ok {
-		o = NewStreamOpt(ctx, r.Pack())
+		o = NewStreamOpt(ctx, r.Pack(), ca...)
 	}
 	return o, r.Exec(ctx)
 }

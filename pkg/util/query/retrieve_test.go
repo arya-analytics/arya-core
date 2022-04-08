@@ -50,7 +50,7 @@ var _ = Describe("Retrieve", func() {
 			Expect(ro[0].Name).To(Equal("Name"))
 			Expect(ro[0].Fields).To(Equal(query.FieldsOpt{"Fld"}))
 		})
-		It("Should allow for multiple relation opts", func() {
+		It("Should allow for multiple relation Opts", func() {
 			p := asm.NewRetrieve().
 				Relation("Name", "Fld").
 				Relation("RelTwo", "FldTwo").

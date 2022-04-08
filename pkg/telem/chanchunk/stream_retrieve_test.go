@@ -10,7 +10,6 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/util/telem/mock"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"sync"
 	"time"
 )
 
@@ -52,18 +51,15 @@ var _ = Describe("streamRetrieve", func() {
 		JustBeforeEach(func() {
 			aCtx, cancel := context.WithCancel(ctx)
 			chunkStream := make(chan chanchunk.StreamCreateArgs)
-			streamQ, err := svc.NewTSCreate().Model(&chunkStream).Stream(aCtx)
+			streamQ, err := svc.NewTSCreate().Model(&chunkStream).Stream(aCtx, chanchunk.ContextArg{ConfigPK: config.ID})
 			Expect(err).To(BeNil())
-			wg := &sync.WaitGroup{}
 			defer func() {
 				cancel()
 				close(chunkStream)
-				wg.Wait()
+				streamQ.Wait()
 			}()
 
-			wg.Add(1)
 			go func() {
-				defer wg.Done()
 				defer GinkgoRecover()
 				Expect(<-streamQ.Errors).To(BeNil())
 			}()

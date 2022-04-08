@@ -24,7 +24,9 @@ func newStreamRetrieve(qExec query.Execute) *streamRetrieve {
 }
 
 func (sr *streamRetrieve) exec(ctx context.Context, p *query.Pack) error {
-	sr.catch = errutil.NewCatchContext(ctx)
+	pkc, _ := query.RetrievePKOpt(p, query.RequireOpt())
+	sr.configPK = pkc[0].Raw().(uuid.UUID)
+	sr.catch = errutil.NewCatchContext(context.Background())
 	var (
 		replicas   []*models.ChannelChunkReplica
 		c          = *query.ConcreteModel[*chan *telem.Chunk](p)
@@ -36,8 +38,8 @@ func (sr *streamRetrieve) exec(ctx context.Context, p *query.Pack) error {
 		Model(&replicas).
 		Relation("ChannelChunk", "StartTS").
 		WhereFields(query.WhereFields{
-			"ChannelChunk.StartTS":          query.InRange(tRng.Start(), tRng.End()),
-			"ChannelChunk.ChannelConfig.ID": sr.config().ID,
+			"ChannelChunk.StartTS":         query.InRange(tRng.Start(), tRng.End()),
+			"ChannelChunk.ChannelConfigID": sr.config().ID,
 		}).
 		Exec)
 	if sr.catch.Error() != nil {

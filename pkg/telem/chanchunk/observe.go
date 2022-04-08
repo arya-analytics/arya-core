@@ -7,8 +7,8 @@ import (
 )
 
 type observedChannelConfig struct {
-	PK     uuid.UUID
-	Status models.ChannelStatus
+	PK    uuid.UUID
+	State models.ChannelState
 }
 
 type observe interface {

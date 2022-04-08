@@ -52,26 +52,11 @@ type Query interface {
 type Pack struct {
 	query Query
 	model *model.Reflect
-	opts  opts
+	Opts
 }
 
 func NewPack(q Query) *Pack {
-	return &Pack{query: q, opts: map[OptKey]interface{}{}}
-}
-
-// SetOpt sets a new option on the Pack with the provided OptKey.
-func (p *Pack) SetOpt(key OptKey, val interface{}) {
-	p.opts[key] = val
-}
-
-// RetrieveOpt sets retrieves the option on the Pack with the specified OptKey.
-func (p *Pack) RetrieveOpt(key OptKey, opts ...OptRetrieveOpt) (interface{}, bool) {
-	ro := newOptRetrieveOpts(opts...)
-	o, ok := p.opts[key]
-	if ro.optRequired && !ok {
-		panic(fmt.Errorf("required opt %s not found in query", key))
-	}
-	return o, ok
+	return &Pack{query: q, Opts: make(Opts)}
 }
 
 func (p *Pack) bindModel(m interface{}) {
@@ -99,7 +84,7 @@ func (p *Pack) String() string {
 	if p.Model().IsChain() {
 		count = p.Model().ChainValue().Len()
 	}
-	return fmt.Sprintf("Variant: %T, Model: %s, Count: %v, Opts: %s", p.query, p.model.Type(), count, p.opts)
+	return fmt.Sprintf("Variant: %T, Model: %s, Count: %v, Opts: %s", p.query, p.model.Type(), count, p.Opts)
 }
 
 // |||| UTILITIES ||||

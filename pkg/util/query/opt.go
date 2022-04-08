@@ -1,6 +1,23 @@
 package query
 
-type opts map[OptKey]interface{}
+import "fmt"
+
+type Opts map[OptKey]interface{}
+
+// SetOpt sets the option with the provided OptKey.
+func (o Opts) SetOpt(key OptKey, val interface{}) {
+	o[key] = val
+}
+
+// RetrieveOpt sets retrieves the option with the specified OptKey.
+func (o Opts) RetrieveOpt(key OptKey, opts ...OptRetrieveOpt) (interface{}, bool) {
+	ro := newOptRetrieveOpts(opts...)
+	qo, ok := o[key]
+	if ro.optRequired && !ok {
+		panic(fmt.Errorf("required opt %s not found in query", key))
+	}
+	return qo, ok
+}
 
 // OptKey is a unique key for a specified option in a query.
 // If you're creating a new option, please be careful not to duplicate any of the OptKey already set.

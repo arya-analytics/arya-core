@@ -10,6 +10,7 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/util/query/streamq"
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"github.com/arya-analytics/aryacore/pkg/util/telem/mock"
+	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"sync"
@@ -29,6 +30,7 @@ var _ = Describe("StreamCreate", func() {
 		svc = chanchunk.NewService(clust.Exec, rngSvc)
 		node = &models.Node{ID: 1}
 		config = &models.ChannelConfig{
+			ID:             uuid.New(),
 			Name:           "Awesome Channel",
 			NodeID:         node.ID,
 			DataRate:       telem.DataRate(25),
@@ -58,7 +60,7 @@ var _ = Describe("StreamCreate", func() {
 			aCtx, cancel = context.WithCancel(ctx)
 			chunkStream = make(chan chanchunk.StreamCreateArgs)
 			var err error
-			streamQ, err = svc.NewTSCreate().Model(&chunkStream).Stream(aCtx)
+			streamQ, err = svc.NewTSCreate().Model(&chunkStream).Stream(aCtx, chanchunk.ContextArg{ConfigPK: config.ID})
 			Expect(err).To(BeNil())
 			go func() {
 				defer GinkgoRecover()
@@ -75,7 +77,9 @@ var _ = Describe("StreamCreate", func() {
 
 				By("Closing the stream")
 				cancel()
-				close(chunkStream)
+				streamQ.Wait()
+
+				time.Sleep(5 * time.Millisecond)
 
 				By("Retrieving the chunk after creation")
 				resCC := &models.ChannelChunk{}
@@ -103,7 +107,7 @@ var _ = Describe("StreamCreate", func() {
 
 				By("Closing the stream")
 				cancel()
-				close(chunkStream)
+				streamQ.Wait()
 
 				By("Retrieving the chunk after creation")
 				var resCC []*models.ChannelChunk
@@ -131,7 +135,7 @@ var _ = Describe("StreamCreate", func() {
 
 				By("Closing the stream")
 				cancel()
-				close(chunkStream)
+				streamQ.Wait()
 
 				By("Retrieving the chunk after creation")
 				var resCC []*models.ChannelChunkReplica
@@ -163,16 +167,16 @@ var _ = Describe("StreamCreate", func() {
 				resCCActive := &models.ChannelConfig{}
 				Expect(clust.NewRetrieve().Model(resCCActive).WherePK(config.ID).Exec(ctx)).To(BeNil())
 				Expect(resCCActive.ID).To(Equal(config.ID))
-				Expect(resCCActive.Status).To(Equal(models.ChannelStatusActive))
+				Expect(resCCActive.State).To(Equal(models.ChannelStatusActive))
 
 				By("Closing the streamq")
 				cancel()
-				close(chunkStream)
+				streamQ.Wait()
 
 				resCCInactive := &models.ChannelConfig{}
 				Expect(clust.NewRetrieve().Model(resCCInactive).WherePK(config.ID).Exec(ctx)).To(BeNil())
 				Expect(resCCInactive.ID).To(Equal(config.ID))
-				Expect(resCCInactive.Status).To(Equal(models.ChannelStatusInactive))
+				Expect(resCCInactive.State).To(Equal(models.ChannelStatusInactive))
 			})
 			Describe("Opening a streamq to a channel that already has Data", func() {
 				It("Should create all the chunks correctly", func() {
@@ -190,8 +194,12 @@ var _ = Describe("StreamCreate", func() {
 						}
 					}
 
+					cancel()
+					streamQ.Wait()
+
+					aCtxTwo, cancelTwo := context.WithCancel(context.Background())
 					var err error
-					streamQ, err = svc.NewTSCreate().Model(&chunkStream).Stream(ctx)
+					streamQ, err = svc.NewTSCreate().Model(&chunkStream).Stream(aCtxTwo, chanchunk.ContextArg{ConfigPK: config.ID})
 					Expect(err).To(BeNil())
 
 					for i, c := range cc {
@@ -199,6 +207,9 @@ var _ = Describe("StreamCreate", func() {
 							chunkStream <- chanchunk.StreamCreateArgs{Start: c.Start(), Data: c.ChunkData}
 						}
 					}
+
+					cancelTwo()
+					streamQ.Wait()
 
 					By("Retrieving the chunk after creation")
 					var resCC []*models.ChannelChunk
@@ -226,7 +237,7 @@ var _ = Describe("StreamCreate", func() {
 				aCtx, cancel = context.WithCancel(ctx)
 				chunkStream = make(chan chanchunk.StreamCreateArgs)
 				var err error
-				streamQ, err = svc.NewTSCreate().Model(&chunkStream).Stream(aCtx)
+				streamQ, err = svc.NewTSCreate().Model(&chunkStream).Stream(aCtx, chanchunk.ContextArg{ConfigPK: config.ID})
 				Expect(err).To(BeNil())
 			})
 			Context("Chunks in reverse order", func() {
@@ -252,8 +263,8 @@ var _ = Describe("StreamCreate", func() {
 						chunkStream <- chanchunk.StreamCreateArgs{Start: c.Start(), Data: c.ChunkData}
 					}
 
-					close(chunkStream)
 					cancel()
+					streamQ.Wait()
 
 					Expect(errors).To(HaveLen(1))
 					Expect(errors[0].(chanchunk.Error).Type).To(Equal(chanchunk.ErrorTimingNonContiguous))
@@ -295,7 +306,7 @@ var _ = Describe("StreamCreate", func() {
 					}
 
 					cancel()
-					close(chunkStream)
+					streamQ.Wait()
 
 					Expect(errors).To(HaveLen(0))
 
@@ -385,69 +396,10 @@ var _ = Describe("StreamCreate", func() {
 		Describe("Duplicate streams", func() {
 			It("Should prevent duplicate write streams to the same channel", func() {
 				chunkStream := make(chan chanchunk.StreamCreateArgs)
-				_, err := svc.NewTSCreate().Model(&chunkStream).Stream(ctx)
-				Expect(err).ToNot(BeNil())
-			})
-		})
-		Describe("Context Cancellation", func() {
-			var (
-				streamQ     *streamq.Stream
-				chunkStream chan chanchunk.StreamCreateArgs
-				cancel      context.CancelFunc
-			)
-			JustBeforeEach(func() {
-				var aCtx context.Context
-				aCtx, cancel = context.WithCancel(ctx)
-				chunkStream = make(chan chanchunk.StreamCreateArgs)
-				var err error
-				streamQ, err = svc.NewTSCreate().Model(&chunkStream).Stream(aCtx)
+				_, err := svc.NewTSCreate().Model(&chunkStream).Stream(ctx, chanchunk.ContextArg{ConfigPK: config.ID})
 				Expect(err).To(BeNil())
-			})
-			It("Should handle the context cancellation with grace", func() {
-				wg := sync.WaitGroup{}
-				wg.Add(1)
-				go func() {
-					defer wg.Done()
-					defer GinkgoRecover()
-					err := <-streamQ.Errors
-					Expect(err.(query.Error).Type).To(Equal(query.ErrorTypeInvalidArgs))
-				}()
-
-				data := telem.NewChunkData([]byte{})
-				Expect(data.WriteData([]float64{1, 2, 3, 4, 5})).To(BeNil())
-
-				// Sending the first piece of Data
-				start := telem.TimeStamp(0)
-				chunkStream <- chanchunk.StreamCreateArgs{Start: telem.TimeStamp(0), Data: data}
-
-				// Cancelling the context
-				time.Sleep(50 * time.Millisecond)
-				cancel()
-
-				// Sending the second piece of Data
-				chunkStream <- chanchunk.StreamCreateArgs{
-					Start: start.Add(telem.NewTimeSpan(200 * time.Millisecond)),
-					Data:  data,
-				}
-
-				// Close the streamq
-				close(chunkStream)
-				wg.Wait()
-
-				By("Resetting the channels state to inactive")
-				resCCInactive := &models.ChannelConfig{}
-				Expect(clust.NewRetrieve().Model(resCCInactive).WherePK(config.ID).Exec(ctx)).To(BeNil())
-				Expect(resCCInactive.ID).To(Equal(config.ID))
-				Expect(resCCInactive.Status).To(Equal(models.ChannelStatusInactive))
-
-				By("Not writing the second piece of Data")
-				var resCC []*models.ChannelChunk
-				Expect(clust.NewRetrieve().
-					Model(&resCC).
-					WhereFields(query.WhereFields{"ChannelConfigID": config.ID}).
-					Order(query.OrderASC, "StartTS").
-					Exec(ctx)).To(BeNil())
-				Expect(len(resCC)).To(Equal(1))
+				_, err = svc.NewTSCreate().Model(&chunkStream).Stream(ctx, chanchunk.ContextArg{ConfigPK: config.ID})
+				Expect(err).ToNot(BeNil())
 			})
 		})
 	})

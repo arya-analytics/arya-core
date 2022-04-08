@@ -72,7 +72,7 @@ func (qa *QueryAssemble) RetrieveRangeReplicasQuery(rr *[]*models.RangeReplica, 
 
 // RetrieveOpenRangesQuery retrieves all ranges marked as open.
 func (qa *QueryAssemble) RetrieveOpenRangesQuery(rng *[]*models.Range) *query.Retrieve {
-	return qa.retrieveRangeLeaseReplicaRelationQuery(rng).WhereFields(query.WhereFields{"Status": models.RangeStatusOpen})
+	return qa.retrieveRangeLeaseReplicaRelationQuery(rng).WhereFields(query.WhereFields{"State": models.RangeStatusOpen})
 }
 
 // RetrieveRangeChunksQuery retrieves all models.ChannelChunk that belong to the range with PK rngPK.
@@ -121,7 +121,7 @@ func (qa *QueryAssemble) ReallocateChunksQuery(pks []uuid.UUID, rngPK uuid.UUID)
 
 // UpdateRangeStatusQuery query updates the status of models.Range with the provided PK to the provided status.
 func (qa *QueryAssemble) UpdateRangeStatusQuery(pk uuid.UUID, status models.RangeStatus) *query.Update {
-	return qa.NewUpdate().Model(&models.Range{ID: pk, Status: status}).Fields("Status").WherePK(pk)
+	return qa.NewUpdate().Model(&models.Range{ID: pk, Status: status}).Fields("State").WherePK(pk)
 }
 
 func (qa *QueryAssemble) retrieveRangeLeaseReplicaRelationQuery(rng interface{}) *query.Retrieve {

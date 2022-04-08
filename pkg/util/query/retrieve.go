@@ -173,12 +173,12 @@ func RetrieveOrderOpt(p *Pack) (OrderOpt, bool) {
 
 // NewLimitOpt creates a new RetrieveLimitOpt.
 func NewLimitOpt(p *Pack, limit int) {
-	p.opts[limitOptKey] = limit
+	p.SetOpt(limitOptKey, limit)
 }
 
 // RetrieveLimitOpt is an option for limiting the number of results returned by a query.
 func RetrieveLimitOpt(p *Pack) (int, bool) {
-	qo, ok := p.opts[limitOptKey]
+	qo, ok := p.RetrieveOpt(limitOptKey)
 	if !ok {
 		return 0, false
 	}

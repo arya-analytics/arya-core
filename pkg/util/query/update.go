@@ -66,7 +66,7 @@ func (u *Update) BindExec(e Execute) *Update {
 
 // NewBulkUpdateOpt creates a new RetrieveBulkUpdateOpt.
 func NewBulkUpdateOpt(p *Pack) {
-	p.opts[bulkUpdateOptKey] = true
+	p.SetOpt(bulkUpdateOptKey, true)
 }
 
 // RetrieveBulkUpdateOpt returns true if the Update is a bulk update.

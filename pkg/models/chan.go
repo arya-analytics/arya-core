@@ -15,11 +15,11 @@ const (
 	ChannelConflictPolicyOverwrite
 )
 
-type ChannelStatus int
+type ChannelState int
 
 //go:generate stringer -type=ChannelState
 const (
-	ChannelStatusInactive ChannelStatus = iota + 1
+	ChannelStatusInactive ChannelState = iota + 1
 	ChannelStatusActive
 )
 
@@ -31,8 +31,8 @@ type ChannelConfig struct {
 	NodeID         int
 	DataRate       telem.DataRate
 	DataType       telem.DataType
-	ConflictPolicy ChannelConflictPolicy `bun:"default:1"`
-	Status         ChannelStatus         `bun:"default:1"`
+	ConflictPolicy ChannelConflictPolicy `bun:",default:1,"`
+	State          ChannelState          `bun:",default:1,"`
 	Retention      telem.TimeSpan
 }
 

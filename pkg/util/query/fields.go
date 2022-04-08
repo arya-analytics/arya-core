@@ -10,7 +10,7 @@ func NewFieldsOpt(p *Pack, fields ...string) {
 
 // RetrieveFieldsOpt retrieves the FieldsOpt from Pack p. Returns false if Pack does not have a FieldsOpt specified.
 func RetrieveFieldsOpt(p *Pack) (FieldsOpt, bool) {
-	qo, ok := p.opts[fieldsOptKey]
+	qo, ok := p.RetrieveOpt(fieldsOptKey)
 	if !ok {
 		return FieldsOpt{}, false
 	}

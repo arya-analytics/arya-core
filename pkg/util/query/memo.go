@@ -27,7 +27,7 @@ func (m *Memo) Exec(ctx context.Context, p *Pack) error {
 	}
 	for _, pk := range pkc {
 		v, vOk := m.into.ValueByPK(pk)
-		if vOk {
+		if vOk && !pk.IsZero() {
 			if p.Model().IsStruct() {
 				p.Model().Set(v)
 			}

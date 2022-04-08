@@ -14,7 +14,7 @@ import (
 //
 // Parsing and Executing a packed Query (Pack).
 //
-// 1. To parse the Pack, use the different opts available to retrieve options from the Pack. As an example, here's how
+// 1. To parse the Pack, use the different Opts available to retrieve options from the Pack. As an example, here's how
 // to retrieve the primary key of a query.
 //
 //		pkc, ok := query.RetrievePKOpt(p)

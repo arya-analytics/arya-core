@@ -31,7 +31,7 @@ func (s *Server) RetrieveStream(req *bulktelemv1.RetrieveStreamRequest, server b
 		return err
 	}
 	tr := telem.NewTimeRange(telem.TimeStamp(req.StartTs), telem.TimeStamp(req.EndTs))
-	stream, err := s.svc.NewStreamRetrieve().WhereConfigPK(pk).WhereTimeRange(tr).Exec(server.Context())
+	stream, err := s.svc.NewStreamRetrieve().WherePK(pk).WhereTimeRange(tr).Exec(server.Context())
 	if err != nil {
 		return err
 	}

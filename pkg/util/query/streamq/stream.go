@@ -63,7 +63,21 @@ type Stream struct {
 	// Errors is a channel that receives errors encountered during the stream operation.
 	Errors chan error
 	// Ctx is the context used to construct the stream.
-	Ctx context.Context
+	Ctx         context.Context
+	_contextArg interface{}
+	done        chan struct{}
+}
+
+func (s *Stream) Complete() {
+	s.done <- struct{}{}
+}
+
+func (s *Stream) Wait() {
+	<-s.done
+}
+
+func ContextArg[T any](s *Stream) T {
+	return s._contextArg.(T)
 }
 
 // Segment adds a goroutine as a segment of the stream. Used for observability purposes.
@@ -104,13 +118,21 @@ func WithSegmentName(name string) SegmentOpt {
 }
 
 const (
-	streamOptKey query.OptKey = "goExec"
+	streamOptKey query.OptKey = "stream"
 	errBuffSize               = 10
 )
 
-func NewStreamOpt(ctx context.Context, p *query.Pack) *Stream {
+func NewStreamOpt(ctx context.Context, p *query.Pack, ca ...interface{}) *Stream {
 	errors := make(chan error, errBuffSize)
-	s := &Stream{Errors: errors, Ctx: ctx, Segments: make(map[Segment]bool)}
+	s := &Stream{
+		Errors:   errors,
+		Ctx:      ctx,
+		Segments: make(map[Segment]bool),
+		done:     make(chan struct{}),
+	}
+	if len(ca) > 0 {
+		s._contextArg = ca[0]
+	}
 	BindStreamOpt(p, s)
 	return s
 }
