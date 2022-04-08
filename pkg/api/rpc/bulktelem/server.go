@@ -8,7 +8,6 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"github.com/google/uuid"
-	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 )
 
@@ -38,7 +37,6 @@ func (s *Server) RetrieveStream(req *bulktelemv1.RetrieveStreamRequest, server b
 
 func (s *Server) CreateStream(server bulktelemv1.BulkTelemService_CreateStreamServer) error {
 	err := qcc.CreateStream(s.svc, &RPCStreamCreateProtocol{rpcStream: server})
-	log.Info("returning")
 	return err
 }
 
