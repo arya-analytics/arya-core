@@ -3,11 +3,10 @@ package query
 import (
 	"context"
 	"github.com/arya-analytics/aryacore/pkg/util/route"
-	"io"
 )
 
 func StreamEOF(err error) (error, bool) {
-	if err == io.EOF {
+	if err == StreamCloseError() {
 		return nil, true
 	}
 	return err, err != nil

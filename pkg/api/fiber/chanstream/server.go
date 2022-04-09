@@ -2,15 +2,12 @@ package chanstream
 
 import (
 	"context"
+	cf "github.com/arya-analytics/aryacore/pkg/api/fiber"
 	"github.com/arya-analytics/aryacore/pkg/query"
 	qcc "github.com/arya-analytics/aryacore/pkg/query/chanstream"
 	"github.com/arya-analytics/aryacore/pkg/telem/chanstream"
-	"github.com/arya-analytics/aryacore/pkg/util/errutil"
+	"github.com/arya-analytics/aryacore/pkg/ws"
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/websocket/v2"
-	log "github.com/sirupsen/logrus"
-	"github.com/vmihailenco/msgpack/v5"
-	"io"
 )
 
 // |||| SERVER ||||
@@ -31,104 +28,64 @@ const (
 
 func (s *Server) BindTo(router fiber.Router) {
 	r := router.Group(groupEndpoint)
-	r.Get(retrieveEndpoint, websocket.New(s.retrieveStream))
-	r.Get(createEndpoint, websocket.New(s.createStream))
+	r.Get(retrieveEndpoint, cf.WebsocketHandler(s.retrieveStream))
+	r.Get(createEndpoint, cf.WebsocketHandler(s.createStream))
 }
 
-func (s *Server) retrieveStream(c *websocket.Conn) {
-	defer func() {
-		if err := c.Close(); err != nil {
-			log.Warn(err)
-		}
-	}()
-	p := &FiberRetrieveProtocol{wsStream: c, ctx: context.Background()}
-	if err := qcc.RetrieveStream(s.svc, p); err != nil {
-		_ = p.Send(qcc.RetrieveResponse{Error: err})
-		log.Warn(err)
-	}
+func (s *Server) retrieveStream(c *ws.Conn) {
+	defer c.Close()
+	p := &FiberRetrieveProtocol{FiberBaseProtocol{conn: c, ctx: context.Background()}}
+	c.SendAndWarn(qcc.RetrieveStream(s.svc, p))
 }
 
-func (s *Server) createStream(c *websocket.Conn) {
-	defer func() {
-		if err := c.Close(); err != nil {
-			log.Warn(err)
-		}
-	}()
-	p := &FiberCreateProtocol{wsStream: c}
-	if err := qcc.CreateStream(s.svc, p); err != nil {
-		_ = p.Send(qcc.CreateResponse{Error: err})
-		log.Warn(err)
-	}
+func (s *Server) createStream(c *ws.Conn) {
+	defer c.Close()
+	p := &FiberCreateProtocol{FiberBaseProtocol{conn: c}}
+	c.SendAndWarn(qcc.CreateStream(s.svc, p))
 }
 
 // |||| RETRIEVE PROTOCOL ||||
 
+type FiberBaseProtocol struct {
+	conn *ws.Conn
+	ctx  context.Context
+}
+
+func (p *FiberBaseProtocol) Context() context.Context {
+	return p.ctx
+}
+
 type FiberRetrieveProtocol struct {
-	wsStream *websocket.Conn
-	ctx      context.Context
+	FiberBaseProtocol
 }
 
 type RetrieveRequest struct {
 	PKC []string
 }
 
-func (r *FiberRetrieveProtocol) Context() context.Context {
-	return r.ctx
-}
-
 func (r *FiberRetrieveProtocol) Receive() (qcc.RetrieveRequest, error) {
-	var (
-		msg   []byte
-		wsReq RetrieveRequest
-		req   qcc.RetrieveRequest
-	)
-	c := errutil.NewCatchSimple()
-	c.Exec(func() (err error) { _, msg, err = r.wsStream.ReadMessage(); return err })
-	c.Exec(func() error { return msgpack.Unmarshal(msg, &wsReq) })
-	c.Exec(func() (err error) { req.PKC, err = query.ParsePKC(wsReq.PKC); return err })
-	if c.Error() != nil && websocket.IsCloseError(c.Error(), websocket.CloseNormalClosure) {
-		return req, io.EOF
+	var req = RetrieveRequest{}
+	if err := r.conn.Receive(req); err != nil {
+		return qcc.RetrieveRequest{}, err
 	}
-	return req, c.Error()
+	pkc, err := query.ParsePKC(req.PKC)
+	return qcc.RetrieveRequest{PKC: pkc}, err
 }
 
 func (r *FiberRetrieveProtocol) Send(res qcc.RetrieveResponse) error {
-	msg, err := msgpack.Marshal(res)
-	if err != nil {
-		return err
-	}
-	return r.wsStream.WriteMessage(websocket.BinaryMessage, msg)
+	return r.conn.Send(res)
 }
 
 // |||| CREATE PROTOCOL ||||
 
 type FiberCreateProtocol struct {
-	wsStream *websocket.Conn
-	ctx      context.Context
+	FiberBaseProtocol
 }
 
-func (c *FiberCreateProtocol) Context() context.Context {
-	return c.ctx
-}
-
-func (c *FiberCreateProtocol) Receive() (qcc.CreateRequest, error) {
-	var (
-		msg []byte
-		req qcc.CreateRequest
-	)
-	ca := errutil.NewCatchSimple()
-	ca.Exec(func() (err error) { _, msg, err = c.wsStream.ReadMessage(); return err })
-	ca.Exec(func() error { return msgpack.Unmarshal(msg, &req) })
-	if ca.Error() != nil && websocket.IsCloseError(ca.Error(), websocket.CloseNormalClosure) {
-		return req, io.EOF
-	}
-	return req, ca.Error()
+func (c *FiberCreateProtocol) Receive() (req qcc.CreateRequest, err error) {
+	return req, c.conn.Receive(req)
 }
 
 func (c *FiberCreateProtocol) Send(res qcc.CreateResponse) error {
-	msg, err := msgpack.Marshal(res)
-	if err != nil {
-		return err
-	}
-	return c.wsStream.WriteMessage(websocket.BinaryMessage, msg)
+	return c.conn.Send(res)
 }

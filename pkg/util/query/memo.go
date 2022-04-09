@@ -27,15 +27,13 @@ func (m *Memo) Exec(ctx context.Context, p *Pack) error {
 	}
 	for _, pk := range pkc {
 		v, vOk := m.into.ValueByPK(pk)
-		if vOk && !pk.IsZero() {
-			if p.Model().IsStruct() {
-				p.Model().Set(v)
-			}
-			if p.Model().IsChain() {
-				p.Model().ChainAppend(v)
-			}
-		} else {
+		if !vOk {
 			return NewSimpleError(ErrorTypeItemNotFound, errors.New("item not found in memo"))
+		}
+		if p.Model().IsStruct() {
+			p.Model().Set(v)
+		} else {
+			p.Model().ChainAppend(v)
 		}
 	}
 	return nil

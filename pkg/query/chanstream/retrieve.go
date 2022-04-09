@@ -89,12 +89,7 @@ func (r *Retrieve) listenForUpdates() error {
 func (r *Retrieve) updateQuery(pkc model.PKChain) {
 	pSampleStream := make(chan *models.ChannelSample, len(pkc))
 	ctx, cancel := context.WithCancel(context.Background())
-	pqStream, err := streamq.
-		NewTSRetrieve().
-		Model(&pSampleStream).
-		WherePKs(pkc).
-		BindExec(r.svc.Exec).
-		Stream(ctx)
+	pqStream, err := r.svc.NewTSRetrieve().Model(&pSampleStream).WherePKs(pkc).Stream(ctx)
 	if err != nil {
 		cancel()
 		r.qStream.Errors <- err

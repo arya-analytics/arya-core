@@ -268,6 +268,9 @@ func (r *Reflect) FieldsByName(name string) *Fields {
 // If Reflect model object is struct, returns the struct if the PK matches. If it isn't,
 // returns ok=false.
 func (r *Reflect) ValueByPK(pk PK) (retRfl *Reflect, ok bool) {
+	if pk.IsZero() {
+		return nil, false
+	}
 	r.ForEach(func(rfl *Reflect, i int) {
 		if rfl.PK().Equals(pk) {
 			retRfl = rfl

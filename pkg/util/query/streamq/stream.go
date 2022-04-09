@@ -52,7 +52,7 @@ import (
 // within segments to Stream.Errors.
 //
 // To stop and garbage collect Segments, check for cancellation of the context (such as route.CtxDone()) and break the
-// goroutine loop. Close any channels sending values to the next segment. DO NOT CLOSE any channels receiving values
+// goroutine loop. StreamCloseError any channels sending values to the next segment. DO NOT CLOSE any channels receiving values
 // from the previous segment.
 //
 type Stream struct {
