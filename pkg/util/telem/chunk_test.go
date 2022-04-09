@@ -175,20 +175,6 @@ var _ = Describe("ChunkData", func() {
 					Expect(c.AllValues()).To(Equal([]float64{1, 2, 3, 4, 5, 6, 7, 8, 9}))
 				})
 			})
-			Describe("Large Chunk", func() {
-				It("Shouldn't take an absurd amount of time to convert the values", func() {
-					cd := telem.NewChunkData([]byte{})
-					var vals []float64
-					for i := 0; i < 20000; i++ {
-						vals = append(vals, float64(i))
-					}
-					Expect(cd.WriteData(vals)).To(BeNil())
-					cc := telem.NewChunk(telem.TimeStamp(0), telem.DataTypeFloat64, telem.DataRate(25000), cd)
-					ts := time.Now()
-					cc.AllValues()
-					Expect(time.Since(ts)).To(BeNumerically("<", 10*time.Millisecond))
-				})
-			})
 		})
 	})
 
