@@ -110,7 +110,11 @@ func (s *DataSourceMem) update(ctx context.Context, p *query.Pack) error {
 	p.Model().ForEach(func(nSRfl *model.Reflect, i int) {
 		dRfl.ForEach(func(nDRfl *model.Reflect, i int) {
 			for _, f := range fo {
-				nDRfl.StructFieldByName(f).Set(nSRfl.StructFieldByName(f))
+				fld := nDRfl.StructFieldByName(f)
+				if !fld.IsValid() {
+					panic(fmt.Sprintf("field %s not found", f))
+				}
+				fld.Set(nSRfl.StructFieldByName(f))
 			}
 		})
 	})
