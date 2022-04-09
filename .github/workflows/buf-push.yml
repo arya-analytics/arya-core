@@ -12,9 +12,10 @@ jobs:
       - name: Buf Login
         run: echo ${{ secrets.BUF_TOKEN }} | buf registry login --username=emilbon99 --token-stdin
       - name: Buf Push Cluster
+        working-directory: pkg/cluster
         run: buf mod update && buf build && buf generate && buf push
       - name: Buf Push API
-        working-directory: pkg/api
+        working-directory: pkg/api/rpc
         run: buf mod update && buf build && buf generate && buf push
 
 
