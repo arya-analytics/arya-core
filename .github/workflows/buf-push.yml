@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: bufbuild/buf-setup-action@v0.6.
+      - uses: bufbuild/buf-setup-action@v0.6
       - name: Buf Push Cluster
         uses: bufbuild/buf-push-action@v1
         with:
