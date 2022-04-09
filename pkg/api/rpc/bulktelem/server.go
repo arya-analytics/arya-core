@@ -27,7 +27,7 @@ func (s *Server) BindTo(srv *grpc.Server) {
 	bulktelemv1.RegisterBulkTelemServiceServer(srv, s)
 }
 
-func (s *Server) RetrieveStream(req *bulktelemv1.RetrieveRequest, server bulktelemv1.BulkTelemService_RetrieveServer) error {
+func (s *Server) Retrieve(req *bulktelemv1.RetrieveRequest, server bulktelemv1.BulkTelemService_RetrieveServer) error {
 	return qcc.RetrieveStream(
 		s.svc,
 		&streamRetrieveProtocol{conn: server},
@@ -38,9 +38,8 @@ func (s *Server) RetrieveStream(req *bulktelemv1.RetrieveRequest, server bulktel
 	)
 }
 
-func (s *Server) CreateStream(server bulktelemv1.BulkTelemService_CreateServer) error {
-	err := qcc.CreateStream(s.svc, &streamCreateProtocol{conn: server})
-	return err
+func (s *Server) Create(server bulktelemv1.BulkTelemService_CreateServer) error {
+	return qcc.CreateStream(s.svc, &streamCreateProtocol{conn: server})
 }
 
 func parsePK(pkStr string) uuid.UUID {
