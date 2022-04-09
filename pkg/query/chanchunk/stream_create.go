@@ -56,7 +56,7 @@ func (sc *streamCreate) stream() error {
 }
 
 func (sc *streamCreate) startStream() error {
-	// Receive the first request as it has the config PK.
+	// ReadInto the first request as it has the config PK.
 	fReq, err := sc.Receive()
 	// If our stream already errored out or was cancelled, return the error.
 	if dErr, done := query.StreamDone(sc.Context(), err); done {

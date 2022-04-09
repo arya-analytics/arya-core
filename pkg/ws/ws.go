@@ -11,7 +11,7 @@ type Conn struct {
 	*websocket.Conn
 }
 
-func (c *Conn) Send(msg interface{}) error {
+func (c *Conn) Write(msg interface{}) error {
 	b, err := marshal(msg)
 	if err != nil {
 		return err
@@ -23,7 +23,7 @@ func (c *Conn) Send(msg interface{}) error {
 	return err
 }
 
-func (c *Conn) Receive(msg interface{}) error {
+func (c *Conn) ReadInto(msg interface{}) error {
 	_, b, err := c.ReadMessage()
 	if Closed(err) {
 		return query.StreamCloseError()
@@ -34,9 +34,9 @@ func (c *Conn) Receive(msg interface{}) error {
 	return unMarshal(b, msg)
 }
 
-func (c *Conn) SendAndWarn(err error) {
+func (c *Conn) WriteAndWarn(err error) {
 	if err != nil {
-		errutil.Warn(c.SendError(err))
+		errutil.Warn(c.WriteError(err))
 		errutil.Warn(err)
 	}
 }
@@ -45,12 +45,12 @@ type ErrorMsg struct {
 	Error string
 }
 
-func (c *Conn) SendError(err error) error {
-	return c.Send(ErrorMsg{Error: err.Error()})
+func (c *Conn) WriteError(err error) error {
+	return c.Write(ErrorMsg{Error: err.Error()})
 }
 
 func (c *Conn) Close() {
-	errutil.Warn(c.SendError(query.StreamCloseError()))
+	errutil.Warn(c.WriteError(query.StreamCloseError()))
 	errutil.Warn(c.Conn.Close())
 }
 

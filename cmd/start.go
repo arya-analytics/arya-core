@@ -27,8 +27,8 @@ import (
 // startCmd represents the start command
 var startCmd = &cobra.Command{
 	Use:   "start",
-	Short: "Send the arya core server",
-	Long:  "Send the arya core server",
+	Short: "Write the arya core server",
+	Long:  "Write the arya core server",
 	Args:  cobra.NoArgs,
 	RunE:  runStart,
 }

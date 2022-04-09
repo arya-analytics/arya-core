@@ -34,58 +34,58 @@ func (s *Server) BindTo(router fiber.Router) {
 
 func (s *Server) retrieveStream(c *ws.Conn) {
 	defer c.Close()
-	p := &fiberRetrieveProtocol{fiberBaseProtocol{conn: c, ctx: context.Background()}}
-	c.SendAndWarn(qcc.RetrieveStream(s.svc, p))
+	p := &retrieveProtocol{baseProtocol{conn: c, ctx: context.Background()}}
+	c.WriteAndWarn(qcc.RetrieveStream(s.svc, p))
 }
 
 func (s *Server) createStream(c *ws.Conn) {
 	defer c.Close()
-	p := &fiberCreateProtocol{fiberBaseProtocol{conn: c}}
-	c.SendAndWarn(qcc.CreateStream(s.svc, p))
+	p := &createProtocol{baseProtocol{conn: c}}
+	c.WriteAndWarn(qcc.CreateStream(s.svc, p))
 }
 
 // |||| RETRIEVE PROTOCOL ||||
 
-type fiberBaseProtocol struct {
+type baseProtocol struct {
 	conn *ws.Conn
 	ctx  context.Context
 }
 
-func (p *fiberBaseProtocol) Context() context.Context {
+func (p *baseProtocol) Context() context.Context {
 	return p.ctx
 }
 
-type fiberRetrieveProtocol struct {
-	fiberBaseProtocol
+type retrieveProtocol struct {
+	baseProtocol
 }
 
 type retrieveRequest struct {
 	PKC []string
 }
 
-func (r *fiberRetrieveProtocol) Receive() (qcc.RetrieveRequest, error) {
+func (r *retrieveProtocol) Receive() (qcc.RetrieveRequest, error) {
 	var req = retrieveRequest{}
-	if err := r.conn.Receive(req); err != nil {
+	if err := r.conn.ReadInto(req); err != nil {
 		return qcc.RetrieveRequest{}, err
 	}
 	pkc, err := query.ParsePKC(req.PKC)
 	return qcc.RetrieveRequest{PKC: pkc}, err
 }
 
-func (r *fiberRetrieveProtocol) Send(res qcc.RetrieveResponse) error {
-	return r.conn.Send(res)
+func (r *retrieveProtocol) Send(res qcc.RetrieveResponse) error {
+	return r.conn.Write(res)
 }
 
 // |||| CREATE PROTOCOL ||||
 
-type fiberCreateProtocol struct {
-	fiberBaseProtocol
+type createProtocol struct {
+	baseProtocol
 }
 
-func (c *fiberCreateProtocol) Receive() (req qcc.CreateRequest, err error) {
-	return req, c.conn.Receive(req)
+func (c *createProtocol) Receive() (req qcc.CreateRequest, err error) {
+	return req, c.conn.ReadInto(req)
 }
 
-func (c *fiberCreateProtocol) Send(res qcc.CreateResponse) error {
-	return c.conn.Send(res)
+func (c *createProtocol) Send(res qcc.CreateResponse) error {
+	return c.conn.Write(res)
 }
