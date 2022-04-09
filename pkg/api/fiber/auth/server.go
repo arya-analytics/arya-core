@@ -42,19 +42,15 @@ func (s *Server) login(c *fiber.Ctx) error {
 	}
 	user, err := s.svc.Login(c.UserContext(), p.Username, p.Password)
 	if err != nil {
-		c.Status(fiber.StatusBadRequest)
-		return c.JSON(api.ErrorResponse{
+		return c.Status(fiber.StatusBadRequest).JSON(api.ErrorResponse{
 			Type:    api.ErrorTypeAuthentication,
-			Message: err.Error(),
+			Message: "Invalid credentials.",
 		})
 	}
 	token, err := auth.NewToken(user.ID)
 	if err != nil {
 		c.Status(fiber.StatusInternalServerError)
-		return c.JSON(api.ErrorResponse{
-			Type:    api.ErrorTypeUnknown,
-			Message: err.Error(),
-		})
+		return c.JSON(api.ErrorResponse{Type: api.ErrorTypeUnknown, Message: "Internal server error."})
 	}
 	c.Cookie(&fiber.Cookie{Name: cookieName, Value: token})
 	return c.JSON(loginResponse{Token: token})

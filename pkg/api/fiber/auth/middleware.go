@@ -12,13 +12,12 @@ import (
 func TokenMiddleware(c *fiber.Ctx) error {
 	token, err := parseToken(c)
 	if err != nil {
-		return c.JSON(err)
+		return c.Status(fiber.StatusUnauthorized).JSON(err)
 	}
 	if err = auth.ValidateToken(token); err != nil {
-		c.Status(fiber.StatusUnauthorized)
-		return c.JSON(api.ErrorResponse{
+		return c.Status(fiber.StatusUnauthorized).JSON(api.ErrorResponse{
 			Type:    api.ErrorTypeUnauthorized,
-			Message: "Invalid token",
+			Message: "Invalid authentication token provided.",
 		})
 	}
 	return c.Next()
@@ -58,7 +57,7 @@ func parseHeaderToken(c *fiber.Ctx) (string, error, bool) {
 	splitToken := strings.Split(authHeader, tokenPrefix)
 	if len(splitToken) != 2 {
 		return "", api.ErrorResponse{
-			Type:    api.ErrorTypeUnauthorized,
+			Type:    api.ErrorTypeInvalidArguments,
 			Message: "Invalid authorization header. Expected format: 'Authorization: Bearer <token>'.",
 		}, true
 	}
