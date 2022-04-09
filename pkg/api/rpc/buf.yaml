@@ -1,7 +1,7 @@
 version: v1
-name: buf.build/arya-analytics/arya-core-cluster
+name: buf.build/arya-analytics/arya-core-api
 deps:
-  - buf.build/srikrsna/protoc-gen-gotag
+  - buf.build/googleapis/googleapis
 breaking:
   use:
     - FILE
