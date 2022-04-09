@@ -55,10 +55,9 @@ func (c *create) startStream() (err error) {
 }
 
 func (c *create) relayErrors() error {
-	err := query.StreamRange(c.ctx, c.qStream.Errors, func(err error) error {
+	return query.StreamRange(c.ctx, c.qStream.Errors, func(err error) error {
 		return c.Send(CreateResponse{Error: err})
 	})
-	return err
 }
 
 func (c *create) relayRequests() error {
