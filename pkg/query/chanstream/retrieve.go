@@ -27,7 +27,9 @@ type RetrieveResponse struct {
 
 type Retrieve struct {
 	RetrieveProtocol
-	cancelQ      context.CancelFunc
+	_cancelQuery context.CancelFunc
+	cancelRelay  context.CancelFunc
+	relayCtx     context.Context
 	svc          *chanstream.Service
 	qStream      *streamq.Stream
 	sampleStream chan *models.ChannelSample
@@ -46,7 +48,7 @@ func RetrieveStream(svc *chanstream.Service, rp RetrieveProtocol) error {
 }
 
 func (r *Retrieve) Stream() error {
-	defer r.closeQuery()
+	r.relayCtx, r.cancelRelay = context.WithCancel(r.Context())
 	wg := errgroup.Group{}
 	wg.Go(r.relayErrors)
 	wg.Go(r.relaySamples)
@@ -55,21 +57,20 @@ func (r *Retrieve) Stream() error {
 }
 
 func (r *Retrieve) relayErrors() error {
-	for err := range r.qStream.Errors {
-		if sErr, done := query.StreamDone(r.Context(), r.Send(RetrieveResponse{Error: err})); done {
-			return sErr
-		}
-	}
-	return nil
+	return query.StreamRange(r.relayCtx, r.qStream.Errors, func(err error) error {
+		return r.Send(RetrieveResponse{Error: err})
+	})
 }
 
 func (r *Retrieve) relaySamples() error {
 	for {
 		select {
 		case s := <-r.sampleStream:
-			if err, done := query.StreamDone(r.Context(), r.Send(RetrieveResponse{Sample: s})); done {
+			if err, done := query.StreamDone(r.relayCtx, r.Send(RetrieveResponse{Sample: s})); done {
 				return err
 			}
+		// When we receive an update signal, it means we've changed the value of r.sampleStream and need to
+		// restart the loop.
 		case <-r.updateSig:
 			continue
 		}
@@ -77,18 +78,15 @@ func (r *Retrieve) relaySamples() error {
 }
 
 func (r *Retrieve) listenForUpdates() error {
-	for {
-		req, rErr := r.Receive()
-		if err, done := query.StreamDone(r.Context(), rErr); done {
-			return err
-		}
-		if uErr := r.updateQuery(req.PKC); uErr != nil {
-			r.qStream.Errors <- uErr
-		}
-	}
+	defer r.cancelQuery()
+	defer r.cancelRelay()
+	return query.StreamFor(r.Context(), r.Receive, func(req RetrieveRequest) error {
+		r.updateQuery(req.PKC)
+		return nil
+	})
 }
 
-func (r *Retrieve) updateQuery(pkc model.PKChain) error {
+func (r *Retrieve) updateQuery(pkc model.PKChain) {
 	pSampleStream := make(chan *models.ChannelSample, len(pkc))
 	ctx, cancel := context.WithCancel(context.Background())
 	pqStream, err := streamq.
@@ -99,18 +97,17 @@ func (r *Retrieve) updateQuery(pkc model.PKChain) error {
 		Stream(ctx)
 	if err != nil {
 		cancel()
-		return err
+		r.qStream.Errors <- err
 	}
-	r.closeQuery()
+	r.cancelQuery()
 	r.sampleStream = pSampleStream
-	r.cancelQ = cancel
+	r._cancelQuery = cancel
 	r.qStream = pqStream
 	r.updateSig <- struct{}{}
-	return nil
 }
 
-func (r *Retrieve) closeQuery() {
-	if r.cancelQ != nil {
-		r.cancelQ()
+func (r *Retrieve) cancelQuery() {
+	if r._cancelQuery != nil {
+		r._cancelQuery()
 	}
 }

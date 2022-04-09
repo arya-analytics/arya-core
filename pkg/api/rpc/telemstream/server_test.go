@@ -18,9 +18,11 @@ import (
 	. "github.com/onsi/gomega"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"io"
 	"net"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -195,12 +197,22 @@ var _ = Describe("Server", func() {
 				stream, err := cl.Create(ctx)
 				Expect(err).To(BeNil())
 
+				wg := &sync.WaitGroup{}
+
+				wg.Add(1)
+
 				go func() {
 					defer GinkgoRecover()
+					defer wg.Done()
 					for {
 						res, err := stream.Recv()
+						if err == io.EOF {
+							break
+						}
 						Expect(err).To(BeNil())
-						Expect(res.Error.Message).To(BeZero())
+						if res != nil {
+							Expect(res.Error.Message).To(BeZero())
+						}
 					}
 				}()
 
@@ -214,7 +226,8 @@ var _ = Describe("Server", func() {
 				}
 
 				Expect(stream.CloseSend()).To(Succeed())
-				time.Sleep(300 * time.Millisecond)
+
+				wg.Wait()
 
 				var resSamples []*models.ChannelSample
 				Expect(persist.NewRetrieve().Model(&resSamples).WherePK(ccOne.ID).Exec(ctx)).To(Succeed())

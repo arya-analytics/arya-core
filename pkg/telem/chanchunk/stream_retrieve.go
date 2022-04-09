@@ -44,8 +44,11 @@ func (sr *StreamRetrieve) exec(ctx context.Context, p *query.Pack) error {
 		return sr.catch.Error()
 	}
 	streamQ.Segment(func() {
-		defer close(c)
-		defer close(streamQ.Errors)
+		defer func() {
+			close(c)
+			close(streamQ.Errors)
+			streamQ.Complete()
+		}()
 		for _, r := range ccr {
 			if route.CtxDone(ctx) {
 				return

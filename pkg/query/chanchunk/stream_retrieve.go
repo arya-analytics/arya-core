@@ -47,22 +47,27 @@ func RetrieveStream(svc *chanchunk.Service, sp StreamRetrieveProtocol, req Strea
 }
 
 func (sr *streamRetrieve) Stream(req StreamRetrieveRequest) error {
+	if err := sr.startStream(req); err != nil {
+		return err
+	}
 	wg := &errgroup.Group{}
+	wg.Go(sr.relayErrors)
+	wg.Go(sr.relayChunks)
+	return wg.Wait()
+}
+
+func (sr *streamRetrieve) startStream(req StreamRetrieveRequest) (err error) {
 	sr.chunkStream = make(chan *telem.Chunk)
 	sr.ctx, sr.cancel = context.WithCancel(sr.Context())
-	stream, qErr := sr.svc.NewTSRetrieve().
+	sr.qStream, err = sr.svc.NewTSRetrieve().
 		WhereConfigPK(req.ChannelConfigID).
 		Model(&sr.chunkStream).
 		WhereTimeRange(req.TimeRange).
 		Stream(sr.ctx)
-	if qErr != nil {
+	if err != nil {
 		sr.cancel()
-		return qErr
 	}
-	sr.qStream = stream
-	wg.Go(sr.relayErrors)
-	wg.Go(sr.relayChunks)
-	return wg.Wait()
+	return err
 }
 
 func (sr *streamRetrieve) relayErrors() error {
@@ -72,8 +77,16 @@ func (sr *streamRetrieve) relayErrors() error {
 }
 
 func (sr *streamRetrieve) relayChunks() error {
-	defer sr.cancel()
-	return query.StreamRange(sr.ctx, sr.chunkStream, func(chunk *telem.Chunk) error {
+	ctx, cancel := context.WithCancel(sr.ctx)
+	defer func() {
+		// Make sure the query is cancelled.
+		cancel()
+		// Wait for the query to complete.
+		sr.qStream.Wait()
+		// Cancel error streaming.
+		sr.cancel()
+	}()
+	return query.StreamRange(ctx, sr.chunkStream, func(chunk *telem.Chunk) error {
 		return sr.Send(StreamRetrieveResponse{
 			StartTS:  chunk.Start(),
 			DataType: chunk.DataType,
