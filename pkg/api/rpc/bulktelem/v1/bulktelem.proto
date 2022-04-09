@@ -1,7 +1,5 @@
 syntax = "proto3";
 
-import "google/rpc/code.proto";
-
 package bulktelem.v1;
 
 // |||| SERVICE ||||
@@ -24,7 +22,7 @@ message CreateStreamResponse {
 }
 
 message error {
-  google.rpc.Code type = 1;
+  int32 type = 1;
   string type_string = 2;
   string message = 3;
 }

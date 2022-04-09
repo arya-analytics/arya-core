@@ -6,13 +6,11 @@ go_library(
     importpath = "github.com/arya-analytics/aryacore/pkg/api/fiber/chanstream",
     visibility = ["//visibility:public"],
     deps = [
+        "//pkg/api/fiber",
         "//pkg/query",
         "//pkg/query/chanstream",
         "//pkg/telem/chanstream",
-        "//pkg/util/errutil",
+        "//pkg/ws",
         "@com_github_gofiber_fiber_v2//:fiber",
-        "@com_github_gofiber_websocket_v2//:websocket",
-        "@com_github_sirupsen_logrus//:logrus",
-        "@com_github_vmihailenco_msgpack_v5//:msgpack",
     ],
 )

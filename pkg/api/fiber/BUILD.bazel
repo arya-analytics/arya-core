@@ -1,0 +1,13 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "fiber",
+    srcs = ["ws.go"],
+    importpath = "github.com/arya-analytics/aryacore/pkg/api/fiber",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/ws",
+        "@com_github_gofiber_fiber_v2//:fiber",
+        "@com_github_gofiber_websocket_v2//:websocket",
+    ],
+)
