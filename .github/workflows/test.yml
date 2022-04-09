@@ -18,7 +18,7 @@ jobs:
           MINIO_ROOT_USER: minio
           MINIO_ROOT_PASSWORD: minio123
     steps:
-      - name: Cache bazelisk
+      - name: Cache Bazelisk
         uses: actions/cache@v2
         env:
           cache-name: bazel-cache

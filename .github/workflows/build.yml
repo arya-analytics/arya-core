@@ -5,7 +5,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Cache bazelisk
+      - name: Cache Bazelisk
         uses: actions/cache@v2
         env:
           cache-name: bazel-cache
