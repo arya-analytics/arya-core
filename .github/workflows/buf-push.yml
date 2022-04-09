@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: bufbuild/buf-setup-action@v0.6.0
+      - uses: bufbuild/buf-setup-action@v1.3.0
       - name: Buf Login
         run: echo ${{ secrets.BUF_TOKEN }} | buf registry login --username=emilbon99 --token-stdin
       - name: Buf Push Cluster
