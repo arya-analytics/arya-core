@@ -8,12 +8,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+
       - uses: bufbuild/buf-setup-action@v1.3.0
+
       - name: Buf Push Cluster
         uses: bufbuild/buf-push-action@v1
         with:
           input: pkg/cluster
           buf_token: ${{ secrets.BUF_TOKEN }}
+
       - name: Buf Push API
         uses: bufbuild/buf-push-action@v1
         with:
