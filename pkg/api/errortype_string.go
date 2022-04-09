@@ -11,11 +11,12 @@ func _() {
 	_ = x[ErrorTypeUnknown-0]
 	_ = x[ErrorTypeUnauthorized-1]
 	_ = x[ErrorTypeAuthentication-2]
+	_ = x[ErrorTypeInvalidArguments-3]
 }
 
-const _ErrorType_name = "ErrorTypeUnknownErrorTypeUnauthorizedErrorTypeAuthentication"
+const _ErrorType_name = "ErrorTypeUnknownErrorTypeUnauthorizedErrorTypeAuthenticationErrorTypeInvalidArguments"
 
-var _ErrorType_index = [...]uint8{0, 16, 37, 60}
+var _ErrorType_index = [...]uint8{0, 16, 37, 60, 85}
 
 func (i ErrorType) String() string {
 	if i < 0 || i >= ErrorType(len(_ErrorType_index)-1) {

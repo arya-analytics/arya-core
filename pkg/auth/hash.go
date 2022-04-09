@@ -17,7 +17,7 @@ func ValidatePassword(hash, password string) error {
 	if err != nil {
 		return Error{
 			Type:    ErrorTypeInvalidCredentials,
-			Message: "Invalid credentials",
+			Message: "Invalid credentials.",
 			Base:    err,
 		}
 	}

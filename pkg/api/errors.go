@@ -18,6 +18,7 @@ const (
 	ErrorTypeUnknown ErrorType = iota
 	ErrorTypeUnauthorized
 	ErrorTypeAuthentication
+	ErrorTypeInvalidArguments
 )
 
 func NewErrorResponse(t ErrorType, message string) ErrorResponse {
