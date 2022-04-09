@@ -111,7 +111,7 @@ var _ = Describe("Server", func() {
 				stream, err := cl.Retrieve(ctx)
 				Expect(err).To(BeNil())
 				stream.Send(&api.RetrieveRequest{
-					PKC: model.NewPKChain([]uuid.UUID{ccOne.ID}).Strings(),
+					Pkc: model.NewPKChain([]uuid.UUID{ccOne.ID}).Strings(),
 				})
 				t := time.NewTimer(110 * time.Millisecond)
 
@@ -126,7 +126,7 @@ var _ = Describe("Server", func() {
 						res, err := stream.Recv()
 						Expect(err).To(BeNil())
 						Expect(res.Error.Message).To(BeZero())
-						resSamples = append(resSamples, res.Sample)
+						resSamples = append(resSamples, res.TelemSample)
 					}
 				}
 				Expect(stream.CloseSend()).To(Succeed())
@@ -138,7 +138,7 @@ var _ = Describe("Server", func() {
 				stream, err := cl.Retrieve(ctx)
 				Expect(err).To(BeNil())
 				Expect(stream.Send(&api.RetrieveRequest{
-					PKC: model.NewPKChain([]uuid.UUID{ccOne.ID}).Strings(),
+					Pkc: model.NewPKChain([]uuid.UUID{ccOne.ID}).Strings(),
 				})).To(Succeed())
 
 				t := time.NewTimer(110 * time.Millisecond)
@@ -154,14 +154,14 @@ var _ = Describe("Server", func() {
 						res, err := stream.Recv()
 						Expect(err).To(BeNil())
 						Expect(res.Error.Message).To(BeZero())
-						resSamples = append(resSamples, res.Sample)
+						resSamples = append(resSamples, res.TelemSample)
 					}
 				}
 
 				Expect(len(resSamples)).To(BeNumerically(">=", 10))
 
 				Expect(stream.Send(&api.RetrieveRequest{
-					PKC: model.NewPKChain([]uuid.UUID{ccOne.ID, ccTwo.ID}).Strings(),
+					Pkc: model.NewPKChain([]uuid.UUID{ccOne.ID, ccTwo.ID}).Strings(),
 				})).To(Succeed())
 
 				time.Sleep(5 * time.Millisecond)
@@ -179,7 +179,7 @@ var _ = Describe("Server", func() {
 						res, err := stream.Recv()
 						Expect(err).To(BeNil())
 						Expect(res.Error.Message).To(BeZero())
-						roundTwoResSamples = append(roundTwoResSamples, res.Sample)
+						roundTwoResSamples = append(roundTwoResSamples, res.TelemSample)
 					}
 				}
 
@@ -218,11 +218,11 @@ var _ = Describe("Server", func() {
 
 				for _, s := range samples {
 					apiS := &api.TelemSample{
-						ChannelConfigID: s.ChannelConfigID.String(),
+						ChannelConfigId: s.ChannelConfigID.String(),
 						Value:           s.Value,
 						Timestamp:       int64(s.Timestamp),
 					}
-					Expect(stream.Send(&api.CreateRequest{Sample: apiS})).To(Succeed())
+					Expect(stream.Send(&api.CreateRequest{TelemSample: apiS})).To(Succeed())
 				}
 
 				Expect(stream.CloseSend()).To(Succeed())

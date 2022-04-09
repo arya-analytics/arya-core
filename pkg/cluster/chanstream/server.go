@@ -5,6 +5,7 @@ import (
 	api "github.com/arya-analytics/aryacore/pkg/cluster/gen/proto/go/chanstream/v1"
 	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/rpc"
+	errorv1 "github.com/arya-analytics/aryacore/pkg/rpc/gen/proto/go/error/v1"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/arya-analytics/aryacore/pkg/util/query/streamq"
@@ -46,7 +47,7 @@ func (s *ServerRPC) Create(stream api.ChannelStreamService_CreateServer) error {
 				return rpcErr
 			}
 			sample := model.NewReflect(&models.ChannelSample{})
-			rpc.NewModelExchange(req.Sample, sample).ToDest()
+			rpc.NewModelExchange(req.ChannelSample, sample).ToDest()
 			rfl.ChanSend(sample)
 		}
 	})
@@ -87,8 +88,8 @@ func (r *rpcRetrieve) relaySamples() error {
 	for {
 		select {
 		case s := <-*r.sampleStream:
-			res := &api.RetrieveResponse{Sample: &api.ChannelSample{}}
-			rpc.NewModelExchange(res.Sample, s).ToSource()
+			res := &api.RetrieveResponse{ChannelSample: &api.ChannelSample{}}
+			rpc.NewModelExchange(res.ChannelSample, s).ToSource()
 			err := r.rpcStream.Send(res)
 			if err == io.EOF {
 				return nil
@@ -120,7 +121,7 @@ func (r *rpcRetrieve) listenForUpdates() error {
 		case <-r.rpcStream.Context().Done():
 			break
 		default:
-			if uErr := r.updateQuery(req.PKC); uErr != nil {
+			if uErr := r.updateQuery(req.Pkc); uErr != nil {
 				r.qStream.Errors <- uErr
 			}
 		}
@@ -157,7 +158,7 @@ func (r *rpcRetrieve) relayErrors() error {
 		case <-r.rpcStream.Context().Done():
 			return nil
 		default:
-			if rpcErr := r.rpcStream.Send(&api.RetrieveResponse{Error: &api.Error{Message: err.Error()}}); rpcErr != nil {
+			if rpcErr := r.rpcStream.Send(&api.RetrieveResponse{Error: &errorv1.Error{Message: err.Error()}}); rpcErr != nil {
 				return rpcErr
 			}
 		}

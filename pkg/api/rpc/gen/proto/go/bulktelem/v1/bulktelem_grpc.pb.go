@@ -18,8 +18,8 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type BulkTelemServiceClient interface {
-	CreateStream(ctx context.Context, opts ...grpc.CallOption) (BulkTelemService_CreateStreamClient, error)
-	RetrieveStream(ctx context.Context, in *RetrieveStreamRequest, opts ...grpc.CallOption) (BulkTelemService_RetrieveStreamClient, error)
+	Create(ctx context.Context, opts ...grpc.CallOption) (BulkTelemService_CreateClient, error)
+	Retrieve(ctx context.Context, in *RetrieveRequest, opts ...grpc.CallOption) (BulkTelemService_RetrieveClient, error)
 }
 
 type bulkTelemServiceClient struct {
@@ -30,43 +30,43 @@ func NewBulkTelemServiceClient(cc grpc.ClientConnInterface) BulkTelemServiceClie
 	return &bulkTelemServiceClient{cc}
 }
 
-func (c *bulkTelemServiceClient) CreateStream(ctx context.Context, opts ...grpc.CallOption) (BulkTelemService_CreateStreamClient, error) {
-	stream, err := c.cc.NewStream(ctx, &BulkTelemService_ServiceDesc.Streams[0], "/bulktelem.v1.BulkTelemService/CreateStream", opts...)
+func (c *bulkTelemServiceClient) Create(ctx context.Context, opts ...grpc.CallOption) (BulkTelemService_CreateClient, error) {
+	stream, err := c.cc.NewStream(ctx, &BulkTelemService_ServiceDesc.Streams[0], "/bulktelem.v1.BulkTelemService/Create", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &bulkTelemServiceCreateStreamClient{stream}
+	x := &bulkTelemServiceCreateClient{stream}
 	return x, nil
 }
 
-type BulkTelemService_CreateStreamClient interface {
-	Send(*CreateStreamRequest) error
-	Recv() (*CreateStreamResponse, error)
+type BulkTelemService_CreateClient interface {
+	Send(*CreateRequest) error
+	Recv() (*CreateResponse, error)
 	grpc.ClientStream
 }
 
-type bulkTelemServiceCreateStreamClient struct {
+type bulkTelemServiceCreateClient struct {
 	grpc.ClientStream
 }
 
-func (x *bulkTelemServiceCreateStreamClient) Send(m *CreateStreamRequest) error {
+func (x *bulkTelemServiceCreateClient) Send(m *CreateRequest) error {
 	return x.ClientStream.SendMsg(m)
 }
 
-func (x *bulkTelemServiceCreateStreamClient) Recv() (*CreateStreamResponse, error) {
-	m := new(CreateStreamResponse)
+func (x *bulkTelemServiceCreateClient) Recv() (*CreateResponse, error) {
+	m := new(CreateResponse)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
 	return m, nil
 }
 
-func (c *bulkTelemServiceClient) RetrieveStream(ctx context.Context, in *RetrieveStreamRequest, opts ...grpc.CallOption) (BulkTelemService_RetrieveStreamClient, error) {
-	stream, err := c.cc.NewStream(ctx, &BulkTelemService_ServiceDesc.Streams[1], "/bulktelem.v1.BulkTelemService/RetrieveStream", opts...)
+func (c *bulkTelemServiceClient) Retrieve(ctx context.Context, in *RetrieveRequest, opts ...grpc.CallOption) (BulkTelemService_RetrieveClient, error) {
+	stream, err := c.cc.NewStream(ctx, &BulkTelemService_ServiceDesc.Streams[1], "/bulktelem.v1.BulkTelemService/Retrieve", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &bulkTelemServiceRetrieveStreamClient{stream}
+	x := &bulkTelemServiceRetrieveClient{stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -76,17 +76,17 @@ func (c *bulkTelemServiceClient) RetrieveStream(ctx context.Context, in *Retriev
 	return x, nil
 }
 
-type BulkTelemService_RetrieveStreamClient interface {
-	Recv() (*RetrieveStreamResponse, error)
+type BulkTelemService_RetrieveClient interface {
+	Recv() (*RetrieveResponse, error)
 	grpc.ClientStream
 }
 
-type bulkTelemServiceRetrieveStreamClient struct {
+type bulkTelemServiceRetrieveClient struct {
 	grpc.ClientStream
 }
 
-func (x *bulkTelemServiceRetrieveStreamClient) Recv() (*RetrieveStreamResponse, error) {
-	m := new(RetrieveStreamResponse)
+func (x *bulkTelemServiceRetrieveClient) Recv() (*RetrieveResponse, error) {
+	m := new(RetrieveResponse)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
@@ -97,19 +97,19 @@ func (x *bulkTelemServiceRetrieveStreamClient) Recv() (*RetrieveStreamResponse, 
 // All implementations should embed UnimplementedBulkTelemServiceServer
 // for forward compatibility
 type BulkTelemServiceServer interface {
-	CreateStream(BulkTelemService_CreateStreamServer) error
-	RetrieveStream(*RetrieveStreamRequest, BulkTelemService_RetrieveStreamServer) error
+	Create(BulkTelemService_CreateServer) error
+	Retrieve(*RetrieveRequest, BulkTelemService_RetrieveServer) error
 }
 
 // UnimplementedBulkTelemServiceServer should be embedded to have forward compatible implementations.
 type UnimplementedBulkTelemServiceServer struct {
 }
 
-func (UnimplementedBulkTelemServiceServer) CreateStream(BulkTelemService_CreateStreamServer) error {
-	return status.Errorf(codes.Unimplemented, "method CreateStream not implemented")
+func (UnimplementedBulkTelemServiceServer) Create(BulkTelemService_CreateServer) error {
+	return status.Errorf(codes.Unimplemented, "method Create not implemented")
 }
-func (UnimplementedBulkTelemServiceServer) RetrieveStream(*RetrieveStreamRequest, BulkTelemService_RetrieveStreamServer) error {
-	return status.Errorf(codes.Unimplemented, "method RetrieveStream not implemented")
+func (UnimplementedBulkTelemServiceServer) Retrieve(*RetrieveRequest, BulkTelemService_RetrieveServer) error {
+	return status.Errorf(codes.Unimplemented, "method Retrieve not implemented")
 }
 
 // UnsafeBulkTelemServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -123,50 +123,50 @@ func RegisterBulkTelemServiceServer(s grpc.ServiceRegistrar, srv BulkTelemServic
 	s.RegisterService(&BulkTelemService_ServiceDesc, srv)
 }
 
-func _BulkTelemService_CreateStream_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(BulkTelemServiceServer).CreateStream(&bulkTelemServiceCreateStreamServer{stream})
+func _BulkTelemService_Create_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(BulkTelemServiceServer).Create(&bulkTelemServiceCreateServer{stream})
 }
 
-type BulkTelemService_CreateStreamServer interface {
-	Send(*CreateStreamResponse) error
-	Recv() (*CreateStreamRequest, error)
+type BulkTelemService_CreateServer interface {
+	Send(*CreateResponse) error
+	Recv() (*CreateRequest, error)
 	grpc.ServerStream
 }
 
-type bulkTelemServiceCreateStreamServer struct {
+type bulkTelemServiceCreateServer struct {
 	grpc.ServerStream
 }
 
-func (x *bulkTelemServiceCreateStreamServer) Send(m *CreateStreamResponse) error {
+func (x *bulkTelemServiceCreateServer) Send(m *CreateResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func (x *bulkTelemServiceCreateStreamServer) Recv() (*CreateStreamRequest, error) {
-	m := new(CreateStreamRequest)
+func (x *bulkTelemServiceCreateServer) Recv() (*CreateRequest, error) {
+	m := new(CreateRequest)
 	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
 	return m, nil
 }
 
-func _BulkTelemService_RetrieveStream_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(RetrieveStreamRequest)
+func _BulkTelemService_Retrieve_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(RetrieveRequest)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(BulkTelemServiceServer).RetrieveStream(m, &bulkTelemServiceRetrieveStreamServer{stream})
+	return srv.(BulkTelemServiceServer).Retrieve(m, &bulkTelemServiceRetrieveServer{stream})
 }
 
-type BulkTelemService_RetrieveStreamServer interface {
-	Send(*RetrieveStreamResponse) error
+type BulkTelemService_RetrieveServer interface {
+	Send(*RetrieveResponse) error
 	grpc.ServerStream
 }
 
-type bulkTelemServiceRetrieveStreamServer struct {
+type bulkTelemServiceRetrieveServer struct {
 	grpc.ServerStream
 }
 
-func (x *bulkTelemServiceRetrieveStreamServer) Send(m *RetrieveStreamResponse) error {
+func (x *bulkTelemServiceRetrieveServer) Send(m *RetrieveResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
@@ -179,14 +179,14 @@ var BulkTelemService_ServiceDesc = grpc.ServiceDesc{
 	Methods:     []grpc.MethodDesc{},
 	Streams: []grpc.StreamDesc{
 		{
-			StreamName:    "CreateStream",
-			Handler:       _BulkTelemService_CreateStream_Handler,
+			StreamName:    "Create",
+			Handler:       _BulkTelemService_Create_Handler,
 			ServerStreams: true,
 			ClientStreams: true,
 		},
 		{
-			StreamName:    "RetrieveStream",
-			Handler:       _BulkTelemService_RetrieveStream_Handler,
+			StreamName:    "Retrieve",
+			Handler:       _BulkTelemService_Retrieve_Handler,
 			ServerStreams: true,
 		},
 	},

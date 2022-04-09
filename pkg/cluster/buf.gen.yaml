@@ -5,6 +5,7 @@ managed:
     default: github.com/arya-analytics/arya-core/pkg/cluster/gen/proto/go
     except:
       - buf.build/srikrsna/protoc-gen-gotag
+      - buf.build/arya-analytics/arya-core-rpc
 plugins:
   - name: go
     out: gen/proto/go

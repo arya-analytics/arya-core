@@ -2,6 +2,10 @@ syntax = "proto3";
 
 package chanstream.v1;
 
+import "error/v1/error.proto";
+
+// |||| SERVICE ||||
+
 service ChannelStreamService {
   rpc Create(stream CreateRequest) returns (stream CreateResponse);
   rpc Retrieve(stream RetrieveRequest) returns (stream RetrieveResponse);
@@ -10,31 +14,28 @@ service ChannelStreamService {
 // |||| MODEL ||||
 
 message ChannelSample {
-  string ChannelConfigID = 1;
-  double Value = 2;
-  int64 Timestamp = 3;
+  string channel_config_id = 1;
+  double value = 2;
+  int64 timestamp = 3;
 }
 
 // |||| CREATE ||||
 
 message CreateRequest {
-  ChannelSample Sample = 1;
+  ChannelSample channel_sample = 1;
 }
 
-message CreateResponse {}
+message CreateResponse {
+  error.v1.Error error = 1;
+}
 
 // |||| RETRIEVE ||||
 
 message RetrieveRequest {
-  repeated string PKC = 1;
+  repeated string pkc = 1;
 }
 
 message RetrieveResponse {
-  ChannelSample Sample = 1;
-  Error Error = 2;
+  ChannelSample channel_sample = 1;
+  error.v1.Error error = 2;
 }
-
-message Error {
-  string Message = 1;
-}
-

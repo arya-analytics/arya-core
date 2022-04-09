@@ -1,50 +1,55 @@
 syntax = "proto3";
 
-import "tagger/tagger.proto";
-
 package chanchunk.v1;
 
-// |||| SVC ||||
+import "error/v1/error.proto";
+import "tagger/tagger.proto";
+
+// |||| SERVICE ||||
 
 service ChannelChunkService {
-  rpc CreateReplicas(stream CreateReplicasRequest) returns (CreateReplicasResponse);
-  rpc RetrieveReplicas(RetrieveReplicasRequest) returns (stream RetrieveReplicasResponse);
-  rpc DeleteReplicas(DeleteReplicasRequest) returns (DeleteReplicasResponse);
+  rpc Create(stream CreateRequest) returns (CreateResponse);
+  rpc Retrieve(RetrieveRequest) returns (stream RetrieveResponse);
+  rpc Delete(DeleteRequest) returns (DeleteREsponse);
 }
 
 // |||| MODEL ||||
 
 message ChannelChunkReplica {
-  string ID = 1 [(tagger.tags) = "model:\"role:pk,\""];
-  string ChannelChunkID = 2;
-  string RangeReplicaID = 3;
+  string id = 1 [(tagger.tags) = "model:\"role:pk,\""];
+  string channel_chunk_id = 2;
+  string range_replica_id = 3;
   bytes telem = 4 [(tagger.tags) = "model:\"role:telemChunkData,\""];
 }
 
 // |||| CREATE ||||
 
-message CreateReplicasRequest {
-  ChannelChunkReplica CCR = 1;
+message CreateRequest {
+  ChannelChunkReplica channel_chunk_replica = 1;
 }
 
-message CreateReplicasResponse {}
+message CreateResponse {
+  error.v1.Error error = 1;
+}
 
 // |||| RETRIEVE ||||
 
-message RetrieveReplicasResponse {
-  ChannelChunkReplica CCR = 1;
+message RetrieveResponse {
+  ChannelChunkReplica channel_chunk_replica = 1;
 }
 
-message RetrieveReplicasRequest {
-  repeated string PKC = 1;
+message RetrieveRequest {
+  repeated string pkc = 1;
 }
 
 // |||| DELETE ||||
 
-message DeleteReplicasRequest {
-  repeated string PKC = 1;
+message DeleteRequest {
+  repeated string pkc = 1;
 }
 
-message DeleteReplicasResponse {}
+message DeleteREsponse {
+  error.v1.Error error = 1;
+}
 
 

@@ -2,9 +2,13 @@
 version: v1
 deps:
   - remote: buf.build
+    owner: arya-analytics
+    repository: arya-core-rpc
+    commit: 5269c4dff70a480f97674a67b4c76679
+  - remote: buf.build
     owner: googleapis
     repository: googleapis
-    commit: f503ec6637504fc3be424ad20a5a4225
+    commit: 4d8df1fb1c354c2d8ae30ebb33211c94
   - remote: buf.build
     owner: srikrsna
     repository: protoc-gen-gotag

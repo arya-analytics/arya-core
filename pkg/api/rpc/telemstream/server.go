@@ -7,6 +7,7 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/query"
 	qcs "github.com/arya-analytics/aryacore/pkg/query/chanstream"
 	"github.com/arya-analytics/aryacore/pkg/rpc"
+	errorv1 "github.com/arya-analytics/aryacore/pkg/rpc/gen/proto/go/error/v1"
 	"github.com/arya-analytics/aryacore/pkg/telem/chanstream"
 	"google.golang.org/grpc"
 )
@@ -49,13 +50,13 @@ func (r *retrieveProtocol) Receive() (qcs.RetrieveRequest, error) {
 	if err != nil {
 		return qcs.RetrieveRequest{}, err
 	}
-	pkc, pkcErr := query.ParsePKC(req.PKC)
+	pkc, pkcErr := query.ParsePKC(req.Pkc)
 	return qcs.RetrieveRequest{PKC: pkc}, pkcErr
 }
 
 func (r *retrieveProtocol) Send(resp qcs.RetrieveResponse) error {
-	rpcResp := &api.RetrieveResponse{Sample: &api.TelemSample{}, Error: &api.Error{}}
-	rpc.NewModelExchange(resp.Sample, rpcResp.Sample).ToDest()
+	rpcResp := &api.RetrieveResponse{TelemSample: &api.TelemSample{}, Error: &errorv1.Error{}}
+	rpc.NewModelExchange(resp.Sample, rpcResp.TelemSample).ToDest()
 	if resp.Error != nil {
 		rpcResp.Error.Message = resp.Error.Error()
 	}
@@ -78,12 +79,12 @@ func (r *createProtocol) Receive() (qcs.CreateRequest, error) {
 		return qcs.CreateRequest{}, err
 	}
 	req := qcs.CreateRequest{Sample: &models.ChannelSample{}}
-	rpc.NewModelExchange(req.Sample, rpcReq.Sample).ToSource()
+	rpc.NewModelExchange(req.Sample, rpcReq.TelemSample).ToSource()
 	return req, err
 }
 
 func (r *createProtocol) Send(resp qcs.CreateResponse) error {
-	rpcResp := &api.CreateResponse{Error: &api.Error{}}
+	rpcResp := &api.CreateResponse{Error: &errorv1.Error{}}
 	if resp.Error != nil {
 		rpcResp.Error.Message = resp.Error.Error()
 	}

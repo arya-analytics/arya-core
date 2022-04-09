@@ -73,7 +73,7 @@ var _ = Describe("Server", func() {
 	Describe("createStream", func() {
 		It("Should create the chunks correctly", func() {
 			cc := mock.ChunkSet(5, telem.TimeStamp(0), config.DataType, config.DataRate, telem.NewTimeSpan(600*time.Second), telem.TimeSpan(0))
-			stream, err := cl.CreateStream(ctx)
+			stream, err := cl.Create(ctx)
 			Expect(err).To(BeNil())
 
 			wg := &sync.WaitGroup{}
@@ -91,7 +91,7 @@ var _ = Describe("Server", func() {
 			}()
 
 			for _, c := range cc {
-				Expect(stream.Send(&bulktelemv1.CreateStreamRequest{
+				Expect(stream.Send(&bulktelemv1.CreateRequest{
 					ChannelConfigId: config.ID.String(),
 					StartTs:         int64(c.Start()),
 					Data:            c.Bytes(),
@@ -120,7 +120,7 @@ var _ = Describe("Server", func() {
 	Describe("retrieveStream", func() {
 		JustBeforeEach(func() {
 			cc := mock.ChunkSet(5, telem.TimeStamp(0), config.DataType, config.DataRate, telem.NewTimeSpan(1*time.Minute), telem.TimeSpan(0))
-			stream, err := cl.CreateStream(ctx)
+			stream, err := cl.Create(ctx)
 			Expect(err).To(BeNil())
 
 			var errors []*errorv1.Error
@@ -138,7 +138,7 @@ var _ = Describe("Server", func() {
 			}()
 
 			for _, c := range cc {
-				Expect(stream.Send(&bulktelemv1.CreateStreamRequest{
+				Expect(stream.Send(&bulktelemv1.CreateRequest{
 					ChannelConfigId: config.ID.String(),
 					StartTs:         int64(c.Start()),
 					Data:            c.Bytes(),
@@ -148,14 +148,14 @@ var _ = Describe("Server", func() {
 			wg.Wait()
 		})
 		It("Should retrieve the chunks correctly", func() {
-			req := &bulktelemv1.RetrieveStreamRequest{
+			req := &bulktelemv1.RetrieveRequest{
 				ChannelConfigId: model.NewPK(config.ID).String(),
 				StartTs:         int64(telem.TimeStamp(0)),
 				EndTs:           int64(telem.TimeStamp(0).Add(telem.NewTimeSpan(180 * time.Second))),
 			}
-			stream, err := cl.RetrieveStream(ctx, req)
+			stream, err := cl.Retrieve(ctx, req)
 			Expect(err).To(BeNil())
-			var chunks []*bulktelemv1.RetrieveStreamResponse
+			var chunks []*bulktelemv1.RetrieveResponse
 			for {
 				res, err := stream.Recv()
 				if err == io.EOF {

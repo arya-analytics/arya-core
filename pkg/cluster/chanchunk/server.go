@@ -26,15 +26,15 @@ func (s *ServerRPC) BindTo(srv *grpc.Server) {
 	api.RegisterChannelChunkServiceServer(srv, s)
 }
 
-func (s *ServerRPC) CreateReplicas(stream api.ChannelChunkService_CreateReplicasServer) error {
+func (s *ServerRPC) Create(stream api.ChannelChunkService_CreateServer) error {
 	c := errutil.NewCatchSimple()
 	for {
-		var req *api.CreateReplicasRequest
+		var req *api.CreateRequest
 		c.Exec(func() (err error) {
 			req, err = stream.Recv()
 			return err
 		})
-		c.Exec(func() error { return s.CreateReplica(stream.Context(), req.CCR) })
+		c.Exec(func() error { return s.CreateReplica(stream.Context(), req.ChannelChunkReplica) })
 		if c.Error() != nil {
 			if c.Error() == io.EOF {
 				break
@@ -42,22 +42,22 @@ func (s *ServerRPC) CreateReplicas(stream api.ChannelChunkService_CreateReplicas
 			return c.Error()
 		}
 	}
-	return stream.SendAndClose(&api.CreateReplicasResponse{})
+	return stream.SendAndClose(&api.CreateResponse{})
 }
 
-func (s *ServerRPC) RetrieveReplicas(req *api.RetrieveReplicasRequest, stream api.ChannelChunkService_RetrieveReplicasServer) error {
-	pkc := ParsePKC(req.PKC)
+func (s *ServerRPC) Retrieve(req *api.RetrieveRequest, stream api.ChannelChunkService_RetrieveServer) error {
+	pkc := ParsePKC(req.Pkc)
 	c := errutil.NewCatchSimple()
 	for _, pk := range pkc {
-		res := &api.RetrieveReplicasResponse{CCR: &api.ChannelChunkReplica{}}
-		c.Exec(func() error { return s.RetrieveReplica(stream.Context(), res.CCR, pk) })
+		res := &api.RetrieveResponse{ChannelChunkReplica: &api.ChannelChunkReplica{}}
+		c.Exec(func() error { return s.RetrieveReplica(stream.Context(), res.ChannelChunkReplica, pk) })
 		c.Exec(func() error { return stream.Send(res) })
 	}
 	return c.Error()
 }
 
-func (s *ServerRPC) DeleteReplicas(ctx context.Context, req *api.DeleteReplicasRequest) (*api.DeleteReplicasResponse, error) {
-	return &api.DeleteReplicasResponse{}, s.DeleteReplica(ctx, ParsePKC(req.PKC))
+func (s *ServerRPC) Delete(ctx context.Context, req *api.DeleteRequest) (*api.DeleteREsponse, error) {
+	return &api.DeleteREsponse{}, s.DeleteReplica(ctx, ParsePKC(req.Pkc))
 }
 
 func (s *ServerRPC) RetrieveReplica(ctx context.Context, ccr *api.ChannelChunkReplica, pk model.PK) error {

@@ -146,7 +146,7 @@ func (rdi *remoteDeltaInlet) Errors() <-chan error {
 func (rdi *remoteDeltaInlet) Update(dCtx route.DeltaContext[*models.ChannelSample, outletContext]) {
 	pkc := parsePKC(dCtx)
 	rdi.sampleStream = make(chan *models.ChannelSample, len(pkc))
-	if err := rdi.rpcStream.SendMsg(&api.RetrieveRequest{PKC: pkc.Strings()}); err != nil {
+	if err := rdi.rpcStream.SendMsg(&api.RetrieveRequest{Pkc: pkc.Strings()}); err != nil {
 		rdi.errStream <- err
 	}
 }
@@ -159,7 +159,7 @@ func (rdi *remoteDeltaInlet) Start() {
 			return
 		}
 		s := &models.ChannelSample{}
-		rpc.NewModelExchange(resp.Sample, s).ToDest()
+		rpc.NewModelExchange(resp.ChannelSample, s).ToDest()
 		rdi.sampleStream <- s
 	}
 }

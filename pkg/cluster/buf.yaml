@@ -2,6 +2,7 @@ version: v1
 name: buf.build/arya-analytics/arya-core-cluster
 deps:
   - buf.build/srikrsna/protoc-gen-gotag
+  - buf.build/arya-analytics/arya-core-rpc
 breaking:
   use:
     - FILE

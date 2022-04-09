@@ -18,9 +18,9 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ChannelChunkServiceClient interface {
-	CreateReplicas(ctx context.Context, opts ...grpc.CallOption) (ChannelChunkService_CreateReplicasClient, error)
-	RetrieveReplicas(ctx context.Context, in *RetrieveReplicasRequest, opts ...grpc.CallOption) (ChannelChunkService_RetrieveReplicasClient, error)
-	DeleteReplicas(ctx context.Context, in *DeleteReplicasRequest, opts ...grpc.CallOption) (*DeleteReplicasResponse, error)
+	Create(ctx context.Context, opts ...grpc.CallOption) (ChannelChunkService_CreateClient, error)
+	Retrieve(ctx context.Context, in *RetrieveRequest, opts ...grpc.CallOption) (ChannelChunkService_RetrieveClient, error)
+	Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*DeleteREsponse, error)
 }
 
 type channelChunkServiceClient struct {
@@ -31,46 +31,46 @@ func NewChannelChunkServiceClient(cc grpc.ClientConnInterface) ChannelChunkServi
 	return &channelChunkServiceClient{cc}
 }
 
-func (c *channelChunkServiceClient) CreateReplicas(ctx context.Context, opts ...grpc.CallOption) (ChannelChunkService_CreateReplicasClient, error) {
-	stream, err := c.cc.NewStream(ctx, &ChannelChunkService_ServiceDesc.Streams[0], "/chanchunk.v1.ChannelChunkService/CreateReplicas", opts...)
+func (c *channelChunkServiceClient) Create(ctx context.Context, opts ...grpc.CallOption) (ChannelChunkService_CreateClient, error) {
+	stream, err := c.cc.NewStream(ctx, &ChannelChunkService_ServiceDesc.Streams[0], "/chanchunk.v1.ChannelChunkService/Create", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &channelChunkServiceCreateReplicasClient{stream}
+	x := &channelChunkServiceCreateClient{stream}
 	return x, nil
 }
 
-type ChannelChunkService_CreateReplicasClient interface {
-	Send(*CreateReplicasRequest) error
-	CloseAndRecv() (*CreateReplicasResponse, error)
+type ChannelChunkService_CreateClient interface {
+	Send(*CreateRequest) error
+	CloseAndRecv() (*CreateResponse, error)
 	grpc.ClientStream
 }
 
-type channelChunkServiceCreateReplicasClient struct {
+type channelChunkServiceCreateClient struct {
 	grpc.ClientStream
 }
 
-func (x *channelChunkServiceCreateReplicasClient) Send(m *CreateReplicasRequest) error {
+func (x *channelChunkServiceCreateClient) Send(m *CreateRequest) error {
 	return x.ClientStream.SendMsg(m)
 }
 
-func (x *channelChunkServiceCreateReplicasClient) CloseAndRecv() (*CreateReplicasResponse, error) {
+func (x *channelChunkServiceCreateClient) CloseAndRecv() (*CreateResponse, error) {
 	if err := x.ClientStream.CloseSend(); err != nil {
 		return nil, err
 	}
-	m := new(CreateReplicasResponse)
+	m := new(CreateResponse)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
 	return m, nil
 }
 
-func (c *channelChunkServiceClient) RetrieveReplicas(ctx context.Context, in *RetrieveReplicasRequest, opts ...grpc.CallOption) (ChannelChunkService_RetrieveReplicasClient, error) {
-	stream, err := c.cc.NewStream(ctx, &ChannelChunkService_ServiceDesc.Streams[1], "/chanchunk.v1.ChannelChunkService/RetrieveReplicas", opts...)
+func (c *channelChunkServiceClient) Retrieve(ctx context.Context, in *RetrieveRequest, opts ...grpc.CallOption) (ChannelChunkService_RetrieveClient, error) {
+	stream, err := c.cc.NewStream(ctx, &ChannelChunkService_ServiceDesc.Streams[1], "/chanchunk.v1.ChannelChunkService/Retrieve", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &channelChunkServiceRetrieveReplicasClient{stream}
+	x := &channelChunkServiceRetrieveClient{stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -80,26 +80,26 @@ func (c *channelChunkServiceClient) RetrieveReplicas(ctx context.Context, in *Re
 	return x, nil
 }
 
-type ChannelChunkService_RetrieveReplicasClient interface {
-	Recv() (*RetrieveReplicasResponse, error)
+type ChannelChunkService_RetrieveClient interface {
+	Recv() (*RetrieveResponse, error)
 	grpc.ClientStream
 }
 
-type channelChunkServiceRetrieveReplicasClient struct {
+type channelChunkServiceRetrieveClient struct {
 	grpc.ClientStream
 }
 
-func (x *channelChunkServiceRetrieveReplicasClient) Recv() (*RetrieveReplicasResponse, error) {
-	m := new(RetrieveReplicasResponse)
+func (x *channelChunkServiceRetrieveClient) Recv() (*RetrieveResponse, error) {
+	m := new(RetrieveResponse)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
 	return m, nil
 }
 
-func (c *channelChunkServiceClient) DeleteReplicas(ctx context.Context, in *DeleteReplicasRequest, opts ...grpc.CallOption) (*DeleteReplicasResponse, error) {
-	out := new(DeleteReplicasResponse)
-	err := c.cc.Invoke(ctx, "/chanchunk.v1.ChannelChunkService/DeleteReplicas", in, out, opts...)
+func (c *channelChunkServiceClient) Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*DeleteREsponse, error) {
+	out := new(DeleteREsponse)
+	err := c.cc.Invoke(ctx, "/chanchunk.v1.ChannelChunkService/Delete", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -110,23 +110,23 @@ func (c *channelChunkServiceClient) DeleteReplicas(ctx context.Context, in *Dele
 // All implementations should embed UnimplementedChannelChunkServiceServer
 // for forward compatibility
 type ChannelChunkServiceServer interface {
-	CreateReplicas(ChannelChunkService_CreateReplicasServer) error
-	RetrieveReplicas(*RetrieveReplicasRequest, ChannelChunkService_RetrieveReplicasServer) error
-	DeleteReplicas(context.Context, *DeleteReplicasRequest) (*DeleteReplicasResponse, error)
+	Create(ChannelChunkService_CreateServer) error
+	Retrieve(*RetrieveRequest, ChannelChunkService_RetrieveServer) error
+	Delete(context.Context, *DeleteRequest) (*DeleteREsponse, error)
 }
 
 // UnimplementedChannelChunkServiceServer should be embedded to have forward compatible implementations.
 type UnimplementedChannelChunkServiceServer struct {
 }
 
-func (UnimplementedChannelChunkServiceServer) CreateReplicas(ChannelChunkService_CreateReplicasServer) error {
-	return status.Errorf(codes.Unimplemented, "method CreateReplicas not implemented")
+func (UnimplementedChannelChunkServiceServer) Create(ChannelChunkService_CreateServer) error {
+	return status.Errorf(codes.Unimplemented, "method Create not implemented")
 }
-func (UnimplementedChannelChunkServiceServer) RetrieveReplicas(*RetrieveReplicasRequest, ChannelChunkService_RetrieveReplicasServer) error {
-	return status.Errorf(codes.Unimplemented, "method RetrieveReplicas not implemented")
+func (UnimplementedChannelChunkServiceServer) Retrieve(*RetrieveRequest, ChannelChunkService_RetrieveServer) error {
+	return status.Errorf(codes.Unimplemented, "method Retrieve not implemented")
 }
-func (UnimplementedChannelChunkServiceServer) DeleteReplicas(context.Context, *DeleteReplicasRequest) (*DeleteReplicasResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteReplicas not implemented")
+func (UnimplementedChannelChunkServiceServer) Delete(context.Context, *DeleteRequest) (*DeleteREsponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
 }
 
 // UnsafeChannelChunkServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -140,67 +140,67 @@ func RegisterChannelChunkServiceServer(s grpc.ServiceRegistrar, srv ChannelChunk
 	s.RegisterService(&ChannelChunkService_ServiceDesc, srv)
 }
 
-func _ChannelChunkService_CreateReplicas_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(ChannelChunkServiceServer).CreateReplicas(&channelChunkServiceCreateReplicasServer{stream})
+func _ChannelChunkService_Create_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(ChannelChunkServiceServer).Create(&channelChunkServiceCreateServer{stream})
 }
 
-type ChannelChunkService_CreateReplicasServer interface {
-	SendAndClose(*CreateReplicasResponse) error
-	Recv() (*CreateReplicasRequest, error)
+type ChannelChunkService_CreateServer interface {
+	SendAndClose(*CreateResponse) error
+	Recv() (*CreateRequest, error)
 	grpc.ServerStream
 }
 
-type channelChunkServiceCreateReplicasServer struct {
+type channelChunkServiceCreateServer struct {
 	grpc.ServerStream
 }
 
-func (x *channelChunkServiceCreateReplicasServer) SendAndClose(m *CreateReplicasResponse) error {
+func (x *channelChunkServiceCreateServer) SendAndClose(m *CreateResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func (x *channelChunkServiceCreateReplicasServer) Recv() (*CreateReplicasRequest, error) {
-	m := new(CreateReplicasRequest)
+func (x *channelChunkServiceCreateServer) Recv() (*CreateRequest, error) {
+	m := new(CreateRequest)
 	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
 	return m, nil
 }
 
-func _ChannelChunkService_RetrieveReplicas_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(RetrieveReplicasRequest)
+func _ChannelChunkService_Retrieve_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(RetrieveRequest)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(ChannelChunkServiceServer).RetrieveReplicas(m, &channelChunkServiceRetrieveReplicasServer{stream})
+	return srv.(ChannelChunkServiceServer).Retrieve(m, &channelChunkServiceRetrieveServer{stream})
 }
 
-type ChannelChunkService_RetrieveReplicasServer interface {
-	Send(*RetrieveReplicasResponse) error
+type ChannelChunkService_RetrieveServer interface {
+	Send(*RetrieveResponse) error
 	grpc.ServerStream
 }
 
-type channelChunkServiceRetrieveReplicasServer struct {
+type channelChunkServiceRetrieveServer struct {
 	grpc.ServerStream
 }
 
-func (x *channelChunkServiceRetrieveReplicasServer) Send(m *RetrieveReplicasResponse) error {
+func (x *channelChunkServiceRetrieveServer) Send(m *RetrieveResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func _ChannelChunkService_DeleteReplicas_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteReplicasRequest)
+func _ChannelChunkService_Delete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ChannelChunkServiceServer).DeleteReplicas(ctx, in)
+		return srv.(ChannelChunkServiceServer).Delete(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/chanchunk.v1.ChannelChunkService/DeleteReplicas",
+		FullMethod: "/chanchunk.v1.ChannelChunkService/Delete",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ChannelChunkServiceServer).DeleteReplicas(ctx, req.(*DeleteReplicasRequest))
+		return srv.(ChannelChunkServiceServer).Delete(ctx, req.(*DeleteRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -213,19 +213,19 @@ var ChannelChunkService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*ChannelChunkServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "DeleteReplicas",
-			Handler:    _ChannelChunkService_DeleteReplicas_Handler,
+			MethodName: "Delete",
+			Handler:    _ChannelChunkService_Delete_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
 		{
-			StreamName:    "CreateReplicas",
-			Handler:       _ChannelChunkService_CreateReplicas_Handler,
+			StreamName:    "Create",
+			Handler:       _ChannelChunkService_Create_Handler,
 			ClientStreams: true,
 		},
 		{
-			StreamName:    "RetrieveReplicas",
-			Handler:       _ChannelChunkService_RetrieveReplicas_Handler,
+			StreamName:    "Retrieve",
+			Handler:       _ChannelChunkService_Retrieve_Handler,
 			ServerStreams: true,
 		},
 	},

@@ -27,7 +27,7 @@ func (s *Server) BindTo(srv *grpc.Server) {
 	bulktelemv1.RegisterBulkTelemServiceServer(srv, s)
 }
 
-func (s *Server) RetrieveStream(req *bulktelemv1.RetrieveStreamRequest, server bulktelemv1.BulkTelemService_RetrieveStreamServer) error {
+func (s *Server) RetrieveStream(req *bulktelemv1.RetrieveRequest, server bulktelemv1.BulkTelemService_RetrieveServer) error {
 	return qcc.RetrieveStream(
 		s.svc,
 		&streamRetrieveProtocol{conn: server},
@@ -38,7 +38,7 @@ func (s *Server) RetrieveStream(req *bulktelemv1.RetrieveStreamRequest, server b
 	)
 }
 
-func (s *Server) CreateStream(server bulktelemv1.BulkTelemService_CreateStreamServer) error {
+func (s *Server) CreateStream(server bulktelemv1.BulkTelemService_CreateServer) error {
 	err := qcc.CreateStream(s.svc, &streamCreateProtocol{conn: server})
 	return err
 }
@@ -51,7 +51,7 @@ func parsePK(pkStr string) uuid.UUID {
 // ||||| RETRIEVE PROTOCOL |||||
 
 type streamRetrieveProtocol struct {
-	conn bulktelemv1.BulkTelemService_RetrieveStreamServer
+	conn bulktelemv1.BulkTelemService_RetrieveServer
 }
 
 func (r *streamRetrieveProtocol) Context() context.Context {
@@ -59,7 +59,7 @@ func (r *streamRetrieveProtocol) Context() context.Context {
 }
 
 func (r *streamRetrieveProtocol) Send(resp qcc.StreamRetrieveResponse) error {
-	return r.conn.Send(&bulktelemv1.RetrieveStreamResponse{
+	return r.conn.Send(&bulktelemv1.RetrieveResponse{
 		StartTs:  int64(resp.StartTS),
 		DataType: int64(resp.DataType),
 		DataRate: float32(resp.DataRate),
@@ -70,7 +70,7 @@ func (r *streamRetrieveProtocol) Send(resp qcc.StreamRetrieveResponse) error {
 // ||||| CREATE PROTOCOL |||||
 
 type streamCreateProtocol struct {
-	conn bulktelemv1.BulkTelemService_CreateStreamServer
+	conn bulktelemv1.BulkTelemService_CreateServer
 }
 
 func (c *streamCreateProtocol) Context() context.Context {
@@ -78,7 +78,7 @@ func (c *streamCreateProtocol) Context() context.Context {
 }
 
 func (c *streamCreateProtocol) Send(resp qcc.StreamCreateResponse) error {
-	return c.conn.Send(&bulktelemv1.CreateStreamResponse{
+	return c.conn.Send(&bulktelemv1.CreateResponse{
 		Error: &errorv1.Error{Message: resp.Error.Error(), Code: code.Code(codes.NotFound)},
 	})
 }

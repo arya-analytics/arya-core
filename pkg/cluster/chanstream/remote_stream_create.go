@@ -41,7 +41,7 @@ func (s *remoteStreamCreate) exec(ctx context.Context, p *query.Pack) error {
 			}
 			exc := newExchange(rfl)
 			exc.ToDest()
-			if sErr := rpcStream.Send(&api.CreateRequest{Sample: exc.Dest().Pointer().(*api.ChannelSample)}); sErr != nil {
+			if sErr := rpcStream.Send(&api.CreateRequest{ChannelSample: exc.Dest().Pointer().(*api.ChannelSample)}); sErr != nil {
 				qStream.Errors <- sErr
 			}
 		}

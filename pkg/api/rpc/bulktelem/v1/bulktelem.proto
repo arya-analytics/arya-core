@@ -1,37 +1,37 @@
 syntax = "proto3";
 
-import "error/v1/error.proto";
-
 package bulktelem.v1;
+
+import "error/v1/error.proto";
 
 // |||| SERVICE ||||
 
 service BulkTelemService {
-  rpc CreateStream(stream CreateStreamRequest) returns (stream CreateStreamResponse);
-  rpc RetrieveStream(RetrieveStreamRequest) returns (stream RetrieveStreamResponse);
+  rpc Create(stream CreateRequest) returns (stream CreateResponse);
+  rpc Retrieve(RetrieveRequest) returns (stream RetrieveResponse);
 }
 
 // ||||| CREATE |||||
 
-message CreateStreamRequest {
+message CreateRequest {
   string channel_config_id = 1;
   int64 start_ts = 2;
   bytes data = 3;
 }
 
-message CreateStreamResponse {
+message CreateResponse {
   error.v1.Error error = 1;
 }
 
 // |||| RETRIEVE ||||
 
-message RetrieveStreamRequest {
+message RetrieveRequest {
   string channel_config_id = 1;
   int64 start_ts = 2;
-  int64 end_ts= 3;
+  int64 end_ts = 3;
 }
 
-message RetrieveStreamResponse {
+message RetrieveResponse {
   int64 start_ts = 2;
   float data_rate = 3;
   int64 data_type = 4;
