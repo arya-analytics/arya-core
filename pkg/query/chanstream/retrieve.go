@@ -25,7 +25,18 @@ type RetrieveResponse struct {
 	Error  error
 }
 
-type Retrieve struct {
+func RetrieveStream(svc *chanstream.Service, rp RetrieveProtocol) error {
+	r := &retrieve{
+		RetrieveProtocol: rp,
+		svc:              svc,
+		qStream:          &streamq.Stream{Errors: make(chan error, 10)},
+		sampleStream:     make(chan *models.ChannelSample),
+		updateSig:        make(chan struct{}),
+	}
+	return r.stream()
+}
+
+type retrieve struct {
 	RetrieveProtocol
 	_cancelQuery context.CancelFunc
 	cancelRelay  context.CancelFunc
@@ -36,18 +47,7 @@ type Retrieve struct {
 	updateSig    chan struct{}
 }
 
-func RetrieveStream(svc *chanstream.Service, rp RetrieveProtocol) error {
-	r := &Retrieve{
-		RetrieveProtocol: rp,
-		svc:              svc,
-		qStream:          &streamq.Stream{Errors: make(chan error, 10)},
-		sampleStream:     make(chan *models.ChannelSample),
-		updateSig:        make(chan struct{}),
-	}
-	return r.Stream()
-}
-
-func (r *Retrieve) Stream() error {
+func (r *retrieve) stream() error {
 	r.relayCtx, r.cancelRelay = context.WithCancel(r.Context())
 	wg := errgroup.Group{}
 	wg.Go(r.relayErrors)
@@ -56,13 +56,13 @@ func (r *Retrieve) Stream() error {
 	return wg.Wait()
 }
 
-func (r *Retrieve) relayErrors() error {
+func (r *retrieve) relayErrors() error {
 	return query.StreamRange(r.relayCtx, r.qStream.Errors, func(err error) error {
 		return r.Send(RetrieveResponse{Error: err})
 	})
 }
 
-func (r *Retrieve) relaySamples() error {
+func (r *retrieve) relaySamples() error {
 	for {
 		select {
 		case s := <-r.sampleStream:
@@ -77,7 +77,7 @@ func (r *Retrieve) relaySamples() error {
 	}
 }
 
-func (r *Retrieve) listenForUpdates() error {
+func (r *retrieve) listenForUpdates() error {
 	defer r.cancelQuery()
 	defer r.cancelRelay()
 	return query.StreamFor(r.Context(), r.Receive, func(req RetrieveRequest) error {
@@ -86,7 +86,7 @@ func (r *Retrieve) listenForUpdates() error {
 	})
 }
 
-func (r *Retrieve) updateQuery(pkc model.PKChain) {
+func (r *retrieve) updateQuery(pkc model.PKChain) {
 	pSampleStream := make(chan *models.ChannelSample, len(pkc))
 	ctx, cancel := context.WithCancel(context.Background())
 	pqStream, err := r.svc.NewTSRetrieve().Model(&pSampleStream).WherePKs(pkc).Stream(ctx)
@@ -101,7 +101,7 @@ func (r *Retrieve) updateQuery(pkc model.PKChain) {
 	r.updateSig <- struct{}{}
 }
 
-func (r *Retrieve) cancelQuery() {
+func (r *retrieve) cancelQuery() {
 	if r._cancelQuery != nil {
 		r._cancelQuery()
 	}

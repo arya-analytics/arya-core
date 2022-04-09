@@ -15,7 +15,6 @@ type StreamCreateProtocol interface {
 	Context() context.Context
 	Receive() (StreamCreateRequest, error)
 	Send(StreamCreateResponse) error
-	CloseSend()
 }
 
 type StreamCreateRequest struct {
@@ -28,6 +27,15 @@ type StreamCreateResponse struct {
 	Error error
 }
 
+func CreateStream(svc *chanchunk.Service, cp StreamCreateProtocol) error {
+	sc := &streamCreate{
+		svc:                  svc,
+		StreamCreateProtocol: cp,
+		qStream:              &streamq.Stream{Errors: make(chan error)},
+	}
+	return sc.stream()
+}
+
 type streamCreate struct {
 	StreamCreateProtocol
 	svc         *chanchunk.Service
@@ -37,16 +45,7 @@ type streamCreate struct {
 	ctx         context.Context
 }
 
-func CreateStream(svc *chanchunk.Service, cp StreamCreateProtocol) error {
-	sc := &streamCreate{
-		svc:                  svc,
-		StreamCreateProtocol: cp,
-		qStream:              &streamq.Stream{Errors: make(chan error)},
-	}
-	return sc.Stream()
-}
-
-func (sc *streamCreate) Stream() error {
+func (sc *streamCreate) stream() error {
 	if err := sc.startStream(); err != nil {
 		return err
 	}

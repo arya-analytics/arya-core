@@ -28,6 +28,15 @@ type StreamRetrieveResponse struct {
 	Error    error
 }
 
+func RetrieveStream(svc *chanchunk.Service, sp StreamRetrieveProtocol, req StreamRetrieveRequest) error {
+	sr := &streamRetrieve{
+		svc:                    svc,
+		StreamRetrieveProtocol: sp,
+		chunkStream:            make(chan *telem.Chunk),
+	}
+	return sr.stream(req)
+}
+
 type streamRetrieve struct {
 	StreamRetrieveProtocol
 	svc         *chanchunk.Service
@@ -37,16 +46,7 @@ type streamRetrieve struct {
 	cancel      context.CancelFunc
 }
 
-func RetrieveStream(svc *chanchunk.Service, sp StreamRetrieveProtocol, req StreamRetrieveRequest) error {
-	sr := &streamRetrieve{
-		svc:                    svc,
-		StreamRetrieveProtocol: sp,
-		chunkStream:            make(chan *telem.Chunk),
-	}
-	return sr.Stream(req)
-}
-
-func (sr *streamRetrieve) Stream(req StreamRetrieveRequest) error {
+func (sr *streamRetrieve) stream(req StreamRetrieveRequest) error {
 	if err := sr.startStream(req); err != nil {
 		return err
 	}

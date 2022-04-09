@@ -23,6 +23,11 @@ type CreateResponse struct {
 	Error error
 }
 
+func CreateStream(svc *chanstream.Service, rp CreateProtocol) error {
+	c := &create{CreateProtocol: rp, svc: svc}
+	return c.stream()
+}
+
 type create struct {
 	CreateProtocol
 	svc          *chanstream.Service
@@ -32,13 +37,8 @@ type create struct {
 	cancelQ      context.CancelFunc
 }
 
-func CreateStream(svc *chanstream.Service, rp CreateProtocol) error {
-	c := &create{CreateProtocol: rp, svc: svc}
-	return c.Stream()
-}
-
-func (c *create) Stream() error {
-	if err := c.startStream(); err != nil {
+func (c *create) stream() error {
+	if err := c.start(); err != nil {
 		return err
 	}
 	wg := errgroup.Group{}
@@ -47,7 +47,7 @@ func (c *create) Stream() error {
 	return wg.Wait()
 }
 
-func (c *create) startStream() (err error) {
+func (c *create) start() (err error) {
 	c.sampleStream = make(chan *models.ChannelSample)
 	c.ctx, c.cancelQ = context.WithCancel(c.Context())
 	c.qStream, err = streamq.NewTSCreate().Model(&c.sampleStream).BindExec(c.svc.Exec).Stream(c.Context())

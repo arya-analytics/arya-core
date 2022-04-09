@@ -27,7 +27,7 @@ func (s *Server) BindTo(srv *grpc.Server) {
 func (s *Server) RetrieveStream(req *bulktelemv1.RetrieveStreamRequest, server bulktelemv1.BulkTelemService_RetrieveStreamServer) error {
 	return qcc.RetrieveStream(
 		s.svc,
-		&RPCStreamRetrieveProtocol{rpcStream: server},
+		&streamRetrieveProtocol{conn: server},
 		qcc.StreamRetrieveRequest{
 			ChannelConfigID: parsePK(req.ChannelConfigId),
 			TimeRange:       telem.NewTimeRange(telem.TimeStamp(req.StartTs), telem.TimeStamp(req.EndTs)),
@@ -36,7 +36,7 @@ func (s *Server) RetrieveStream(req *bulktelemv1.RetrieveStreamRequest, server b
 }
 
 func (s *Server) CreateStream(server bulktelemv1.BulkTelemService_CreateStreamServer) error {
-	err := qcc.CreateStream(s.svc, &RPCStreamCreateProtocol{rpcStream: server})
+	err := qcc.CreateStream(s.svc, &streamCreateProtocol{conn: server})
 	return err
 }
 
@@ -47,16 +47,16 @@ func parsePK(pkStr string) uuid.UUID {
 
 // ||||| RETRIEVE PROTOCOL |||||
 
-type RPCStreamRetrieveProtocol struct {
-	rpcStream bulktelemv1.BulkTelemService_RetrieveStreamServer
+type streamRetrieveProtocol struct {
+	conn bulktelemv1.BulkTelemService_RetrieveStreamServer
 }
 
-func (r *RPCStreamRetrieveProtocol) Context() context.Context {
-	return r.rpcStream.Context()
+func (r *streamRetrieveProtocol) Context() context.Context {
+	return r.conn.Context()
 }
 
-func (r *RPCStreamRetrieveProtocol) Send(resp qcc.StreamRetrieveResponse) error {
-	return r.rpcStream.Send(&bulktelemv1.RetrieveStreamResponse{
+func (r *streamRetrieveProtocol) Send(resp qcc.StreamRetrieveResponse) error {
+	return r.conn.Send(&bulktelemv1.RetrieveStreamResponse{
 		StartTs:  int64(resp.StartTS),
 		DataType: int64(resp.DataType),
 		DataRate: float32(resp.DataRate),
@@ -66,22 +66,22 @@ func (r *RPCStreamRetrieveProtocol) Send(resp qcc.StreamRetrieveResponse) error 
 
 // ||||| CREATE PROTOCOL |||||
 
-type RPCStreamCreateProtocol struct {
-	rpcStream bulktelemv1.BulkTelemService_CreateStreamServer
+type streamCreateProtocol struct {
+	conn bulktelemv1.BulkTelemService_CreateStreamServer
 }
 
-func (c *RPCStreamCreateProtocol) Context() context.Context {
-	return c.rpcStream.Context()
+func (c *streamCreateProtocol) Context() context.Context {
+	return c.conn.Context()
 }
 
-func (c *RPCStreamCreateProtocol) Send(resp qcc.StreamCreateResponse) error {
-	return c.rpcStream.Send(&bulktelemv1.CreateStreamResponse{
+func (c *streamCreateProtocol) Send(resp qcc.StreamCreateResponse) error {
+	return c.conn.Send(&bulktelemv1.CreateStreamResponse{
 		Error: &bulktelemv1.Error{Message: resp.Error.Error()},
 	})
 }
 
-func (c *RPCStreamCreateProtocol) Receive() (qcc.StreamCreateRequest, error) {
-	req, err := c.rpcStream.Recv()
+func (c *streamCreateProtocol) Receive() (qcc.StreamCreateRequest, error) {
+	req, err := c.conn.Recv()
 	if err != nil {
 		return qcc.StreamCreateRequest{}, err
 	}
@@ -94,7 +94,4 @@ func (c *RPCStreamCreateProtocol) Receive() (qcc.StreamCreateRequest, error) {
 		ChunkData: cd,
 		StartTS:   telem.TimeStamp(req.StartTs),
 	}, nil
-}
-
-func (c *RPCStreamCreateProtocol) CloseSend() {
 }
