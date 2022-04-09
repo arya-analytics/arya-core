@@ -1,0 +1,16 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "auth",
+    srcs = [
+        "middleware.go",
+        "server.go",
+    ],
+    importpath = "github.com/arya-analytics/aryacore/pkg/api/fiber/auth",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/api",
+        "//pkg/auth",
+        "@com_github_gofiber_fiber_v2//:fiber",
+    ],
+)

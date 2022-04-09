@@ -5,10 +5,12 @@ go_library(
     srcs = [
         "engine.go",
         "errors.go",
+        "handle.go",
     ],
     importpath = "github.com/arya-analytics/aryacore/pkg/storage/internal",
     visibility = ["//pkg/storage:__subpackages__"],
     deps = [
+        "//pkg/util/model",
         "//pkg/util/query",
         "//pkg/util/query/streamq",
         "//pkg/util/tasks",

@@ -3,12 +3,13 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 go_library(
     name = "models",
     srcs = [
+        "auth.go",
         "chan.go",
         "channelconflictpolicy_string.go",
         "channelstate_string.go",
         "hooks.go",
         "node.go",
-        "range.go",
+        "rng.go",
     ],
     importpath = "github.com/arya-analytics/aryacore/pkg/models",
     visibility = ["//visibility:public"],
@@ -19,6 +20,7 @@ go_library(
         "//pkg/util/query",
         "//pkg/util/telem",
         "@com_github_google_uuid//:uuid",
+        "@com_github_uptrace_bun//:bun",
     ],
 )
 

@@ -1,0 +1,11 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "api",
+    srcs = [
+        "errors.go",
+        "errortype_string.go",
+    ],
+    importpath = "github.com/arya-analytics/aryacore/pkg/api",
+    visibility = ["//visibility:public"],
+)

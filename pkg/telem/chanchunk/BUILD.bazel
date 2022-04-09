@@ -42,6 +42,7 @@ go_test(
         "//pkg/util/query/streamq",
         "//pkg/util/telem",
         "//pkg/util/telem/mock",
+        "@com_github_google_uuid//:uuid",
         "@com_github_onsi_ginkgo_v2//:ginkgo",
         "@com_github_onsi_gomega//:gomega",
     ],

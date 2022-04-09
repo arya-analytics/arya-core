@@ -1,0 +1,39 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "auth",
+    srcs = [
+        "errors.go",
+        "errortype_string.go",
+        "hash.go",
+        "service.go",
+        "token.go",
+    ],
+    importpath = "github.com/arya-analytics/aryacore/pkg/auth",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/models",
+        "//pkg/util/errutil",
+        "//pkg/util/query",
+        "@com_github_golang_jwt_jwt//:jwt",
+        "@com_github_google_uuid//:uuid",
+        "@org_golang_x_crypto//bcrypt",
+    ],
+)
+
+go_test(
+    name = "auth_test",
+    srcs = [
+        "auth_suite_test.go",
+        "service_test.go",
+        "token_test.go",
+    ],
+    deps = [
+        ":auth",
+        "//pkg/models",
+        "//pkg/util/query/mock",
+        "@com_github_google_uuid//:uuid",
+        "@com_github_onsi_ginkgo_v2//:ginkgo",
+        "@com_github_onsi_gomega//:gomega",
+    ],
+)
