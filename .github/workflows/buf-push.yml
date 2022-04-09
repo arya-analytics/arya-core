@@ -9,6 +9,10 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: bufbuild/buf-setup-action@v0.6.0
+      - name: Buf Breaking Cluster
+        uses: bufbuild/buf-breaking-action@v1
+        with:
+          against: https://github.com/arya-analytics/arya-core.git#branch=main,ref=HEAD~1,subdir=pkg/cluster
       - name: Buf Push Cluster
         uses: bufbuild/buf-push-action@v1
         with:
