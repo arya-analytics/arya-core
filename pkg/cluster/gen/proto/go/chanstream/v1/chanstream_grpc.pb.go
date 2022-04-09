@@ -31,7 +31,7 @@ func NewChannelStreamServiceClient(cc grpc.ClientConnInterface) ChannelStreamSer
 }
 
 func (c *channelStreamServiceClient) Create(ctx context.Context, opts ...grpc.CallOption) (ChannelStreamService_CreateClient, error) {
-	stream, err := c.cc.NewStream(ctx, &ChannelStreamService_ServiceDesc.Streams[0], "/chanstream.v1.ChannelStreamService/Create", opts...)
+	stream, err := c.cc.NewStream(ctx, &ChannelStreamService_ServiceDesc.Streams[0], "/telemstream.v1.ChannelStreamService/Create", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +62,7 @@ func (x *channelStreamServiceCreateClient) Recv() (*CreateResponse, error) {
 }
 
 func (c *channelStreamServiceClient) Retrieve(ctx context.Context, opts ...grpc.CallOption) (ChannelStreamService_RetrieveClient, error) {
-	stream, err := c.cc.NewStream(ctx, &ChannelStreamService_ServiceDesc.Streams[1], "/chanstream.v1.ChannelStreamService/Retrieve", opts...)
+	stream, err := c.cc.NewStream(ctx, &ChannelStreamService_ServiceDesc.Streams[1], "/telemstream.v1.ChannelStreamService/Retrieve", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -178,7 +178,7 @@ func (x *channelStreamServiceRetrieveServer) Recv() (*RetrieveRequest, error) {
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var ChannelStreamService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "chanstream.v1.ChannelStreamService",
+	ServiceName: "telemstream.v1.ChannelStreamService",
 	HandlerType: (*ChannelStreamServiceServer)(nil),
 	Methods:     []grpc.MethodDesc{},
 	Streams: []grpc.StreamDesc{
@@ -195,5 +195,5 @@ var ChannelStreamService_ServiceDesc = grpc.ServiceDesc{
 			ClientStreams: true,
 		},
 	},
-	Metadata: "chanstream/v1/chanstream.proto",
+	Metadata: "telemstream/v1/telemstream.proto",
 }

@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.26.0
 // 	protoc        (unknown)
-// source: chanstream/v1/chanstream.proto
+// source: telemstream/v1/telemstream.proto
 
 package chanstreamv1
 
@@ -389,21 +389,21 @@ func file_chanstream_v1_chanstream_proto_rawDescGZIP() []byte {
 
 var file_chanstream_v1_chanstream_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_chanstream_v1_chanstream_proto_goTypes = []interface{}{
-	(*ChannelSample)(nil),    // 0: chanstream.v1.ChannelSample
-	(*CreateRequest)(nil),    // 1: chanstream.v1.CreateRequest
-	(*CreateResponse)(nil),   // 2: chanstream.v1.CreateResponse
-	(*RetrieveRequest)(nil),  // 3: chanstream.v1.RetrieveRequest
-	(*RetrieveResponse)(nil), // 4: chanstream.v1.RetrieveResponse
-	(*Error)(nil),            // 5: chanstream.v1.Error
+	(*ChannelSample)(nil),    // 0: telemstream.v1.ChannelSample
+	(*CreateRequest)(nil),    // 1: telemstream.v1.CreateRequest
+	(*CreateResponse)(nil),   // 2: telemstream.v1.CreateResponse
+	(*RetrieveRequest)(nil),  // 3: telemstream.v1.RetrieveRequest
+	(*RetrieveResponse)(nil), // 4: telemstream.v1.RetrieveResponse
+	(*Error)(nil),            // 5: telemstream.v1.Error
 }
 var file_chanstream_v1_chanstream_proto_depIdxs = []int32{
-	0, // 0: chanstream.v1.CreateRequest.Sample:type_name -> chanstream.v1.ChannelSample
-	0, // 1: chanstream.v1.RetrieveResponse.Sample:type_name -> chanstream.v1.ChannelSample
-	5, // 2: chanstream.v1.RetrieveResponse.Error:type_name -> chanstream.v1.Error
-	1, // 3: chanstream.v1.ChannelStreamService.Create:input_type -> chanstream.v1.CreateRequest
-	3, // 4: chanstream.v1.ChannelStreamService.Retrieve:input_type -> chanstream.v1.RetrieveRequest
-	2, // 5: chanstream.v1.ChannelStreamService.Create:output_type -> chanstream.v1.CreateResponse
-	4, // 6: chanstream.v1.ChannelStreamService.Retrieve:output_type -> chanstream.v1.RetrieveResponse
+	0, // 0: telemstream.v1.CreateRequest.Sample:type_name -> telemstream.v1.ChannelSample
+	0, // 1: telemstream.v1.RetrieveResponse.Sample:type_name -> telemstream.v1.ChannelSample
+	5, // 2: telemstream.v1.RetrieveResponse.Error:type_name -> telemstream.v1.Error
+	1, // 3: telemstream.v1.ChannelStreamService.Create:input_type -> telemstream.v1.CreateRequest
+	3, // 4: telemstream.v1.ChannelStreamService.Retrieve:input_type -> telemstream.v1.RetrieveRequest
+	2, // 5: telemstream.v1.ChannelStreamService.Create:output_type -> telemstream.v1.CreateResponse
+	4, // 6: telemstream.v1.ChannelStreamService.Retrieve:output_type -> telemstream.v1.RetrieveResponse
 	5, // [5:7] is the sub-list for method output_type
 	3, // [3:5] is the sub-list for method input_type
 	3, // [3:3] is the sub-list for extension type_name

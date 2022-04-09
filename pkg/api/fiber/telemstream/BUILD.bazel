@@ -1,9 +1,9 @@
 load("@io_bazel_rules_go//go:def.bzl", "go_library")
 
 go_library(
-    name = "chanstream",
+    name = "telemstream",
     srcs = ["server.go"],
-    importpath = "github.com/arya-analytics/aryacore/pkg/api/fiber/chanstream",
+    importpath = "github.com/arya-analytics/aryacore/pkg/api/fiber/telemstream",
     visibility = ["//visibility:public"],
     deps = [
         "//pkg/api/fiber",

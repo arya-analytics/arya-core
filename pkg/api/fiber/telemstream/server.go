@@ -1,4 +1,4 @@
-package chanstream
+package telemstream
 
 import (
 	"context"
