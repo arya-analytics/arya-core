@@ -9,14 +9,13 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: bufbuild/buf-setup-action@v0.6.0
+      - name: Buf Login
+        run: echo ${{ secrets.BUF_TOKEN }} | buf registry login --username=emilbon99 --token-stdin
       - name: Buf Push Cluster
-        uses: bufbuild/buf-push-action@v1
-        with:
-          input: pkg/cluster
-          buf_token: ${{ secrets.BUF_TOKEN }}
+        run: buf build && buf generate && buf push
       - name: Buf Push API
-        uses: bufbuild/buf-push-action@v1
-        with:
-          input: pkg/api
-          buf_token: ${{ secrets.BUF_TOKEN }}
+        working-directory: pkg/api
+        run: buf build && buf generate && buf push
+
+
 
