@@ -17,5 +17,5 @@ jobs:
       - name: Buf Push API
         uses: bufbuild/buf-push-action@v1
         with:
-          input: pkg/api
+          input: pkg/api/rpc
           buf_token: ${{ secrets.BUF_TOKEN }}
