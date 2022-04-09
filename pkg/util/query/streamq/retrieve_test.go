@@ -14,10 +14,10 @@ var _ = Describe("TSRetrieve", func() {
 		exec = &mock.Exec{}
 		asm  = streamq.NewAssembleTS(exec.Exec)
 	)
-	Describe("TimeRangeOpt", func() {
+	Describe("RetrieveTimeRangeOpt", func() {
 		It("Should set the time range all opt properly", func() {
 			p := asm.NewTSRetrieve().AllTime().Pack()
-			tr, ok := streamq.TimeRangeOpt(p)
+			tr, ok := streamq.RetrieveTimeRangeOpt(p)
 			Expect(ok).To(BeTrue())
 			Expect(tr.Start()).To(Equal(telem.TimeStampMin))
 			Expect(tr.End()).To(Equal(telem.TimeStampMax))
@@ -25,13 +25,13 @@ var _ = Describe("TSRetrieve", func() {
 		It("Should set the where time range opt properly", func() {
 			tr := telem.NewTimeRange(telem.NewTimeStamp(time.Now()), telem.NewTimeStamp(time.Now()))
 			p := asm.NewTSRetrieve().WhereTimeRange(tr).Pack()
-			opt, ok := streamq.TimeRangeOpt(p)
+			opt, ok := streamq.RetrieveTimeRangeOpt(p)
 			Expect(ok).To(BeTrue())
 			Expect(opt).To(Equal(tr))
 		})
 		It("Should return ok as false when the opt isn't specified", func() {
 			p := asm.NewTSRetrieve().Pack()
-			_, ok := streamq.TimeRangeOpt(p)
+			_, ok := streamq.RetrieveTimeRangeOpt(p)
 			Expect(ok).To(BeFalse())
 		})
 

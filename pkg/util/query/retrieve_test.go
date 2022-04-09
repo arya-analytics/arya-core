@@ -45,22 +45,22 @@ var _ = Describe("Retrieve", func() {
 	Describe("Relation", func() {
 		It("Should create a relation opt correctly", func() {
 			p := asm.NewRetrieve().Relation("Name", "Fld").Pack()
-			ro := query.RelationOpts(p)
+			ro := query.RetrieveRelationOpts(p)
 			Expect(ro).To(HaveLen(1))
 			Expect(ro[0].Name).To(Equal("Name"))
 			Expect(ro[0].Fields).To(Equal(query.FieldsOpt{"Fld"}))
 		})
-		It("Should allow for multiple relation opts", func() {
+		It("Should allow for multiple relation Opts", func() {
 			p := asm.NewRetrieve().
 				Relation("Name", "Fld").
 				Relation("RelTwo", "FldTwo").
 				Pack()
-			ro := query.RelationOpts(p)
+			ro := query.RetrieveRelationOpts(p)
 			Expect(ro).To(HaveLen(2))
 		})
 		It("Should return an empty array when no relations are specified", func() {
 			p := asm.NewRetrieve().Pack()
-			ro := query.RelationOpts(p)
+			ro := query.RetrieveRelationOpts(p)
 			Expect(ro).To(HaveLen(0))
 		})
 	})
@@ -76,13 +76,13 @@ var _ = Describe("Retrieve", func() {
 	Describe("Limit", func() {
 		It("Should create the limit opt correctly", func() {
 			p := asm.NewRetrieve().Limit(1).Pack()
-			limit, ok := query.LimitOpt(p)
+			limit, ok := query.RetrieveLimitOpt(p)
 			Expect(ok).To(BeTrue())
 			Expect(limit).To(Equal(1))
 		})
 		It("Should return false if no limit is specified", func() {
 			p := asm.NewRetrieve().Pack()
-			limit, ok := query.LimitOpt(p)
+			limit, ok := query.RetrieveLimitOpt(p)
 			Expect(ok).To(BeFalse())
 			Expect(limit).To(Equal(0))
 		})

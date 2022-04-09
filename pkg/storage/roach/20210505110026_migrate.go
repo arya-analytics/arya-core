@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/util/errutil"
 	"github.com/uptrace/bun"
 	bunMigrate "github.com/uptrace/bun/migrate"
@@ -63,11 +64,12 @@ func (m *migrateCatcher) Exec(execFunc migrationExecFunc) {
 
 func migrateUpFunc() bunMigrate.MigrationFunc {
 	return func(ctx context.Context, db *bun.DB) error {
+
 		c := &migrateCatcher{CatchContext: errutil.NewCatchContext(ctx)}
 
 		// |||| NODE ||||
 
-		c.Exec(db.NewCreateTable().Model((*Node)(nil)).Exec)
+		c.Exec(db.NewCreateTable().Model((*models.Node)(nil)).Exec)
 		c.CatchSimple.Exec(func() error {
 			_, err := db.Exec(nodesViewSQL)
 			return err
@@ -76,24 +78,24 @@ func migrateUpFunc() bunMigrate.MigrationFunc {
 		// |||| RANGE ||||
 
 		c.Exec(db.NewCreateTable().
-			Model((*Range)(nil)).
+			Model((*models.Range)(nil)).
 			Exec,
 		)
 		c.Exec(db.NewCreateIndex().
-			Model((*Range)(nil)).
+			Model((*models.Range)(nil)).
 			Column("id").
 			Where("status > 1").
 			Exec,
 		)
 
 		c.Exec(db.NewCreateTable().
-			Model((*RangeReplica)(nil)).
+			Model((*models.RangeReplica)(nil)).
 			ForeignKey(`("node_id") REFERENCES "nodes" ("id") ON DELETE CASCADE`).
 			ForeignKey(`("range_id") REFERENCES "ranges" ("id") ON DELETE CASCADE`).
 			Exec,
 		)
 		c.Exec(db.NewCreateTable().
-			Model((*RangeLease)(nil)).
+			Model((*models.RangeLease)(nil)).
 			ForeignKey(`("range_replica_id") REFERENCES "range_replicas" ("id") ON DELETE CASCADE`).
 			ForeignKey(`("range_id") REFERENCES "ranges" ("id") ON DELETE CASCADE`).
 			Exec,
@@ -102,27 +104,41 @@ func migrateUpFunc() bunMigrate.MigrationFunc {
 		// |||| CHANNEL ||||
 
 		c.Exec(db.NewCreateTable().
-			Model((*ChannelConfig)(nil)).
+			Model((*models.ChannelConfig)(nil)).
 			ForeignKey(`("node_id") REFERENCES "nodes" ("id") ON DELETE CASCADE`).
 			Exec,
 		)
 		c.Exec(db.NewCreateTable().
-			Model((*ChannelChunk)(nil)).
+			Model((*models.ChannelChunk)(nil)).
 			ForeignKey(`("channel_config_id") REFERENCES "channel_configs" ("id") ON DELETE CASCADE`).
 			ForeignKey(`("range_id") REFERENCES "ranges" ("id") ON DELETE CASCADE`).
 			Exec,
 		)
 		c.Exec(db.NewCreateIndex().
-			Model((*ChannelChunk)(nil)).
+			Model((*models.ChannelChunk)(nil)).
 			Column("id", "start_ts").
 			Exec,
 		)
 		c.Exec(db.NewCreateTable().
-			Model((*ChannelChunkReplica)(nil)).
+			Model((*models.ChannelChunkReplica)(nil)).
 			ForeignKey(`("channel_chunk_id") REFERENCES channel_chunks ("id") ON DELETE CASCADE`).
 			ForeignKey(`("range_replica_id") REFERENCES range_replicas ("id") ON DELETE CASCADE`).
 			Exec,
 		)
+
+		// |||| AUTH ||||
+
+		db.RegisterModel((*models.UserToGroup)(nil))
+
+		c.Exec(db.NewCreateTable().Model((*models.User)(nil)).Exec)
+		c.Exec(db.NewCreateTable().Model((*models.Group)(nil)).Exec)
+		c.Exec(db.NewCreateTable().
+			Model((*models.UserToGroup)(nil)).
+			ForeignKey(`("group_id") REFERENCES groups ("id") ON DELETE CASCADE`).
+			ForeignKey(`("user_id") REFERENCES users ("id") ON DELETE CASCADE`).
+			Exec,
+		)
+
 		return c.Error()
 	}
 }

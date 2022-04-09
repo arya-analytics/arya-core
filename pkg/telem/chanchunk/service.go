@@ -5,33 +5,37 @@
 package chanchunk
 
 import (
+	"context"
 	"github.com/arya-analytics/aryacore/pkg/telem/rng"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
+	"github.com/arya-analytics/aryacore/pkg/util/query/streamq"
 )
 
 // Service provides an interface for reading and modifying bulk telemetry on the cluster.
 // Avoid constructing directly, and instead call NewService.
-//
-// Operations:
-//		NewStreamCreate -> Save contiguous chunks of telemetry.
-//
 type Service struct {
 	obs    observe
-	qa     query.Assemble
 	rngSvc *rng.Service
+	qExec  query.Execute
 }
 
 // NewService creates a new service with the provided parameters.
-func NewService(qa query.Assemble, rngSVC *rng.Service) *Service {
-	return &Service{qa: qa, obs: newObserveMem(), rngSvc: rngSVC}
+func NewService(qExec query.Execute, rngSvc *rng.Service) *Service {
+	svc := &Service{qExec: qExec, obs: newObserveMem(), rngSvc: rngSvc}
+	return svc
 }
 
-// NewStreamCreate opens a StreamCreate.
-func (s *Service) NewStreamCreate() *StreamCreate {
-	return newStreamCreate(s.qa.Exec, s.obs, s.rngSvc)
+func (s *Service) Exec(ctx context.Context, p *query.Pack) error {
+	return query.Switch(ctx, p, query.Ops{
+		&streamq.TSRetrieve{}: newStreamRetrieve(s.qExec).exec,
+		&streamq.TSCreate{}:   newStreamCreate(s.qExec, s.obs, s.rngSvc).exec,
+	})
 }
 
-// NewStreamRetrieve opens a StreamCreate.
-func (s *Service) NewStreamRetrieve() *StreamRetrieve {
-	return newStreamRetrieve(s.qa)
+func (s *Service) NewTSCreate() *StreamCreate {
+	return newStreamCreate(s.qExec, s.obs, s.rngSvc)
+}
+
+func (s *Service) NewTSRetrieve() *StreamRetrieve {
+	return newStreamRetrieve(s.qExec)
 }

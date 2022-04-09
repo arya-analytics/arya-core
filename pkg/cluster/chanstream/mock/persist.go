@@ -43,7 +43,7 @@ func (ps *Persist) tsCreate(ctx context.Context, p *query.Pack) error {
 }
 
 func (ps *Persist) tsChanCreate(ctx context.Context, p *query.Pack) error {
-	goe, _ := streamq.StreamOpt(p)
+	goe, _ := streamq.RetrieveStreamOpt(p)
 	go func() {
 		for {
 			rfl, ok := p.Model().ChanRecv()
@@ -61,7 +61,7 @@ func (ps *Persist) tsChanCreate(ctx context.Context, p *query.Pack) error {
 const clockSpeed = 10 * time.Millisecond
 
 func (ps *Persist) tsRetrieve(ctx context.Context, p *query.Pack) error {
-	pkc, ok := query.PKOpt(p)
+	pkc, ok := query.RetrievePKOpt(p)
 	if !ok {
 		panic("query must have a pk specified")
 	}
@@ -82,7 +82,7 @@ func (ps *Persist) tsRetrieve(ctx context.Context, p *query.Pack) error {
 
 func (ps *Persist) tsChanRetrieve(ctx context.Context, p *query.Pack) error {
 	t := time.NewTicker(clockSpeed)
-	pkOpt, ok := query.PKOpt(p)
+	pkOpt, ok := query.RetrievePKOpt(p)
 	if !ok {
 		panic("query must have a pk specified")
 	}

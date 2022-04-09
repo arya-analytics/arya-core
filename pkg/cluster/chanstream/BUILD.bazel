@@ -6,6 +6,7 @@ go_library(
         "local.go",
         "local_stream_create.go",
         "local_stream_retrieve.go",
+        "models.go",
         "remote.go",
         "remote_stream_create.go",
         "remote_stream_retrieve.go",

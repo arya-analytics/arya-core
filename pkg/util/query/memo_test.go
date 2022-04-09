@@ -74,9 +74,20 @@ var _ = Describe("Memo", func() {
 		)
 		Expect(resCCTwo.Name).To(Equal("Hello"))
 	})
-	It("Should panic if a non chain is passed to the memo", func() {
-		Expect(func() {
-			query.NewMemo(model.NewReflect(&models.ChannelConfig{}))
-		}).To(Panic())
+	It("Should set the result of the query if the model is a struct", func() {
+		newID := uuid.New()
+		memoTwo := query.NewMemo(model.NewReflect(&models.ChannelConfig{}))
+		memoTwo.Add(model.NewReflect(&models.ChannelConfig{ID: newID, Name: "Hello"}))
+		Expect(query.
+			NewRetrieve().
+			Model(&models.ChannelConfig{}).
+			WherePK(newID).
+			WithMemo(memoTwo).
+			BindExec(func(ctx context.Context, p *query.Pack) error {
+				return nil
+			}).
+			Exec(ctx),
+		)
+		Expect(memoTwo.Exec(ctx, query.NewRetrieve().Model(&models.ChannelConfig{}).WherePK(newID).Pack())).To(Succeed())
 	})
 })

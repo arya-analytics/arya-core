@@ -10,15 +10,15 @@ import (
 )
 
 var _ = Describe("Where", func() {
-	DescribeTable("Field Expressions", func(exp query.FieldExp, expOp query.FieldOp, expVals []interface{}) {
+	DescribeTable("Field Expressions", func(exp query.FieldExpression, expOp query.FieldFilter, expVals []interface{}) {
 		Expect(exp.Op).To(Equal(expOp))
 		Expect(exp.Values).To(HaveLen(len(expVals)))
 		Expect(exp.Values).To(Equal(expVals))
 	},
-		Entry("Greater Than", query.GreaterThan(1), query.FieldOpGreaterThan, []interface{}{1}),
-		Entry("Less Than", query.LessThan(1), query.FieldOpLessThan, []interface{}{1}),
-		Entry("In Range", query.InRange(1, 2), query.FieldOpInRange, []interface{}{1, 2}),
-		Entry("In", query.In(1, 2, 3), query.FieldOpIn, []interface{}{1, 2, 3}),
+		Entry("Greater Than", query.GreaterThan(1), query.FieldFilterGreaterThan, []interface{}{1}),
+		Entry("Less Than", query.LessThan(1), query.FieldFilterLessThan, []interface{}{1}),
+		Entry("IsIn Range", query.InRange(1, 2), query.FieldFilterInRange, []interface{}{1, 2}),
+		Entry("IsIn", query.IsIn(1, 2, 3), query.FilterFilterIsIn, []interface{}{1, 2, 3}),
 	)
 	Describe("Opt Binding", func() {
 		var (
@@ -28,14 +28,14 @@ var _ = Describe("Where", func() {
 		Describe("Primary Keys", func() {
 			It("Should create the correct pk opt", func() {
 				p := asm.NewRetrieve().WherePK(123).Pack()
-				pkc, ok := query.PKOpt(p)
+				pkc, ok := query.RetrievePKOpt(p)
 				Expect(ok).To(BeTrue())
 				Expect(pkc).To(HaveLen(1))
 				Expect(pkc[0].Raw()).To(Equal(123))
 			})
 			It("Should create the correct multi pk opt", func() {
 				p := asm.NewRetrieve().WherePKs([]int{1, 2, 3}).Pack()
-				pkc, ok := query.PKOpt(p)
+				pkc, ok := query.RetrievePKOpt(p)
 				Expect(ok).To(BeTrue())
 				Expect(pkc).To(HaveLen(3))
 				Expect(pkc[0].Raw()).To(Equal(1))
@@ -43,14 +43,14 @@ var _ = Describe("Where", func() {
 			})
 			It("Should return false when a pk opt wasn't specified", func() {
 				p := asm.NewRetrieve().Pack()
-				pkc, ok := query.PKOpt(p)
+				pkc, ok := query.RetrievePKOpt(p)
 				Expect(pkc).To(HaveLen(0))
 				Expect(ok).To(BeFalse())
 			})
 			It("Should allow the caller to pass in a PKChain", func() {
 				inPKC := model.NewPKChain([]uuid.UUID{uuid.New(), uuid.New()})
 				p := asm.NewRetrieve().WherePKs(inPKC).Pack()
-				pkc, ok := query.PKOpt(p)
+				pkc, ok := query.RetrievePKOpt(p)
 				Expect(ok).To(BeTrue())
 				Expect(pkc).To(HaveLen(2))
 				Expect(pkc[0]).To(Equal(inPKC[0]))
@@ -59,13 +59,13 @@ var _ = Describe("Where", func() {
 			It("Should allow the caller to pass in a PK", func() {
 				inPK := model.NewPK(uuid.New())
 				p := asm.NewRetrieve().WherePK(inPK).Pack()
-				pkc, ok := query.PKOpt(p)
+				pkc, ok := query.RetrievePKOpt(p)
 				Expect(ok).To(BeTrue())
 				Expect(pkc).To(HaveLen(1))
 				Expect(pkc[0].Raw()).To(Equal(inPK.Raw()))
 			})
 			DescribeTable("Single primary keys on Query Variants", func(q query.Query) {
-				pkc, ok := query.PKOpt(q.Pack())
+				pkc, ok := query.RetrievePKOpt(q.Pack())
 				Expect(ok).To(BeTrue())
 				Expect(pkc).To(HaveLen(1))
 			},
@@ -73,7 +73,7 @@ var _ = Describe("Where", func() {
 				Entry("Update", asm.NewUpdate().WherePK(1)),
 			)
 			DescribeTable("Multi primary keys on Query Variants", func(q query.Query) {
-				pkc, ok := query.PKOpt(q.Pack())
+				pkc, ok := query.RetrievePKOpt(q.Pack())
 				Expect(ok).To(BeTrue())
 				Expect(pkc).To(HaveLen(3))
 			},
@@ -91,14 +91,14 @@ var _ = Describe("Where", func() {
 		Describe("Where Fields", func() {
 			It("Should create the correct Where fields opt", func() {
 				p := asm.NewRetrieve().WhereFields(query.WhereFields{"RandomField": "RandomValue"}).Pack()
-				wf, ok := query.WhereFieldsOpt(p)
+				wf, ok := query.RetrieveWhereFieldsOpt(p)
 				Expect(ok).To(BeTrue())
 				Expect(wf["RandomField"]).To(Equal("RandomValue"))
 				Expect(len(wf)).To(Equal(1))
 			})
 			It("Should return false when a Where fields opt wasn't specified", func() {
 				p := asm.NewRetrieve().Pack()
-				wf, ok := query.WhereFieldsOpt(p)
+				wf, ok := query.RetrieveWhereFieldsOpt(p)
 				Expect(ok).To(BeFalse())
 				Expect(wf).To(HaveLen(0))
 			})

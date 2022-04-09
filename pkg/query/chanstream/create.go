@@ -23,49 +23,47 @@ type CreateResponse struct {
 	Error error
 }
 
-type Create struct {
+func CreateStream(svc *chanstream.Service, rp CreateProtocol) error {
+	c := &create{CreateProtocol: rp, svc: svc}
+	return c.stream()
+}
+
+type create struct {
 	CreateProtocol
 	svc          *chanstream.Service
 	qStream      *streamq.Stream
 	sampleStream chan *models.ChannelSample
+	ctx          context.Context
+	cancelQ      context.CancelFunc
 }
 
-func CreateStream(svc *chanstream.Service, rp CreateProtocol) error {
-	c := &Create{
-		CreateProtocol: rp,
-		svc:            svc,
+func (c *create) stream() error {
+	if err := c.start(); err != nil {
+		return err
 	}
-	return c.Stream()
-}
-
-func (c *Create) Stream() error {
 	wg := errgroup.Group{}
-	c.sampleStream = make(chan *models.ChannelSample)
-	stream, qErr := streamq.NewTSCreate().Model(&c.sampleStream).BindExec(c.svc.Exec).Stream(c.Context())
-	if qErr != nil {
-		return qErr
-	}
-	c.qStream = stream
 	wg.Go(c.relayErrors)
 	wg.Go(c.relayRequests)
 	return wg.Wait()
 }
 
-func (c *Create) relayErrors() error {
-	for err := range c.qStream.Errors {
-		if sErr, done := query.StreamDone(c.Context(), c.Send(CreateResponse{Error: err})); done {
-			return sErr
-		}
-	}
-	return nil
+func (c *create) start() (err error) {
+	c.sampleStream = make(chan *models.ChannelSample)
+	c.ctx, c.cancelQ = context.WithCancel(c.Context())
+	c.qStream, err = streamq.NewTSCreate().Model(&c.sampleStream).BindExec(c.svc.Exec).Stream(c.Context())
+	return err
 }
 
-func (c *Create) relayRequests() error {
-	for {
-		req, rErr := c.Receive()
-		if err, done := query.StreamDone(c.Context(), rErr); done {
-			return err
-		}
+func (c *create) relayErrors() error {
+	return query.StreamRange(c.ctx, c.qStream.Errors, func(err error) error {
+		return c.Send(CreateResponse{Error: err})
+	})
+}
+
+func (c *create) relayRequests() error {
+	defer c.cancelQ()
+	return query.StreamFor(c.ctx, c.Receive, func(req CreateRequest) error {
 		c.sampleStream <- req.Sample
-	}
+		return nil
+	})
 }

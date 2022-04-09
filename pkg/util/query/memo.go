@@ -15,30 +15,25 @@ type Memo struct {
 
 // NewMemo instantiates a new Memo that saves and looks up query results from into.
 // NewMemo panics if into is not a chain.
-func NewMemo(into *model.Reflect) *Memo {
-	if !into.IsChain() {
-		panic("memo requires a chain")
-	}
-	return &Memo{into: into}
+func NewMemo(into interface{}) *Memo {
+	return &Memo{into: model.NewReflect(into)}
 }
 
 // Exec implements query.Execute, and will attempt to satisfy the query using memoized results.
 func (m *Memo) Exec(ctx context.Context, p *Pack) error {
-	pkc, pkcOk := PKOpt(p)
+	pkc, pkcOk := RetrievePKOpt(p)
 	if !pkcOk {
 		return NewSimpleError(ErrorTypeItemNotFound, errors.New("item not found in memo"))
 	}
 	for _, pk := range pkc {
 		v, vOk := m.into.ValueByPK(pk)
-		if vOk {
-			if p.Model().IsStruct() {
-				p.Model().Set(v)
-			}
-			if p.Model().IsChain() {
-				p.Model().ChainAppend(v)
-			}
-		} else {
+		if !vOk {
 			return NewSimpleError(ErrorTypeItemNotFound, errors.New("item not found in memo"))
+		}
+		if p.Model().IsStruct() {
+			p.Model().Set(v)
+		} else {
+			p.Model().ChainAppend(v)
 		}
 	}
 	return nil
@@ -47,6 +42,10 @@ func (m *Memo) Exec(ctx context.Context, p *Pack) error {
 // Add adds a query result to the memo.
 func (m *Memo) Add(resRfl *model.Reflect) {
 	resRfl.ForEach(func(rfl *model.Reflect, i int) {
-		m.into.ChainAppend(rfl)
+		if m.into.IsStruct() {
+			m.into.Set(rfl)
+		} else {
+			m.into.ChainAppend(rfl)
+		}
 	})
 }

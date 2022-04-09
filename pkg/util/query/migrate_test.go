@@ -20,12 +20,12 @@ var _ = Describe("Migrate", func() {
 	Describe("Verify", func() {
 		It("Should add the option correctly", func() {
 			p := asm.NewMigrate().Verify().Pack()
-			v := query.VerifyOpt(p)
+			v := query.RetrieveVerifyOpt(p)
 			Expect(v).To(BeTrue())
 		})
 		It("Should be false when the option isn't specified", func() {
 			p := asm.NewMigrate().Pack()
-			v := query.VerifyOpt(p)
+			v := query.RetrieveVerifyOpt(p)
 			Expect(v).To(BeFalse())
 		})
 	})

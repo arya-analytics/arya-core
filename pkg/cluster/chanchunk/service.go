@@ -115,11 +115,11 @@ func (s *Service) retrieve(ctx context.Context, p *query.Pack) error {
 
 func preDeleteRetrieveQuery(p *query.Pack) *query.Retrieve {
 	q := query.NewRetrieve().Model(p.Model().Pointer())
-	pkc, pkOk := query.PKOpt(p)
+	pkc, pkOk := query.RetrievePKOpt(p)
 	if pkOk {
 		q.WherePKs(pkc.Raw())
 	}
-	wf, wfOk := query.WhereFieldsOpt(p)
+	wf, wfOk := query.RetrieveWhereFieldsOpt(p)
 	if wfOk {
 		q.WhereFields(wf)
 	}

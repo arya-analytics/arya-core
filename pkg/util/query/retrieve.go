@@ -125,8 +125,8 @@ func NewRelationOpt(p *Pack, name string, fields ...string) {
 	}
 }
 
-// RelationOpts retrieves a slice of all RelationOpt applied to the query.
-func RelationOpts(p *Pack) []RelationOpt {
+// RetrieveRelationOpts retrieves a slice of all RelationOpt applied to the query.
+func RetrieveRelationOpts(p *Pack) []RelationOpt {
 	o, ok := p.RetrieveOpt(relationOptKey)
 	if !ok {
 		return []RelationOpt{}
@@ -171,14 +171,14 @@ func RetrieveOrderOpt(p *Pack) (OrderOpt, bool) {
 
 // || LIMIT ||
 
-// NewLimitOpt creates a new LimitOpt.
+// NewLimitOpt creates a new RetrieveLimitOpt.
 func NewLimitOpt(p *Pack, limit int) {
-	p.opts[limitOptKey] = limit
+	p.SetOpt(limitOptKey, limit)
 }
 
-// LimitOpt is an option for limiting the number of results returned by a query.
-func LimitOpt(p *Pack) (int, bool) {
-	qo, ok := p.opts[limitOptKey]
+// RetrieveLimitOpt is an option for limiting the number of results returned by a query.
+func RetrieveLimitOpt(p *Pack) (int, bool) {
+	qo, ok := p.RetrieveOpt(limitOptKey)
 	if !ok {
 		return 0, false
 	}
@@ -187,14 +187,14 @@ func LimitOpt(p *Pack) (int, bool) {
 
 // || MEMO ||
 
-// NewMemoOpt creates a new MemoOpt.
+// NewMemoOpt creates a new RetrieveMemoOpt.
 func NewMemoOpt(p *Pack, memo *Memo) {
 	p.SetOpt(memoOptKey, memo)
 }
 
-// MemoOpt is an option that that applies a Memo to the query.
+// RetrieveMemoOpt retrieves an option that that applies a Memo to the query.
 // For more information on memoizing query results, see Memo.
-func MemoOpt(p *Pack) (*Memo, bool) {
+func RetrieveMemoOpt(p *Pack) (*Memo, bool) {
 	qo, ok := p.RetrieveOpt(memoOptKey)
 	if !ok {
 		return nil, false

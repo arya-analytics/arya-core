@@ -2,6 +2,7 @@ package roach
 
 import (
 	"context"
+	"github.com/arya-analytics/aryacore/pkg/storage/internal"
 	"github.com/arya-analytics/aryacore/pkg/util/pool"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/arya-analytics/aryacore/pkg/util/tasks"
@@ -59,6 +60,6 @@ func (e *Engine) shouldHandle(p *query.Pack) bool {
 	case *query.Migrate:
 		return true
 	default:
-		return catalog().Contains(p.Model())
+		return internal.RequiresEngine(p.Model(), e)
 	}
 }

@@ -88,11 +88,11 @@ func (s *DataSourceMem) create(ctx context.Context, p *query.Pack) error {
 }
 
 func (s *DataSourceMem) update(ctx context.Context, p *query.Pack) error {
-	bulk := query.BulkUpdateOpt(p)
+	bulk := query.RetrieveBulkUpdateOpt(p)
 	if bulk {
 		return s.bulkUpdate(ctx, p)
 	}
-	pk, ok := query.PKOpt(p)
+	pk, ok := query.RetrievePKOpt(p)
 	if !ok {
 		panic("non-bulk update must havea pk")
 	}
@@ -110,7 +110,11 @@ func (s *DataSourceMem) update(ctx context.Context, p *query.Pack) error {
 	p.Model().ForEach(func(nSRfl *model.Reflect, i int) {
 		dRfl.ForEach(func(nDRfl *model.Reflect, i int) {
 			for _, f := range fo {
-				nDRfl.StructFieldByName(f).Set(nSRfl.StructFieldByName(f))
+				fld := nDRfl.StructFieldByName(f)
+				if !fld.IsValid() {
+					panic(fmt.Sprintf("field %s not found", f))
+				}
+				fld.Set(nSRfl.StructFieldByName(f))
 			}
 		})
 	})
@@ -137,11 +141,11 @@ func (s *DataSourceMem) bulkUpdate(ctx context.Context, p *query.Pack) error {
 
 func (s *DataSourceMem) filter(p *query.Pack) *model.Reflect {
 	var filteredRfl = s.Data.Retrieve(p.Model().Type())
-	pkC, ok := query.PKOpt(p)
+	pkC, ok := query.RetrievePKOpt(p)
 	if ok {
 		filteredRfl = s.filterByPK(filteredRfl, pkC)
 	}
-	wFld, ok := query.WhereFieldsOpt(p)
+	wFld, ok := query.RetrieveWhereFieldsOpt(p)
 	if ok {
 		filteredRfl = s.filterByWhereFields(filteredRfl, wFld)
 	}
@@ -149,7 +153,7 @@ func (s *DataSourceMem) filter(p *query.Pack) *model.Reflect {
 	if ok {
 		s.runCalculations(filteredRfl, calcOpt)
 	}
-	ro := query.RelationOpts(p)
+	ro := query.RetrieveRelationOpts(p)
 	for _, r := range ro {
 		s.retrieveRelation(filteredRfl, r)
 	}
@@ -179,7 +183,7 @@ func (s *DataSourceMem) retrieveRelation(sRfl *model.Reflect, rel query.Relation
 	}
 	joinStr, ok := st.Retrieve("model", "join")
 	if !ok {
-		panic("model must have a join tag specified in order to perform lookup")
+		panic(fmt.Sprintf("model %s must have a join tag specified in order to perform lookup", sRfl.Type().Name()))
 	}
 	str := strings.Split(joinStr, "=")
 	if len(str) != 2 {
@@ -264,7 +268,7 @@ func fieldExpMatch(wFldName string, wFldVal interface{}, source *model.Reflect) 
 	if !fldVal.IsValid() {
 		return false
 	}
-	_, ok := wFldVal.(query.FieldExp)
+	_, ok := wFldVal.(query.FieldExpression)
 	// We don't currently support any field expressions.
 	if ok {
 		panic("field expressions not currently supported")

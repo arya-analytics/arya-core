@@ -42,7 +42,7 @@ func (b *Base) BindExec(e Execute) {
 // Results from the query will be bound to the parameters passed in during assembly.
 func (b *Base) Exec(ctx context.Context) error {
 	p := b.Pack()
-	memo, ok := MemoOpt(p)
+	memo, ok := RetrieveMemoOpt(p)
 	if ok {
 		if err := memo.Exec(ctx, p); err == nil {
 			return nil

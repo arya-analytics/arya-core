@@ -172,7 +172,7 @@ var _ = Describe("Partition", func() {
 				})
 
 			})
-			Context("Range Status", func() {
+			Context("Range State", func() {
 				It("Should close the source range", func() {
 					sourceRng := &models.Range{}
 					err := qa.RetrieveRangeQuery(sourceRng, rngId).Exec(ctx)

@@ -10,6 +10,9 @@ func BatchModel[T comparable](m interface{}, fld string) map[T]*model.Reflect {
 	b := map[T]*model.Reflect{}
 	rfl.ForEach(func(nRfl *model.Reflect, i int) {
 		rawFldV := nRfl.StructFieldByName(fld)
+		if !rawFldV.IsValid() {
+			panic("field " + fld + " is not found")
+		}
 		fldV, ok := rawFldV.Interface().(T)
 		if !ok {
 			panic(fmt.Sprintf("batch model received unknown type for field. received type %s", rawFldV.Type()))

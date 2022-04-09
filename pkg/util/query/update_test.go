@@ -19,18 +19,18 @@ var _ = Describe("Update", func() {
 	Describe("Bulk", func() {
 		It("Should set the bulk update opt correctly", func() {
 			Expect(asm.NewUpdate().Bulk().Exec(ctx)).To(BeNil())
-			bulk := query.BulkUpdateOpt(exec.Pack)
+			bulk := query.RetrieveBulkUpdateOpt(exec.Pack)
 			Expect(bulk).To(BeTrue())
 		})
 		It("Should return false when the opt isn't specified", func() {
 			Expect(asm.NewUpdate().Exec(ctx)).To(BeNil())
-			bulk := query.BulkUpdateOpt(exec.Pack)
+			bulk := query.RetrieveBulkUpdateOpt(exec.Pack)
 			Expect(bulk).To(BeFalse())
 		})
 		It("Should panic when trying to retrieve a bulk opt from a non update", func() {
 			Expect(asm.NewRetrieve().Exec(ctx)).To(BeNil())
 			Expect(func() {
-				query.BulkUpdateOpt(exec.Pack)
+				query.RetrieveBulkUpdateOpt(exec.Pack)
 			}).To(Panic())
 		})
 	})

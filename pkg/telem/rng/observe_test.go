@@ -31,7 +31,7 @@ var _ = Describe("observe", func() {
 			Entry("No PK", rng.ObservedRange{LeaseReplicaPK: uuid.New(), LeaseNodePK: 1, Status: models.RangeStatusClosed}),
 			Entry("No Lease Node PK", rng.ObservedRange{PK: uuid.New(), LeaseReplicaPK: uuid.New(), Status: models.RangeStatusClosed}),
 			Entry("No Lease Replica PK", rng.ObservedRange{PK: uuid.New(), LeaseNodePK: 1, Status: models.RangeStatusOpen}),
-			Entry("No Range Status", rng.ObservedRange{PK: uuid.New(), LeaseReplicaPK: uuid.New(), LeaseNodePK: 1}),
+			Entry("No Range State", rng.ObservedRange{PK: uuid.New(), LeaseReplicaPK: uuid.New(), LeaseNodePK: 1}),
 		)
 		Describe("Retrieving rngMap", func() {
 			var (
@@ -60,7 +60,7 @@ var _ = Describe("observe", func() {
 						Expect(retOR.PK).To(Equal(or.PK))
 					},
 					Entry("By PK", ranges, or, rng.ObservedRange{PK: or.PK}),
-					Entry("By Status", ranges, or, rng.ObservedRange{Status: or.Status}),
+					Entry("By State", ranges, or, rng.ObservedRange{Status: or.Status}),
 					Entry("By Lease Node PK", ranges, or, rng.ObservedRange{LeaseNodePK: or.LeaseNodePK}),
 					Entry("by Lease Node PK and status", ranges, or, rng.ObservedRange{LeaseNodePK: or.LeaseNodePK, Status: models.RangeStatusOpen}),
 					Entry("By Lease Replica PK", ranges, or, rng.ObservedRange{LeaseReplicaPK: or.LeaseReplicaPK}),

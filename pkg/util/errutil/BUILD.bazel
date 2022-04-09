@@ -6,6 +6,7 @@ go_library(
         "catch.go",
         "convert.go",
         "inspect.go",
+        "warn.go",
     ],
     importpath = "github.com/arya-analytics/aryacore/pkg/util/errutil",
     visibility = ["//visibility:public"],

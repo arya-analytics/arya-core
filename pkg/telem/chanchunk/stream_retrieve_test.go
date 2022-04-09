@@ -1,6 +1,7 @@
 package chanchunk_test
 
 import (
+	"context"
 	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/telem/chanchunk"
 	"github.com/arya-analytics/aryacore/pkg/telem/rng"
@@ -9,7 +10,6 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/util/telem/mock"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"sync"
 	"time"
 )
 
@@ -23,7 +23,7 @@ var _ = Describe("StreamRetrieve", func() {
 	BeforeEach(func() {
 		rngObs := rng.NewObserveMem([]rng.ObservedRange{})
 		rngSvc := rng.NewService(rngObs, clust.Exec)
-		svc = chanchunk.NewService(clust, rngSvc)
+		svc = chanchunk.NewService(clust.Exec, rngSvc)
 		node = &models.Node{ID: 1}
 		config = &models.ChannelConfig{
 			Name:           "Awesome Channel",
@@ -49,21 +49,19 @@ var _ = Describe("StreamRetrieve", func() {
 			chunkSize int64
 		)
 		JustBeforeEach(func() {
-			stream := svc.NewStreamCreate()
-			wg := &sync.WaitGroup{}
+			aCtx, cancel := context.WithCancel(ctx)
+			chunkStream := make(chan chanchunk.StreamCreateArgs)
+			streamQ, err := svc.NewTSCreate().WhereConfigPK(config.ID).Model(&chunkStream).Stream(aCtx)
+			Expect(err).To(BeNil())
 			defer func() {
-				stream.Close()
-				wg.Wait()
+				cancel()
+				close(chunkStream)
+				streamQ.Wait()
 			}()
 
-			Expect(stream.Start(ctx, config.ID)).To(BeNil())
-
-			wg.Add(1)
 			go func() {
-				defer wg.Done()
 				defer GinkgoRecover()
-				err := <-stream.Errors()
-				Expect(err).To(BeNil())
+				Expect(<-streamQ.Errors).To(BeNil())
 			}()
 
 			cc := mock.ChunkSet(
@@ -76,15 +74,19 @@ var _ = Describe("StreamRetrieve", func() {
 			)
 			chunkSize = cc[0].Size()
 			for _, c := range cc {
-				stream.Send(c.Start(), c.ChunkData)
+				chunkStream <- chanchunk.StreamCreateArgs{
+					Start: c.Start(),
+					Data:  c.ChunkData,
+				}
 			}
 		})
-		It("Should retrieve a streamq of chunks within the correct time range", func() {
+		It("Should retrieve a stream of chunks within the correct time range", func() {
 			tr := telem.NewTimeRange(telem.TimeStamp(0), telem.TimeStamp(0).Add(telem.NewTimeSpan(170*time.Second)))
-			stream, err := svc.NewStreamRetrieve().WhereConfigPK(config.ID).WhereTimeRange(tr).Exec(ctx)
+			chunkStream := make(chan *telem.Chunk)
+			_, err := svc.NewTSRetrieve().WhereConfigPK(config.ID).Model(&chunkStream).WhereTimeRange(tr).Stream(ctx)
 			Expect(err).To(BeNil())
 			var chunks []*telem.Chunk
-			for c := range stream {
+			for c := range chunkStream {
 				chunks = append(chunks, c)
 			}
 			Expect(chunks).To(HaveLen(3))

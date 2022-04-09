@@ -122,7 +122,7 @@ func (s StructTagChain) RetrieveBase() (StructTag, bool) {
 	return s.RetrieveByFieldName(baseFieldName)
 }
 
-// HasAnyFields determines if the chain contains and struct fields with a name in the provided WhereFields.
+// HasAnyFields determines if the chain contains any struct fields with a name in the provided WhereFields.
 func (s StructTagChain) HasAnyFields(flds ...string) bool {
 	for _, st := range s {
 		for _, fld := range flds {

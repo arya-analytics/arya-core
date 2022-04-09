@@ -18,7 +18,7 @@ func newLocalStreamCreate(qe query.Execute) *localStreamCreate {
 
 func (lsc *localStreamCreate) exec(ctx context.Context, p *query.Pack) error {
 	sampleStream := *query.ConcreteModel[*chan *models.ChannelSample](p)
-	streamQ := stream(p)
+	streamQ, _ := streamq.RetrieveStreamOpt(p, query.RequireOpt())
 	streamQ.Segment(func() {
 		for s := range sampleStream {
 			if route.CtxDone(ctx) {

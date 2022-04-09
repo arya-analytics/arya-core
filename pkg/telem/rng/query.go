@@ -12,7 +12,7 @@ import (
 // interface.
 //
 // Retrieve, Update, and Delete query extensions provide a similar (yet more specific) API to query.Assemble.
-// In contrast, Create query extensions return a concrete, created value. This is done to simplify the interface and
+// IsIn contrast, Create query extensions return a concrete, created value. This is done to simplify the interface and
 // enable the creation of multiple item combinations at once.
 //
 // Instantiate QueryAssemble by calling NewQueryAssemble.

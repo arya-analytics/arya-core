@@ -33,7 +33,7 @@ var _ = Describe("Server", func() {
 		// || MODEL DEFINITIONS ||
 		rngObs := rng.NewObserveMem([]rng.ObservedRange{})
 		rngSvc := rng.NewService(rngObs, clust.Exec)
-		svc = chanchunk.NewService(clust, rngSvc)
+		svc = chanchunk.NewService(clust.Exec, rngSvc)
 		node = &models.Node{ID: 1}
 		config = &models.ChannelConfig{
 			Name:           "Awesome Channel",
@@ -75,9 +75,9 @@ var _ = Describe("Server", func() {
 			stream, err := cl.CreateStream(ctx)
 			Expect(err).To(BeNil())
 
-			wg := sync.WaitGroup{}
-			wg.Add(1)
+			wg := &sync.WaitGroup{}
 			var errors []*bulktelemv1.Error
+			wg.Add(1)
 			go func() {
 				for {
 					res, err := stream.Recv()
@@ -96,9 +96,11 @@ var _ = Describe("Server", func() {
 					Data:            c.Bytes(),
 				})).To(BeNil())
 			}
+
 			Expect(stream.CloseSend()).To(BeNil())
 
 			wg.Wait()
+
 			By("Not returning any errors")
 			Expect(errors).To(HaveLen(0))
 
@@ -120,9 +122,9 @@ var _ = Describe("Server", func() {
 			stream, err := cl.CreateStream(ctx)
 			Expect(err).To(BeNil())
 
-			wg := sync.WaitGroup{}
-			wg.Add(1)
 			var errors []*bulktelemv1.Error
+			wg := &sync.WaitGroup{}
+			wg.Add(1)
 			go func() {
 				for {
 					res, err := stream.Recv()
@@ -141,8 +143,7 @@ var _ = Describe("Server", func() {
 					Data:            c.Bytes(),
 				})).To(BeNil())
 			}
-			Expect(stream.CloseSend()).To(BeNil())
-
+			Expect(stream.CloseSend()).To(Succeed())
 			wg.Wait()
 		})
 		It("Should retrieve the chunks correctly", func() {

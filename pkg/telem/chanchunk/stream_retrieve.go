@@ -4,63 +4,104 @@ import (
 	"context"
 	"github.com/arya-analytics/aryacore/pkg/models"
 	"github.com/arya-analytics/aryacore/pkg/util/errutil"
-	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
+	"github.com/arya-analytics/aryacore/pkg/util/query/streamq"
+	"github.com/arya-analytics/aryacore/pkg/util/route"
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
+	"github.com/google/uuid"
 )
 
 type StreamRetrieve struct {
-	qa    query.Assemble
-	cfgPK interface{}
-	_cfg  *models.ChannelConfig
-	tRng  telem.TimeRange
-	catch *errutil.CatchContext
+	streamq.TSRetrieve
+	qExec   query.Execute
+	_config *models.ChannelConfig
+	tRng    telem.TimeRange
+	catch   *errutil.CatchContext
 }
 
-func newStreamRetrieve(qa query.Assemble) *StreamRetrieve {
-	return &StreamRetrieve{qa: qa, _cfg: &models.ChannelConfig{}}
-}
-
-func (sr *StreamRetrieve) WhereConfigPK(cfgPK interface{}) *StreamRetrieve {
-	sr.cfgPK = cfgPK
+func newStreamRetrieve(qExec query.Execute) *StreamRetrieve {
+	sr := &StreamRetrieve{qExec: qExec, _config: &models.ChannelConfig{}}
+	sr.Base.Init(sr)
+	sr.BindExec(sr.exec)
 	return sr
 }
 
-func (sr *StreamRetrieve) WhereTimeRange(tRng telem.TimeRange) *StreamRetrieve {
-	sr.tRng = tRng
+func (sr *StreamRetrieve) WhereConfigPK(configPK uuid.UUID) *StreamRetrieve {
+	newConfigPKOpt(sr.Pack(), configPK)
 	return sr
+}
+
+func (sr *StreamRetrieve) exec(ctx context.Context, p *query.Pack) error {
+	sr.catch = errutil.NewCatchContext(context.Background())
+	var (
+		ccr        []*models.ChannelChunkReplica
+		c          = *query.ConcreteModel[*chan *telem.Chunk](p)
+		streamQ, _ = streamq.RetrieveStreamOpt(p, query.RequireOpt())
+		tr, _      = streamq.RetrieveTimeRangeOpt(p, query.RequireOpt())
+	)
+	sr.catch.Exec(retrieveCCRQuery(sr.qExec, sr.config().ID, tr, &ccr).Exec)
+	if sr.catch.Error() != nil {
+		return sr.catch.Error()
+	}
+	streamQ.Segment(func() {
+		defer func() {
+			close(c)
+			close(streamQ.Errors)
+			streamQ.Complete()
+		}()
+		for _, r := range ccr {
+			if route.CtxDone(ctx) {
+				return
+			}
+			c <- telem.NewChunk(r.ChannelChunk.StartTS, sr.config().DataType, sr.config().DataRate, r.Telem)
+		}
+	})
+	return nil
 }
 
 func (sr *StreamRetrieve) config() *models.ChannelConfig {
-	if model.NewPK(sr._cfg.ID).IsZero() {
-		sr.catch.Exec(sr.qa.NewRetrieve().Model(sr._cfg).WherePK(sr.cfgPK).Exec)
-	}
-	return sr._cfg
+	configPK, _ := retrieveConfigPKOpt(sr.Pack(), query.RequireOpt())
+	sr.catch.Exec(query.
+		NewRetrieve().
+		BindExec(sr.qExec).
+		Model(sr._config).
+		WherePK(configPK).
+		WithMemo(query.NewMemo(sr._config)).
+		Exec,
+	)
+	return sr._config
 }
 
-func (sr *StreamRetrieve) Exec(ctx context.Context) (chan *telem.Chunk, error) {
-	sr.catch = errutil.NewCatchContext(ctx)
-	var (
-		stream   = make(chan *telem.Chunk)
-		replicas []*models.ChannelChunkReplica
-	)
-	cfg := sr.config()
-	sr.catch.Exec(sr.qa.NewRetrieve().
-		Model(&replicas).
+/// |||| QUERY UTILS ||||
+
+func retrieveCCRQuery(
+	qExec query.Execute,
+	configPK uuid.UUID,
+	tr telem.TimeRange,
+	ccr *[]*models.ChannelChunkReplica,
+) *query.Retrieve {
+	return query.NewRetrieve().
+		BindExec(qExec).
+		Model(ccr).
 		Relation("ChannelChunk", "StartTS").
 		WhereFields(query.WhereFields{
-			"ChannelChunk.StartTS":          query.InRange(sr.tRng.Start(), sr.tRng.End()),
-			"ChannelChunk.ChannelConfig.ID": cfg.ID,
-		}).
-		Exec)
-	if sr.catch.Error() != nil {
-		return stream, sr.catch.Error()
+			"ChannelChunk.ChannelConfigID": configPK,
+			"ChannelChunk.StartTS":         query.InRange(tr.Start(), tr.End()),
+		})
+}
+
+// |||| OPTS ||||
+
+const configPKOptKey query.OptKey = "configPK"
+
+func newConfigPKOpt(p *query.Pack, configPK uuid.UUID) {
+	p.SetOpt(configPKOptKey, configPK)
+}
+
+func retrieveConfigPKOpt(p *query.Pack, opts ...query.OptRetrieveOpt) (uuid.UUID, bool) {
+	o, ok := p.RetrieveOpt(configPKOptKey, opts...)
+	if !ok {
+		return uuid.Nil, false
 	}
-	go func() {
-		for _, r := range replicas {
-			stream <- telem.NewChunk(r.ChannelChunk.StartTS, cfg.DataType, cfg.DataRate, r.Telem)
-		}
-		close(stream)
-	}()
-	return stream, nil
+	return o.(uuid.UUID), true
 }
