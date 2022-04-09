@@ -21,6 +21,7 @@ go_library(
         "//pkg/cluster/gen/proto/go/chanstream/v1:chanstream",
         "//pkg/models",
         "//pkg/rpc",
+        "//pkg/rpc/gen/proto/go/error/v1:error",
         "//pkg/util/errutil",
         "//pkg/util/model",
         "//pkg/util/pool",

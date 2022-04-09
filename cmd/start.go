@@ -5,7 +5,6 @@ package cmd
 import (
 	"fmt"
 	"github.com/arya-analytics/aryacore/pkg/api/rpc/bulktelem"
-	"github.com/arya-analytics/aryacore/pkg/api/rpc/chanconfig"
 	"github.com/arya-analytics/aryacore/pkg/cluster"
 	"github.com/arya-analytics/aryacore/pkg/cluster/chanchunk"
 	"github.com/arya-analytics/aryacore/pkg/models"
@@ -163,11 +162,6 @@ func startGRPCServer(clust cluster.Cluster, chanChunkSvc *telemchanchunk.Service
 
 	bulkTelemServer := bulktelem.NewServer(chanChunkSvc)
 	bulkTelemServer.BindTo(grpcServer)
-
-	// || TELEM CHANCONFIG ||
-
-	chanConfigServer := chanconfig.NewServer(clust)
-	chanConfigServer.BindTo(grpcServer)
 
 	go func() {
 		if err := grpcServer.Serve(lis); err != nil {

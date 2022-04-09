@@ -116,7 +116,7 @@ var demoWriteDataCmd = &cobra.Command{
 const timeSpan = 30 * time.Second
 
 func startWriteStream(ctx context.Context, client bulktelemv1.BulkTelemServiceClient, config *chanconfigv1.ChannelConfig) {
-	stream, err := client.CreateStream(ctx)
+	stream, err := client.Create(ctx)
 	defer stream.CloseSend()
 	if err != nil {
 		log.Fatalln(err)
@@ -149,7 +149,7 @@ func startWriteStream(ctx context.Context, client bulktelemv1.BulkTelemServiceCl
 	)[0]
 
 	for range ticker.C {
-		if sErr := stream.Send(&bulktelemv1.CreateStreamRequest{
+		if sErr := stream.Send(&bulktelemv1.CreateRequest{
 			ChannelConfigId: config.ID,
 			StartTs:         int64(telem.NewTimeStamp(time.Now())),
 			Data:            c.Bytes(),

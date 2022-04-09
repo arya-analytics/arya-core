@@ -11,7 +11,6 @@ go_library(
     visibility = ["//visibility:public"],
     deps = [
         "//pkg/api/rpc/bulktelem",
-        "//pkg/api/rpc/chanconfig",
         "//pkg/api/rpc/gen/proto/go/bulktelem/v1:bulktelem",
         "//pkg/api/rpc/gen/proto/go/chanconfig/v1:chanconfig",
         "//pkg/cluster",

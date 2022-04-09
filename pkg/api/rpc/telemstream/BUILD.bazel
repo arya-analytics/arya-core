@@ -11,6 +11,7 @@ go_library(
         "//pkg/query",
         "//pkg/query/chanstream",
         "//pkg/rpc",
+        "//pkg/rpc/gen/proto/go/error/v1:error",
         "//pkg/telem/chanstream",
         "@org_golang_google_grpc//:grpc",
     ],
