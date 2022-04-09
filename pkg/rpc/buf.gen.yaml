@@ -2,9 +2,10 @@ version: v1
 managed:
   enabled: true
   go_package_prefix:
-    default: github.com/arya-analytics/arya-core/pkg/api/rpc/gen/proto/go
+    default: github.com/arya-analytics/arya-core/pkg/rpc/gen/proto/go
     except:
-      - buf.build/arya-analytics/arya-core-rpc
+      - buf.build/googleapis/googleapis
+
 plugins:
   - name: go
     out: gen/proto/go

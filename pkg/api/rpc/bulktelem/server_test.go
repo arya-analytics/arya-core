@@ -4,6 +4,7 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/api/rpc/bulktelem"
 	bulktelemv1 "github.com/arya-analytics/aryacore/pkg/api/rpc/gen/proto/go/bulktelem/v1"
 	"github.com/arya-analytics/aryacore/pkg/models"
+	errorv1 "github.com/arya-analytics/aryacore/pkg/rpc/gen/proto/go/error/v1"
 	"github.com/arya-analytics/aryacore/pkg/telem/chanchunk"
 	"github.com/arya-analytics/aryacore/pkg/telem/rng"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
@@ -76,7 +77,7 @@ var _ = Describe("Server", func() {
 			Expect(err).To(BeNil())
 
 			wg := &sync.WaitGroup{}
-			var errors []*bulktelemv1.Error
+			var errors []*errorv1.Error
 			wg.Add(1)
 			go func() {
 				for {
@@ -122,7 +123,7 @@ var _ = Describe("Server", func() {
 			stream, err := cl.CreateStream(ctx)
 			Expect(err).To(BeNil())
 
-			var errors []*bulktelemv1.Error
+			var errors []*errorv1.Error
 			wg := &sync.WaitGroup{}
 			wg.Add(1)
 			go func() {

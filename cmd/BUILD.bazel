@@ -18,6 +18,7 @@ go_library(
         "//pkg/cluster/chanchunk",
         "//pkg/models",
         "//pkg/rpc",
+        "//pkg/rpc/gen/proto/go/error/v1:error",
         "//pkg/storage",
         "//pkg/storage/minio",
         "//pkg/storage/redis",

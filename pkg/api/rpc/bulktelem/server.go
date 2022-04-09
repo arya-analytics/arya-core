@@ -4,11 +4,14 @@ import (
 	"context"
 	bulktelemv1 "github.com/arya-analytics/aryacore/pkg/api/rpc/gen/proto/go/bulktelem/v1"
 	qcc "github.com/arya-analytics/aryacore/pkg/query/chanchunk"
+	errorv1 "github.com/arya-analytics/aryacore/pkg/rpc/gen/proto/go/error/v1"
 	"github.com/arya-analytics/aryacore/pkg/telem/chanchunk"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"github.com/google/uuid"
+	code "google.golang.org/genproto/googleapis/rpc/code"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 )
 
 type Server struct {
@@ -76,7 +79,7 @@ func (c *streamCreateProtocol) Context() context.Context {
 
 func (c *streamCreateProtocol) Send(resp qcc.StreamCreateResponse) error {
 	return c.conn.Send(&bulktelemv1.CreateStreamResponse{
-		Error: &bulktelemv1.Error{Message: resp.Error.Error()},
+		Error: &errorv1.Error{Message: resp.Error.Error(), Code: code.Code(codes.NotFound)},
 	})
 }
 

@@ -1,0 +1,12 @@
+version: v1
+name: buf.build/arya-analytics/arya-core-rpc
+deps:
+  - buf.build/googleapis/googleapis
+breaking:
+  use:
+    - FILE
+lint:
+  use:
+    - DEFAULT
+  except:
+    - FIELD_LOWER_SNAKE_CASE

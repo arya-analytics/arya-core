@@ -9,6 +9,7 @@ import (
 	"fmt"
 	bulktelemv1 "github.com/arya-analytics/aryacore/pkg/api/rpc/gen/proto/go/bulktelem/v1"
 	chanconfigv1 "github.com/arya-analytics/aryacore/pkg/api/rpc/gen/proto/go/chanconfig/v1"
+	errorv1 "github.com/arya-analytics/aryacore/pkg/rpc/gen/proto/go/error/v1"
 	"github.com/arya-analytics/aryacore/pkg/util/telem"
 	"github.com/arya-analytics/aryacore/pkg/util/telem/mock"
 	"github.com/google/uuid"
@@ -122,7 +123,7 @@ func startWriteStream(ctx context.Context, client bulktelemv1.BulkTelemServiceCl
 	}
 	wg := sync.WaitGroup{}
 	wg.Add(1)
-	var errors []*bulktelemv1.Error
+	var errors []*errorv1.Error
 	go func() {
 		defer wg.Done()
 		for {

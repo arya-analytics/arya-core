@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+import "error/v1/error.proto";
+
 package bulktelem.v1;
 
 // |||| SERVICE ||||
@@ -18,13 +20,7 @@ message CreateStreamRequest {
 }
 
 message CreateStreamResponse {
-  error Error = 1;
-}
-
-message error {
-  int32 type = 1;
-  string type_string = 2;
-  string message = 3;
+  error.v1.Error error = 1;
 }
 
 // |||| RETRIEVE ||||

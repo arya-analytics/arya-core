@@ -1,5 +1,7 @@
 version: v1
 name: buf.build/arya-analytics/arya-core-api
+deps:
+  - buf.build/arya-analytics/arya-core-rpc
 breaking:
   use:
     - FILE

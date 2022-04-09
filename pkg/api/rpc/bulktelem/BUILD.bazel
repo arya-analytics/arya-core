@@ -8,11 +8,14 @@ go_library(
     deps = [
         "//pkg/api/rpc/gen/proto/go/bulktelem/v1:bulktelem",
         "//pkg/query/chanchunk",
+        "//pkg/rpc/gen/proto/go/error/v1:error",
         "//pkg/telem/chanchunk",
         "//pkg/util/model",
         "//pkg/util/telem",
         "@com_github_google_uuid//:uuid",
+        "@org_golang_google_genproto//googleapis/rpc/code",
         "@org_golang_google_grpc//:grpc",
+        "@org_golang_google_grpc//codes",
     ],
 )
 
@@ -27,6 +30,7 @@ go_test(
         "//pkg/api/rpc/gen/proto/go/bulktelem/v1:bulktelem",
         "//pkg/cluster/mock",
         "//pkg/models",
+        "//pkg/rpc/gen/proto/go/error/v1:error",
         "//pkg/telem/chanchunk",
         "//pkg/telem/rng",
         "//pkg/util/model",

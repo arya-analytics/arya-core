@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package error.v1;
+
+import "google/rpc/code.proto";
+
+option go_package = "github.com/arya-analytics/aryacore/pkg/rpc/gen/proto/go/error/v1";
+
+message Error {
+  google.rpc.Code code = 1;
+  string message = 2;
+}
