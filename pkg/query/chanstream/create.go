@@ -44,8 +44,7 @@ func (c *create) Stream() error {
 	wg := errgroup.Group{}
 	wg.Go(c.relayErrors)
 	wg.Go(c.relayRequests)
-	err := wg.Wait()
-	return err
+	return wg.Wait()
 }
 
 func (c *create) startStream() (err error) {
