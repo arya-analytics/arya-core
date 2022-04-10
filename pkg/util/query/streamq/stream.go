@@ -64,15 +64,15 @@ type Stream struct {
 	Errors chan error
 	// Ctx is the context used to construct the stream.
 	Ctx  context.Context
-	done chan struct{}
+	Done chan struct{}
 }
 
 func (s *Stream) Complete() {
-	s.done <- struct{}{}
+	s.Done <- struct{}{}
 }
 
 func (s *Stream) Wait() {
-	<-s.done
+	<-s.Done
 }
 
 // Segment adds a goroutine as a segment of the stream. Used for observability purposes.
@@ -123,7 +123,7 @@ func NewStreamOpt(ctx context.Context, p *query.Pack) *Stream {
 		Errors:   errors,
 		Ctx:      ctx,
 		Segments: make(map[Segment]bool),
-		done:     make(chan struct{}),
+		Done:     make(chan struct{}),
 	}
 	BindStreamOpt(p, s)
 	return s
