@@ -2,10 +2,10 @@ package mock
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
+	"github.com/arya-analytics/aryacore/pkg/util/query/filter"
 	"github.com/arya-analytics/aryacore/pkg/util/query/streamq"
 	"reflect"
 	"strings"
@@ -43,36 +43,34 @@ func (s *DataSourceMem) Exec(ctx context.Context, p *query.Pack) error {
 }
 
 func (s *DataSourceMem) retrieve(ctx context.Context, p *query.Pack) error {
-	f := s.filter(p)
-	if f.ChainValue().Len() == 0 {
-		return query.NewSimpleError(query.ErrorTypeItemNotFound, errors.New(fmt.Sprintf("%s", p)))
+	d := s.Data.Retrieve(p.Model().Type())
+	f, err := s.filter(p, d, filter.ErrOnNotFound())
+	if err != nil {
+		return err
 	}
-	var exc *model.Exchange
+	s.retrieveRelations(p, d)
 	if p.Model().IsStruct() {
-		exc = model.NewExchange(p.Model().Pointer(), f.ChainValueByIndex(0).Pointer())
+		p.Model().Set(f.ChainValueByIndex(0))
 	} else {
-		exc = model.NewExchange(p.Model().Pointer(), f.Pointer())
+		p.Model().Set(f)
 	}
-	exc.ToSource()
 	return nil
 }
 
 func (s *DataSourceMem) delete(ctx context.Context, p *query.Pack) error {
-	f := s.filter(p)
-	newData := f.NewChain()
-	s.Data.Retrieve(f.Type()).ForEach(func(rfl *model.Reflect, i int) {
-		match := false
-		f.ForEach(func(nFRfl *model.Reflect, i int) {
-			if rfl.PK().Equals(nFRfl.PK()) {
+	d := s.Data.Retrieve(p.Model().Type())
+	f, err := s.filter(p, d)
+	if err != nil {
+		return err
+	}
+	newData := d.Filter(func(rfl *model.Reflect, i int) (match bool) {
+		f.ForEach(func(nRfl *model.Reflect, i int) {
+			if nRfl.PK().Equals(rfl.PK()) {
 				match = true
 			}
 		})
-		if !match {
-			newData.ChainAppend(rfl)
-		}
+		return !match
 	})
-	s.mu.Lock()
-	defer s.mu.Unlock()
 	s.Data.Write(newData)
 	return nil
 }
@@ -80,56 +78,56 @@ func (s *DataSourceMem) delete(ctx context.Context, p *query.Pack) error {
 func (s *DataSourceMem) create(ctx context.Context, p *query.Pack) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	dRfl := s.Data.Retrieve(p.Model().Type())
-	p.Model().ForEach(func(rfl *model.Reflect, i int) {
-		dRfl.ChainAppendEach(rfl)
-	})
+	s.Data.Retrieve(p.Model().Type()).ChainAppendEach(p.Model())
 	return nil
 }
 
 func (s *DataSourceMem) update(ctx context.Context, p *query.Pack) error {
 	bulk := query.RetrieveBulkUpdateOpt(p)
 	if bulk {
-		return s.bulkUpdate(ctx, p)
+		return s.bulkUpdate(p)
 	}
-	pk, ok := query.RetrievePKOpt(p)
-	if !ok {
-		panic("non-bulk update must havea pk")
+	return s.unaryUpdate(p)
+	return nil
+}
+
+func (s *DataSourceMem) unaryUpdate(p *query.Pack) error {
+	if !p.Model().IsStruct() {
+		panic("model must be a struct when not using bulk update")
 	}
-	dRfl := s.filterByPK(s.Data.Retrieve(p.Model().Type()), pk)
-	if dRfl.ChainValue().Len() == 0 {
-		return query.NewSimpleError(query.ErrorTypeItemNotFound, nil)
-	}
-	if dRfl.ChainValue().Len() > 1 {
-		return query.NewSimpleError(query.ErrorTypeMultipleResults, nil)
+	f, err := s.filter(
+		p,
+		s.Data.Retrieve(p.Model().Type()),
+		filter.ErrOnNotFound(),
+		filter.ErrOnMultipleResults(),
+	)
+	if err != nil {
+		return err
 	}
 	fo, ok := query.RetrieveFieldsOpt(p)
 	if !ok {
 		panic("fields must be specified for updates")
 	}
-	p.Model().ForEach(func(nSRfl *model.Reflect, i int) {
-		dRfl.ForEach(func(nDRfl *model.Reflect, i int) {
-			for _, f := range fo {
-				fld := nDRfl.StructFieldByName(f)
-				if !fld.IsValid() {
-					panic(fmt.Sprintf("field %s not found", f))
-				}
-				fld.Set(nSRfl.StructFieldByName(f))
-			}
-		})
-	})
+	u := f.ChainValueByIndex(0)
+	for _, fn := range fo {
+		fld := u.StructFieldByName(fn)
+		if !fld.IsValid() {
+			panic(fmt.Sprintf("field %s not found", fn))
+		}
+		fld.Set(p.Model().StructFieldByName(fn))
+	}
 	return nil
 }
 
-func (s *DataSourceMem) bulkUpdate(ctx context.Context, p *query.Pack) error {
-	dRfl := s.Data.Retrieve(p.Model().Type())
+func (s *DataSourceMem) bulkUpdate(p *query.Pack) error {
+	d := s.Data.Retrieve(p.Model().Type())
 	fo, ok := query.RetrieveFieldsOpt(p)
 	if !ok {
 		panic("fields must be specified for bulk updates")
 	}
-	p.Model().ForEach(func(nSRfl *model.Reflect, i int) {
-		dRfl.ForEach(func(nDRfl *model.Reflect, i int) {
-			if nDRfl.PK() == nSRfl.PK() {
+	d.ForEach(func(nDRfl *model.Reflect, i int) {
+		p.Model().ForEach(func(nSRfl *model.Reflect, i int) {
+			if nDRfl.PK().Equals(nSRfl.PK()) {
 				for _, f := range fo {
 					nDRfl.StructFieldByName(f).Set(nSRfl.StructFieldByName(f))
 				}
@@ -139,34 +137,15 @@ func (s *DataSourceMem) bulkUpdate(ctx context.Context, p *query.Pack) error {
 	return nil
 }
 
-func (s *DataSourceMem) filter(p *query.Pack) *model.Reflect {
-	var filteredRfl = s.Data.Retrieve(p.Model().Type())
-	pkC, ok := query.RetrievePKOpt(p)
-	if ok {
-		filteredRfl = s.filterByPK(filteredRfl, pkC)
-	}
-	wFld, ok := query.RetrieveWhereFieldsOpt(p)
-	if ok {
-		filteredRfl = s.filterByWhereFields(filteredRfl, wFld)
-	}
-	calcOpt, ok := query.RetrieveCalcOpt(p)
-	if ok {
-		s.runCalculations(filteredRfl, calcOpt)
-	}
-	ro := query.RetrieveRelationOpts(p)
-	for _, r := range ro {
-		s.retrieveRelation(filteredRfl, r)
-	}
-	return filteredRfl
+func (s *DataSourceMem) filter(p *query.Pack, d *model.Reflect, opts ...filter.Opt) (*model.Reflect, error) {
+	s.retrieveWhereFieldRelations(p, d)
+	return filter.Filter(p, d, opts...)
 }
 
-func (s *DataSourceMem) runCalculations(sRfl *model.Reflect, calc query.CalcOpt) {
-	reflect.ValueOf(calc.Into).Elem().Set(reflect.Zero(reflect.TypeOf(calc.Into).Elem()))
-	switch calc.Op {
-	case query.CalcSum:
-		s.calcSum(sRfl, calc.Field, calc.Into)
-	default:
-		panic(fmt.Sprintf("unsupported operation %s", calc.Op))
+func (s *DataSourceMem) retrieveRelations(p *query.Pack, d *model.Reflect) {
+	ro := query.RetrieveRelationOpts(p)
+	for _, r := range ro {
+		s.retrieveRelation(d, r)
 	}
 }
 
@@ -206,72 +185,15 @@ func (s *DataSourceMem) retrieveRelation(sRfl *model.Reflect, rel query.Relation
 	})
 }
 
-func (s *DataSourceMem) calcSum(sRfl *model.Reflect, field string, into interface{}) {
-	intoRfl := reflect.ValueOf(into)
-	sRfl.ForEach(func(rfl *model.Reflect, i int) {
-		fld := rfl.StructFieldByName(field)
-		if !fld.CanFloat() && !fld.CanInt() {
-			panic("cant run a calculation on a non number!")
-		}
-		if fld.CanFloat() {
-			fldFloat := fld.Float()
-			intoRflFloat := intoRfl.Elem().Float()
-			intoRflFloat += fldFloat
-			intoRfl.Elem().Set(reflect.ValueOf(intoRflFloat))
-		}
-		if fld.CanInt() {
-			fldInt := fld.Int()
-			intoRflInt := intoRfl.Elem().Int()
-			intoRflInt += fldInt
-			intoRfl.Elem().Set(reflect.ValueOf(intoRflInt))
-		}
-	})
-
-}
-
-func (s *DataSourceMem) filterByPK(sRfl *model.Reflect, pkc model.PKChain) *model.Reflect {
-	nRfl := sRfl.NewChain()
-	sRfl.ForEach(func(rfl *model.Reflect, i int) {
-		for _, pk := range pkc {
-			if rfl.PK().Equals(pk) {
-				nRfl.ChainAppendEach(rfl)
-			}
-		}
-	})
-	return nRfl
-}
-
-func (s *DataSourceMem) filterByWhereFields(sRfl *model.Reflect, wFld query.WhereFields) *model.Reflect {
-	nRfl := sRfl.NewChain()
+func (s *DataSourceMem) retrieveWhereFieldRelations(p *query.Pack, sRfl *model.Reflect) {
+	wFld, ok := query.RetrieveWhereFieldsOpt(p)
+	if !ok {
+		return
+	}
 	for k := range wFld {
 		fn, ln := model.SplitLastFieldName(k)
 		if fn != "" {
 			s.retrieveRelation(sRfl, query.RelationOpt{Name: fn, Fields: query.FieldsOpt{ln}})
 		}
 	}
-	sRfl.ForEach(func(rfl *model.Reflect, i int) {
-		match := false
-		for k, v := range wFld {
-			if fieldExpMatch(k, v, rfl) {
-				match = true
-			}
-		}
-		if match {
-			nRfl.ChainAppendEach(rfl)
-		}
-	})
-	return nRfl
-}
-
-func fieldExpMatch(wFldName string, wFldVal interface{}, source *model.Reflect) bool {
-	fldVal := source.StructFieldByName(wFldName)
-	if !fldVal.IsValid() {
-		return false
-	}
-	_, ok := wFldVal.(query.FieldExpression)
-	// We don't currently support any field expressions.
-	if ok {
-		panic("field expressions not currently supported")
-	}
-	return wFldVal == fldVal.Interface()
 }

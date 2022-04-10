@@ -5,7 +5,8 @@ import (
 )
 
 type ModelA struct {
-	ID                    int    `model:"role:pk"`
+	ID                    int `model:"role:pk"`
+	IDFloat64             float64
 	Name                  string `model:"role:str" randomcat:"random:hello"`
 	BooleanField          bool
 	InnerModel            *ModelB

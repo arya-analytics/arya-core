@@ -175,7 +175,7 @@ func (r *Reflect) ChainAppend(rta *Reflect) {
 }
 
 // ChainAppendEach appends all models in Reflect rta to the model object.
-// Panics if Reflect is a chain.
+// Panics if Reflect is not a chain.
 func (r *Reflect) ChainAppendEach(rta *Reflect) {
 	rta.ForEach(func(rfl *Reflect, i int) {
 		r.ChainAppend(rfl)
@@ -298,6 +298,16 @@ func (r *Reflect) ForEach(fef func(rfl *Reflect, i int)) {
 			fef(rfl, i)
 		}
 	}
+}
+
+func (r *Reflect) Filter(fef func(rfl *Reflect, i int) bool) *Reflect {
+	ret := r.NewChain()
+	r.ForEach(func(rfl *Reflect, i int) {
+		if fef(rfl, i) {
+			ret.ChainAppend(rfl)
+		}
+	})
+	return ret
 }
 
 // || CONSTRUCTOR ||
