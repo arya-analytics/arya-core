@@ -42,7 +42,7 @@ func (s *Service) Exec(ctx context.Context, p *query.Pack) error {
 
 const (
 	cfgRelNode         = "Node"
-	CfgFieldNodeIsHost = "Node.IsHost"
+	cfgFieldNodeIsHost = "Node.IsHost"
 	csFieldNode        = "ChannelConfig.Node"
 )
 
@@ -112,7 +112,7 @@ func (s *Service) tsRetrieve(ctx context.Context, p *query.Pack) error {
 	c := errutil.NewCatchContext(ctx)
 	route.ModelSwitchBoolean(
 		&cc,
-		CfgFieldNodeIsHost,
+		cfgFieldNodeIsHost,
 		func(m *model.Reflect) {
 			c.Exec(func(ctx context.Context) (err error) {
 				_, err = retrieveSamplesQuery(p, m).BindStream(st).BindExec(s.local.exec).Stream(ctx)
