@@ -425,7 +425,7 @@ func (r *Reflect) FieldTypeByName(name string) reflect.Type {
 			structFld, ok = fld.Elem().FieldByName(splitName)
 		}
 		if !ok {
-			panic(fmt.Sprintf("field %s does not exist on type %s", splitName, fld.Elem()))
+			panic(fmt.Sprintf("field %s does not exist on %s", name, r.Type().Name()))
 		}
 		fld = structFld.Type
 	}

@@ -7,7 +7,6 @@ import (
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
 	"github.com/arya-analytics/aryacore/pkg/util/query/streamq"
-	log "github.com/sirupsen/logrus"
 	"reflect"
 	"strings"
 	"sync"
@@ -60,7 +59,7 @@ func (s *DataSourceMem) retrieve(ctx context.Context, p *query.Pack) error {
 
 func (s *DataSourceMem) delete(ctx context.Context, p *query.Pack) error {
 	d := s.Data.Retrieve(p.Model().Type())
-	f, err := s.filter(p, d)
+	f, err := s.filter(p, d, filter.ErrorOnNotFound())
 	if err != nil {
 		return err
 	}
@@ -84,15 +83,19 @@ func (s *DataSourceMem) create(ctx context.Context, p *query.Pack) error {
 }
 
 func (s *DataSourceMem) update(ctx context.Context, p *query.Pack) error {
+	fo, ok := query.RetrieveFieldsOpt(p)
+	if !ok {
+		panic("fields must be specified for updates")
+	}
 	bulk := query.RetrieveBulkUpdateOpt(p)
 	if bulk {
-		return s.bulkUpdate(p)
+		return s.bulkUpdate(p, fo)
 	}
-	return s.unaryUpdate(p)
+	return s.unaryUpdate(p, fo)
 	return nil
 }
 
-func (s *DataSourceMem) unaryUpdate(p *query.Pack) error {
+func (s *DataSourceMem) unaryUpdate(p *query.Pack, fo query.FieldsOpt) error {
 	if !p.Model().IsStruct() {
 		panic("model must be a struct when not using bulk update")
 	}
@@ -105,10 +108,7 @@ func (s *DataSourceMem) unaryUpdate(p *query.Pack) error {
 	if err != nil {
 		return err
 	}
-	fo, ok := query.RetrieveFieldsOpt(p)
-	if !ok {
-		panic("fields must be specified for updates")
-	}
+
 	u := f.ChainValueByIndex(0)
 	for _, fn := range fo {
 		fld := u.StructFieldByName(fn)
@@ -120,12 +120,8 @@ func (s *DataSourceMem) unaryUpdate(p *query.Pack) error {
 	return nil
 }
 
-func (s *DataSourceMem) bulkUpdate(p *query.Pack) error {
+func (s *DataSourceMem) bulkUpdate(p *query.Pack, fo query.FieldsOpt) error {
 	d := s.Data.Retrieve(p.Model().Type())
-	fo, ok := query.RetrieveFieldsOpt(p)
-	if !ok {
-		panic("fields must be specified for bulk updates")
-	}
 	d.ForEach(func(nDRfl *model.Reflect, i int) {
 		p.Model().ForEach(func(nSRfl *model.Reflect, i int) {
 			if nDRfl.PK().Equals(nSRfl.PK()) {
@@ -154,10 +150,7 @@ func (s *DataSourceMem) retrieveRelation(sRfl *model.Reflect, rel query.Relation
 	names := model.SplitFieldNames(rel.Name)
 	name := names[0]
 	fldT := sRfl.FieldTypeByName(name)
-	st, ok := sRfl.StructTagChain().RetrieveByFieldName(name)
-	if !ok {
-		panic(fmt.Sprintf("field %s couldn't be found on model %s", name, sRfl.Type()))
-	}
+	st, _ := sRfl.StructTagChain().RetrieveByFieldName(name)
 	if fldT.Kind() == reflect.Ptr {
 		fldT = fldT.Elem()
 	}
@@ -167,7 +160,7 @@ func (s *DataSourceMem) retrieveRelation(sRfl *model.Reflect, rel query.Relation
 	}
 	str := strings.Split(joinStr, "=")
 	if len(str) != 2 {
-		panic(fmt.Sprintf("struct tag join improperlly formatted: %s", joinStr))
+		panic(fmt.Sprintf("struct tag join improperly formatted: %s", joinStr))
 	}
 	s.Data.Retrieve(fldT).ForEach(func(nDRfl *model.Reflect, i int) {
 		dFld := nDRfl.StructFieldByName(str[1])
@@ -194,7 +187,6 @@ func (s *DataSourceMem) retrieveWhereFieldRelations(p *query.Pack, sRfl *model.R
 	for k := range wFld {
 		fn, ln := model.SplitLastFieldName(k)
 		if fn != "" {
-			log.Infof("Retrieving relation %s", k)
 			s.retrieveRelation(sRfl, query.RelationOpt{Name: fn, Fields: query.FieldsOpt{ln}})
 		}
 	}
