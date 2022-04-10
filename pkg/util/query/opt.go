@@ -2,7 +2,6 @@ package query
 
 import (
 	"fmt"
-	log "github.com/sirupsen/logrus"
 )
 
 type Opts map[OptKey]interface{}
@@ -75,7 +74,6 @@ type OptRetrieveOpt func(o *optRetrieveOpts)
 //
 //  The function will panic if the pk option was not set on the query.
 func RequireOpt() OptRetrieveOpt {
-	log.Info("RequireOpt")
 	return func(o *optRetrieveOpts) {
 		o.optRequired = true
 	}
