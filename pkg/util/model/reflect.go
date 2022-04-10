@@ -138,6 +138,8 @@ func (r *Reflect) StructFieldByName(name string) reflect.Value {
 			fld = r.StructValue().FieldByNameFunc(matchFields(splitName))
 		} else if !fld.IsNil() {
 			fld = fld.Elem().FieldByNameFunc(matchFields(splitName))
+		} else {
+			return reflect.Value{}
 		}
 	}
 	return fld
