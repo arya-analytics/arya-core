@@ -25,8 +25,7 @@ var _ = Describe("Opt", func() {
 				p := query.NewRetrieve().Pack()
 				Expect(func() {
 					query.RetrievePKOpt(p, query.RequireOpt())
-				})
-
+				}).To(Panic())
 			})
 		})
 	})
