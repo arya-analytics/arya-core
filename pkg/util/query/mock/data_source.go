@@ -3,10 +3,11 @@ package mock
 import (
 	"context"
 	"fmt"
+	"github.com/arya-analytics/aryacore/pkg/util/filter"
 	"github.com/arya-analytics/aryacore/pkg/util/model"
 	"github.com/arya-analytics/aryacore/pkg/util/query"
-	"github.com/arya-analytics/aryacore/pkg/util/query/filter"
 	"github.com/arya-analytics/aryacore/pkg/util/query/streamq"
+	log "github.com/sirupsen/logrus"
 	"reflect"
 	"strings"
 	"sync"
@@ -44,7 +45,7 @@ func (s *DataSourceMem) Exec(ctx context.Context, p *query.Pack) error {
 
 func (s *DataSourceMem) retrieve(ctx context.Context, p *query.Pack) error {
 	d := s.Data.Retrieve(p.Model().Type())
-	f, err := s.filter(p, d, filter.ErrOnNotFound())
+	f, err := s.filter(p, d, filter.ErrorOnNotFound())
 	if err != nil {
 		return err
 	}
@@ -98,8 +99,8 @@ func (s *DataSourceMem) unaryUpdate(p *query.Pack) error {
 	f, err := s.filter(
 		p,
 		s.Data.Retrieve(p.Model().Type()),
-		filter.ErrOnNotFound(),
-		filter.ErrOnMultipleResults(),
+		filter.ErrorOnNotFound(),
+		filter.ErrorOnMultiple(),
 	)
 	if err != nil {
 		return err
@@ -139,7 +140,7 @@ func (s *DataSourceMem) bulkUpdate(p *query.Pack) error {
 
 func (s *DataSourceMem) filter(p *query.Pack, d *model.Reflect, opts ...filter.Opt) (*model.Reflect, error) {
 	s.retrieveWhereFieldRelations(p, d)
-	return filter.Filter(p, d, opts...)
+	return filter.ReflectFilter(p, d, opts...)
 }
 
 func (s *DataSourceMem) retrieveRelations(p *query.Pack, d *model.Reflect) {
@@ -193,6 +194,7 @@ func (s *DataSourceMem) retrieveWhereFieldRelations(p *query.Pack, sRfl *model.R
 	for k := range wFld {
 		fn, ln := model.SplitLastFieldName(k)
 		if fn != "" {
+			log.Infof("Retrieving relation %s", k)
 			s.retrieveRelation(sRfl, query.RelationOpt{Name: fn, Fields: query.FieldsOpt{ln}})
 		}
 	}

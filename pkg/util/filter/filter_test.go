@@ -34,11 +34,11 @@ var _ = Describe("Filter", func() {
 			Expect(s).To(HaveLen(3))
 			Expect(os).To(HaveLen(1))
 		})
-		It("Should panic on nonexistent fields", func() {
+		It("Should not panic on nonexistent fields", func() {
 			s := []*mock.ModelA{{ID: 1}, {ID: 2}, {ID: 3}}
-			Expect(func() {
-				_, _ = filter.Filter(query.NewRetrieve().WhereFields(query.WhereFields{"IDontExist": 4}).Pack(), s)
-			}).To(Panic())
+			os, err := filter.Filter(query.NewRetrieve().WhereFields(query.WhereFields{"IDontExist": 4}).Pack(), s)
+			Expect(err).To(BeNil())
+			Expect(os).To(HaveLen(0))
 		})
 		It("Should panic when trying to use a field expression", func() {
 			s := []*mock.ModelA{{ID: 1}, {ID: 2}, {ID: 3}}

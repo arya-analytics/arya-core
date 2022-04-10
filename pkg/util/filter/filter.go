@@ -170,7 +170,7 @@ func filters() []filter {
 func fieldsMatch(wFldName string, wFldVal interface{}, source *model.Reflect) bool {
 	fldVal := source.StructFieldByName(wFldName)
 	if !fldVal.IsValid() {
-		panic(fmt.Sprintf("field not found: %s", wFldName))
+		return false
 	}
 	_, ok := wFldVal.(query.FieldExpression)
 	// We don't currently support any field expressions.
