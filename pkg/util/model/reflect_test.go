@@ -37,6 +37,18 @@ var _ = Describe("Reflect", func() {
 				Expect(rfl.Type()).To(Equal(reflect.TypeOf(mock.ModelA{})))
 			})
 		})
+		Describe("NewReflectFromType", func() {
+			It("Should create a reflect from a type", func() {
+				rfl := model.NewReflectFromType(reflect.TypeOf(mock.ModelA{}))
+				Expect(rfl.IsStruct()).To(BeTrue())
+				Expect(rfl.Type()).To(Equal(reflect.TypeOf(mock.ModelA{})))
+			})
+			It("Should panic if the type is not of struct kind", func() {
+				Expect(func() {
+					model.NewReflectFromType(reflect.TypeOf(uuid.UUID{}))
+				}).To(Panic())
+			})
+		})
 	})
 
 	Context("Single Model", func() {
@@ -68,8 +80,18 @@ var _ = Describe("Reflect", func() {
 			It("Should return true for IsStruct", func() {
 				Expect(rfl.IsStruct()).To(BeTrue())
 			})
-			Describe("Accessing Struct fields", func() {
+			It("Should panic when trying to access the chan value", func() {
+				Expect(func() { rfl.ChanValue() }).To(Panic())
+			})
+			It("Should set the value without issue", func() {
+				nRfl := model.NewReflect(&mock.ModelA{ID: 41})
+				Expect(func() {
+					nRfl.Set(model.NewReflect(&mock.ModelA{ID: 42}))
+				}).ToNot(Panic())
+				Expect(nRfl.PK().Raw()).To(Equal(42))
 
+			})
+			Describe("Accessing Struct fields", func() {
 				It("Should return the correct struct field by name", func() {
 					Expect(rfl.StructFieldByName("ID").Interface()).To(Equal(22))
 				})
@@ -118,7 +140,7 @@ var _ = Describe("Reflect", func() {
 				It("Should panic when the field doesn't exist", func() {
 					Expect(func() {
 						rfl.FieldTypeByName("InnerModel.NonExistent")
-					}).To(PanicWith("field NonExistent does not exist on type mock.ModelB"))
+					}).To(PanicWith("field InnerModel.NonExistent does not exist on ModelA"))
 				})
 			})
 		})
@@ -324,6 +346,10 @@ var _ = Describe("Reflect", func() {
 		It("Should return false for IsChain", func() {
 			Expect(rfl.IsChain()).To(BeFalse())
 		})
+		It("Should panic when trying to get the primary key", func() {
+			Expect(func() { rfl.PKChain() }).To(Panic())
+
+		})
 		Describe("Sending and receiving", func() {
 			It("Should send and receive the values correctly", func() {
 				rts := model.NewReflect(&mock.ModelA{ID: 2})
@@ -368,6 +394,15 @@ var _ = Describe("Reflect", func() {
 					model.NewReflect(&m)
 				}).ToNot(Panic())
 			})
+		})
+	})
+	Describe("Filter", func() {
+		It("Should filter the reflect into a new reflect", func() {
+			id := []*mock.ModelA{{ID: 1}, {ID: 2}}
+			od := model.NewReflect(&id).Filter(func(rfl *model.Reflect, i int) bool {
+				return rfl.PK().Equals(model.NewPK(2))
+			})
+			Expect(od.ChainValue().Len()).To(Equal(1))
 		})
 	})
 })

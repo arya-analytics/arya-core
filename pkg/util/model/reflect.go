@@ -136,10 +136,7 @@ func (r *Reflect) StructFieldByName(name string) reflect.Value {
 	for i, splitName := range sn {
 		if i == 0 {
 			fld = r.StructValue().FieldByNameFunc(matchFields(splitName))
-		} else {
-			if fld.IsNil() {
-				return reflect.Value{}
-			}
+		} else if !fld.IsNil() {
 			fld = fld.Elem().FieldByNameFunc(matchFields(splitName))
 		}
 	}
@@ -226,18 +223,6 @@ func (r *Reflect) ChanRecv() (*Reflect, bool) {
 		return NewReflect(v.Interface()), true
 	}
 	return nil, false
-}
-
-func (r *Reflect) ChanTryRecv() (*Reflect, bool) {
-	v, ok := r.ChanValue().TryRecv()
-	if ok {
-		return NewReflect(v.Interface()), true
-	}
-	return nil, false
-}
-
-func (r *Reflect) ChanTrySend(rts *Reflect) bool {
-	return r.ChanValue().TrySend(rts.PointerValue())
 }
 
 // |||| FIELD ACCESSORS ||||
@@ -397,17 +382,6 @@ func (r *Reflect) RawType() reflect.Type {
 // RawValue returns the unparsed Val of the model object.
 func (r *Reflect) RawValue() reflect.Value {
 	return r.PointerValue().Elem()
-}
-
-// AsFieldValue returns the value of the type when set on a nested field.
-func (r *Reflect) AsFieldValue() reflect.Value {
-	if r.IsChain() {
-		return r.ChainValue()
-	}
-	if r.IsChan() {
-		return r.ChanValue()
-	}
-	return r.StructValue()
 }
 
 // FieldTypeByName returns the type of the field by its name. Supports

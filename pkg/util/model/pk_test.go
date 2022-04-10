@@ -55,6 +55,14 @@ var _ = Describe("PKC", func() {
 					fmt.Println(newPK)
 				}).To(Panic())
 			})
+			Describe("Creating a PK chain from a string", func() {
+				It("Should create a chain of PKs from a string", func() {
+					pkcStr := []string{uuid.New().String(), uuid.New().String()}
+					newPKC, err := model.NewPK(uuid.UUID{}).NewChainFromStrings(pkcStr...)
+					Expect(err).To(BeNil())
+					Expect(newPKC).To(HaveLen(len(pkcStr)))
+				})
+			})
 		})
 		Describe("Equality Check", func() {
 			It("Should return true when two UUIDs are equal", func() {

@@ -76,5 +76,11 @@ var _ = Describe("Catalog", func() {
 			m := ds.Retrieve(t)
 			Expect(m.Type()).To(Equal(reflect.TypeOf(mock.ModelA{})))
 		})
+		It("Should create a new slice for a nonexistent item", func() {
+			ds := model.NewDataSource()
+			t := reflect.TypeOf(mock.ModelA{})
+			m := ds.Retrieve(t)
+			Expect(m.Type()).To(Equal(reflect.TypeOf(mock.ModelA{})))
+		})
 	})
 })
